@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  tokman:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: graycodeai/tokman:latest
+    container_name: tokman
+    restart: unless-stopped
+    volumes:
+      # Persist data
+      - tokman-data:/home/tokman/.local/share/tokman
+      - tokman-config:/home/tokman/.config/tokman
+      # Mount project directories for filtering
+      - ${PROJECT_PATH:-.}:/workspace:ro
+    working_dir: /workspace
+    environment:
+      - TOKMAN_LOG_LEVEL=${TOKMAN_LOG_LEVEL:-info}
+      - TOKMAN_SKIP_ENV_VALIDATION=${TOKMAN_SKIP_ENV_VALIDATION:-false}
+    ports:
+      # Dashboard port (optional)
+      - "8080:8080"
+    command: ["dashboard", "--port", "8080", "--host", "0.0.0.0"]
+
+  # Optional: TokMan with Redis for distributed tracking
+  tokman-redis:
+    extends:
+      service: tokman
+    depends_on:
+      - redis
+    environment:
+      - TOKMAN_REDIS_URL=redis://redis:6379
+
+  redis:
+    image: redis:7-alpine
+    container_name: tokman-redis
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  tokman-data:
+  tokman-config:
+  redis-data:

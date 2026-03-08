@@ -1,0 +1,24 @@
+pkgbase = tokman-bin
+	pkgdesc = Token-aware CLI proxy for LLM interactions
+	pkgver = 1.1.0
+	pkgrel = 1
+	url = https://github.com/GrayCodeAI/tokman
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	optdepends = docker: for docker command wrappers
+	optdepends = git: for git command wrappers
+	optdepends = go: for go command wrappers
+	optdepends = kubectl: for kubernetes command wrappers
+	optdepends = nodejs: for npm/pnpm/npx wrappers
+	optdepends = python: for pip/pytest/mypy wrappers
+	optdepends = rust: for cargo wrappers
+	provides = tokman
+	conflicts = tokman
+	conflicts = tokman-git
+	source_x86_64 = tokman-1.1.0-linux-amd64.tar.gz::https://github.com/GrayCodeAI/tokman/releases/download/v1.1.0/tokman-linux-amd64.tar.gz
+	sha256sums_x86_64 = PLACEHOLDER_LINUX_AMD64_SHA256
+	source_aarch64 = tokman-1.1.0-linux-arm64.tar.gz::https://github.com/GrayCodeAI/tokman/releases/download/v1.1.0/tokman-linux-arm64.tar.gz
+	sha256sums_aarch64 = PLACEHOLDER_LINUX_ARM64_SHA256
+
+pkgname = tokman-bin
