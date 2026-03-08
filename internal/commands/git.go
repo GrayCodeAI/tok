@@ -54,6 +54,7 @@ Global flags (applied before subcommand):
   --bare                      Treat repository as bare
   --literal-pathspecs         Treat pathspecs literally
   -c <key=value>              Set git config option`,
+	TraverseChildren: true, // Allow flags between 'git' and subcommand
 }
 
 // buildGitCmd creates a git command with global options prepended
