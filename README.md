@@ -6,12 +6,16 @@ TokMan intercepts CLI commands, filters their output, and tracks token savings i
 
 ## Features
 
-- 🔧 **Git Command Wrappers** — Filtered `status`, `diff`, and `log` with smart formatting
+- 🔧 **Git Command Wrappers** — Filtered `status`, `diff`, `log`, `add`, `commit`, `push`, `pull`, and more
 - 📁 **LS Handler** — Hide noise directories (.git, node_modules, target, etc.)
-- 🧪 **Test Aggregation** — Condense Go test output into summary format
-- 🏗️ **Build Filtering** — Show only errors and warnings from builds
+- 🐳 **Infrastructure Wrappers** — Docker, kubectl, AWS CLI with filtered output
+- 📦 **Package Managers** — npm, pnpm, pip, cargo with compact output
+- 🧪 **Test Runners** — Go, pytest, vitest, playwright with aggregated results
+- 🔨 **Build Tools** — Go, cargo, next.js with error-only output
 - 📊 **Token Tracking** — SQLite-based metrics on tokens saved
 - 🔄 **Shell Integration** — Automatic command rewriting via shell hooks
+- 🔐 **Integrity Verification** — SHA-256 hook verification for security
+- 💰 **Economics Analysis** — Compare spending vs savings with quota estimates
 
 ## Installation
 
@@ -28,11 +32,14 @@ sudo mv tokman /usr/local/bin/
 ## Quick Start
 
 ```bash
-# Initialize database and config
+# Initialize TokMan (install shell hook)
 tokman init
 
 # Check token savings
 tokman status
+
+# View comprehensive savings analysis
+tokman gain
 
 # Use wrapped commands
 tokman git status
@@ -46,25 +53,93 @@ tokman test ./...
 
 | Command | Description |
 |---------|-------------|
-| `tokman init` | Initialize database and config |
-| `tokman status` | Show token savings summary |
+| `tokman init` | Initialize TokMan and install shell hook |
+| `tokman status` | Quick token savings summary |
 | `tokman report` | Detailed usage analytics |
+| `tokman gain` | Comprehensive savings with graphs, history, quota |
+| `tokman config` | Show or create configuration file |
+| `tokman verify` | Verify hook integrity (SHA-256 check) |
+| `tokman economics` | Show spending vs savings analysis |
 
 ### Git Wrappers
 
 | Command | Filter Applied |
 |---------|---------------|
 | `tokman git status` | Porcelain parsing, emoji formatting |
-| `tokman git diff` | Stats summary, 30-line hunk limit |
-| `tokman git log` | Oneline format, 20-commit limit |
+| `tokman git diff` | Stats summary, compact hunks |
+| `tokman git log` | Oneline format, smart limits |
+| `tokman git add` | Compact "ok ✓" output |
+| `tokman git commit` | Show hash on success |
+| `tokman git push` | Show branch on success |
+| `tokman git pull` | Show stats summary |
+| `tokman git branch` | Compact listing |
+| `tokman git stash` | Compact list/apply/drop |
+| `tokman git show` | Commit summary + compact diff |
+| `tokman git fetch` | Show new refs count |
+| `tokman git worktree` | Compact listing |
 
-### Other Wrappers
+### Infrastructure Wrappers
 
-| Command | Filter Applied |
-|---------|---------------|
-| `tokman ls [path]` | Hide noise dirs, group by type, human sizes |
-| `tokman test [args]` | Aggregate test results, show failures only |
-| `tokman build [args]` | Filter verbose output, show errors only |
+| Command | Description |
+|---------|-------------|
+| `tokman docker` | Docker CLI with filtered output |
+| `tokman kubectl` | Kubernetes CLI with filtered output |
+| `tokman aws` | AWS CLI with filtered output |
+| `tokman gh` | GitHub CLI with token-optimized output |
+| `tokman gt` | Graphite stacked PR commands |
+
+### Build & Test Wrappers
+
+| Command | Description |
+|---------|-------------|
+| `tokman go test` | Go tests with aggregated results |
+| `tokman go build` | Go build with error-only output |
+| `tokman go vet` | Go vet with compact output |
+| `tokman cargo test` | Cargo tests with compact output |
+| `tokman cargo build` | Cargo build with error-only output |
+| `tokman cargo clippy` | Rust linter with compact output |
+| `tokman pytest` | Python tests with compact output |
+| `tokman ruff` | Python linter/formatter compact |
+| `tokman mypy` | Python type checker compact |
+| `tokman vitest` | Vitest with compact output |
+| `tokman playwright` | Playwright E2E tests compact |
+
+### Package Managers
+
+| Command | Description |
+|---------|-------------|
+| `tokman npm` | npm run with filtered output |
+| `tokman pnpm` | pnpm with ultra-compact output |
+| `tokman npx` | npx with intelligent routing |
+| `tokman pip` | pip with compact output |
+| `tokman cargo` | Cargo commands with filtering |
+
+### Utilities
+
+| Command | Description |
+|---------|-------------|
+| `tokman ls` | Hide noise dirs, human sizes |
+| `tokman tree` | Compact tree output |
+| `tokman find` | Find files with compact output |
+| `tokman grep` | Compact grep, groups by file |
+| `tokman diff` | Ultra-condensed diff |
+| `tokman json` | Show JSON structure |
+| `tokman env` | Show env vars (sensitive masked) |
+| `tokman deps` | Summarize dependencies |
+| `tokman log` | Filter/deduplicate logs |
+| `tokman wc` | Word/line/byte count compact |
+| `tokman curl` | Auto-JSON detection |
+| `tokman wget` | Download with compact output |
+
+### Analysis Commands
+
+| Command | Description |
+|---------|-------------|
+| `tokman discover` | Find missed savings in Claude Code history |
+| `tokman learn` | Generate CLI correction rules from errors |
+| `tokman err <cmd>` | Run command, show only errors/warnings |
+| `tokman proxy <cmd>` | Run without filtering (still tracked) |
+| `tokman hook-audit` | Show hook rewrite metrics |
 
 ### Rewriting
 
@@ -82,6 +157,7 @@ source /path/to/tokman/hooks/tokman-rewrite.sh
 ```
 
 This enables:
+- Automatic command rewriting for all supported commands
 - `ts` — alias for `tokman status`
 - `tr` — alias for `tokman rewrite`
 - `tokman_install_hook` — install hook to shell config
@@ -94,30 +170,62 @@ Config file: `~/.config/tokman/config.toml`
 ```toml
 [tracking]
 enabled = true
-database_path = ""  # Default: ~/.local/share/tokman/history.db
+telemetry = false
 
 [filter]
 mode = "minimal"  # "minimal" or "aggressive"
 noise_dirs = [
     ".git", "node_modules", "target",
-    "__pycache__", ".venv", "vendor"
+    "__pycache__", ".venv", "vendor",
+    ".idea", ".vscode", "dist", "build"
 ]
 
 [hooks]
 excluded_commands = []
 ```
 
-## Filter Modes
+## Gain Command Features
 
-### Minimal (default)
-- Strip ANSI escape codes
-- Remove duplicate log lines
-- Limit output size
+The `tokman gain` command provides comprehensive savings analysis:
 
-### Aggressive
-- Strip function bodies (brace-depth tracking)
-- Condense imports
-- Maximum token reduction
+```bash
+# Basic summary
+tokman gain
+
+# Show ASCII graph of daily savings
+tokman gain --graph
+
+# Show recent command history
+tokman gain --history
+
+# Show quota analysis (subscription tier estimate)
+tokman gain --quota --tier pro
+
+# Time breakdowns
+tokman gain --daily
+tokman gain --weekly
+tokman gain --monthly
+tokman gain --all
+
+# Export data
+tokman gain --format json
+tokman gain --format csv
+
+# Filter to current project
+tokman gain --project
+```
+
+## Security: Integrity Verification
+
+TokMan protects against hook tampering:
+
+```bash
+# Verify hook integrity
+tokman verify
+
+# Runtime checks are automatic for operational commands
+# Hooks are verified via SHA-256 hash stored during init
+```
 
 ## Architecture
 
@@ -126,16 +234,22 @@ excluded_commands = []
 │                    TokMan CLI                   │
 ├─────────────────────────────────────────────────┤
 │  Command Handlers (internal/commands/)          │
-│  ├── git.go      - Git wrappers                │
-│  ├── ls.go       - LS with noise filtering     │
-│  ├── test.go     - Test aggregation            │
-│  └── rewrite.go  - Command rewriting           │
+│  ├── git.go       - Git wrappers               │
+│  ├── docker.go    - Docker filtering           │
+│  ├── go.go        - Go build/test              │
+│  ├── cargo.go     - Rust commands              │
+│  ├── npm.go       - npm/pnpm/npx               │
+│  ├── pytest.go    - Python tests               │
+│  ├── gain.go      - Savings analysis           │
+│  ├── economics.go - Cost analysis              │
+│  └── ...          - 40+ command handlers       │
 ├─────────────────────────────────────────────────┤
 │  Core Engine (internal/)                        │
-│  ├── filter/     - Output filtering            │
-│  ├── tracking/   - SQLite token tracking       │
-│  ├── config/     - TOML config loader          │
-│  └── discover/   - Command registry            │
+│  ├── filter/      - Output filtering            │
+│  ├── tracking/    - SQLite token tracking       │
+│  ├── config/      - TOML config loader          │
+│  ├── integrity/   - SHA-256 hook verification   │
+│  └── economics/   - Cost analysis engine        │
 ├─────────────────────────────────────────────────┤
 │  Shell Integration (hooks/)                     │
 │  └── tokman-rewrite.sh - Bash/Zsh hook         │
@@ -172,22 +286,28 @@ Following XDG Base Directory Specification:
 | Resource | Path |
 |----------|------|
 | Config | `~/.config/tokman/config.toml` |
-| Database | `~/.local/share/tokman/history.db` |
-| Logs | `~/.local/share/tokman/tokman.log` |
+| Database | `~/.config/tokman/tracking.db` |
+| Logs | `~/.config/tokman/tokman.log` |
+| Hook | `~/.claude/hooks/tokman-rewrite.sh` |
+| Hook Hash | `~/.claude/hooks/tokman-rewrite.sh.sha256` |
 
 Override with environment variables:
 - `XDG_CONFIG_HOME`
-- `XDG_DATA_HOME`
 - `TOKMAN_DATABASE_PATH`
 
 ## Roadmap
 
+- [x] ~~Git command wrappers~~
+- [x] ~~Token tracking database~~
+- [x] ~~Shell integration hooks~~
+- [x] ~~Integrity verification~~
+- [x] ~~Economics analysis~~
+- [x] ~~Python tool wrappers (pytest, ruff, mypy)~~
+- [x] ~~Rust/Cargo test aggregation~~
 - [ ] Windows support
 - [ ] Custom filter plugins
 - [ ] Web dashboard for analytics
 - [ ] LLM API integration (direct token counting)
-- [ ] Rust/Cargo test aggregation
-- [ ] Python pytest aggregation
 
 ## License
 
