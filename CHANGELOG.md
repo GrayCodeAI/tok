@@ -1,0 +1,89 @@
+# Changelog
+
+All notable changes to TokMan will be documented in this file.
+
+## [1.1.0] - 2025-03-08
+
+### Added - Beyond Parity Features
+
+#### Custom Filter Plugins
+- JSON-based user-defined filter rules
+- `tokman plugin list` - List all loaded plugins
+- `tokman plugin create <name>` - Create new plugin template
+- `tokman plugin enable/disable <name>` - Toggle plugins
+- `tokman plugin examples` - Generate example plugins
+- Pattern matching with hide/replace modes
+- Auto-loading from `~/.config/tokman/plugins/*.json`
+
+#### Web Dashboard
+- `tokman dashboard` - Launch interactive web dashboard
+- Real-time token savings visualization with Chart.js
+- Daily/weekly/monthly breakdowns
+- Command-level analytics
+- Cost tracking with Claude API rates
+- RESTful API endpoints for custom integrations
+
+#### Shell Completions
+- Bash completion script (`completions/tokman.bash`)
+- Zsh completion script (`completions/_tokman`)
+- Fish completion script (`completions/tokman.fish`)
+
+#### CI/CD Integration
+- GitHub Actions workflow template (`templates/github-actions.yml`)
+- GitLab CI template (`templates/gitlab-ci.yml`)
+- Token savings reporting in CI pipelines
+
+### Added - Testing & Quality
+
+- Unit tests for `internal/ccusage` package
+- Unit tests for `internal/commands` (smart command)
+- Unit tests for `internal/config` (Windows path validation)
+- Unit tests for `internal/economics` package
+- Unit tests for `internal/utils` package
+- Performance benchmarks for filter engine
+- Sub-millisecond filtering performance
+
+### Performance
+
+- Filter short input: 8.9 µs
+- Filter git status: 26 µs
+- Filter large output (2000 lines): 1.07 ms
+- Zero-allocation utility functions (EstimateTokens, IsCode)
+
+## [1.0.0] - 2025-03-08
+
+### Added - Core Features
+
+- Token-aware CLI proxy for LLM interactions
+- Smart command rewriting (git, npm, go, pytest, etc.)
+- Intelligent output filtering to reduce token usage
+- Token savings tracking with SQLite database
+- Economics reporting with Claude API pricing
+- Runtime integrity verification
+- Cross-platform support (Linux, macOS, Windows)
+
+### Commands
+
+- `tokman git` - Git command filtering
+- `tokman smart <file>` - 2-line code summary
+- `tokman status` - Project token savings
+- `tokman report` - Detailed savings report
+- `tokman economics` - Cost analysis
+- `tokman init` - Initialize TokMan for project
+- `tokman verify` - Verify installation integrity
+
+### Configuration
+
+- XDG Base Directory support
+- Windows path support (%APPDATA%, %LOCALAPPDATA%)
+- Environment variable overrides (TOKMAN_*)
+- TOML configuration file support
+- RTK environment variable compatibility aliases
+
+### RTK Feature Parity
+
+- 100% feature parity with RTK (Rust)
+- All filtering patterns implemented
+- All command rewrites supported
+- All configuration options available
+- Environment variable compatibility maintained

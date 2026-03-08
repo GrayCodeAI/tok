@@ -163,6 +163,92 @@ This enables:
 - `tokman_install_hook` — install hook to shell config
 - `tokman_status` — show integration status
 
+### Shell Completions
+
+Enable autocompletions for your shell:
+
+```bash
+# Bash
+source <(tokman completion bash)
+
+# Zsh
+source <(tokman completion zsh)
+
+# Fish
+tokman completion fish | source
+```
+
+Or save the completion files from `completions/` directory.
+
+## Custom Filter Plugins
+
+Create JSON-based filter plugins in `~/.config/tokman/plugins/`:
+
+```json
+{
+  "name": "hide-npm-warnings",
+  "description": "Hide npm deprecation warnings",
+  "enabled": true,
+  "patterns": ["npm WARN deprecated"],
+  "mode": "hide"
+}
+```
+
+```bash
+# Plugin management
+tokman plugin list           # List loaded plugins
+tokman plugin create myfilter # Create new plugin template
+tokman plugin enable myfilter # Enable a plugin
+tokman plugin disable myfilter # Disable a plugin
+tokman plugin examples       # Generate example plugins
+```
+
+## Web Dashboard
+
+Launch an interactive dashboard to visualize token savings:
+
+```bash
+# Start dashboard on default port (8080)
+tokman dashboard
+
+# Custom port
+tokman dashboard --port 3000
+
+# Open browser automatically
+tokman dashboard --open
+```
+
+Features:
+- Real-time token savings charts
+- Daily/weekly/monthly breakdowns
+- Command-level analytics
+- Cost tracking with Claude API rates
+- RESTful API endpoints (`/api/stats`, `/api/daily`, `/api/commands`)
+
+## CI/CD Integration
+
+Include TokMan in your CI pipelines for automated reporting:
+
+### GitHub Actions
+
+```yaml
+# .github/workflows/tokman.yml
+name: Token Savings Report
+on: [workflow_run]
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.21' }
+      - run: go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+      - run: tokman summary --format markdown >> $GITHUB_STEP_SUMMARY
+```
+
+See `templates/` for complete GitHub Actions and GitLab CI examples.
+
 ## Configuration
 
 Config file: `~/.config/tokman/config.toml`
@@ -304,10 +390,14 @@ Override with environment variables:
 - [x] ~~Economics analysis~~
 - [x] ~~Python tool wrappers (pytest, ruff, mypy)~~
 - [x] ~~Rust/Cargo test aggregation~~
-- [ ] Windows support
-- [ ] Custom filter plugins
-- [ ] Web dashboard for analytics
+- [x] ~~Windows support~~
+- [x] ~~Custom filter plugins~~
+- [x] ~~Web dashboard for analytics~~
+- [x] ~~Shell completions (bash/zsh/fish)~~
+- [x] ~~CI/CD integration templates~~
 - [ ] LLM API integration (direct token counting)
+- [ ] Homebrew formula
+- [ ] Docker image
 
 ## License
 
