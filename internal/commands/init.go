@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/GrayCodeAI/tokman/internal/integrity"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 	"github.com/GrayCodeAI/tokman/internal/utils"
 )
@@ -79,6 +80,16 @@ configuration files, and database.`,
 				fmt.Fprintf(os.Stderr, "Warning: failed to create log file: %v\n", err)
 			} else {
 				fmt.Printf("  %s Log file: %s\n", green("✓"), cyan(logPath))
+			}
+		}
+
+		// Store integrity hash for hook if it exists
+		hookPath := filepath.Join(hooksDir, "tokman-rewrite.sh")
+		if _, err := os.Stat(hookPath); err == nil {
+			if err := integrity.StoreHash(hookPath); err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to store hook integrity hash: %v\n", err)
+			} else {
+				fmt.Printf("  %s Hook integrity hash stored\n", green("✓"))
 			}
 		}
 
