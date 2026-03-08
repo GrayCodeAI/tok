@@ -2,7 +2,7 @@
 
 **Token-Aware CLI Proxy** — Reduce token usage in LLM interactions by filtering verbose command output.
 
-A Go implementation inspired by [RTK (Rust Token Killer)](https://github.com/your-repo/rtk), designed to intercept CLI commands, filter their output, and track token savings.
+TokMan intercepts CLI commands, filters their output, and tracks token savings in a SQLite database.
 
 ## Features
 
@@ -192,10 +192,6 @@ Override with environment variables:
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
-
-## Credits
-
-Inspired by [RTK (Rust Token Killer)](https://github.com/your-repo/rtk).
 
 ---
 
