@@ -105,23 +105,23 @@ func runWgetStdout(url string, userArgs []string, timer *tracking.TimedExecution
 	total := len(lines)
 	raw := content
 
-	var rtkOutput string
+	var tokmanOutput string
 	if total > 20 {
-		rtkOutput = fmt.Sprintf("⬇️  %s ok | %d lines | %s\n", compactURL(url), total, formatSize(uint64(len(output))))
-		rtkOutput += "--- first 10 lines ---\n"
+		tokmanOutput = fmt.Sprintf("⬇️  %s ok | %d lines | %s\n", compactURL(url), total, formatSize(uint64(len(output))))
+		tokmanOutput += "--- first 10 lines ---\n"
 		for i := 0; i < 10 && i < len(lines); i++ {
-			rtkOutput += truncateLine(lines[i], 100) + "\n"
+			tokmanOutput += truncateLine(lines[i], 100) + "\n"
 		}
-		rtkOutput += fmt.Sprintf("... +%d more lines", total-10)
+		tokmanOutput += fmt.Sprintf("... +%d more lines", total-10)
 	} else {
-		rtkOutput = fmt.Sprintf("⬇️  %s ok | %d lines\n", compactURL(url), total)
-		rtkOutput += content
+		tokmanOutput = fmt.Sprintf("⬇️  %s ok | %d lines\n", compactURL(url), total)
+		tokmanOutput += content
 	}
 
-	fmt.Print(rtkOutput)
+	fmt.Print(tokmanOutput)
 
 	originalTokens := filter.EstimateTokens(raw)
-	filteredTokens := filter.EstimateTokens(rtkOutput)
+	filteredTokens := filter.EstimateTokens(tokmanOutput)
 	timer.Track(fmt.Sprintf("wget -O - %s", url), "tokman wget -O", originalTokens, filteredTokens)
 
 	return nil

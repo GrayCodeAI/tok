@@ -13,7 +13,7 @@ type CommandMapping struct {
 }
 
 // Registry maps original commands to TokMan wrappers
-// Based on RTK discover/registry.rs
+// Command registry for auto-discovery
 var Registry = map[string]CommandMapping{
 	// Git commands
 	"git status": {

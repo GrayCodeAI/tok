@@ -20,7 +20,7 @@ type Tracker struct {
 type TimedExecution struct {
 	startTime time.Time
 	command   string
-	rtkCmd    string
+	tokmanCmd string
 	once      sync.Once
 }
 
@@ -37,7 +37,7 @@ func Start() *TimedExecution {
 }
 
 // Track records the execution with token savings.
-func (t *TimedExecution) Track(command, rtkCmd string, originalTokens, filteredTokens int) {
+func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filteredTokens int) {
 	t.once.Do(func() {
 		execTime := time.Since(t.startTime)
 		saved := originalTokens - filteredTokens
@@ -66,7 +66,7 @@ func (t *TimedExecution) Track(command, rtkCmd string, originalTokens, filteredT
 }
 
 // TrackPassthrough records a passthrough command (no filtering).
-func (t *TimedExecution) TrackPassthrough(command, rtkCmd string) {
+func (t *TimedExecution) TrackPassthrough(command, tokmanCmd string) {
 	t.once.Do(func() {
 		execTime := time.Since(t.startTime)
 

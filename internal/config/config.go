@@ -97,7 +97,7 @@ func Load(cfgFile string) (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TOKMAN")
 
-	// RTK compatibility aliases (for cross-compatibility)
+	// Environment variable aliases (for compatibility with other tools)
 	if val := os.Getenv("RTK_DB_PATH"); val != "" {
 		viper.SetDefault("tracking.database_path", val)
 	}

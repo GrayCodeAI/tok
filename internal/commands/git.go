@@ -18,7 +18,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
-// Git status codes from RTK
+// Git status codes
 const (
 	GitStaged     = "staged"
 	GitModified   = "modified"
@@ -461,7 +461,7 @@ func runGitDiff(args []string) (string, error) {
 	return filtered, nil
 }
 
-// filterDiff filters diff hunks to max 30 lines (from RTK)
+// filterDiff filters diff hunks to max 30 lines
 func filterDiff(diff string) string {
 	lines := strings.Split(diff, "\n")
 	var result []string
@@ -593,7 +593,7 @@ func recordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 }
 
 // ============================================================================
-// Additional Git Subcommands (RTK parity)
+// Additional Git Subcommands
 // ============================================================================
 
 var gitShowCmd = &cobra.Command{

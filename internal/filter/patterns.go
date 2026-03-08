@@ -21,7 +21,7 @@ var CommentPatterns = map[string]*regexp.Regexp{
 	"makefile": regexp.MustCompile(`(?m)#.*$`),
 }
 
-// Import patterns for various languages (from RTK)
+// Import patterns for various languages
 var ImportPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`^use\s+`),           // Rust
 	regexp.MustCompile(`^import\s+`),        // Python/JS/TS
@@ -74,7 +74,7 @@ var BlockDelimiters = map[rune]rune{
 	'(': ')',
 }
 
-// Git porcelain status codes (from RTK git.rs)
+// Git porcelain status codes
 var GitStatusCodes = map[string]string{
 	"M ": "staged_modified",
 	" M": "modified",
@@ -90,7 +90,7 @@ var GitStatusCodes = map[string]string{
 	"DD": "unmerged_both_deleted",
 }
 
-// Test result patterns (from RTK cargo_cmd.rs)
+// Test result patterns
 var TestResultPatterns = []*regexp.Regexp{
 	// Rust/Cargo
 	regexp.MustCompile(`test result: (ok|FAILED|ignored)\.`),

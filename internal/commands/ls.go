@@ -14,7 +14,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/config"
 )
 
-// Default noise directories to filter out (from RTK)
+// Default noise directories to filter out
 var defaultNoiseDirs = []string{
 	".git",
 	"node_modules",

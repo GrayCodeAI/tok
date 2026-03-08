@@ -2,7 +2,7 @@ package filter
 
 import "regexp"
 
-// ANSI escape sequence pattern from RTK
+// ANSI escape sequence pattern
 var ansiPattern = regexp.MustCompile(`\x1b\[[0-9;]*[a-zA-Z]`)
 
 // Additional ANSI patterns for comprehensive stripping

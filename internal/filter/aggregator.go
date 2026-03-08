@@ -126,7 +126,7 @@ func (f *LogAggregator) stripTimestamp(line string) string {
 }
 
 // aggregateTestResults compresses test output into summaries.
-// From RTK cargo_cmd.rs: aggregates multiple test suites into single line.
+// Aggregates multiple test suites into single line.
 func (f *LogAggregator) aggregateTestResults(input string) string {
 	// Check for test output patterns
 	hasTestOutput := false
