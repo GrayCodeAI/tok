@@ -7,8 +7,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/Patel230/tokman/internal/config"
-	"github.com/Patel230/tokman/internal/utils"
+	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 var (

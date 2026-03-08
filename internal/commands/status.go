@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/Patel230/tokman/internal/config"
-	"github.com/Patel230/tokman/internal/tracking"
+	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
 var statusCmd = &cobra.Command{

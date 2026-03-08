@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Patel230/tokman/internal/commands"
+	"github.com/GrayCodeAI/tokman/internal/commands"
 )
 
 func main() {

@@ -6,7 +6,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/Patel230/tokman/internal/discover"
+	"github.com/GrayCodeAI/tokman/internal/discover"
 )
 
 var rewriteCmd = &cobra.Command{
