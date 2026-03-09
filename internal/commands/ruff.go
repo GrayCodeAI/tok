@@ -317,20 +317,3 @@ func filterRuffFormat(output string) string {
 	return result.String()
 }
 
-func compactPath(path string) string {
-	path = strings.ReplaceAll(path, "\\", "/")
-
-	if idx := strings.LastIndex(path, "/src/"); idx != -1 {
-		return "src/" + path[idx+5:]
-	}
-	if idx := strings.LastIndex(path, "/lib/"); idx != -1 {
-		return "lib/" + path[idx+5:]
-	}
-	if idx := strings.LastIndex(path, "/tests/"); idx != -1 {
-		return "tests/" + path[idx+7:]
-	}
-	if idx := strings.LastIndex(path, "/"); idx != -1 {
-		return path[idx+1:]
-	}
-	return path
-}

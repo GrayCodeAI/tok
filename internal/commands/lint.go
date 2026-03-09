@@ -228,14 +228,7 @@ func detectLinter(args []string) (string, bool) {
 	return args[0], true
 }
 
-func packageManagerExec(tool string) *exec.Cmd {
-	// Try direct tool first
-	if path, err := exec.LookPath(tool); err == nil {
-		return exec.Command(path)
-	}
-	// Fallback to npx
-	return exec.Command("npx", tool)
-}
+// packageManagerExec is defined in format.go
 
 func filterEslintJSON(output string) string {
 	var results []EslintResult
