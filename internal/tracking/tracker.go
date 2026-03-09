@@ -300,6 +300,25 @@ func (t *Tracker) OverallSavingsPct() (float64, error) {
 	return float64(saved) / float64(original) * 100, nil
 }
 
+// TokensSaved24h returns tokens saved in the last 24 hours.
+func (t *Tracker) TokensSaved24h() (int64, error) {
+	var saved int64
+	err := t.db.QueryRow(
+		"SELECT COALESCE(SUM(saved_tokens), 0) FROM commands WHERE timestamp >= ?",
+		time.Now().Add(-24*time.Hour).Format(time.RFC3339),
+	).Scan(&saved)
+	return saved, err
+}
+
+// TokensSavedTotal returns total tokens saved across all time.
+func (t *Tracker) TokensSavedTotal() (int64, error) {
+	var saved int64
+	err := t.db.QueryRow(
+		"SELECT COALESCE(SUM(saved_tokens), 0) FROM commands",
+	).Scan(&saved)
+	return saved, err
+}
+
 // GetCommandStats returns statistics grouped by command.
 func (t *Tracker) GetCommandStats(projectPath string) ([]CommandStats, error) {
 	query := `

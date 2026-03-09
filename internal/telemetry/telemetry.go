@@ -28,6 +28,8 @@ type StatsProvider interface {
 	CountCommandsSince(since time.Time) (int64, error)
 	TopCommands(limit int) ([]string, error)
 	OverallSavingsPct() (float64, error)
+	TokensSaved24h() (int64, error)
+	TokensSavedTotal() (int64, error)
 }
 
 // Client handles telemetry ping operations.
@@ -88,21 +90,25 @@ func (c *Client) sendPing() {
 	version := getVersion()
 	osName := runtime.GOOS
 	arch := runtime.GOARCH
+	installMethod := detectInstallMethod()
 
 	// Get stats from tracking DB
 	var commands24h int64
 	var topCommands []string
 	var savingsPct float64
+	var tokensSaved24h, tokensSavedTotal int64
 
 	if c.stats != nil {
 		commands24h, _ = c.stats.CountCommandsSince(time.Now().Add(-24 * time.Hour))
 		topCommands, _ = c.stats.TopCommands(5)
 		savingsPct, _ = c.stats.OverallSavingsPct()
+		tokensSaved24h, _ = c.stats.TokensSaved24h()
+		tokensSavedTotal, _ = c.stats.TokensSavedTotal()
 	}
 
 	// Build payload (JSON-like structure)
-	payload := fmt.Sprintf(`{"device_hash":"%s","version":"%s","os":"%s","arch":"%s","commands_24h":%d,"top_commands":%s,"savings_pct":%.2f}`,
-		deviceHash, version, osName, arch, commands24h, formatStringSlice(topCommands), savingsPct)
+	payload := fmt.Sprintf(`{"device_hash":"%s","version":"%s","os":"%s","arch":"%s","install_method":"%s","commands_24h":%d,"top_commands":%s,"savings_pct":%.2f,"tokens_saved_24h":%d,"tokens_saved_total":%d}`,
+		deviceHash, version, osName, arch, installMethod, commands24h, formatStringSlice(topCommands), savingsPct, tokensSaved24h, tokensSavedTotal)
 
 	// Send HTTP POST (with 2-second timeout)
 	// Using curl for simplicity (no external HTTP dependencies)
@@ -155,6 +161,29 @@ func formatStringSlice(s []string) string {
 		quoted[i] = fmt.Sprintf(`"%s"`, v)
 	}
 	return fmt.Sprintf("[%s]", strings.Join(quoted, ","))
+}
+
+// detectInstallMethod determines how tokman was installed.
+func detectInstallMethod() string {
+	// Check if running from GOPATH/bin (go install)
+	execPath, err := os.Executable()
+	if err == nil {
+		// Check common install locations
+		home, _ := os.UserHomeDir()
+		goBinPath := filepath.Join(home, "go", "bin")
+		if strings.HasPrefix(execPath, goBinPath) {
+			return "go-install"
+		}
+		// Check for Homebrew on macOS
+		if strings.HasPrefix(execPath, "/usr/local/Cellar/") || strings.HasPrefix(execPath, "/opt/homebrew/Cellar/") {
+			return "homebrew"
+		}
+		// Check for Linux package manager paths
+		if strings.HasPrefix(execPath, "/usr/bin/") || strings.HasPrefix(execPath, "/usr/local/bin/") {
+			return "package-manager"
+		}
+	}
+	return "unknown"
 }
 
 // Global client

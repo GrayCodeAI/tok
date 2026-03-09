@@ -1,0 +1,57 @@
+# TokMan Configuration
+# This file configures the TokMan dashboard and tracking behavior.
+
+# Dashboard Settings
+dashboard:
+  # Port to run dashboard on (default: 8080)
+  port: 8080
+  # Address to bind server to (use 0.0.0.0 for all interfaces)
+  bind: "localhost"
+  # Auto-refresh interval in milliseconds
+  update_interval: 30000
+  # UI theme: dark, light
+  theme: "dark"
+  # Enable export functionality
+  enable_export: true
+
+# Alert Settings
+alerts:
+  # Enable alert system
+  enabled: true
+  # Daily token savings limit (triggers warning when exceeded)
+  daily_token_limit: 1000000
+  # Weekly token savings limit
+  weekly_token_limit: 5000000
+  # Usage spike threshold (multiplier of average)
+  usage_spike_threshold: 2.0
+
+# Tracking Settings
+tracking:
+  # Database path (empty = default ~/.tokman/tracking.db)
+  database_path: ""
+  # Days to retain historical data
+  history_retention_days: 90
+  # Enable automatic cleanup of old data
+  auto_cleanup: true
+
+# Integration Settings
+integrations:
+  # Claude Code integration via ccusage
+  claude_code:
+    enabled: true
+    # Path to ccusage binary (empty = auto-detect)
+    binary_path: ""
+  # Future integrations (not yet implemented)
+  cursor:
+    enabled: false
+  cline:
+    enabled: false
+
+# Export Settings
+export:
+  # Default export format: csv, json
+  default_format: "json"
+  # Include timestamps in exports
+  include_timestamps: true
+  # Max records per export (0 = unlimited)
+  max_records: 0

@@ -9,9 +9,12 @@ import (
 
 // Config represents the main configuration structure.
 type Config struct {
-	Tracking TrackingConfig `mapstructure:"tracking"`
-	Filter   FilterConfig   `mapstructure:"filter"`
-	Hooks    HooksConfig    `mapstructure:"hooks"`
+	Tracking   TrackingConfig   `mapstructure:"tracking"`
+	Filter     FilterConfig     `mapstructure:"filter"`
+	Hooks      HooksConfig      `mapstructure:"hooks"`
+	Dashboard  DashboardConfig  `mapstructure:"dashboard"`
+	Alerts     AlertsConfig     `mapstructure:"alerts"`
+	Export     ExportConfig     `mapstructure:"export"`
 }
 
 // TrackingConfig controls token tracking behavior.
@@ -34,6 +37,30 @@ type HooksConfig struct {
 	ExcludedCommands []string `mapstructure:"excluded_commands"`
 	AuditDir         string   `mapstructure:"audit_dir"`   // Directory for hook audit logs
 	TeeDir           string   `mapstructure:"tee_dir"`     // Directory for failure tee logs
+}
+
+// DashboardConfig controls dashboard behavior.
+type DashboardConfig struct {
+	Port           int    `mapstructure:"port"`
+	Bind           string `mapstructure:"bind"`
+	UpdateInterval int    `mapstructure:"update_interval"`
+	Theme          string `mapstructure:"theme"`
+	EnableExport   bool   `mapstructure:"enable_export"`
+}
+
+// AlertsConfig controls alert thresholds.
+type AlertsConfig struct {
+	Enabled             bool    `mapstructure:"enabled"`
+	DailyTokenLimit     int64   `mapstructure:"daily_token_limit"`
+	WeeklyTokenLimit    int64   `mapstructure:"weekly_token_limit"`
+	UsageSpikeThreshold float64 `mapstructure:"usage_spike_threshold"`
+}
+
+// ExportConfig controls export behavior.
+type ExportConfig struct {
+	DefaultFormat    string `mapstructure:"default_format"`
+	IncludeTimestamp bool   `mapstructure:"include_timestamps"`
+	MaxRecords       int    `mapstructure:"max_records"`
 }
 
 // Defaults returns the default configuration.
@@ -76,6 +103,24 @@ func Defaults() *Config {
 			AuditDir:         "",
 			TeeDir:           "",
 		},
+		Dashboard: DashboardConfig{
+			Port:           8080,
+			Bind:           "localhost",
+			UpdateInterval: 30000,
+			Theme:          "dark",
+			EnableExport:   true,
+		},
+		Alerts: AlertsConfig{
+			Enabled:             true,
+			DailyTokenLimit:     1000000,
+			WeeklyTokenLimit:    5000000,
+			UsageSpikeThreshold: 2.0,
+		},
+		Export: ExportConfig{
+			DefaultFormat:    "json",
+			IncludeTimestamp: true,
+			MaxRecords:       0,
+		},
 	}
 }
 
@@ -97,23 +142,23 @@ func Load(cfgFile string) (*Config, error) {
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TOKMAN")
 
-	// Environment variable aliases (for compatibility with other tools)
-	if val := os.Getenv("RTK_DB_PATH"); val != "" {
+	// Environment variable aliases (for compatibility)
+	if val := os.Getenv("TOKMAN_DB_PATH"); val != "" {
 		viper.SetDefault("tracking.database_path", val)
 	}
-	if val := os.Getenv("RTK_TELEMETRY_DISABLED"); val != "" {
+	if val := os.Getenv("TOKMAN_TELEMETRY_DISABLED"); val != "" {
 		viper.SetDefault("tracking.telemetry", val == "false")
 	}
-	if val := os.Getenv("RTK_AUDIT_DIR"); val != "" {
+	if val := os.Getenv("TOKMAN_AUDIT_DIR"); val != "" {
 		viper.SetDefault("hooks.audit_dir", val)
 	}
-	if val := os.Getenv("RTK_TEE_DIR"); val != "" {
+	if val := os.Getenv("TOKMAN_TEE_DIR"); val != "" {
 		viper.SetDefault("hooks.tee_dir", val)
 	}
-	if val := os.Getenv("RTK_TEE"); val != "" {
+	if val := os.Getenv("TOKMAN_TEE"); val != "" {
 		viper.SetDefault("hooks.tee_enabled", val == "true" || val == "1")
 	}
-	if val := os.Getenv("RTK_HOOK_AUDIT"); val != "" {
+	if val := os.Getenv("TOKMAN_HOOK_AUDIT"); val != "" {
 		viper.SetDefault("hooks.audit_enabled", val == "true" || val == "1")
 	}
 

@@ -147,7 +147,7 @@ func runErr(args []string, verbose bool) int {
 	return exitCode
 }
 
-// Advanced error patterns matching RTK's runner.rs
+// Advanced error patterns matching TokMan's runner.rs
 var errorPatterns = []*regexp.Regexp{
 	// Generic errors (case insensitive)
 	regexp.MustCompile(`(?i)^.*error[\s:\[].*$`),

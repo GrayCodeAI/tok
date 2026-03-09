@@ -78,11 +78,11 @@ All notable changes to TokMan will be documented in this file.
 - Windows path support (%APPDATA%, %LOCALAPPDATA%)
 - Environment variable overrides (TOKMAN_*)
 - TOML configuration file support
-- RTK environment variable compatibility aliases
+- TokMan environment variable compatibility
 
-### RTK Feature Parity
+### TokMan Feature Parity
 
-- 100% feature parity with RTK (Rust)
+- 100% feature parity with TokMan (Go)
 - All filtering patterns implemented
 - All command rewrites supported
 - All configuration options available

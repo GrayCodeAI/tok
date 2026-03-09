@@ -381,8 +381,8 @@ func rewriteSegment(seg string, excluded []string) (string, bool) {
 	cmdClean := strings.TrimPrefix(trimmed, envPrefix)
 	cmdClean = strings.TrimSpace(cmdClean)
 
-	// Check RTK_DISABLED
-	if strings.Contains(envPrefix, "RTK_DISABLED=") {
+	// Check TOKMAN_DISABLED
+	if strings.Contains(envPrefix, "TOKMAN_DISABLED=") {
 		return seg, false
 	}
 
