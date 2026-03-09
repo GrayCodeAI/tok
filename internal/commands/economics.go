@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/economics"
@@ -41,7 +44,8 @@ Requires ccusage installed (npm i -g ccusage).`,
 		}
 
 		if err := economics.Run(opts); err != nil {
-			panic(err.Error())
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
 		}
 	},
 }

@@ -46,9 +46,9 @@ func runSummary(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Running and summarizing: %s\n", command)
 	}
 
-	// Execute command
-	var execCmd *exec.Cmd
-	execCmd = exec.Command("sh", "-c", command)
+	// Execute command safely without shell interpretation
+	// This prevents shell injection vulnerabilities
+	execCmd := exec.Command(args[0], args[1:]...)
 
 	output, err := execCmd.CombinedOutput()
 	raw := string(output)

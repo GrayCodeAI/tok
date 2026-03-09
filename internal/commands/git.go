@@ -242,7 +242,7 @@ func parsePorcelain(output string) *GitStatus {
 			continue
 		}
 
-		if len(line) < 2 {
+		if len(line) < 4 {
 			continue
 		}
 
