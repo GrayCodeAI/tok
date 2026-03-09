@@ -1,4 +1,5 @@
 # Binaries
+tokman
 bin/
 *.exe
 *.exe~
