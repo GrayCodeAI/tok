@@ -151,6 +151,16 @@ func runKubectlPods(args []string) error {
 		parts = append(parts, fmt.Sprintf("%d restarts", restartsTotal))
 	}
 
+	// Ultra-compact mode: ASCII-only, single line
+	if ultraCompact {
+		filtered := fmt.Sprintf("%d pods: %s", len(pods), strings.Join(parts, ", "))
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("kubectl get pods", "tokman kubectl pods", originalTokens, filteredTokens)
+		return nil
+	}
+
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("☸️  %d pods: %s\n", len(pods), strings.Join(parts, ", ")))
 
@@ -207,6 +217,26 @@ func runKubectlServices(args []string) error {
 	}
 
 	services := svcList.Items
+
+	// Ultra-compact mode: ASCII-only, inline format
+	if ultraCompact {
+		filtered := fmt.Sprintf("%d services:", len(services))
+		for i, svc := range services {
+			if i >= 5 {
+				break
+			}
+			name := svc.Metadata.Name
+			filtered += " " + name
+		}
+		if len(services) > 5 {
+			filtered += fmt.Sprintf(" +%d", len(services)-5)
+		}
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("kubectl get services", "tokman kubectl services", originalTokens, filteredTokens)
+		return nil
+	}
 
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("☸️  %d services:\n", len(services)))

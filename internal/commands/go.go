@@ -200,6 +200,11 @@ func filterGoTestOutput(raw string) string {
 		}
 	}
 
+	// Ultra-compact mode
+	if ultraCompact {
+		return filterGoTestOutputUltraCompact(passed, failed, skipped, failures, packageResults)
+	}
+
 	var result []string
 	result = append(result, "📋 Go Test Results:")
 	result = append(result, fmt.Sprintf("   ✅ %d passed", passed))
@@ -228,6 +233,64 @@ func filterGoTestOutput(raw string) string {
 				break
 			}
 			result = append(result, fmt.Sprintf("   • %s", f))
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
+
+func filterGoTestOutputUltraCompact(passed, failed, skipped int, failures []string, packageResults map[string][]string) string {
+	var parts []string
+
+	// Summary on one line
+	parts = append(parts, fmt.Sprintf("P:%d", passed))
+	if failed > 0 {
+		parts = append(parts, fmt.Sprintf("F:%d", failed))
+	}
+	if skipped > 0 {
+		parts = append(parts, fmt.Sprintf("S:%d", skipped))
+	}
+
+	var result []string
+	result = append(result, strings.Join(parts, " "))
+
+	// Package status (one per line, limited)
+	pkgCount := 0
+	for pkg, status := range packageResults {
+		if pkgCount >= 5 {
+			result = append(result, fmt.Sprintf("... +%d more pkgs", len(packageResults)-5))
+			break
+		}
+		statusStr := "PASS"
+		for _, s := range status {
+			if strings.Contains(s, "FAIL") {
+				statusStr = "FAIL"
+				break
+			}
+		}
+		// Shorten package path
+		shortPkg := pkg
+		if idx := strings.LastIndex(pkg, "/"); idx >= 0 {
+			shortPkg = pkg[idx+1:]
+		}
+		result = append(result, fmt.Sprintf("%s: %s", shortPkg, statusStr))
+		pkgCount++
+	}
+
+	// Failures (limited to 5)
+	if len(failures) > 0 {
+		for i, f := range failures {
+			if i >= 5 {
+				result = append(result, fmt.Sprintf("... +%d more failures", len(failures)-5))
+				break
+			}
+			// Shorten failure name
+			parts := strings.Split(f, ".")
+			if len(parts) >= 2 {
+				result = append(result, fmt.Sprintf("FAIL: %s", parts[len(parts)-1]))
+			} else {
+				result = append(result, fmt.Sprintf("FAIL: %s", f))
+			}
 		}
 	}
 

@@ -60,9 +60,17 @@ func runCargo(cmd *cobra.Command, args []string) error {
 	var filtered string
 	switch subcommand {
 	case "build", "check":
-		filtered = filterCargoBuild(output)
+		if ultraCompact {
+			filtered = filterCargoBuildUltraCompact(output)
+		} else {
+			filtered = filterCargoBuild(output)
+		}
 	case "test":
-		filtered = filterCargoTest(output)
+		if ultraCompact {
+			filtered = filterCargoTestUltraCompact(output)
+		} else {
+			filtered = filterCargoTest(output)
+		}
 	case "nextest":
 		filtered = filterCargoNextest(output)
 	case "clippy":
@@ -203,4 +211,49 @@ func filterCargoClippy(output string) string {
 	}
 
 	return result.String()
+}
+
+// filterCargoBuildUltraCompact returns minimal ASCII-only output for builds
+func filterCargoBuildUltraCompact(output string) string {
+	errors := 0
+	warnings := 0
+	for _, line := range strings.Split(output, "\n") {
+		if strings.Contains(line, "error") {
+			errors++
+		}
+		if strings.Contains(line, "warning") {
+			warnings++
+		}
+	}
+	if errors > 0 {
+		return fmt.Sprintf("build failed: %d errors, %d warnings", errors, warnings)
+	}
+	if warnings > 0 {
+		return fmt.Sprintf("build ok: %d warnings", warnings)
+	}
+	return "build ok"
+}
+
+// filterCargoTestUltraCompact returns minimal ASCII-only output for tests
+func filterCargoTestUltraCompact(output string) string {
+	passed := 0
+	failed := 0
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(line, "test result:") {
+			// Parse: "test result: ok. X passed; Y failed; Z ignored"
+			parts := strings.Fields(line)
+			for i, p := range parts {
+				if p == "passed" && i > 0 {
+					fmt.Sscanf(parts[i-1], "%d", &passed)
+				}
+				if p == "failed" && i > 0 {
+					fmt.Sscanf(parts[i-1], "%d", &failed)
+				}
+			}
+		}
+	}
+	if failed > 0 {
+		return fmt.Sprintf("tests: %d passed, %d failed", passed, failed)
+	}
+	return fmt.Sprintf("tests: %d passed", passed)
 }

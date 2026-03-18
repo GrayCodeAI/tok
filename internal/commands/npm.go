@@ -197,6 +197,11 @@ func filterNpmTestOutput(output string) string {
 		}
 	}
 
+	// Ultra-compact mode
+	if ultraCompact {
+		return filterNpmTestOutputUltraCompact(passed, failed, skipped, testSuitesPassed, testSuitesFailed, failures)
+	}
+
 	// Build result
 	result = append(result, "📋 npm test Results:")
 	if testSuitesPassed > 0 || testSuitesFailed > 0 {
@@ -237,6 +242,48 @@ func filterNpmTestOutput(output string) string {
 				result = append(result, truncateLine(strings.TrimSpace(line), 100))
 				if len(result) > 20 {
 					result = append(result, fmt.Sprintf("   ... (%d more lines)", len(lines)-20))
+					break
+				}
+			}
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
+
+func filterNpmTestOutputUltraCompact(passed, failed, skipped, suitesPassed, suitesFailed int, failures []string) string {
+	var parts []string
+
+	// Suites first
+	if suitesPassed > 0 || suitesFailed > 0 {
+		parts = append(parts, fmt.Sprintf("S:%d/%d", suitesPassed, suitesPassed+suitesFailed))
+	}
+
+	// Test counts
+	parts = append(parts, fmt.Sprintf("P:%d", passed))
+	if failed > 0 {
+		parts = append(parts, fmt.Sprintf("F:%d", failed))
+	}
+	if skipped > 0 {
+		parts = append(parts, fmt.Sprintf("S:%d", skipped))
+	}
+
+	var result []string
+	result = append(result, strings.Join(parts, " "))
+
+	// Failures (limited to 3)
+	if len(failures) > 0 {
+		for i, f := range failures {
+			if i >= 3 {
+				result = append(result, fmt.Sprintf("... +%d more", len(failures)-3))
+				break
+			}
+			// Extract just the test name
+			lines := strings.Split(f, "\n")
+			for _, l := range lines {
+				l = strings.TrimSpace(l)
+				if l != "" && len(l) > 3 {
+					result = append(result, truncateLine(l, 60))
 					break
 				}
 			}

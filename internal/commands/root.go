@@ -18,6 +18,8 @@ var (
 	dryRun       bool
 	ultraCompact bool
 	skipEnv      bool
+	queryIntent  string // Query intent for query-aware compression
+	llmEnabled   bool   // Enable LLM-based compression
 )
 
 // Version is set via ldflags during build
@@ -71,8 +73,14 @@ func init() {
 		"ultra-compact mode: ASCII icons, inline format")
 	rootCmd.PersistentFlags().BoolVar(&skipEnv, "skip-env", false,
 		"set SKIP_ENV_VALIDATION=1 for child processes")
+	rootCmd.PersistentFlags().StringVar(&queryIntent, "query", "",
+		"query intent for compression (debug/review/deploy/search)")
+	rootCmd.PersistentFlags().BoolVar(&llmEnabled, "llm", false,
+		"enable LLM-based compression (requires Ollama/LM Studio)")
 
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))
+	viper.BindPFlag("llm", rootCmd.PersistentFlags().Lookup("llm"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -173,3 +181,18 @@ func isOperationalCommand(cmd *cobra.Command) bool {
 
 	return true
 }
+
+// GetQueryIntent returns the query intent for query-aware compression
+// Can be set via --query flag or TOKMAN_QUERY environment variable
+func GetQueryIntent() string {
+	if queryIntent != "" {
+		return queryIntent
+	}
+	return os.Getenv("TOKMAN_QUERY")
+}
+
+// IsLLMEnabled returns whether LLM-based compression is enabled
+func IsLLMEnabled() bool {
+	return llmEnabled || os.Getenv("TOKMAN_LLM") == "true"
+}
+

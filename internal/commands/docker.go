@@ -113,6 +113,28 @@ func runDockerPs(args []string) error {
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	count := len(lines)
 
+	// Ultra-compact mode: ASCII-only, inline format
+	if ultraCompact {
+		filtered := fmt.Sprintf("%d containers:", count)
+		for i, line := range lines {
+			if i >= 5 {
+				break
+			}
+			parts := strings.Split(line, "\t")
+			if len(parts) >= 2 {
+				filtered += " " + parts[1] // container name
+			}
+		}
+		if count > 5 {
+			filtered += fmt.Sprintf(" +%d", count-5)
+		}
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(output)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("docker ps", "tokman docker ps", originalTokens, filteredTokens)
+		return err
+	}
+
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("🐳 %d containers:\n", count))
 
@@ -173,6 +195,28 @@ func runDockerImages(args []string) error {
 
 	lines := strings.Split(strings.TrimSpace(output), "\n")
 	count := len(lines)
+
+	// Ultra-compact mode: ASCII-only, inline format
+	if ultraCompact {
+		filtered := fmt.Sprintf("%d images:", count)
+		for i, line := range lines {
+			if i >= 5 {
+				break
+			}
+			parts := strings.Split(line, "\t")
+			if len(parts) >= 1 {
+				filtered += " " + parts[0] // image name
+			}
+		}
+		if count > 5 {
+			filtered += fmt.Sprintf(" +%d", count-5)
+		}
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(output)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("docker images", "tokman docker images", originalTokens, filteredTokens)
+		return err
+	}
 
 	var result strings.Builder
 	result.WriteString(fmt.Sprintf("🐳 %d images\n", count))

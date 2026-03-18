@@ -342,6 +342,11 @@ func parseAheadBehind(s string) (ahead, behind int) {
 
 // formatStatus formats git status for output
 func formatStatus(status *GitStatus) string {
+	// Ultra-compact mode: ASCII-only, inline format
+	if ultraCompact {
+		return formatStatusUltraCompact(status)
+	}
+
 	var buf strings.Builder
 
 	green := color.New(color.FgGreen).SprintFunc()
@@ -410,6 +415,67 @@ func formatStatus(status *GitStatus) string {
 	if len(status.Staged) == 0 && len(status.Modified) == 0 &&
 		len(status.Untracked) == 0 && len(status.Conflicted) == 0 {
 		buf.WriteString(green("\n✓ Clean working tree\n"))
+	}
+
+	return buf.String()
+}
+
+// formatStatusUltraCompact returns ultra-compact ASCII-only output
+func formatStatusUltraCompact(status *GitStatus) string {
+	var parts []string
+
+	// Branch
+	branch := status.Branch
+	if status.Ahead > 0 || status.Behind > 0 {
+		branch += fmt.Sprintf(" [a%d b%d]", status.Ahead, status.Behind)
+	}
+	parts = append(parts, branch)
+
+	// Summary counts
+	if len(status.Staged) > 0 {
+		parts = append(parts, fmt.Sprintf("S:%d", len(status.Staged)))
+	}
+	if len(status.Modified) > 0 {
+		parts = append(parts, fmt.Sprintf("M:%d", len(status.Modified)))
+	}
+	if len(status.Untracked) > 0 {
+		parts = append(parts, fmt.Sprintf("U:%d", len(status.Untracked)))
+	}
+	if len(status.Conflicted) > 0 {
+		parts = append(parts, fmt.Sprintf("C:%d", len(status.Conflicted)))
+	}
+
+	var buf strings.Builder
+	buf.WriteString(strings.Join(parts, " "))
+	buf.WriteString("\n")
+
+	// File list (limited to 10 files total)
+	allFiles := make([]string, 0)
+	for _, f := range status.Staged {
+		allFiles = append(allFiles, fmt.Sprintf("S %s", f.Path))
+	}
+	for _, f := range status.Modified {
+		allFiles = append(allFiles, fmt.Sprintf("M %s", f.Path))
+	}
+	for _, f := range status.Untracked {
+		allFiles = append(allFiles, fmt.Sprintf("? %s", f.Path))
+	}
+	for _, f := range status.Conflicted {
+		allFiles = append(allFiles, fmt.Sprintf("! %s", f.Path))
+	}
+
+	maxFiles := 10
+	for i, f := range allFiles {
+		if i >= maxFiles {
+			buf.WriteString(fmt.Sprintf("... +%d more\n", len(allFiles)-maxFiles))
+			break
+		}
+		buf.WriteString(f + "\n")
+	}
+
+	// Clean state
+	if len(allFiles) == 0 {
+		buf.WriteString("clean\n")
 	}
 
 	return buf.String()

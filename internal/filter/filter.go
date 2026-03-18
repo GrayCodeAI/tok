@@ -41,26 +41,109 @@ type Filter interface {
 
 // Engine combines multiple filters.
 type Engine struct {
-	filters []Filter
-	mode    Mode
+	filters        []Filter
+	mode           Mode
+	queryIntent    string // Query intent for query-aware compression
+	promptTemplate string // Prompt template name for LLM summarization
+}
+
+// EngineConfig holds configuration for the filter engine
+type EngineConfig struct {
+	Mode              Mode
+	QueryIntent       string
+	LLMEnabled        bool
+	MultiFileEnabled  bool
+	PromptTemplate    string // Template name for LLM summarization
 }
 
 // NewEngine creates a new filter engine with all registered filters.
 func NewEngine(mode Mode) *Engine {
+	return NewEngineWithQuery(mode, "")
+}
+
+// NewEngineWithQuery creates a new filter engine with query-aware compression.
+func NewEngineWithQuery(mode Mode, queryIntent string) *Engine {
+	return NewEngineWithConfig(EngineConfig{
+		Mode:        mode,
+		QueryIntent: queryIntent,
+	})
+}
+
+// NewEngineWithConfig creates a filter engine with full configuration options.
+func NewEngineWithConfig(cfg EngineConfig) *Engine {
 	filters := []Filter{
 		NewANSIFilter(),
 		NewCommentFilter(),
 		NewImportFilter(),
 		NewLogAggregator(),
 	}
-	if mode == ModeAggressive {
+	
+	// Add multi-file filter early if enabled (for cross-file optimization)
+	if cfg.MultiFileEnabled {
+		filters = append(filters, NewMultiFileFilter(MultiFileConfig{
+			PreserveBoundaries: true,
+		}))
+	}
+	
+	// Add research-based semantic filters
+	filters = append(filters, 
+		NewSemanticFilter(),     // Semantic pruning - research-based
+		NewPositionAwareFilter(), // Position-bias optimization - reorders for LLM recall
+		NewHierarchicalFilter(),  // Multi-level summarization for large outputs
+	)
+	
+	// Add query-aware filter if intent is provided
+	if cfg.QueryIntent != "" {
+		filters = append(filters, NewQueryAwareFilter(cfg.QueryIntent))
+	}
+	
+	if cfg.Mode == ModeAggressive {
 		filters = append(filters, NewBodyFilter())
 	}
 
 	return &Engine{
-		filters: filters,
-		mode:    mode,
+		filters:        filters,
+		mode:           cfg.Mode,
+		queryIntent:    cfg.QueryIntent,
+		promptTemplate: cfg.PromptTemplate,
 	}
+}
+
+// NewEngineWithLLM creates a filter engine with LLM-aware compression enabled.
+// Falls back to heuristic-based filters if LLM is unavailable.
+func NewEngineWithLLM(mode Mode, queryIntent string, llmEnabled bool) *Engine {
+	return NewEngineWithConfig(EngineConfig{
+		Mode:        mode,
+		QueryIntent: queryIntent,
+		LLMEnabled:  llmEnabled,
+	})
+}
+
+// NewEngineWithLLMAndConfig creates a fully configured engine with LLM support.
+func NewEngineWithLLMAndConfig(cfg EngineConfig) *Engine {
+	engine := NewEngineWithConfig(cfg)
+	
+	if cfg.LLMEnabled {
+		// Insert LLM-aware filter after semantic filter
+		llmFilter := NewLLMAwareFilter(LLMAwareConfig{
+			Threshold:      2000,
+			Enabled:        true,
+			CacheEnabled:   true,
+			PromptTemplate: cfg.PromptTemplate,
+		})
+		
+		// Find position after semantic filter
+		filters := make([]Filter, 0, len(engine.filters)+1)
+		for _, f := range engine.filters {
+			filters = append(filters, f)
+			if f.Name() == "semantic" {
+				filters = append(filters, llmFilter)
+			}
+		}
+		engine.filters = filters
+	}
+	
+	return engine
 }
 
 // Process applies all filters to the input.
