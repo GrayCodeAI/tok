@@ -18,7 +18,7 @@ type Config struct {
 	Export    ExportConfig    `mapstructure:"export"`
 }
 
-// PipelineConfig controls the 10-layer compression pipeline.
+// PipelineConfig controls the 12-layer compression pipeline.
 // Supports contexts up to 2M tokens with streaming processing.
 type PipelineConfig struct {
 	// Context limits
@@ -77,6 +77,13 @@ type PipelineConfig struct {
 	LLMProvider            string `mapstructure:"llm_provider"`             // ollama, lmstudio, openai
 	LLMModel               string `mapstructure:"llm_model"`                // Model name
 	LLMBaseURL             string `mapstructure:"llm_base_url"`             // API endpoint
+	
+	// Attribution Filter (Layer 12) - ProCut-style pruning
+	EnableAttribution      bool    `mapstructure:"enable_attribution"`       // Enable attribution filtering
+	AttributionThreshold   float64 `mapstructure:"attribution_threshold"`    // Importance threshold (0.0-1.0)
+	AttributionPositional  bool    `mapstructure:"attribution_positional"`   // Use positional bias
+	AttributionFrequency   bool    `mapstructure:"attribution_frequency"`    // Use frequency bias
+	AttributionSemantic    bool    `mapstructure:"attribution_semantic"`     // Use semantic preservation
 }
 
 // CommandContext provides metadata about the command being executed.
@@ -224,6 +231,13 @@ func Defaults() *Config {
 			CompactionMaxTokens:     5000,  // Larger summaries for big contexts
 			CompactionStateSnapshot: true,
 			CompactionAutoDetect:    true,
+			
+			// Layer 12: Attribution (ProCut-style pruning)
+			EnableAttribution:     true,
+			AttributionThreshold:  0.25,  // Lower threshold = more pruning
+			AttributionPositional: true,  // Preserve start/end content
+			AttributionFrequency:  true,  // Reduce repeated content
+			AttributionSemantic:   true,  // Preserve keywords, numbers, code
 		},
 		Hooks: HooksConfig{
 			ExcludedCommands: []string{},

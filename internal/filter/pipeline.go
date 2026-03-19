@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// PipelineCoordinator orchestrates the 10-layer compression pipeline.
+// PipelineCoordinator orchestrates the 12-layer compression pipeline.
 // Research-based: Combines the best techniques from 50+ research papers worldwide
 // to achieve maximum token reduction for CLI/Agent output.
 //
@@ -21,6 +21,8 @@ import (
 // Layer 8: Gist Compression (Stanford/Berkeley 2023) - 20x+
 // Layer 9: Hierarchical Summary (AutoCompressor, Princeton/MIT 2023) - Extreme
 // Layer 10: Budget Enforcement (Industry standard) - Guaranteed
+// Layer 11: Compaction Layer (Semantic compression) - Auto
+// Layer 12: Attribution Filter (ProCut, LinkedIn 2025) - 78%
 type PipelineCoordinator struct {
 	config PipelineConfig
 	
@@ -60,6 +62,9 @@ type PipelineCoordinator struct {
 	
 	// Layer 11: Compaction Layer (Semantic compression)
 	compactionLayer *CompactionLayer
+	
+	// Layer 12: Attribution Filter (ProCut-style pruning)
+	attributionFilter *AttributionFilter
 }
 
 // PipelineConfig holds configuration for the compression pipeline
@@ -105,6 +110,10 @@ type PipelineConfig struct {
 	CompactionMaxTokens     int
 	CompactionStateSnapshot bool
 	CompactionAutoDetect    bool
+	
+	// Layer 12: Attribution Filter (ProCut-style pruning)
+	EnableAttribution       bool
+	AttributionThreshold    float64
 }
 
 // NewPipelineCoordinator creates a new 10-layer pipeline coordinator.
@@ -213,6 +222,14 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		p.compactionLayer = NewCompactionLayer(compactionCfg)
 	}
 	
+	// Layer 12: Attribution Filter (ProCut-style pruning)
+	if cfg.EnableAttribution {
+		p.attributionFilter = NewAttributionFilter()
+		if cfg.AttributionThreshold > 0 {
+			p.attributionFilter.config.ImportanceThreshold = cfg.AttributionThreshold
+		}
+	}
+	
 	return p
 }
 
@@ -278,6 +295,11 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	// Layer 11: Compaction Layer (Semantic compression)
 	if p.compactionLayer != nil {
 		output = p.processLayer11(output, stats)
+	}
+	
+	// Layer 12: Attribution Filter (ProCut-style pruning)
+	if p.attributionFilter != nil {
+		output = p.processLayer12(output, stats)
 	}
 	
 	// Layer 10: Budget Enforcement (Strict token limits)
@@ -369,6 +391,13 @@ func (p *PipelineCoordinator) processLayer11(input string, stats *PipelineStats)
 	return output
 }
 
+// Layer 12: Attribution (ProCut-style pruning)
+func (p *PipelineCoordinator) processLayer12(input string, stats *PipelineStats) string {
+	output, saved := p.attributionFilter.Apply(input, p.config.Mode)
+	stats.LayerStats["12_attribution"] = LayerStat{TokensSaved: saved}
+	return output
+}
+
 // Layer 10: Budget Enforcement
 func (p *PipelineCoordinator) processLayer10(input string, stats *PipelineStats) string {
 	output := input
@@ -413,7 +442,7 @@ func (s *PipelineStats) String() string {
 	var sb strings.Builder
 	
 	sb.WriteString("╔════════════════════════════════════════════════════╗\n")
-	sb.WriteString("║          Tokman 10-Layer Compression Stats         ║\n")
+	sb.WriteString("║          Tokman 12-Layer Compression Stats         ║\n")
 	sb.WriteString("╠════════════════════════════════════════════════════╣\n")
 	sb.WriteString(fmt.Sprintf("║ Original:  %6d tokens                         ║\n", s.OriginalTokens))
 	sb.WriteString(fmt.Sprintf("║ Final:     %6d tokens                         ║\n", s.FinalTokens))
@@ -425,7 +454,7 @@ func (s *PipelineStats) String() string {
 	layerOrder := []string{
 		"1_entropy", "2_perplexity", "3_goal_driven", "4_ast_preserve",
 		"5_contrastive", "6_ngram", "7_evaluator", "8_gist", "9_hierarchical",
-		"neural", "10_session", "10_budget",
+		"neural", "11_compaction", "12_attribution", "10_session", "10_budget",
 	}
 	
 	for _, layer := range layerOrder {
