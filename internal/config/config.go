@@ -11,10 +11,73 @@ import (
 type Config struct {
 	Tracking  TrackingConfig  `mapstructure:"tracking"`
 	Filter    FilterConfig    `mapstructure:"filter"`
+	Pipeline  PipelineConfig  `mapstructure:"pipeline"`
 	Hooks     HooksConfig     `mapstructure:"hooks"`
 	Dashboard DashboardConfig `mapstructure:"dashboard"`
 	Alerts    AlertsConfig    `mapstructure:"alerts"`
 	Export    ExportConfig    `mapstructure:"export"`
+}
+
+// PipelineConfig controls the 10-layer compression pipeline.
+// Supports contexts up to 2M tokens with streaming processing.
+type PipelineConfig struct {
+	// Context limits
+	MaxContextTokens int `mapstructure:"max_context_tokens"` // Max input context (default: 2M)
+	ChunkSize        int `mapstructure:"chunk_size"`         // Processing chunk size for large inputs
+	
+	// Layer enable/disable
+	EnableEntropy     bool `mapstructure:"enable_entropy"`
+	EnablePerplexity  bool `mapstructure:"enable_perplexity"`
+	EnableGoalDriven  bool `mapstructure:"enable_goal_driven"`
+	EnableAST         bool `mapstructure:"enable_ast"`
+	EnableContrastive bool `mapstructure:"enable_contrastive"`
+	EnableNgram       bool `mapstructure:"enable_ngram"`
+	EnableEvaluator   bool `mapstructure:"enable_evaluator"`
+	EnableGist        bool `mapstructure:"enable_gist"`
+	EnableHierarchical bool `mapstructure:"enable_hierarchical"`
+	EnableBudget      bool `mapstructure:"enable_budget"`
+	
+	// Layer thresholds (tunable)
+	EntropyThreshold      float64 `mapstructure:"entropy_threshold"`       // Layer 1: 0.0-1.0 (default: 0.3)
+	PerplexityThreshold   float64 `mapstructure:"perplexity_threshold"`    // Layer 2: 0.0-1.0 (default: 0.5)
+	GoalDrivenThreshold   float64 `mapstructure:"goal_driven_threshold"`   // Layer 3: 0.0-1.0 (default: 0.4)
+	ASTPreserveThreshold  float64 `mapstructure:"ast_preserve_threshold"`  // Layer 4: 0.0-1.0 (default: 0.6)
+	ContrastiveThreshold  float64 `mapstructure:"contrastive_threshold"`   // Layer 5: 0.0-1.0 (default: 0.5)
+	NgramMinOccurrences   int     `mapstructure:"ngram_min_occurrences"`   // Layer 6: min repeats (default: 3)
+	EvaluatorThreshold    float64 `mapstructure:"evaluator_threshold"`     // Layer 7: 0.0-1.0 (default: 0.4)
+	GistMinChunkSize      int     `mapstructure:"gist_min_chunk_size"`     // Layer 8: chars (default: 100)
+	HierarchicalMaxLevels int     `mapstructure:"hierarchical_max_levels"` // Layer 9: depth (default: 3)
+	HierarchicalRatio     float64 `mapstructure:"hierarchical_ratio"`      // Layer 9: 0.0-1.0 (default: 0.3)
+	
+	// Budget enforcement
+	DefaultBudget    int  `mapstructure:"default_budget"`     // Default token budget (0 = unlimited)
+	HardBudgetLimit  bool `mapstructure:"hard_budget_limit"`  // Strict enforcement
+	BudgetOverflowFile string `mapstructure:"budget_overflow_file"` // File to save overflow content
+	
+	// Resilience
+	TeeOnFailure    bool   `mapstructure:"tee_on_failure"`    // Save raw output on failure
+	TeeDir          string `mapstructure:"tee_dir"`           // Directory for tee files
+	FailSafeMode    bool   `mapstructure:"failsafe_mode"`     // Return original on corruption
+	ValidateOutput  bool   `mapstructure:"validate_output"`   // Check output validity
+	ShortCircuitBudget bool `mapstructure:"short_circuit_budget"` // Skip layers if budget met
+	
+	// Performance
+	ParallelLayers  bool `mapstructure:"parallel_layers"`   // Run independent layers in parallel
+	CacheEnabled    bool `mapstructure:"cache_enabled"`     // Cache compression results
+	CacheMaxSize    int  `mapstructure:"cache_max_size"`    // Max cache entries
+	StreamThreshold int  `mapstructure:"stream_threshold"`  // Stream if input > N tokens
+}
+
+// CommandContext provides metadata about the command being executed.
+// Used for intelligent filtering decisions.
+type CommandContext struct {
+	Command    string `mapstructure:"command"`     // "git", "npm", "cargo", etc.
+	Subcommand string `mapstructure:"subcommand"`  // "status", "test", "build"
+	ExitCode   int    `mapstructure:"exit_code"`   // Non-zero = likely has errors
+	Intent     string `mapstructure:"intent"`      // "debug", "review", "deploy", "search"
+	IsTest     bool   `mapstructure:"is_test"`     // Test output detection
+	IsBuild    bool   `mapstructure:"is_build"`    // Build output detection
+	IsError    bool   `mapstructure:"is_error"`    // Error output detection
 }
 
 // TrackingConfig controls token tracking behavior.
@@ -97,6 +160,51 @@ func Defaults() *Config {
 			},
 			Mode:     "minimal",
 			MaxWidth: 0,
+		},
+		Pipeline: PipelineConfig{
+			// Context limits - supports up to 2M tokens
+			MaxContextTokens: 2000000, // 2M tokens max
+			ChunkSize:        100000,  // 100K tokens per chunk
+			
+			// All layers enabled by default
+			EnableEntropy:      true,
+			EnablePerplexity:   true,
+			EnableGoalDriven:   true,
+			EnableAST:          true,
+			EnableContrastive:  true,
+			EnableNgram:        true,
+			EnableEvaluator:    true,
+			EnableGist:         true,
+			EnableHierarchical: true,
+			EnableBudget:       true,
+			
+			// Layer thresholds (research-backed defaults)
+			EntropyThreshold:      0.3,
+			PerplexityThreshold:   0.5,
+			GoalDrivenThreshold:   0.4,
+			ASTPreserveThreshold:  0.6,
+			ContrastiveThreshold:  0.5,
+			NgramMinOccurrences:   3,
+			EvaluatorThreshold:    0.4,
+			GistMinChunkSize:      100,
+			HierarchicalMaxLevels: 3,
+			HierarchicalRatio:     0.3,
+			
+			// Budget
+			DefaultBudget:   0,    // Unlimited by default
+			HardBudgetLimit: true, // Strict enforcement when budget set
+			
+			// Resilience
+			TeeOnFailure:     true,
+			FailSafeMode:     true,
+			ValidateOutput:   true,
+			ShortCircuitBudget: true,
+			
+			// Performance
+			ParallelLayers:  false, // Sequential for deterministic output
+			CacheEnabled:    true,
+			CacheMaxSize:    1000,
+			StreamThreshold: 500000, // Stream if > 500K tokens
 		},
 		Hooks: HooksConfig{
 			ExcludedCommands: []string{},
