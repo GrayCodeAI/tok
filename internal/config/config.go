@@ -216,6 +216,14 @@ func Defaults() *Config {
 			CacheEnabled:    true,
 			CacheMaxSize:    1000,
 			StreamThreshold: 500000, // Stream if > 500K tokens
+			
+			// Layer 11: Compaction (enabled by default for automatic chat compression)
+			EnableCompaction:        true,
+			CompactionThreshold:     2000,
+			CompactionPreserveTurns: 5,
+			CompactionMaxTokens:     500,
+			CompactionStateSnapshot: true,
+			CompactionAutoDetect:    true,
 		},
 		Hooks: HooksConfig{
 			ExcludedCommands: []string{},
