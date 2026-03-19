@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-// PipelineCoordinator orchestrates the 13-layer compression pipeline.
+// PipelineCoordinator orchestrates the 14-layer compression pipeline.
 // Research-based: Combines the best techniques from 50+ research papers worldwide
 // to achieve maximum token reduction for CLI/Agent output.
 //
@@ -24,6 +24,7 @@ import (
 // Layer 11: Compaction Layer (Semantic compression) - Auto
 // Layer 12: Attribution Filter (ProCut, LinkedIn 2025) - 78%
 // Layer 13: H2O Filter (Heavy-Hitter Oracle, NeurIPS 2023) - 30x+
+// Layer 14: Attention Sink Filter (StreamingLLM, 2023) - Infinite context stability
 type PipelineCoordinator struct {
 	config PipelineConfig
 	
@@ -69,6 +70,9 @@ type PipelineCoordinator struct {
 	
 	// Layer 13: H2O Filter (Heavy-Hitter Oracle)
 	h2oFilter *H2OFilter
+	
+	// Layer 14: Attention Sink Filter (StreamingLLM-style)
+	attentionSinkFilter *AttentionSinkFilter
 }
 
 // PipelineConfig holds configuration for the compression pipeline
@@ -124,6 +128,11 @@ type PipelineConfig struct {
 	H2OSinkSize        int
 	H2ORecentSize      int
 	H2OHeavyHitterSize int
+	
+	// Layer 14: Attention Sink Filter (StreamingLLM-style)
+	EnableAttentionSink   bool
+	AttentionSinkCount    int
+	AttentionRecentCount  int
 }
 
 // NewPipelineCoordinator creates a new 10-layer pipeline coordinator.
@@ -254,6 +263,17 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		}
 	}
 	
+	// Layer 14: Attention Sink Filter (StreamingLLM-style)
+	if cfg.EnableAttentionSink {
+		p.attentionSinkFilter = NewAttentionSinkFilter()
+		if cfg.AttentionSinkCount > 0 {
+			p.attentionSinkFilter.config.SinkTokenCount = cfg.AttentionSinkCount
+		}
+		if cfg.AttentionRecentCount > 0 {
+			p.attentionSinkFilter.config.RecentTokenCount = cfg.AttentionRecentCount
+		}
+	}
+	
 	return p
 }
 
@@ -329,6 +349,11 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	// Layer 13: H2O Filter (Heavy-Hitter Oracle)
 	if p.h2oFilter != nil {
 		output = p.processLayer13(output, stats)
+	}
+	
+	// Layer 14: Attention Sink Filter (StreamingLLM-style)
+	if p.attentionSinkFilter != nil {
+		output = p.processLayer14(output, stats)
 	}
 	
 	// Layer 10: Budget Enforcement (Strict token limits)
@@ -434,6 +459,13 @@ func (p *PipelineCoordinator) processLayer13(input string, stats *PipelineStats)
 	return output
 }
 
+// Layer 14: Attention Sink (StreamingLLM-style)
+func (p *PipelineCoordinator) processLayer14(input string, stats *PipelineStats) string {
+	output, saved := p.attentionSinkFilter.Apply(input, p.config.Mode)
+	stats.LayerStats["14_attention_sink"] = LayerStat{TokensSaved: saved}
+	return output
+}
+
 // Layer 10: Budget Enforcement
 func (p *PipelineCoordinator) processLayer10(input string, stats *PipelineStats) string {
 	output := input
@@ -478,7 +510,7 @@ func (s *PipelineStats) String() string {
 	var sb strings.Builder
 	
 	sb.WriteString("╔════════════════════════════════════════════════════╗\n")
-	sb.WriteString("║          Tokman 13-Layer Compression Stats         ║\n")
+	sb.WriteString("║          Tokman 14-Layer Compression Stats         ║\n")
 	sb.WriteString("╠════════════════════════════════════════════════════╣\n")
 	sb.WriteString(fmt.Sprintf("║ Original:  %6d tokens                         ║\n", s.OriginalTokens))
 	sb.WriteString(fmt.Sprintf("║ Final:     %6d tokens                         ║\n", s.FinalTokens))

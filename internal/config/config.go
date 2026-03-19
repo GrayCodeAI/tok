@@ -90,6 +90,11 @@ type PipelineConfig struct {
 	H2OSinkSize        int  `mapstructure:"h2o_sink_size"`         // Attention sink tokens to preserve
 	H2ORecentSize      int  `mapstructure:"h2o_recent_size"`       // Recent tokens to preserve
 	H2OHeavyHitterSize int  `mapstructure:"h2o_heavy_hitter_size"` // Heavy hitter tokens to preserve
+	
+	// Attention Sink Filter (Layer 14) - StreamingLLM-style
+	EnableAttentionSink  bool `mapstructure:"enable_attention_sink"`   // Enable attention sink filtering
+	AttentionSinkCount   int  `mapstructure:"attention_sink_count"`    // Initial tokens to preserve as sinks
+	AttentionRecentCount int  `mapstructure:"attention_recent_count"`  // Recent lines to preserve
 }
 
 // CommandContext provides metadata about the command being executed.
@@ -250,6 +255,11 @@ func Defaults() *Config {
 			H2OSinkSize:        4,   // First 4 tokens are attention sinks
 			H2ORecentSize:      20,  // Keep last 20 tokens
 			H2OHeavyHitterSize: 40,  // Top 40 heavy hitters
+			
+			// Layer 14: Attention Sink (StreamingLLM-style)
+			EnableAttentionSink:  true,
+			AttentionSinkCount:   4,   // First 4 lines are attention sinks
+			AttentionRecentCount: 8,   // Keep last 8 lines in rolling cache
 		},
 		Hooks: HooksConfig{
 			ExcludedCommands: []string{},

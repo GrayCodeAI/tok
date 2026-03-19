@@ -229,6 +229,11 @@ func (c *CompactionLayer) Apply(input string, mode Mode) (string, int) {
 	// Parse turns from input
 	turns := c.parseTurns(input)
 	
+	// If no turns detected, this isn't conversation content - return unchanged
+	if len(turns) == 0 {
+		return input, 0
+	}
+	
 	// Create state snapshot
 	snapshot := c.createSnapshot(turns, input)
 	
@@ -241,6 +246,11 @@ func (c *CompactionLayer) Apply(input string, mode Mode) (string, int) {
 	output := c.snapshotToString(snapshot)
 	finalTokens := EstimateTokens(output)
 	savedTokens := originalTokens - finalTokens
+	
+	// Return original if compaction produced empty or invalid output
+	if len(output) == 0 || finalTokens == 0 {
+		return input, 0
+	}
 	
 	// Return original if compaction didn't save tokens
 	if savedTokens <= 0 {
