@@ -219,9 +219,9 @@ func Defaults() *Config {
 			
 			// Layer 11: Compaction (enabled by default for automatic chat compression)
 			EnableCompaction:        true,
-			CompactionThreshold:     2000,
-			CompactionPreserveTurns: 5,
-			CompactionMaxTokens:     500,
+			CompactionThreshold:     500,   // Trigger early for better compression
+			CompactionPreserveTurns: 10,    // Keep more recent turns
+			CompactionMaxTokens:     5000,  // Larger summaries for big contexts
 			CompactionStateSnapshot: true,
 			CompactionAutoDetect:    true,
 		},

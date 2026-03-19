@@ -145,12 +145,12 @@ func init() {
 	// Compaction flags (Layer 11 - AdaL-style semantic compression)
 	rootCmd.PersistentFlags().BoolVar(&compactionEnabled, "compaction", true,
 		"enable AdaL-style semantic compaction for chat/conversation content (default: true)")
-	rootCmd.PersistentFlags().IntVar(&compactionThreshold, "compaction-threshold", 2000,
-		"minimum tokens to trigger compaction")
-	rootCmd.PersistentFlags().IntVar(&compactionPreserve, "compaction-preserve", 5,
-		"recent conversation turns to preserve verbatim")
-	rootCmd.PersistentFlags().IntVar(&compactionMaxTokens, "compaction-max-tokens", 500,
-		"maximum tokens for compaction summary")
+	rootCmd.PersistentFlags().IntVar(&compactionThreshold, "compaction-threshold", 500,
+		"minimum tokens to trigger compaction (default: 500)")
+	rootCmd.PersistentFlags().IntVar(&compactionPreserve, "compaction-preserve", 10,
+		"recent conversation turns to preserve verbatim (default: 10)")
+	rootCmd.PersistentFlags().IntVar(&compactionMaxTokens, "compaction-max-tokens", 5000,
+		"maximum tokens for compaction summary (default: 5000)")
 	rootCmd.PersistentFlags().BoolVar(&compactionSnapshot, "compaction-snapshot", true,
 		"use state snapshot format (4-section XML)")
 	rootCmd.PersistentFlags().BoolVar(&compactionAutoDetect, "compaction-auto-detect", true,
@@ -306,7 +306,7 @@ func GetCompactionThreshold() int {
 	if compactionThreshold > 0 {
 		return compactionThreshold
 	}
-	return 2000
+	return 500 // Default for 1M-2M context support
 }
 
 // GetCompactionPreserveTurns returns the number of turns to preserve
@@ -314,7 +314,7 @@ func GetCompactionPreserveTurns() int {
 	if compactionPreserve > 0 {
 		return compactionPreserve
 	}
-	return 5
+	return 10 // Keep more turns for large contexts
 }
 
 // GetCompactionMaxTokens returns the max summary tokens
@@ -322,7 +322,7 @@ func GetCompactionMaxTokens() int {
 	if compactionMaxTokens > 0 {
 		return compactionMaxTokens
 	}
-	return 500
+	return 5000 // Larger summaries for 1M-2M context
 }
 
 // IsCompactionSnapshotEnabled returns whether state snapshot format is enabled
