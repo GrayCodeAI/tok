@@ -84,9 +84,8 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 		return output, true, err
 	}
 
-	// Apply TOML filter
-	engine := toml.NewTOMLFilterEngine(config)
-	filtered, _ := engine.Apply(output, filter.ModeMinimal)
+	// Apply multi-layer pipeline compression
+	filtered := h.applyPipeline(output, config)
 
 	// Record tracking
 	if h.tracker != nil {
@@ -230,6 +229,43 @@ func getTeeDir() string {
 func getProjectPath() string {
 	path, _ := os.Getwd()
 	return path
+}
+
+// applyPipeline applies the multi-layer compression pipeline
+func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.FilterConfig) string {
+	// Build pipeline configuration from CLI flags
+	mode := filter.ModeMinimal
+	if IsUltraCompact() {
+		mode = filter.ModeAggressive
+	}
+	
+	cfg := filter.PipelineConfig{
+		Mode:            mode,
+		QueryIntent:     GetQueryIntent(),
+		Budget:          GetTokenBudget(),
+		LLMEnabled:      IsLLMEnabled(),
+		SessionTracking: true,
+		NgramEnabled:    true,
+		MultiFileEnabled: true,
+	}
+	
+	// Create and run the pipeline
+	pipeline := filter.NewPipelineCoordinator(cfg)
+	filtered, stats := pipeline.Process(output)
+	
+	// Log compression stats in verbose mode
+	if IsVerbose() && stats.TotalSaved > 0 {
+		fmt.Fprintf(os.Stderr, "[pipeline: %d -> %d tokens, %.1f%% saved]\n",
+			stats.OriginalTokens, stats.FinalTokens, stats.ReductionPercent)
+	}
+	
+	// If TOML has specific rules, apply them as a final pass
+	if tomlConfig != nil && (len(tomlConfig.Replace) > 0 || len(tomlConfig.MatchOutput) > 0 || len(tomlConfig.StripLinesMatching) > 0) {
+		engine := toml.NewTOMLFilterEngine(tomlConfig)
+		filtered, _ = engine.Apply(filtered, mode)
+	}
+	
+	return filtered
 }
 
 // Global fallback handler

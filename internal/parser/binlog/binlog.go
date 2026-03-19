@@ -449,7 +449,7 @@ func readOptionalString(reader *binReader, parsed *ParsedBinlog) (string, error)
 	}
 	
 	// Check if it's a deduplicated string reference
-	if strLen < len(parsed.stringRecords) && strLen < 100 {
+	if int(strLen) < len(parsed.stringRecords) && strLen < 100 {
 		// Likely a reference to the string table
 		// For now, read the actual string
 	}

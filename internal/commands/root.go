@@ -21,6 +21,7 @@ var (
 	skipEnv      bool
 	queryIntent  string // Query intent for query-aware compression
 	llmEnabled   bool   // Enable LLM-based compression
+	tokenBudget  int    // Token budget for compression (0 = unlimited)
 	fallbackArgs []string // Args for fallback handler
 )
 
@@ -130,10 +131,13 @@ func init() {
 		"query intent for compression (debug/review/deploy/search)")
 	rootCmd.PersistentFlags().BoolVar(&llmEnabled, "llm", false,
 		"enable LLM-based compression (requires Ollama/LM Studio)")
+	rootCmd.PersistentFlags().IntVar(&tokenBudget, "budget", 0,
+		"token budget for output (0 = unlimited, e.g., --budget 2000)")
 
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))
 	viper.BindPFlag("llm", rootCmd.PersistentFlags().Lookup("llm"))
+	viper.BindPFlag("budget", rootCmd.PersistentFlags().Lookup("budget"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -247,5 +251,20 @@ func GetQueryIntent() string {
 // IsLLMEnabled returns whether LLM-based compression is enabled
 func IsLLMEnabled() bool {
 	return llmEnabled || os.Getenv("TOKMAN_LLM") == "true"
+}
+
+// GetTokenBudget returns the token budget for compression
+// Can be set via --budget flag or TOKMAN_BUDGET environment variable
+func GetTokenBudget() int {
+	if tokenBudget > 0 {
+		return tokenBudget
+	}
+	envBudget := os.Getenv("TOKMAN_BUDGET")
+	if envBudget != "" {
+		var budget int
+		fmt.Sscanf(envBudget, "%d", &budget)
+		return budget
+	}
+	return 0
 }
 
