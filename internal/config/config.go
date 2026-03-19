@@ -67,12 +67,12 @@ type PipelineConfig struct {
 	CacheMaxSize    int  `mapstructure:"cache_max_size"`    // Max cache entries
 	StreamThreshold int  `mapstructure:"stream_threshold"`  // Stream if input > N tokens
 	
-	// LLM Compaction (Layer 11) - AdaL-style semantic compression
+	// LLM Compaction (Layer 11) - Semantic compression
 	EnableCompaction       bool   `mapstructure:"enable_compaction"`        // Enable LLM-based compaction
 	CompactionThreshold    int    `mapstructure:"compaction_threshold"`     // Minimum tokens to trigger
 	CompactionPreserveTurns int   `mapstructure:"compaction_preserve_turns"` // Recent turns to keep verbatim
 	CompactionMaxTokens    int    `mapstructure:"compaction_max_tokens"`    // Max summary tokens
-	CompactionStateSnapshot bool   `mapstructure:"compaction_state_snapshot"` // Use AdaL-style state snapshot format
+	CompactionStateSnapshot bool   `mapstructure:"compaction_state_snapshot"` // Use state snapshot format
 	CompactionAutoDetect   bool   `mapstructure:"compaction_auto_detect"`   // Auto-detect conversation content
 	LLMProvider            string `mapstructure:"llm_provider"`             // ollama, lmstudio, openai
 	LLMModel               string `mapstructure:"llm_model"`                // Model name

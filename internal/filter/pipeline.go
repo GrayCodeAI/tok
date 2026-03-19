@@ -58,7 +58,7 @@ type PipelineCoordinator struct {
 	// Optional: Neural Layer (when LLM enabled)
 	llmFilter *LLMAwareFilter
 	
-	// Layer 11: Compaction Layer (AdaL-style semantic compression)
+	// Layer 11: Compaction Layer (Semantic compression)
 	compactionLayer *CompactionLayer
 }
 
@@ -98,7 +98,7 @@ type PipelineConfig struct {
 	EnableGist        bool
 	EnableHierarchical bool
 	
-	// Layer 11: Compaction (AdaL-style semantic compression)
+	// Layer 11: Compaction (Semantic compression)
 	EnableCompaction        bool
 	CompactionThreshold     int
 	CompactionPreserveTurns int
@@ -190,7 +190,7 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		})
 	}
 	
-	// Layer 11: Compaction Layer (AdaL-style semantic compression)
+	// Layer 11: Compaction Layer (Semantic compression)
 	if cfg.EnableCompaction {
 		compactionCfg := CompactionConfig{
 			Enabled:              true,
@@ -275,7 +275,7 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		output = p.processLayerNeural(output, stats)
 	}
 	
-	// Layer 11: Compaction Layer (AdaL-style semantic compression)
+	// Layer 11: Compaction Layer (Semantic compression)
 	if p.compactionLayer != nil {
 		output = p.processLayer11(output, stats)
 	}
@@ -362,7 +362,7 @@ func (p *PipelineCoordinator) processLayerNeural(input string, stats *PipelineSt
 	return output
 }
 
-// Layer 11: Compaction (AdaL-style semantic compression)
+// Layer 11: Compaction (Semantic compression)
 func (p *PipelineCoordinator) processLayer11(input string, stats *PipelineStats) string {
 	output, saved := p.compactionLayer.Apply(input, p.config.Mode)
 	stats.LayerStats["11_compaction"] = LayerStat{TokensSaved: saved}

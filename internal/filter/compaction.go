@@ -13,15 +13,15 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/llm"
 )
 
-// CompactionLayer provides AdaL-style semantic compression.
-// It creates state snapshots with 4 sections similar to AdaL CLI's auto-compaction:
+// CompactionLayer provides semantic compression for chat/conversation content.
+// It creates state snapshots with 4 sections:
 //
 // 1. session_history: user queries + activity log (what was done)
 // 2. current_state: focus + next_action (what's active now)
 // 3. context: critical + working knowledge (what to remember)
 // 4. pending_plan: future milestones (what's next)
 //
-// Research basis: "MemGPT" (UC Berkeley, 2023) and AdaL CLI's production implementation
+// Research basis: "MemGPT" (UC Berkeley, 2023) semantic compression
 // achieves 98%+ compression ratios while preserving semantic meaning.
 //
 // This layer is designed for:
@@ -66,7 +66,7 @@ type CompactionConfig struct {
 	// Detect content type automatically
 	AutoDetect bool
 	
-	// Create state snapshot format (AdaL-style)
+	// Create state snapshot format (4-section XML)
 	StateSnapshotFormat bool
 	
 	// Extract key-value pairs from content
@@ -104,7 +104,7 @@ type CompactionResult struct {
 	Timestamp      time.Time
 }
 
-// StateSnapshot represents AdaL-style compaction output
+// StateSnapshot represents semantic compaction output
 type StateSnapshot struct {
 	SessionHistory SessionHistory `json:"session_history"`
 	CurrentState   CurrentState   `json:"current_state"`

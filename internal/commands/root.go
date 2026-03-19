@@ -142,9 +142,9 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&tokenBudget, "budget", 0,
 		"token budget for output (0 = unlimited, e.g., --budget 2000)")
 	
-	// Compaction flags (Layer 11 - AdaL-style semantic compression)
+	// Compaction flags (Layer 11 - Semantic compression)
 	rootCmd.PersistentFlags().BoolVar(&compactionEnabled, "compaction", true,
-		"enable AdaL-style semantic compaction for chat/conversation content (default: true)")
+		"enable semantic compaction for chat/conversation content (default: true)")
 	rootCmd.PersistentFlags().IntVar(&compactionThreshold, "compaction-threshold", 500,
 		"minimum tokens to trigger compaction (default: 500)")
 	rootCmd.PersistentFlags().IntVar(&compactionPreserve, "compaction-preserve", 10,
