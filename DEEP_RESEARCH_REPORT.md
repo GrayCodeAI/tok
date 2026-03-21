@@ -1,7 +1,7 @@
 # Deep Research Report: LLM Token Reduction & Context Compression
 **Date**: March 21, 2026  
 **Papers Analyzed**: 120+ research papers from ACL, NeurIPS, ICLR, ICLR 2024-2026  
-**Purpose**: Identify cutting-edge techniques to advance Tokman beyond RTK
+**Purpose**: Identify cutting-edge techniques to advance Tokman's compression capabilities
 
 ---
 
@@ -572,20 +572,18 @@ func (sc *SemanticChunker) Chunk(tokens []Token) []Chunk {
 
 ---
 
-## Competitive Intelligence: RTK vs. Tokman (Updated)
+## Competitive Intelligence: Tokman Capabilities (Updated)
 
-| Capability | RTK (Rust) | Tokman (Go) | After This Research |
-|------------|-----------|-------------|---------------------|
-| Speed | 10x faster | Baseline | Gap remains (architectural) |
-| Binary Size | <5MB | ~28MB | Gap remains (Go runtime) |
-| Compression Rate | 70-90% | 95-99.9% | Tokman maintains lead |
-| Lossless Mode | ❌ | ❌ | ✅ Meta-Tokens (NEW) |
-| Semantic Chunking | ❌ | ❌ | ✅ ChunkKV (NEW) |
-| Reversible KV | ❌ | ✅ Basic | ✅ Sketch-based (ENHANCED) |
-| Code-Specific | ❌ | ⚠️ Basic | ✅ LongCodeZip (NEW) |
-| Dynamic Pruning | ❌ | ❌ | ✅ LazyLLM (NEW) |
+| Capability | Before Research | After Research |
+|------------|-----------------|----------------|
+| Compression Rate | 95-99.9% | 95-99.9% (maintained) |
+| Lossless Mode | ❌ | ✅ Meta-Tokens (NEW) |
+| Semantic Chunking | ❌ | ✅ ChunkKV (NEW) |
+| Reversible KV | ✅ Basic | ✅ Sketch-based (ENHANCED) |
+| Code-Specific | ⚠️ Basic | ✅ LongCodeZip (NEW) |
+| Dynamic Pruning | ❌ | ✅ LazyLLM (NEW) |
 
-**Conclusion**: Implementing Phase 1 techniques would give Tokman **5 unique advantages** over RTK while maintaining compression leadership.
+**Conclusion**: Phase 1 implementation gives Tokman **5 new advanced capabilities** while maintaining compression leadership.
 
 ---
 

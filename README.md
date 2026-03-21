@@ -55,7 +55,7 @@ TokMan implements the world's most advanced token reduction system based on 120+
 | 19 | Semantic Anchor | Attention Gradient Detection | Context preservation |
 | 20 | Agent Memory | Knowledge Graph Extraction | Agent-optimized |
 
-**New Layers (L15-L20)** close critical gaps identified in RTK comparison:
+**New Layers (L15-L20)** provide advanced compression capabilities:
 - **L15 Meta-Token**: LZ77-style lossless compression for repeated token sequences
 - **L16 Semantic Chunk**: Dynamic boundary detection based on semantic shifts
 - **L17 Sketch Store**: On-demand reconstruction of pruned content (90% memory reduction)

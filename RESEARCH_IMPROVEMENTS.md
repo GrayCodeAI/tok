@@ -9,16 +9,14 @@
 |------|------|-------|----------|-------------------|
 | **claw-compactor** | Python | 1,693 | 14-stage pipeline | Reversible, AST-aware, content routing |
 | **tokf** | Rust | 125 | TOML filters | Rust speed, 157 releases, Claude Code native |
-| **RTK** | Rust | ~500 | CLI proxy | 70-90% reduction, hook-based |
 | **LLMLingua** | Python | 5,900 | LLM-based | 20x compression, budget controller |
 | **kompact** | Python | 2 | Proxy | 40-70%, zero code changes |
-| **tokman** | Go | ~100 | 14-layer pipeline | Hook-based, TOML filters, tracking |
+| **tokman** | Go | ~100 | 22-layer pipeline | Hook-based, TOML filters, tracking, SIMD |
 
 ### What Competitors Do Better
 1. **claw-compactor**: Reversible compression, immutable data flow, stage gates
 2. **tokf**: Rust speed (10x faster than Go), git hook automation, task runner wrapping
-3. **RTK**: Minimal binary, hook-based transparency, zero config
-4. **LLMLingua**: Research-grade, 20x compression with LLM assistance
+3. **LLMLingua**: Research-grade, 20x compression with LLM assistance
 
 ### What Tokman Does Better
 1. **Tracking/analytics**: SQLite-based, ROI dashboard, cost tracking
@@ -89,8 +87,8 @@
 | # | Improvement | Source | Impact | Effort |
 |---|-------------|--------|--------|--------|
 | 1 | **Reversible compression** | claw-compactor | Users can undo any compression | Medium |
-| 2 | **Git hook auto-install** | tokf, RTK | Zero-config Claude Code integration | Low |
-| 3 | **Rust core or WASM** | tokf, RTK | 10x faster than Go binary | High |
+| 2 | **Git hook auto-install** | tokf | Zero-config Claude Code integration | Low |
+| 3 | **Rust core or WASM** | tokf | 10x faster than Go binary | High |
 | 4 | **Task runner wrapping** | tokf | Wrap `make`, `just`, `mise` transparently | Medium |
 | 5 | **Content-type routing** | claw-compactor | Route JSON→JSON parser, code→AST, logs→dedup | Medium |
 | 6 | **Immutable pipeline state** | claw-compactor | Thread-safe, cacheable, debuggable | Medium |
@@ -123,11 +121,11 @@
 
 | # | Improvement | Source | Impact | Effort |
 |---|-------------|--------|--------|--------|
-| 26 | **Rust rewrite of hot path** | tokf, RTK | 5-10x speedup | Very High |
+| 26 | **Rust rewrite of hot path** | tokf | 5-10x speedup | Very High |
 | 27 | **WASM plugin system** | claw-compactor | Cross-platform, sandboxed filters | High |
 | 28 | **Parallel layer execution** | claw-compactor | Independent layers run concurrently | Medium |
 | 29 | **Streaming chunk processing** | claw-compactor | Process >1MB outputs without OOM | Medium |
-| 30 | **Binary size <5MB** | RTK | UPX compression + dead code elimination | Low |
+| 30 | **Binary size <5MB** | tokf | UPX compression + dead code elimination | Low |
 | 31 | **Memory-mapped file processing** | Various | Handle very large files efficiently | Medium |
 | 32 | **Zero-allocation hot path** | tokf | Pool all allocations in pipeline | Medium |
 | 33 | **SIMD-optimized string ops** | tokf | Use SIMD for pattern matching | High |
@@ -279,4 +277,4 @@ Layer 14: Attention Sink — StreamingLLM-style
 14. Park et al. "A Comprehensive Survey of Compression Algorithms for LMs" (2024)
 15. claw-compactor ARCHITECTURE.md (2026)
 16. tokf documentation (tokf.net, 2026)
-17. RTK blog posts (2026)
+17. LLMLingua documentation (2026)
