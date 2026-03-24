@@ -175,8 +175,8 @@ func TestHandleStats(t *testing.T) {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
 
-	if resp.LayerCount != 14 {
-		t.Errorf("Expected 14 layers, got %d", resp.LayerCount)
+	if resp.LayerCount != 31 {
+		t.Errorf("Expected 31 layers, got %d", resp.LayerCount)
 	}
 
 	t.Logf("Stats: %+v", resp)

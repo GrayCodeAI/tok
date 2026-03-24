@@ -247,6 +247,177 @@ func IsWordChar(c byte) bool {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '_'
 }
 
+// IsWhitespace checks if a byte is whitespace.
+func IsWhitespace(c byte) bool {
+	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
+}
+
+// IsPunctuation checks if a byte is punctuation.
+func IsPunctuation(c byte) bool {
+	return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '`') || (c >= '{' && c <= '~')
+}
+
+// IsDigit checks if a byte is a digit.
+func IsDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}
+
+// IsUpper checks if a byte is uppercase.
+func IsUpper(c byte) bool {
+	return c >= 'A' && c <= 'Z'
+}
+
+// IsLower checks if a byte is lowercase.
+func IsLower(c byte) bool {
+	return c >= 'a' && c <= 'z'
+}
+
+// ToLower converts a byte to lowercase.
+func ToLower(c byte) byte {
+	if c >= 'A' && c <= 'Z' {
+		return c + 32
+	}
+	return c
+}
+
+// ToUpper converts a byte to uppercase.
+func ToUpper(c byte) byte {
+	if c >= 'a' && c <= 'z' {
+		return c - 32
+	}
+	return c
+}
+
+// CountWords counts whitespace-separated words using SIMD-optimized scanning.
+func CountWords(s string) int {
+	if len(s) == 0 {
+		return 0
+	}
+
+	count := 0
+	inWord := false
+	for i := 0; i < len(s); i++ {
+		if IsWhitespace(s[i]) {
+			inWord = false
+		} else if !inWord {
+			inWord = true
+			count++
+		}
+	}
+	return count
+}
+
+// SplitWords splits string into words using SIMD-optimized scanning.
+func SplitWords(s string) []string {
+	if len(s) == 0 {
+		return nil
+	}
+
+	var words []string
+	start := -1
+	for i := 0; i < len(s); i++ {
+		if IsWhitespace(s[i]) {
+			if start >= 0 {
+				words = append(words, s[start:i])
+				start = -1
+			}
+		} else if start < 0 {
+			start = i
+		}
+	}
+	if start >= 0 {
+		words = append(words, s[start:])
+	}
+	return words
+}
+
+// ContainsWord checks if s contains the word w (whole word matching).
+func ContainsWord(s, w string) bool {
+	if len(w) == 0 || len(s) < len(w) {
+		return false
+	}
+
+	for i := 0; i <= len(s)-len(w); i++ {
+		if s[i] == w[0] {
+			// Check prefix match
+			if s[i:i+len(w)] == w {
+				// Check word boundaries
+			startOK := i == 0 || !IsWordChar(s[i-1])
+			endOK := i+len(w) == len(s) || !IsWordChar(s[i+len(w)])
+			if startOK && endOK {
+				return true
+			}
+		}
+		}
+	}
+	return false
+}
+
+// CountOccurrences counts non-overlapping occurrences of sub in s.
+func CountOccurrences(s, sub string) int {
+	if len(sub) == 0 || len(s) < len(sub) {
+		return 0
+	}
+
+	count := 0
+	for i := 0; i <= len(s)-len(sub); i++ {
+		if s[i:i+len(sub)] == sub {
+			count++
+			i += len(sub) - 1
+		}
+	}
+	return count
+}
+
+// RemoveDuplicates removes duplicate adjacent lines.
+func RemoveDuplicates(lines []string) []string {
+	if len(lines) <= 1 {
+		return lines
+	}
+
+	result := make([]string, 0, len(lines))
+	result = append(result, lines[0])
+	for i := 1; i < len(lines); i++ {
+		if lines[i] != lines[i-1] {
+			result = append(result, lines[i])
+		}
+	}
+	return result
+}
+
+// JaccardSimilarity computes Jaccard similarity between two word sets.
+func JaccardSimilarity(a, b string) float64 {
+	setA := make(map[string]bool)
+	setB := make(map[string]bool)
+
+	for _, w := range SplitWords(a) {
+		setA[w] = true
+	}
+	for _, w := range SplitWords(b) {
+		setB[w] = true
+	}
+
+	if len(setA) == 0 && len(setB) == 0 {
+		return 1.0
+	}
+	if len(setA) == 0 || len(setB) == 0 {
+		return 0
+	}
+
+	intersection := 0
+	for w := range setA {
+		if setB[w] {
+			intersection++
+		}
+	}
+
+	union := len(setA) + len(setB) - intersection
+	if union == 0 {
+		return 0
+	}
+	return float64(intersection) / float64(union)
+}
+
 // FindWordBoundary finds the next word boundary starting from pos.
 // Returns the position of the next non-word character or end of string.
 func FindWordBoundary(s string, pos int) int {

@@ -165,6 +165,9 @@ func (a *AttributionFilter) tokenize(content string) []token {
 }
 
 // calculateImportance calculates importance scores for each token
+// P2.3: Enhanced with GlobEnc-style attention-based salience scoring.
+// Research Source: "FrugalPrompt: Reducing Contextual Overhead via Token Attribution" (Oct 2025)
+// Uses attention contribution scoring inspired by GlobEnc and DecompX methods.
 func (a *AttributionFilter) calculateImportance(tokens []token, content string) []float64 {
 	n := len(tokens)
 	scores := make([]float64, n)
@@ -175,6 +178,9 @@ func (a *AttributionFilter) calculateImportance(tokens []token, content string) 
 		freq[strings.ToLower(strings.TrimSpace(t.text))]++
 	}
 
+	// Build token connectivity matrix for GlobEnc-style attention simulation
+	connectivity := a.computeTokenConnectivity(tokens)
+
 	// Track positions for positional bias
 	for i, t := range tokens {
 		var score float64
@@ -182,11 +188,15 @@ func (a *AttributionFilter) calculateImportance(tokens []token, content string) 
 		// 1. Positional importance (introduction and conclusion are important)
 		if a.config.PositionalBias {
 			pos := float64(i) / float64(n)
-			// Higher importance at start and end
+			// Higher importance at start and end (U-shaped)
 			if pos < 0.2 {
 				score += 0.3 * (1 - pos/0.2)
 			} else if pos > 0.8 {
 				score += 0.3 * (pos - 0.8) / 0.2
+			}
+			// Lost-in-the-middle: penalize middle positions
+			if pos > 0.3 && pos < 0.7 {
+				score -= 0.05
 			}
 		}
 
@@ -205,14 +215,25 @@ func (a *AttributionFilter) calculateImportance(tokens []token, content string) 
 			score += a.semanticScore(t.text)
 		}
 
-		// 4. Length-based importance (very short tokens often less important)
+		// 4. GlobEnc-style attention contribution (NEW - P2.3)
+		// Tokens that are highly connected (attended to by many others) are important
+		if connectivity[i] > 0 {
+			score += connectivity[i] * 0.3
+		}
+
+		// 5. Length-based importance (very short tokens often less important)
 		if len(strings.TrimSpace(t.text)) <= 2 && !isPunctuation(t.text) {
 			score -= 0.1
 		}
 
+		// 6. DecompX-style decomposition: tokens in important regions get bonus
+		if a.isInImportantRegion(tokens, i) {
+			score += 0.15
+		}
+
 		// Ensure score is in [0, 1] range
 		// Lower baseline so filler words can be pruned
-		scores[i] = math.Max(0, math.Min(1, 0.3+score))
+		scores[i] = math.Max(0, math.Min(1, 0.2+score))
 	}
 
 	// Normalize scores
@@ -231,6 +252,98 @@ func (a *AttributionFilter) calculateImportance(tokens []token, content string) 
 	}
 
 	return scores
+}
+
+// computeTokenConnectivity computes a simplified attention connectivity score.
+// GlobEnc-inspired: tokens that are "hubs" (many tokens reference them) are important.
+func (a *AttributionFilter) computeTokenConnectivity(tokens []token) []float64 {
+	n := len(tokens)
+	connectivity := make([]float64, n)
+
+	if n < 3 {
+		return connectivity
+	}
+
+	// Build a simple co-occurrence matrix within a window
+	windowSize := 5
+	for i := 0; i < n; i++ {
+		tokenI := strings.ToLower(strings.TrimSpace(tokens[i].text))
+		if len(tokenI) < 2 {
+			continue
+		}
+
+		for j := max(0, i-windowSize); j < min(n, i+windowSize+1); j++ {
+			if i == j {
+				continue
+			}
+			tokenJ := strings.ToLower(strings.TrimSpace(tokens[j].text))
+			// Simple semantic relatedness: shared prefix or substring
+			if len(tokenI) >= 3 && len(tokenJ) >= 3 {
+				if strings.HasPrefix(tokenI, tokenJ[:3]) || strings.HasPrefix(tokenJ, tokenI[:3]) {
+					connectivity[i] += 0.1
+				}
+			}
+			// Structural co-occurrence: adjacent tokens in code
+			if intAbs(i-j) == 1 && (isCodeSymbol(tokens[i].text) || isCodeSymbol(tokens[j].text)) {
+				connectivity[i] += 0.15
+			}
+		}
+	}
+
+	// Normalize
+	maxConn := 0.0
+	for _, c := range connectivity {
+		if c > maxConn {
+			maxConn = c
+		}
+	}
+	if maxConn > 0 {
+		for i := range connectivity {
+			connectivity[i] /= maxConn
+		}
+	}
+
+	return connectivity
+}
+
+// isInImportantRegion checks if a token is in a semantically important region.
+// DecompX-inspired: regions with high semantic density are more important.
+func (a *AttributionFilter) isInImportantRegion(tokens []token, idx int) bool {
+	// Check if surrounded by important tokens
+	windowSize := 3
+	importantCount := 0
+	for j := intMax(0, idx-windowSize); j < intMin(len(tokens), idx+windowSize+1); j++ {
+		if j == idx {
+			continue
+		}
+		text := strings.TrimSpace(tokens[j].text)
+		if isNumber(text) || isCodeSymbol(text) || isFilePath(text) || isURL(text) {
+			importantCount++
+		}
+	}
+	return importantCount >= 2
+}
+
+// Helper functions for int math
+func intMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func intMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func intAbs(a int) int {
+	if a < 0 {
+		return -a
+	}
+	return a
 }
 
 // semanticScore returns importance score for semantic content

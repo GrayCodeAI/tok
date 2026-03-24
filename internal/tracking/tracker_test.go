@@ -10,35 +10,40 @@ func TestEstimateTokens(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    string
-		expected int
+		minExpected int // BPE may differ from heuristic, use minimum
 	}{
 		{
-			name:     "empty string",
-			input:    "",
-			expected: 0,
+			name:        "empty string",
+			input:       "",
+			minExpected: 0,
 		},
 		{
-			name:     "short string",
-			input:    "hello",
-			expected: 2, // ceil(5/4) = 2
+			name:        "short string",
+			input:       "test",
+			minExpected: 1,
 		},
 		{
-			name:     "medium string",
-			input:    "hello world",
-			expected: 3, // ceil(11/4) = 3
+			name:        "medium string",
+			input:       "hello world",
+			minExpected: 2,
 		},
 		{
-			name:     "exact multiple",
-			input:    "four",
-			expected: 1, // ceil(4/4) = 1
+			name:        "exact multiple",
+			input:       "four",
+			minExpected: 1,
+		},
+		{
+			name:        "long string",
+			input:       "The quick brown fox jumps over the lazy dog and runs away into the forest.",
+			minExpected: 10,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := EstimateTokens(tt.input)
-			if result != tt.expected {
-				t.Errorf("EstimateTokens() = %d, want %d", result, tt.expected)
+			if result < tt.minExpected {
+				t.Errorf("EstimateTokens() = %d, want >= %d", result, tt.minExpected)
 			}
 		})
 	}

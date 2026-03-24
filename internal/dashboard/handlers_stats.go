@@ -4,8 +4,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/GrayCodeAI/tokman/internal/ccusage"
-	"github.com/GrayCodeAI/tokman/internal/economics"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -211,45 +209,41 @@ func hourlyHandler(tracker *tracking.Tracker) http.HandlerFunc {
 }
 
 // dailyBreakdownHandler returns detailed daily breakdown with tokens saved per day
+// Shows only tokman tracking data (not ccusage historical data)
 func dailyBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_ = 30 // default days, used for future enhancement
+		days := 30
 		if d := r.URL.Query().Get("days"); d != "" {
 			if parsed, err := strconv.Atoi(d); err == nil && parsed > 0 && parsed <= 365 {
-				_ = parsed // use parsed days for future enhancement
+				days = parsed
 			}
 		}
 
-		// Get tokman daily stats
-		tmStats := economics.GetDailyStats(tracker)
+		// Get tokman daily stats only
+		tmStats, err := tracker.GetDailySavings("", days)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
 
-		// Try to merge with ccusage data
-		ccDaily, _ := ccusage.Fetch(ccusage.Daily)
-		periods := economics.MergeDailyLite(ccDaily, tmStats)
-
-		// Convert to response format
-		result := make([]map[string]any, len(periods))
-		for i, p := range periods {
-			entry := map[string]any{
-				"date":         p.Label,
-				"tokens_saved": p.TMSavedTokens,
-				"commands":     p.TMCommands,
-				"savings_pct":  p.TMSavingsPct,
+		// Convert to response format - only include days with activity
+		var result []map[string]any
+		for _, d := range tmStats {
+			// Only include days with actual commands
+			if d.Commands == 0 && d.Saved == 0 && d.Original == 0 {
+				continue
 			}
-			// Add ccusage data if available
-			if p.CCCost != nil {
-				entry["cc_cost"] = *p.CCCost
+			savingsPct := 0.0
+			if d.Original > 0 {
+				savingsPct = float64(d.Saved) / float64(d.Original) * 100
 			}
-			if p.CCInputTokens != nil {
-				entry["cc_input"] = *p.CCInputTokens
-			}
-			if p.CCOutputTokens != nil {
-				entry["cc_output"] = *p.CCOutputTokens
-			}
-			if p.SavingsWeighted != nil {
-				entry["estimated_savings"] = *p.SavingsWeighted
-			}
-			result[i] = entry
+			result = append(result, map[string]any{
+				"date":         d.Date,
+				"tokens_saved": d.Saved,
+				"commands":     d.Commands,
+				"savings_pct":  savingsPct,
+				"original":      d.Original,
+			})
 		}
 
 		jsonResponse(w, http.StatusOK, result)

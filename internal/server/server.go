@@ -17,7 +17,7 @@ import (
 
 const (
 	maxRequestBodySize = 10 * 1024 * 1024 // 10MB
-	defaultLayerCount  = 20
+	defaultLayerCount  = 31
 )
 
 // Server provides REST API for token compression

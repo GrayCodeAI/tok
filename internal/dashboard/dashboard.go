@@ -81,7 +81,7 @@ The dashboard provides:
 	}
 
 	cmd.Flags().IntVarP(&Port, "port", "p", 8080, "Port to run dashboard on")
-	cmd.Flags().BoolVarP(&Open, "open", "o", false, "Open browser automatically")
+	cmd.Flags().BoolVarP(&Open, "open", "O", false, "Open browser automatically")
 	cmd.Flags().StringVar(&Bind, "bind", "localhost", "Address to bind server to (e.g., 0.0.0.0 for all interfaces)")
 	cmd.Flags().StringVar(&APIKey, "api-key", "", "API key for authentication (empty = no auth)")
 

@@ -14,12 +14,13 @@ type filterLayer struct {
 	name   string
 }
 
-// PipelineCoordinator orchestrates the 20-layer compression pipeline.
+// PipelineCoordinator orchestrates the 26-layer compression pipeline.
 // Research-based: Combines the best techniques from 120+ research papers worldwide
 // to achieve maximum token reduction for CLI/Agent output.
 //
 // Layer order is critical - each layer builds on the previous:
 //
+// L0: TF-IDF Coarse Filter (DSPC, Sep 2025) - 3x faster pipeline
 // Layer 1: Entropy Filtering (Selective Context, Mila 2023) - 2-3x
 // Layer 2: Perplexity Pruning (LLMLingua, Microsoft/Tsinghua 2023) - 20x
 // Layer 3: Goal-Driven Selection (SWE-Pruner, Shanghai Jiao Tong 2025) - 14.8x
@@ -40,6 +41,13 @@ type filterLayer struct {
 // Layer 18: Lazy Pruner (LazyLLM, July 2024) - 2.34x speedup
 // Layer 19: Semantic Anchor (Attention Gradient Detection) - Context preservation
 // Layer 20: Agent Memory (Knowledge Graph Extraction) - Agent-optimized
+// Layer 21: Reasoning Trace (R-KV, 2025) - CoT compression
+// Layer 22: Symbolic Compress (MetaGlyph, Jan 2026) - 62-81% instruction reduction
+// Layer 23: Phrase Grouping (CompactPrompt, 2025) - Dependency-based grouping
+// Layer 24: Numerical Quantization (CompactPrompt, 2025) - Structured data compression
+// Layer 25: Dynamic Ratio (PruneSID, Mar 2026) - Adaptive compression ratio
+// T12: Question-Aware Filter (LongLLMLingua-style)
+// T17: Density-Adaptive Filter (DAST-style)
 type PipelineCoordinator struct {
 	config PipelineConfig
 
@@ -114,6 +122,48 @@ type PipelineCoordinator struct {
 
 	// T17: Density-Adaptive Filter (DAST-style)
 	densityAdaptiveFilter *DensityAdaptiveFilter
+
+	// NEW: TF-IDF Coarse Filter (DSPC, Sep 2025)
+	tfidfFilter *TFIDFFilter
+
+	// NEW: Reasoning Trace Compression (R-KV, 2025)
+	reasoningTraceFilter *ReasoningTraceFilter
+
+	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
+	symbolicCompressFilter *SymbolicCompressFilter
+
+	// NEW: Phrase Grouping Filter (CompactPrompt, 2025)
+	phraseGroupingFilter *PhraseGroupingFilter
+
+	// NEW: Numerical Quantization (CompactPrompt, 2025)
+	numericalQuantizer *NumericalQuantizer
+
+	// NEW: Dynamic Compression Ratio (PruneSID, Mar 2026)
+	dynamicRatioFilter *DynamicRatioFilter
+
+	// NEW: LoPace Lossless Compressor (Feb 2026)
+	lopaceCompressor *LoPaceCompressor
+
+	// NEW: Inter-Layer Feedback Mechanism
+	feedback *InterLayerFeedback
+
+	// NEW: Quality Estimator for feedback
+	qualityEstimator *QualityEstimator
+
+	// Phase 2: Hypernym Concept Compression (Mercury-style)
+	hypernymCompressor *HypernymCompressor
+
+	// Phase 2: SemantiCache Clustered Merging (Mar 2026)
+	semanticCacheFilter *SemanticCacheFilter
+
+	// Phase 2: SCOPE Prefill/Decode Separation (ACL 2025)
+	scopeFilter *ScopeFilter
+
+	// Phase 2: SmallKV Model Compensation (2025)
+	smallKVCompensator *SmallKVCompensator
+
+	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
+	kvzipFilter *KVzipFilter
 }
 
 // PipelineConfig holds configuration for the compression pipeline
@@ -217,6 +267,43 @@ type PipelineConfig struct {
 	EnableDensityAdaptive bool
 	DensityTargetRatio    float64
 	DensityThreshold      float64
+
+	// NEW: TF-IDF Coarse Filter (DSPC, Sep 2025)
+	EnableTFIDF    bool
+	TFIDFThreshold float64
+
+	// NEW: Reasoning Trace Compression (R-KV, 2025)
+	EnableReasoningTrace  bool
+	MaxReflectionLoops    int
+
+	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
+	EnableSymbolicCompress bool
+
+	// NEW: Phrase Grouping Filter (CompactPrompt, 2025)
+	EnablePhraseGrouping bool
+
+	// NEW: Numerical Quantization (CompactPrompt, 2025)
+	EnableNumericalQuant bool
+	DecimalPlaces        int
+
+	// NEW: Dynamic Compression Ratio (PruneSID, Mar 2026)
+	EnableDynamicRatio   bool
+	DynamicRatioBase     float64
+
+	// Phase 2: Hypernym Concept Compression (Mercury-style)
+	EnableHypernym bool
+
+	// Phase 2: SemantiCache Clustered Merging (Mar 2026)
+	EnableSemanticCache bool
+
+	// Phase 2: SCOPE Prefill/Decode Separation (ACL 2025)
+	EnableScope bool
+
+	// Phase 2: SmallKV Model Compensation (2025)
+	EnableSmallKV bool
+
+	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
+	EnableKVzip bool
 }
 
 // NewPipelineCoordinator creates a new 10-layer pipeline coordinator.
@@ -454,6 +541,86 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		}
 	}
 
+	// NEW: TF-IDF Coarse Filter (DSPC, Sep 2025)
+	if cfg.EnableTFIDF {
+		tfidfCfg := DefaultTFIDFConfig()
+		if cfg.TFIDFThreshold > 0 {
+			tfidfCfg.Threshold = cfg.TFIDFThreshold
+		}
+		p.tfidfFilter = NewTFIDFFilterWithConfig(tfidfCfg)
+	}
+
+	// NEW: Reasoning Trace Compression (R-KV, 2025)
+	if cfg.EnableReasoningTrace {
+		reasonCfg := DefaultReasoningTraceConfig()
+		if cfg.MaxReflectionLoops > 0 {
+			reasonCfg.MaxReflectionLoops = cfg.MaxReflectionLoops
+		}
+		p.reasoningTraceFilter = &ReasoningTraceFilter{config: reasonCfg}
+	}
+
+	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
+	if cfg.EnableSymbolicCompress {
+		p.symbolicCompressFilter = NewSymbolicCompressFilter()
+	}
+
+	// NEW: Phrase Grouping Filter (CompactPrompt, 2025)
+	if cfg.EnablePhraseGrouping {
+		p.phraseGroupingFilter = NewPhraseGroupingFilter()
+	}
+
+	// NEW: Numerical Quantization (CompactPrompt, 2025)
+	if cfg.EnableNumericalQuant {
+		numCfg := DefaultNumericalConfig()
+		if cfg.DecimalPlaces > 0 {
+			numCfg.DecimalPlaces = cfg.DecimalPlaces
+		}
+		p.numericalQuantizer = NewNumericalQuantizer()
+		p.numericalQuantizer.config = numCfg
+	}
+
+	// NEW: Dynamic Compression Ratio (PruneSID, Mar 2026)
+	if cfg.EnableDynamicRatio {
+		dynCfg := DefaultDynamicRatioConfig()
+		if cfg.DynamicRatioBase > 0 {
+			dynCfg.BaseBudgetRatio = cfg.DynamicRatioBase
+		}
+		p.dynamicRatioFilter = NewDynamicRatioFilter()
+		p.dynamicRatioFilter.config = dynCfg
+	}
+
+	// NEW: Inter-Layer Feedback Mechanism
+	p.feedback = NewInterLayerFeedback()
+	p.qualityEstimator = NewQualityEstimator()
+
+	// NEW: LoPace Lossless Compressor (for tee/cache)
+	p.lopaceCompressor = NewLoPaceCompressor()
+
+	// Phase 2: Hypernym Concept Compression (Mercury, May 2025)
+	if cfg.EnableHypernym {
+		p.hypernymCompressor = NewHypernymCompressor()
+	}
+
+	// Phase 2: SemantiCache Clustered Merging (Mar 2026)
+	if cfg.EnableSemanticCache {
+		p.semanticCacheFilter = NewSemanticCacheFilter()
+	}
+
+	// Phase 2: SCOPE Prefill/Decode Separation (ACL 2025)
+	if cfg.EnableScope {
+		p.scopeFilter = NewScopeFilter()
+	}
+
+	// Phase 2: SmallKV Model Compensation (2025)
+	if cfg.EnableSmallKV {
+		p.smallKVCompensator = NewSmallKVCompensator()
+	}
+
+	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
+	if cfg.EnableKVzip {
+		p.kvzipFilter = NewKVzipFilter()
+	}
+
 	// Build layers in Process() execution order
 	p.layers = []filterLayer{
 		{p.entropyFilter, "1_entropy"},               // Layer 1
@@ -483,16 +650,25 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	return p
 }
 
-// Process runs the full 14-layer compression pipeline with early-exit support.
+// Process runs the full 26-layer compression pipeline with early-exit support.
 // T7: Stage gates skip layers when not applicable (zero cost).
 // T81: Skip remaining layers if budget already met.
 func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	stats := &PipelineStats{
-		OriginalTokens: core.EstimateTokens(input), // T22: Unified estimator
+		OriginalTokens: core.EstimateTokens(input), // T22: Unified BPE estimator
 		LayerStats:     make(map[string]LayerStat),
 	}
 
 	output := input
+
+	// L0: TF-IDF Coarse Pre-filter (NEW - DSPC 2025)
+	// Runs before expensive layers to remove low-information content early
+	if p.tfidfFilter != nil {
+		output = p.processLayer(filterLayer{p.tfidfFilter, "0_tfidf"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
 
 	// Layers 1-9
 	if p.entropyFilter != nil && p.config.EnableEntropy && !p.shouldSkipEntropy(output) {
@@ -595,29 +771,115 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		}
 	}
 
-	// Layers 15-20
+	// Layers 15-20 (FIXED: Now with early-exit checks)
 	if p.metaTokenFilter != nil && !p.shouldSkipMetaToken(output) {
 		output = p.processLayer(p.layers[14], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	if p.semanticChunkFilter != nil && !p.shouldSkipSemanticChunk(output) {
 		output = p.processLayer(p.layers[15], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	if p.sketchStoreFilter != nil && !p.shouldSkipBudgetDependent() {
 		output = p.processLayer(p.layers[16], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	if p.lazyPrunerFilter != nil && !p.shouldSkipBudgetDependent() {
 		output = p.processLayer(p.layers[17], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	if p.semanticAnchorFilter != nil {
 		output = p.processLayer(p.layers[18], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	if p.agentMemoryFilter != nil {
 		output = p.processLayer(p.layers[19], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	// NEW Layers: Reasoning Trace, Symbolic, Phrase Grouping, Numerical, Dynamic Ratio
+	if p.reasoningTraceFilter != nil {
+		output = p.processLayer(filterLayer{p.reasoningTraceFilter, "21_reasoning_trace"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	if p.symbolicCompressFilter != nil {
+		output = p.processLayer(filterLayer{p.symbolicCompressFilter, "22_symbolic_compress"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	if p.phraseGroupingFilter != nil {
+		output = p.processLayer(filterLayer{p.phraseGroupingFilter, "23_phrase_grouping"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	if p.numericalQuantizer != nil {
+		output = p.processLayer(filterLayer{p.numericalQuantizer, "24_numerical_quant"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	if p.dynamicRatioFilter != nil {
+		output = p.processLayer(filterLayer{p.dynamicRatioFilter, "25_dynamic_ratio"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	// Phase 2: Hypernym Concept Compression
+	if p.hypernymCompressor != nil {
+		output = p.processLayer(filterLayer{p.hypernymCompressor, "26_hypernym"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	// Phase 2: SemantiCache Clustered Merging
+	if p.semanticCacheFilter != nil {
+		output = p.processLayer(filterLayer{p.semanticCacheFilter, "27_semantic_cache"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	// Phase 2: SCOPE Prefill/Decode Separation
+	if p.scopeFilter != nil {
+		output = p.processLayer(filterLayer{p.scopeFilter, "28_scope"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
+	// Phase 2: KVzip Query-Agnostic Reconstruction
+	if p.kvzipFilter != nil {
+		output = p.processLayer(filterLayer{p.kvzipFilter, "29_kvzip"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
 	}
 
 	// T12: Question-Aware Recovery
@@ -632,6 +894,23 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 
 	// Layer 10: Budget Enforcement (special - sub-filters)
 	output = p.processBudgetLayer(output, stats)
+
+	// Phase 2: SmallKV Post-Processing Compensation
+	// Runs after all compression to repair any over-compression damage
+	if p.smallKVCompensator != nil {
+		output = p.smallKVCompensator.Compensate(input, output, p.config.Mode)
+	}
+
+	// Inter-layer feedback: record final quality
+	if p.feedback != nil && p.qualityEstimator != nil {
+		quality := p.qualityEstimator.EstimateQuality(input, output)
+		p.feedback.RecordSignal(FeedbackSignal{
+			LayerName:           "pipeline",
+			QualityScore:        quality,
+			CompressionRatio:    stats.ReductionPercent / 100.0,
+			SuggestedAdjustment: (quality - 0.8) * 0.5,
+		})
+	}
 
 	return output, p.finalizeStats(stats, output)
 }
@@ -650,12 +929,12 @@ func (p *PipelineCoordinator) shouldEarlyExit(stats *PipelineStats) bool {
 // This reduces unnecessary processing and improves pipeline efficiency.
 
 // shouldSkipEntropy checks if entropy filtering would help.
-// Skip if content is too short or already highly dense.
+// Skip if content is too short or has too few unique characters.
 func (p *PipelineCoordinator) shouldSkipEntropy(content string) bool {
 	if len(content) < 50 {
 		return true // Too short for meaningful entropy analysis
 	}
-	// Check if content is already dense (low repetition)
+	// Check if content has enough character diversity for entropy filtering
 	uniqueChars := make(map[rune]bool)
 	for _, r := range content {
 		uniqueChars[r] = true
@@ -663,9 +942,9 @@ func (p *PipelineCoordinator) shouldSkipEntropy(content string) bool {
 			return false // Diverse content, entropy filtering will help
 		}
 	}
-	// Very few unique chars - might still benefit from entropy filtering
-	// but likely has other issues
-	return false
+	// Very few unique chars - skip entropy filtering
+	// Low diversity content doesn't benefit from entropy-based compression
+	return true
 }
 
 // shouldSkipPerplexity checks if perplexity pruning would help.
@@ -820,7 +1099,7 @@ func (s *PipelineStats) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("╔════════════════════════════════════════════════════╗\n")
-	sb.WriteString("║          Tokman 14-Layer Compression Stats         ║\n")
+	sb.WriteString("║         Tokman 31-Layer Compression Stats          ║\n")
 	sb.WriteString("╠════════════════════════════════════════════════════╣\n")
 	sb.WriteString(fmt.Sprintf("║ Original:  %6d tokens                         ║\n", s.OriginalTokens))
 	sb.WriteString(fmt.Sprintf("║ Final:     %6d tokens                         ║\n", s.FinalTokens))
@@ -830,11 +1109,16 @@ func (s *PipelineStats) String() string {
 
 	// Order layers properly
 	layerOrder := []string{
+		"0_tfidf",
 		"1_entropy", "2_perplexity", "3_goal_driven", "4_ast_preserve",
 		"5_contrastive", "6_ngram", "7_evaluator", "8_gist", "9_hierarchical",
 		"neural", "11_compaction", "12_attribution", "13_h2o", "14_attention_sink",
 		"15_meta_token", "16_semantic_chunk", "17_sketch_store", "18_lazy_pruner",
-		"19_semantic_anchor", "20_agent_memory", "10_session", "10_budget",
+		"19_semantic_anchor", "20_agent_memory",
+		"21_reasoning_trace", "22_symbolic_compress", "23_phrase_grouping",
+		"24_numerical_quant", "25_dynamic_ratio",
+		"26_hypernym", "27_semantic_cache", "28_scope", "29_kvzip",
+		"10_session", "10_budget",
 	}
 
 	for _, layer := range layerOrder {
@@ -882,6 +1166,19 @@ func QuickProcess(input string, mode Mode, opts ...QuickProcessOpt) (string, int
 		EnableLazyPruner:     true,
 		EnableSemanticAnchor: true,
 		EnableAgentMemory:    true,
+		// NEW layers enabled by default
+		EnableTFIDF:           true,
+		EnableReasoningTrace:  true,
+		EnableSymbolicCompress: true,
+		EnablePhraseGrouping:  true,
+		EnableNumericalQuant:  true,
+		EnableDynamicRatio:    true,
+		// Phase 2 layers
+		EnableHypernym:      true,
+		EnableSemanticCache: true,
+		EnableScope:         true,
+		EnableSmallKV:       true,
+		EnableKVzip:         true,
 	}
 	for _, opt := range opts {
 		opt(&cfg)

@@ -441,21 +441,38 @@ func (t *Tracker) Vacuum() error {
 
 // GetSavings returns the total token savings for a project path.
 // Uses GLOB matching for case-sensitive path comparison.
+// When projectPath is empty, returns all records without filtering.
 func (t *Tracker) GetSavings(projectPath string) (*SavingsSummary, error) {
-	query := `
-		SELECT 
-			COUNT(*) as total_commands,
-			COALESCE(SUM(saved_tokens), 0) as total_saved,
-			COALESCE(SUM(original_tokens), 0) as total_original,
-			COALESCE(SUM(filtered_tokens), 0) as total_filtered
-		FROM commands
-		WHERE project_path GLOB ? OR project_path = ?
-	`
+	var query string
+	var args []any
+	
+	if projectPath == "" {
+		query = `
+			SELECT 
+				COUNT(*) as total_commands,
+				COALESCE(SUM(saved_tokens), 0) as total_saved,
+				COALESCE(SUM(original_tokens), 0) as total_original,
+				COALESCE(SUM(filtered_tokens), 0) as total_filtered
+			FROM commands
+		`
+		args = nil
+	} else {
+		query = `
+			SELECT 
+				COUNT(*) as total_commands,
+				COALESCE(SUM(saved_tokens), 0) as total_saved,
+				COALESCE(SUM(original_tokens), 0) as total_original,
+				COALESCE(SUM(filtered_tokens), 0) as total_filtered
+			FROM commands
+			WHERE project_path GLOB ? OR project_path = ?
+		`
+		pattern := projectPath + "/%"
+		args = []any{pattern, projectPath}
+	}
 
-	pattern := projectPath + "/%"
 	summary := &SavingsSummary{}
 
-	err := t.db.QueryRow(query, pattern, projectPath).Scan(
+	err := t.db.QueryRow(query, args...).Scan(
 		&summary.TotalCommands,
 		&summary.TotalSaved,
 		&summary.TotalOriginal,
@@ -568,21 +585,39 @@ func (t *Tracker) TokensSavedTotal() (int64, error) {
 }
 
 // GetCommandStats returns statistics grouped by command.
+// When projectPath is empty, returns all commands without filtering.
 func (t *Tracker) GetCommandStats(projectPath string) ([]CommandStats, error) {
-	query := `
-		SELECT 
-			command,
-			COUNT(*) as execution_count,
-			COALESCE(SUM(saved_tokens), 0) as total_saved,
-			COALESCE(SUM(original_tokens), 0) as total_original
-		FROM commands
-		WHERE project_path GLOB ? OR project_path = ?
-		GROUP BY command
-		ORDER BY total_saved DESC
-	`
+	var query string
+	var rows *sql.Rows
+	var err error
 
-	pattern := projectPath + "/%"
-	rows, err := t.db.Query(query, pattern, projectPath)
+	if projectPath == "" {
+		query = `
+			SELECT 
+				command,
+				COUNT(*) as execution_count,
+				COALESCE(SUM(saved_tokens), 0) as total_saved,
+				COALESCE(SUM(original_tokens), 0) as total_original
+			FROM commands
+			GROUP BY command
+			ORDER BY total_saved DESC
+		`
+		rows, err = t.db.Query(query)
+	} else {
+		query = `
+			SELECT 
+				command,
+				COUNT(*) as execution_count,
+				COALESCE(SUM(saved_tokens), 0) as total_saved,
+				COALESCE(SUM(original_tokens), 0) as total_original
+			FROM commands
+			WHERE project_path GLOB ? OR project_path = ?
+			GROUP BY command
+			ORDER BY total_saved DESC
+		`
+		pattern := projectPath + "/%"
+		rows, err = t.db.Query(query, pattern, projectPath)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get command stats: %w", err)
 	}
@@ -607,18 +642,33 @@ func (t *Tracker) GetCommandStats(projectPath string) ([]CommandStats, error) {
 }
 
 // GetRecentCommands returns the most recent command executions.
+// When projectPath is empty, returns all recent commands without filtering.
 func (t *Tracker) GetRecentCommands(projectPath string, limit int) ([]CommandRecord, error) {
-	query := `
-		SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
-		       project_path, session_id, exec_time_ms, timestamp, parse_success
-		FROM commands
-		WHERE project_path GLOB ? OR project_path = ?
-		ORDER BY timestamp DESC
-		LIMIT ?
-	`
+	var query string
+	var rows *sql.Rows
+	var err error
 
-	pattern := projectPath + "/%"
-	rows, err := t.db.Query(query, pattern, projectPath, limit)
+	if projectPath == "" {
+		query = `
+			SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
+			       project_path, session_id, exec_time_ms, timestamp, parse_success
+			FROM commands
+			ORDER BY timestamp DESC
+			LIMIT ?
+		`
+		rows, err = t.db.Query(query, limit)
+	} else {
+		query = `
+			SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
+			       project_path, session_id, exec_time_ms, timestamp, parse_success
+			FROM commands
+			WHERE project_path GLOB ? OR project_path = ?
+			ORDER BY timestamp DESC
+			LIMIT ?
+		`
+		pattern := projectPath + "/%"
+		rows, err = t.db.Query(query, pattern, projectPath, limit)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to get recent commands: %w", err)
 	}

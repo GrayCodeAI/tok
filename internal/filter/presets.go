@@ -13,7 +13,7 @@ const (
 	// ~1.5x faster than full, ~85% of the compression.
 	PresetBalanced PipelinePreset = "balanced"
 
-	// PresetFull runs all 14 layers for maximum compression.
+	// PresetFull runs all 29 layers for maximum compression.
 	PresetFull PipelinePreset = "full"
 )
 
@@ -39,6 +39,13 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		cfg.EnableAttribution = false
 		cfg.EnableH2O = false
 		cfg.EnableAttentionSink = false
+		// NEW layers disabled in fast preset
+		cfg.EnableTFIDF = false
+		cfg.EnableReasoningTrace = false
+		cfg.EnableSymbolicCompress = false
+		cfg.EnablePhraseGrouping = false
+		cfg.EnableNumericalQuant = false
+		cfg.EnableDynamicRatio = false
 
 	case PresetBalanced:
 		cfg.EnableEntropy = true
@@ -54,8 +61,15 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		cfg.EnableAttribution = false
 		cfg.EnableH2O = false
 		cfg.EnableAttentionSink = true
+		// NEW layers: TF-IDF + numerical in balanced
+		cfg.EnableTFIDF = true
+		cfg.EnableReasoningTrace = false
+		cfg.EnableSymbolicCompress = false
+		cfg.EnablePhraseGrouping = false
+		cfg.EnableNumericalQuant = true
+		cfg.EnableDynamicRatio = false
 
-	default: // PresetFull
+	default: // PresetFull - all 29 layers
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
 		cfg.EnableGoalDriven = true
@@ -69,6 +83,19 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		cfg.EnableAttribution = true
 		cfg.EnableH2O = true
 		cfg.EnableAttentionSink = true
+		// NEW layers enabled in full preset
+		cfg.EnableTFIDF = true
+		cfg.EnableReasoningTrace = true
+		cfg.EnableSymbolicCompress = true
+		cfg.EnablePhraseGrouping = true
+		cfg.EnableNumericalQuant = true
+		cfg.EnableDynamicRatio = true
+		// Phase 2 layers
+		cfg.EnableHypernym = true
+		cfg.EnableSemanticCache = true
+		cfg.EnableScope = true
+		cfg.EnableSmallKV = true
+		cfg.EnableKVzip = true
 	}
 
 	return cfg
