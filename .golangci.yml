@@ -16,7 +16,6 @@ linters:
     - goimports
     - bodyclose
     - nilerr
-    - exportloopref
     - copyloopvar
     - noctx
 
