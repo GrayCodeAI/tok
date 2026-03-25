@@ -301,27 +301,27 @@ func BenchmarkStageGates(b *testing.B) {
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
 			p := NewPipelineCoordinator(PipelineConfig{
-				Mode:                ModeMinimal,
-				EnableEntropy:       true,
-				EnablePerplexity:    true,
-				EnableGoalDriven:    true,
-				EnableAST:           true,
-				EnableContrastive:   true,
-				EnableEvaluator:     true,
-				EnableGist:          true,
-				EnableHierarchical:  true,
-				EnableCompaction:    true,
-				EnableAttribution:   true,
-				EnableH2O:           true,
-				EnableAttentionSink: true,
-				EnableMetaToken:     true,
-				EnableSemanticChunk: true,
-				EnableSketchStore:   true,
-				EnableLazyPruner:    true,
+				Mode:                 ModeMinimal,
+				EnableEntropy:        true,
+				EnablePerplexity:     true,
+				EnableGoalDriven:     true,
+				EnableAST:            true,
+				EnableContrastive:    true,
+				EnableEvaluator:      true,
+				EnableGist:           true,
+				EnableHierarchical:   true,
+				EnableCompaction:     true,
+				EnableAttribution:    true,
+				EnableH2O:            true,
+				EnableAttentionSink:  true,
+				EnableMetaToken:      true,
+				EnableSemanticChunk:  true,
+				EnableSketchStore:    true,
+				EnableLazyPruner:     true,
 				EnableSemanticAnchor: true,
-				EnableAgentMemory:   true,
-				QueryIntent:         "test query",
-				Budget:              500, // Enable budget-dependent layers
+				EnableAgentMemory:    true,
+				QueryIntent:          "test query",
+				Budget:               500, // Enable budget-dependent layers
 			})
 
 			b.ResetTimer()

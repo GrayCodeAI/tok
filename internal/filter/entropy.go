@@ -31,10 +31,10 @@ type EntropyFilter struct {
 	totalTokens float64
 
 	// Dynamic frequency estimation (T11)
-	dynamicFreq     map[string]int   // Input-specific frequencies
-	dynamicTotal    int              // Total tokens in current input
-	zipfExponent    float64          // Zipf's law exponent for estimation
-	useDynamicEst   bool             // Enable dynamic frequency estimation
+	dynamicFreq   map[string]int // Input-specific frequencies
+	dynamicTotal  int            // Total tokens in current input
+	zipfExponent  float64        // Zipf's law exponent for estimation
+	useDynamicEst bool           // Enable dynamic frequency estimation
 
 	// Threshold for entropy-based pruning
 	entropyThreshold float64

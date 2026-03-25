@@ -59,14 +59,14 @@ type DashboardMetrics struct {
 
 // LayerMetrics tracks metrics for a single layer
 type LayerMetrics struct {
-	Name           string  `json:"name"`
-	CallCount      int64   `json:"call_count"`
-	TotalSaved     int64   `json:"total_saved"`
-	AvgSaved       float64 `json:"avg_saved"`
-	AvgLatencyMs   float64 `json:"avg_latency_ms"`
-	MaxSaved       int     `json:"max_saved"`
-	SkipCount      int64   `json:"skip_count"`
-	Effectiveness  float64 `json:"effectiveness"` // saved / call_count
+	Name          string  `json:"name"`
+	CallCount     int64   `json:"call_count"`
+	TotalSaved    int64   `json:"total_saved"`
+	AvgSaved      float64 `json:"avg_saved"`
+	AvgLatencyMs  float64 `json:"avg_latency_ms"`
+	MaxSaved      int     `json:"max_saved"`
+	SkipCount     int64   `json:"skip_count"`
+	Effectiveness float64 `json:"effectiveness"` // saved / call_count
 }
 
 // ContentMetrics tracks metrics per content type
@@ -80,23 +80,23 @@ type ContentMetrics struct {
 
 // CompressionRecord captures a single compression event
 type CompressionRecord struct {
-	Timestamp       time.Time         `json:"timestamp"`
-	ContentType     string            `json:"content_type"`
-	InputTokens     int               `json:"input_tokens"`
-	OutputTokens    int               `json:"output_tokens"`
-	SavedTokens     int               `json:"saved_tokens"`
-	CompressionPct  float64           `json:"compression_pct"`
-	LatencyMs       float64           `json:"latency_ms"`
-	LayersUsed      int               `json:"layers_used"`
-	LayerContribs   map[string]int    `json:"layer_contribs"`
+	Timestamp      time.Time      `json:"timestamp"`
+	ContentType    string         `json:"content_type"`
+	InputTokens    int            `json:"input_tokens"`
+	OutputTokens   int            `json:"output_tokens"`
+	SavedTokens    int            `json:"saved_tokens"`
+	CompressionPct float64        `json:"compression_pct"`
+	LatencyMs      float64        `json:"latency_ms"`
+	LayersUsed     int            `json:"layers_used"`
+	LayerContribs  map[string]int `json:"layer_contribs"`
 }
 
 // DefaultDashboardConfig returns default configuration
 func DefaultDashboardConfig() DashboardConfig {
 	return DashboardConfig{
-		Enabled:     true,
-		MaxRecords:  100,
-		Port:        8080,
+		Enabled:    true,
+		MaxRecords: 100,
+		Port:       8080,
 	}
 }
 

@@ -213,9 +213,9 @@ func NewLogger(level string) *Logger {
 
 // LogEntry represents a structured log entry
 type LogEntry struct {
-	Time    string                 `json:"time"`
-	Level   string                 `json:"level"`
-	Message string                 `json:"message"`
+	Time    string         `json:"time"`
+	Level   string         `json:"level"`
+	Message string         `json:"message"`
 	Fields  map[string]any `json:"fields,omitempty"`
 }
 

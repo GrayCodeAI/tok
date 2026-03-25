@@ -263,4 +263,3 @@ func (f *BudgetEnforcer) selectLines(scored []scoredLine, targetTokens int, tota
 
 	return result
 }
-

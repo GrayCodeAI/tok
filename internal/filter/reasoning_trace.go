@@ -143,9 +143,9 @@ func (f *ReasoningTraceFilter) isReasoningTrace(input string) bool {
 
 // reasoningBlock represents a block of reasoning text
 type reasoningBlock struct {
-	content     string
-	isReflection bool
-	isConclusion bool
+	content       string
+	isReflection  bool
+	isConclusion  bool
 	reflectionIdx int
 }
 

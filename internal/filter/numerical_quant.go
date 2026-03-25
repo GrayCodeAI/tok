@@ -230,7 +230,7 @@ func (n *NumericalQuantizer) compressTimestamps(input string, mode Mode) string 
 
 	// "2024-01-15T10:30:45.123Z" → "01-15 10:30"
 	re := regexp.MustCompile(`(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):\d{2}[\d.Z]*`)
-	return re.ReplaceAllString(input, "$2-$3 $4:$5")
+	result := re.ReplaceAllString(input, "$2-$3 $4:$5")
 
 	// Compress verbose date strings
 	re2 := regexp.MustCompile(`(?i)(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})`)
@@ -240,7 +240,7 @@ func (n *NumericalQuantizer) compressTimestamps(input string, mode Mode) string 
 		"july": "Jul", "august": "Aug", "september": "Sep",
 		"october": "Oct", "november": "Nov", "december": "Dec",
 	}
-	return re2.ReplaceAllStringFunc(input, func(match string) string {
+	return re2.ReplaceAllStringFunc(result, func(match string) string {
 		sub := re2.FindStringSubmatch(match)
 		if len(sub) < 4 {
 			return match

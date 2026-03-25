@@ -41,13 +41,13 @@ func init() {
 // JSON structures for RuboCop --format json output
 
 type RubocopOutput struct {
-	Files   []RubocopFile   `json:"files"`
-	Summary RubocopSummary  `json:"summary"`
+	Files   []RubocopFile  `json:"files"`
+	Summary RubocopSummary `json:"summary"`
 }
 
 type RubocopFile struct {
-	Path     string            `json:"path"`
-	Offenses []RubocopOffense  `json:"offenses"`
+	Path     string           `json:"path"`
+	Offenses []RubocopOffense `json:"offenses"`
 }
 
 type RubocopOffense struct {
@@ -63,9 +63,9 @@ type RubocopLocation struct {
 }
 
 type RubocopSummary struct {
-	OffenseCount             int `json:"offense_count"`
-	InspectedFileCount       int `json:"inspected_file_count"`
-	CorrectableOffenseCount  int `json:"correctable_offense_count"`
+	OffenseCount            int `json:"offense_count"`
+	InspectedFileCount      int `json:"inspected_file_count"`
+	CorrectableOffenseCount int `json:"correctable_offense_count"`
 }
 
 func runRubocop(cmd *cobra.Command, args []string) error {

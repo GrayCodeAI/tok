@@ -9,9 +9,9 @@ import (
 // Limits the number of compressions per time window to prevent
 // resource exhaustion and ensure fair usage.
 type RateLimiter struct {
-	config    RateLimitConfig
-	counters  map[string]*rateCounter
-	mu        sync.RWMutex
+	config   RateLimitConfig
+	counters map[string]*rateCounter
+	mu       sync.RWMutex
 }
 
 // RateLimitConfig holds rate limiting configuration
@@ -31,7 +31,7 @@ type RateLimitConfig struct {
 
 // rateCounter tracks rate limiting state
 type rateCounter struct {
-	count    int
+	count       int
 	windowStart time.Time
 }
 

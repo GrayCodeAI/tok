@@ -14,9 +14,9 @@ type BinaryPassthrough struct {
 
 // BinaryConfig holds configuration for binary detection
 type BinaryConfig struct {
-	Enabled          bool
-	MaxBinaryRatio   float64 // Max ratio of non-UTF8 bytes before marking as binary
-	MinCheckBytes    int     // Minimum bytes to check
+	Enabled        bool
+	MaxBinaryRatio float64 // Max ratio of non-UTF8 bytes before marking as binary
+	MinCheckBytes  int     // Minimum bytes to check
 }
 
 // DefaultBinaryConfig returns default configuration

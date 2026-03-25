@@ -85,21 +85,21 @@ func filterJestOutput(raw string) string {
 		if strings.Contains(line, "Tests:") {
 			parts := strings.Fields(line)
 			for i, p := range parts {
-			if p == "passed" && i > 0 {
-				if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
-					passed = 0
+				if p == "passed" && i > 0 {
+					if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
+						passed = 0
+					}
 				}
-			}
-			if p == "failed" && i > 0 {
-				if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
-					failed = 0
+				if p == "failed" && i > 0 {
+					if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
+						failed = 0
+					}
 				}
-			}
-			if p == "skipped" && i > 0 {
-				if _, err := fmt.Sscanf(parts[i-1], "%d", &skipped); err != nil {
-					skipped = 0
+				if p == "skipped" && i > 0 {
+					if _, err := fmt.Sscanf(parts[i-1], "%d", &skipped); err != nil {
+						skipped = 0
+					}
 				}
-			}
 			}
 		}
 

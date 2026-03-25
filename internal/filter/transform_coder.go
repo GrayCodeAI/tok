@@ -20,9 +20,9 @@ type TransformCoder struct {
 // TransformConfig holds configuration for transform coding
 type TransformConfig struct {
 	Enabled          bool
-	PCAComponents    int     // Number of principal components to keep
-	QuantizationBits int     // Bits for quantization (2-8)
-	EntropyCoding    bool    // Enable entropy coding
+	PCAComponents    int  // Number of principal components to keep
+	QuantizationBits int  // Bits for quantization (2-8)
+	EntropyCoding    bool // Enable entropy coding
 	MinContentLength int
 }
 

@@ -1,0 +1,49 @@
+[[rules]]
+match = "bundle install *"
+description = "bundle install - Ruby gem installer"
+
+[rules.filter]
+keep_lines_matching = [
+    "Installing.*",
+    "Removing.*",
+    "Bundle complete!.*",
+    "Bundle updated!.*",
+    "ERROR.*",
+    "Could not find.*",
+]
+
+strip_lines_matching = [
+    "^Using .*",
+    "^\\s*$",
+    "^Fetching gem metadata.*",
+    "^Resolving dependencies.*",
+]
+
+max_lines = 30
+
+[rules.filter.on_empty]
+return = "ok bundle: complete"
+
+[[rules]]
+match = "bundle update *"
+description = "bundle update - Ruby gem updater"
+
+[rules.filter]
+keep_lines_matching = [
+    "Installing.*",
+    "Updating.*",
+    "Bundle updated!.*",
+    "ERROR.*",
+]
+
+strip_lines_matching = [
+    "^Using .*",
+    "^\\s*$",
+    "^Fetching gem metadata.*",
+    "^Resolving dependencies.*",
+]
+
+max_lines = 30
+
+[rules.filter.on_empty]
+return = "ok bundle: updated"

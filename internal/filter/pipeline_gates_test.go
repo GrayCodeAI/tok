@@ -9,10 +9,10 @@ import (
 
 func TestStageGates_ShortContent(t *testing.T) {
 	p := NewPipelineCoordinator(PipelineConfig{
-		Mode:             ModeAggressive,
-		EnableEntropy:    true,
-		EnablePerplexity: true,
-		EnableH2O:        true,
+		Mode:                ModeAggressive,
+		EnableEntropy:       true,
+		EnablePerplexity:    true,
+		EnableH2O:           true,
 		EnableAttentionSink: true,
 	})
 
@@ -42,9 +42,9 @@ func TestStageGates_ShortContent(t *testing.T) {
 func TestStageGates_NoQueryIntent(t *testing.T) {
 	// Without query intent, goal-driven and contrastive should be skipped
 	p := NewPipelineCoordinator(PipelineConfig{
-		Mode:             ModeAggressive,
-		QueryIntent:      "", // No query
-		EnableGoalDriven: true,
+		Mode:              ModeAggressive,
+		QueryIntent:       "", // No query
+		EnableGoalDriven:  true,
 		EnableContrastive: true,
 	})
 
@@ -63,9 +63,9 @@ func TestStageGates_NoQueryIntent(t *testing.T) {
 func TestStageGates_WithQueryIntent(t *testing.T) {
 	// With query intent, goal-driven and contrastive should run
 	p := NewPipelineCoordinator(PipelineConfig{
-		Mode:             ModeAggressive,
-		QueryIntent:      "find the error in the code",
-		EnableGoalDriven: true,
+		Mode:              ModeAggressive,
+		QueryIntent:       "find the error in the code",
+		EnableGoalDriven:  true,
 		EnableContrastive: true,
 	})
 

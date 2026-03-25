@@ -69,11 +69,11 @@ type RspecException struct {
 }
 
 type RspecSummary struct {
-	Duration                      float64 `json:"duration"`
-	ExampleCount                  int     `json:"example_count"`
-	FailureCount                  int     `json:"failure_count"`
-	PendingCount                  int     `json:"pending_count"`
-	ErrorsOutsideOfExamplesCount  int     `json:"errors_outside_of_examples_count"`
+	Duration                     float64 `json:"duration"`
+	ExampleCount                 int     `json:"example_count"`
+	FailureCount                 int     `json:"failure_count"`
+	PendingCount                 int     `json:"pending_count"`
+	ErrorsOutsideOfExamplesCount int     `json:"errors_outside_of_examples_count"`
 }
 
 func runRspec(cmd *cobra.Command, args []string) error {
@@ -461,11 +461,4 @@ func rspecFallbackTail(output string, n int) string {
 		return strings.TrimSpace(output) + "\n"
 	}
 	return strings.Join(lines[len(lines)-n:], "\n") + "\n"
-}
-
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

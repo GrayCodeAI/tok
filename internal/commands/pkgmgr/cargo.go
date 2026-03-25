@@ -225,16 +225,16 @@ func filterCargoTestUltraCompact(output string) string {
 		if strings.HasPrefix(line, "test result:") {
 			parts := strings.Fields(line)
 			for i, p := range parts {
-			if p == "passed" && i > 0 {
-				if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
-					passed = 0
+				if p == "passed" && i > 0 {
+					if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
+						passed = 0
+					}
 				}
-			}
-			if p == "failed" && i > 0 {
-				if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
-					failed = 0
+				if p == "failed" && i > 0 {
+					if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
+						failed = 0
+					}
 				}
-			}
 			}
 		}
 	}

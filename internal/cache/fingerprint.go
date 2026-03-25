@@ -31,21 +31,21 @@ type FingerprintCache struct {
 
 // CachedResult holds a cached compression result
 type CachedResult struct {
-	Fingerprint   string
-	OriginalSize  int
-	Compressed    string
+	Fingerprint    string
+	OriginalSize   int
+	Compressed     string
 	CompressedSize int
-	TokensSaved   int
-	CreatedAt     time.Time
-	ExpiresAt     time.Time
-	AccessCount   int
+	TokensSaved    int
+	CreatedAt      time.Time
+	ExpiresAt      time.Time
+	AccessCount    int
 }
 
 // FingerprintResult holds the result of a fingerprint operation
 type FingerprintResult struct {
-	Hash      string
-	Hit       bool
-	Cached    *CachedResult
+	Hash   string
+	Hit    bool
+	Cached *CachedResult
 }
 
 // NewFingerprintCache creates a new fingerprint-based cache

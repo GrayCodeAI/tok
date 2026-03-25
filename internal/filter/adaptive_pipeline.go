@@ -56,7 +56,7 @@ func (t Tier) LayerCount() int {
 
 // AdaptivePipeline selects 0-20 layers based on content complexity.
 type AdaptivePipeline struct {
-	c *PipelineCoordinator
+	c   *PipelineCoordinator
 	cfg PipelineConfig
 }
 
@@ -135,12 +135,16 @@ func (p *AdaptivePipeline) runSimple(input string) (string, *PipelineStats) {
 
 	if p.c.entropyFilter != nil {
 		o, s := p.c.entropyFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["entropy"] = LayerStat{TokensSaved: s}
 	}
 	if p.c.ngramAbbreviator != nil {
 		o, s := p.c.ngramAbbreviator.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["ngram"] = LayerStat{TokensSaved: s}
 	}
 	out = p.c.processBudgetLayer(out, stats)
@@ -177,7 +181,9 @@ func (p *AdaptivePipeline) runMedium(input string) (string, *PipelineStats) {
 	for _, l := range layers {
 		if l.f != nil {
 			o, s := l.f.Apply(out, p.cfg.Mode)
-			if s > 0 { out = o }
+			if s > 0 {
+				out = o
+			}
 			stats.LayerStats[l.name] = LayerStat{TokensSaved: s}
 		}
 	}
@@ -194,15 +200,16 @@ func (p *AdaptivePipeline) runMedium(input string) (string, *PipelineStats) {
 // runFull: 20 layers - all impactful layers
 //
 // The 20 layers:
-//	1. Entropy         - fast pre-filter (Selective Context 2023)
-//	2. Perplexity      - core 20x compression (LLMLingua 2023)
-//	3. Goal-Driven     - intent-aware selection (SWE-Pruner 2025)
-//	4. AST Preserve    - code structure (LongCodeZip 2025)
-//	5. N-gram          - lossless abbreviation (CompactPrompt 2025)
-//	6. Hierarchical    - recursive summarization (AutoCompressor 2023)
-//	7. Budget          - token limit enforcement
-//	8. Compaction      - semantic compression (MemGPT 2023)
-//	9. Attribution     - token importance scoring (ProCut 2025)
+//  1. Entropy         - fast pre-filter (Selective Context 2023)
+//  2. Perplexity      - core 20x compression (LLMLingua 2023)
+//  3. Goal-Driven     - intent-aware selection (SWE-Pruner 2025)
+//  4. AST Preserve    - code structure (LongCodeZip 2025)
+//  5. N-gram          - lossless abbreviation (CompactPrompt 2025)
+//  6. Hierarchical    - recursive summarization (AutoCompressor 2023)
+//  7. Budget          - token limit enforcement
+//  8. Compaction      - semantic compression (MemGPT 2023)
+//  9. Attribution     - token importance scoring (ProCut 2025)
+//
 // 10. H2O             - heavy-hitter detection (NeurIPS 2023)
 // 11. Attention Sink  - stability preservation (StreamingLLM 2023)
 // 12. Semantic Chunk  - chunk-level compression (ChunkKV 2025)
@@ -224,115 +231,153 @@ func (p *AdaptivePipeline) runFull(input string) (string, *PipelineStats) {
 	// Layer 1: Entropy
 	if p.c.entropyFilter != nil {
 		o, s := p.c.entropyFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["1_entropy"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 2: Perplexity
 	if p.c.perplexityFilter != nil {
 		o, s := p.c.perplexityFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["2_perplexity"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 3: Goal-Driven
 	if p.c.goalDrivenFilter != nil {
 		o, s := p.c.goalDrivenFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["3_goal_driven"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 4: AST Preserve
 	if p.c.astPreserveFilter != nil {
 		o, s := p.c.astPreserveFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["4_ast"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 5: N-gram
 	if p.c.ngramAbbreviator != nil {
 		o, s := p.c.ngramAbbreviator.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["5_ngram"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 6: Hierarchical
 	if p.c.hierarchicalSummaryFilter != nil {
 		o, s := p.c.hierarchicalSummaryFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["6_hierarchical"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 8: Compaction
 	if p.c.compactionLayer != nil {
 		o, s := p.c.compactionLayer.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["8_compaction"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 9: Attribution
 	if p.c.attributionFilter != nil {
 		o, s := p.c.attributionFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["9_attribution"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 10: H2O
 	if p.c.h2oFilter != nil {
 		o, s := p.c.h2oFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["10_h2o"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 11: Attention Sink
 	if p.c.attentionSinkFilter != nil {
 		o, s := p.c.attentionSinkFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["11_attention_sink"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 12: Semantic Chunk
 	if p.c.semanticChunkFilter != nil {
 		o, s := p.c.semanticChunkFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["12_semantic_chunk"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 13: Lazy Pruner
 	if p.c.lazyPrunerFilter != nil {
 		o, s := p.c.lazyPrunerFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["13_lazy_pruner"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 14: Semantic Anchor
 	if p.c.semanticAnchorFilter != nil {
 		o, s := p.c.semanticAnchorFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["14_semantic_anchor"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 15: Reasoning Trace
 	if p.c.reasoningTraceFilter != nil {
 		o, s := p.c.reasoningTraceFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["15_reasoning"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 16: Symbolic
 	if p.c.symbolicCompressFilter != nil {
 		o, s := p.c.symbolicCompressFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["16_symbolic"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 17: Numerical
 	if p.c.numericalQuantizer != nil {
 		o, s := p.c.numericalQuantizer.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["17_numerical"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 18: Dynamic Ratio
 	if p.c.dynamicRatioFilter != nil {
 		o, s := p.c.dynamicRatioFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["18_dynamic"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 19: SCOPE
 	if p.c.scopeFilter != nil {
 		o, s := p.c.scopeFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["19_scope"] = LayerStat{TokensSaved: s}
 	}
 	// Layer 20: DynaKV (token-wise adaptive)
 	if p.c.dynamicRatioFilter != nil {
 		o, s := p.c.dynamicRatioFilter.Apply(out, p.cfg.Mode)
-		if s > 0 { out = o }
+		if s > 0 {
+			out = o
+		}
 		stats.LayerStats["20_dynakv"] = LayerStat{TokensSaved: s}
 	}
 

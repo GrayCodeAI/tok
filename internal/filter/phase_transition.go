@@ -22,23 +22,23 @@ type PhaseTransitionDetector struct {
 
 // PhaseConfig holds configuration for phase transition detection
 type PhaseConfig struct {
-	Enabled              bool
-	EntropyThreshold     float64 // Min entropy ratio (compressed/original)
-	StructureThreshold   float64 // Min structure preservation ratio
-	KeyTermThreshold     float64 // Min key-term retention ratio
-	MinContentLength     int
-	BackoffRatio         float64 // How much to reduce compression when threshold hit
+	Enabled            bool
+	EntropyThreshold   float64 // Min entropy ratio (compressed/original)
+	StructureThreshold float64 // Min structure preservation ratio
+	KeyTermThreshold   float64 // Min key-term retention ratio
+	MinContentLength   int
+	BackoffRatio       float64 // How much to reduce compression when threshold hit
 }
 
 // DefaultPhaseConfig returns default configuration
 func DefaultPhaseConfig() PhaseConfig {
 	return PhaseConfig{
-		Enabled:              true,
-		EntropyThreshold:     0.4,  // Below 40% entropy = quality collapse
-		StructureThreshold:   0.3,  // Below 30% structure = broken output
-		KeyTermThreshold:     0.5,  // Below 50% key terms = information loss
-		MinContentLength:     50,
-		BackoffRatio:         0.7,  // Reduce compression by 30%
+		Enabled:            true,
+		EntropyThreshold:   0.4, // Below 40% entropy = quality collapse
+		StructureThreshold: 0.3, // Below 30% structure = broken output
+		KeyTermThreshold:   0.5, // Below 50% key terms = information loss
+		MinContentLength:   50,
+		BackoffRatio:       0.7, // Reduce compression by 30%
 	}
 }
 
@@ -52,11 +52,11 @@ func (p *PhaseTransitionDetector) Name() string { return "phase_transition" }
 
 // PhaseQualityMetrics holds quality measurements
 type PhaseQualityMetrics struct {
-	EntropyRatio     float64
-	StructureRatio   float64
-	KeyTermRatio     float64
-	OverallQuality   float64
-	IsCollapsed      bool
+	EntropyRatio   float64
+	StructureRatio float64
+	KeyTermRatio   float64
+	OverallQuality float64
+	IsCollapsed    bool
 }
 
 // CheckQuality measures quality of compressed output vs original

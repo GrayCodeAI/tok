@@ -242,7 +242,7 @@ func dailyBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"tokens_saved": d.Saved,
 				"commands":     d.Commands,
 				"savings_pct":  savingsPct,
-				"original":      d.Original,
+				"original":     d.Original,
 			})
 		}
 

@@ -274,14 +274,14 @@ func (f *PhraseGroupingFilter) compressGroups(groups []phraseGroup, mode Mode) s
 
 // Simple heuristic word class detection (no ML required)
 var (
-	articles      = map[string]bool{"the": true, "a": true, "an": true}
-	determiners   = map[string]bool{"the": true, "a": true, "an": true, "this": true, "that": true, "these": true, "those": true, "my": true, "your": true, "its": true, "our": true, "their": true}
-	prepositions  = map[string]bool{"in": true, "on": true, "at": true, "to": true, "for": true, "with": true, "from": true, "by": true, "of": true, "about": true, "into": true, "through": true, "during": true, "before": true, "after": true, "above": true, "below": true, "between": true}
-	adverbs       = map[string]bool{"very": true, "quickly": true, "slowly": true, "easily": true, "often": true, "never": true, "always": true, "already": true, "just": true, "also": true, "still": true, "now": true, "then": true, "here": true, "there": true}
-	particles      = map[string]bool{"up": true, "out": true, "off": true, "away": true, "back": true, "down": true, "over": true, "around": true}
-	verbSuffixes  = []string{"ing", "ed", "ize", "ise", "ate", "ify"}
-	nounSuffixes  = []string{"tion", "sion", "ment", "ness", "ity", "er", "or", "ist", "ism"}
-	adjSuffixes   = []string{"able", "ible", "ful", "less", "ous", "ive", "ial", "al", "ent", "ant"}
+	articles     = map[string]bool{"the": true, "a": true, "an": true}
+	determiners  = map[string]bool{"the": true, "a": true, "an": true, "this": true, "that": true, "these": true, "those": true, "my": true, "your": true, "its": true, "our": true, "their": true}
+	prepositions = map[string]bool{"in": true, "on": true, "at": true, "to": true, "for": true, "with": true, "from": true, "by": true, "of": true, "about": true, "into": true, "through": true, "during": true, "before": true, "after": true, "above": true, "below": true, "between": true}
+	adverbs      = map[string]bool{"very": true, "quickly": true, "slowly": true, "easily": true, "often": true, "never": true, "always": true, "already": true, "just": true, "also": true, "still": true, "now": true, "then": true, "here": true, "there": true}
+	particles    = map[string]bool{"up": true, "out": true, "off": true, "away": true, "back": true, "down": true, "over": true, "around": true}
+	verbSuffixes = []string{"ing", "ed", "ize", "ise", "ate", "ify"}
+	nounSuffixes = []string{"tion", "sion", "ment", "ness", "ity", "er", "or", "ist", "ism"}
+	adjSuffixes  = []string{"able", "ible", "ful", "less", "ous", "ive", "ial", "al", "ent", "ant"}
 )
 
 func (f *PhraseGroupingFilter) isNoun(w string) bool {

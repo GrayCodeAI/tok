@@ -17,7 +17,7 @@ type StreamingProcessor struct {
 	coordinator *PipelineCoordinator
 	buffer      strings.Builder
 	mu          sync.Mutex
-	chunkSize   int // Process when buffer reaches this size
+	chunkSize   int         // Process when buffer reaches this size
 	lineChan    chan string // For true line-by-line processing
 }
 

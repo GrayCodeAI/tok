@@ -33,8 +33,8 @@ type DynaKVConfig struct {
 func DefaultDynaKVConfig() DynaKVConfig {
 	return DynaKVConfig{
 		Enabled:            true,
-		MaxCompressionRate: 0.9,  // 90% compression for filler
-		MinCompressionRate: 0.0,  // 0% compression for important tokens
+		MaxCompressionRate: 0.9, // 90% compression for filler
+		MinCompressionRate: 0.0, // 0% compression for important tokens
 		ImportanceBoost:    1.5,
 		MinContentLength:   100,
 	}

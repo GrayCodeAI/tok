@@ -57,11 +57,11 @@ type WASMPlugin struct {
 
 // PluginManifest describes a WASM plugin
 type PluginManifest struct {
-	Name        string `json:"name"`
-	Version     string `json:"version"`
-	Description string `json:"description"`
-	Author      string `json:"author"`
-	Entry       string `json:"entry"`
+	Name        string        `json:"name"`
+	Version     string        `json:"version"`
+	Description string        `json:"description"`
+	Author      string        `json:"author"`
+	Entry       string        `json:"entry"`
 	Layers      []PluginLayer `json:"layers"`
 }
 
@@ -78,10 +78,10 @@ type PluginLayer struct {
 func DefaultWASMPluginConfig() WASMPluginConfig {
 	homeDir, _ := os.UserHomeDir()
 	return WASMPluginConfig{
-		Enabled:     true,
-		PluginDir:   filepath.Join(homeDir, ".config", "tokman", "plugins"),
-		MaxPlugins:  10,
-		TimeoutMs:   1000,
+		Enabled:    true,
+		PluginDir:  filepath.Join(homeDir, ".config", "tokman", "plugins"),
+		MaxPlugins: 10,
+		TimeoutMs:  1000,
 	}
 }
 

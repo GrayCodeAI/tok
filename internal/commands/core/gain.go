@@ -93,7 +93,7 @@ func runGain(cmd *cobra.Command, args []string) error {
 	// Input: $2.50/1M tokens, Output: $10.00/1M tokens (average ~$5/1M)
 	costPer1MTokens := 5.0
 	estimatedSavings := float64(savings.TotalSaved) / 1_000_000 * costPer1MTokens
-	
+
 	fmt.Printf("💰 Estimated cost saved: $%.2f\n", estimatedSavings)
 	fmt.Println()
 

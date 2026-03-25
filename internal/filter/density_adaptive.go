@@ -45,9 +45,9 @@ type DensityAdaptiveConfig struct {
 func DefaultDensityAdaptiveConfig() DensityAdaptiveConfig {
 	return DensityAdaptiveConfig{
 		Enabled:          true,
-		TargetRatio:      0.4,  // Keep 40% of original
+		TargetRatio:      0.4, // Keep 40% of original
 		DensityThreshold: 0.5,
-		WindowSize:       10,   // lines
+		WindowSize:       10, // lines
 		DensityBoost:     1.3,
 		SparsePenalty:    0.7,
 	}

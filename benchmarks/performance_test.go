@@ -12,19 +12,19 @@ import (
 // defaultConfig returns a default pipeline config for benchmarking
 func defaultConfig(mode filter.Mode) filter.PipelineConfig {
 	return filter.PipelineConfig{
-		Mode:                    mode,
-		EnableEntropy:           true,
-		EnablePerplexity:        true,
-		EnableGoalDriven:        true,
-		EnableAST:               true,
-		EnableContrastive:       true,
-		EnableEvaluator:         true,
-		EnableGist:              true,
-		EnableHierarchical:      true,
-		EnableCompaction:        true,
-		EnableAttribution:       true,
-		EnableH2O:               true,
-		EnableAttentionSink:     true,
+		Mode:                mode,
+		EnableEntropy:       true,
+		EnablePerplexity:    true,
+		EnableGoalDriven:    true,
+		EnableAST:           true,
+		EnableContrastive:   true,
+		EnableEvaluator:     true,
+		EnableGist:          true,
+		EnableHierarchical:  true,
+		EnableCompaction:    true,
+		EnableAttribution:   true,
+		EnableH2O:           true,
+		EnableAttentionSink: true,
 	}
 }
 

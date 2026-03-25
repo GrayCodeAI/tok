@@ -10,9 +10,9 @@ import (
 // This allows later layers to signal earlier layers to adjust aggressiveness,
 // creating an adaptive pipeline that self-corrects based on compression results.
 type InterLayerFeedback struct {
-	config   FeedbackConfig
-	signals  map[string]FeedbackSignal
-	mu       sync.RWMutex
+	config  FeedbackConfig
+	signals map[string]FeedbackSignal
+	mu      sync.RWMutex
 }
 
 // FeedbackConfig holds configuration for inter-layer feedback
@@ -45,9 +45,9 @@ type FeedbackSignal struct {
 // DefaultFeedbackConfig returns default configuration
 func DefaultFeedbackConfig() FeedbackConfig {
 	return FeedbackConfig{
-		Enabled:           true,
-		QualityThreshold:  0.7,
-		MaxAdjustment:     0.3,
+		Enabled:          true,
+		QualityThreshold: 0.7,
+		MaxAdjustment:    0.3,
 	}
 }
 

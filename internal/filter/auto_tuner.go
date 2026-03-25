@@ -19,11 +19,11 @@ import (
 // 3. Dynamically enable/disable layers based on learned weights
 // 4. Persist learned weights to disk for cross-session learning
 type AutoTuner struct {
-	config    AutoTunerConfig
-	weights   map[string]map[string]float64 // contentType -> layerName -> weight
-	history   []TuningRecord
-	mu        sync.RWMutex
-	dataPath  string
+	config   AutoTunerConfig
+	weights  map[string]map[string]float64 // contentType -> layerName -> weight
+	history  []TuningRecord
+	mu       sync.RWMutex
+	dataPath string
 }
 
 // AutoTunerConfig holds configuration for the auto-tuner
@@ -46,12 +46,12 @@ type AutoTunerConfig struct {
 
 // TuningRecord captures a single compression result for learning
 type TuningRecord struct {
-	ContentType string            `json:"content_type"`
-	InputSize   int               `json:"input_size"`
-	OutputSize  int               `json:"output_size"`
-	Saved       int               `json:"saved"`
-	LayerStats  map[string]int    `json:"layer_stats"` // layer -> tokens saved
-	Latency     int64             `json:"latency_us"`
+	ContentType string         `json:"content_type"`
+	InputSize   int            `json:"input_size"`
+	OutputSize  int            `json:"output_size"`
+	Saved       int            `json:"saved"`
+	LayerStats  map[string]int `json:"layer_stats"` // layer -> tokens saved
+	Latency     int64          `json:"latency_us"`
 }
 
 // DefaultAutoTunerConfig returns default configuration
@@ -74,9 +74,9 @@ func NewAutoTuner() *AutoTuner {
 // NewAutoTunerWithConfig creates an auto-tuner with custom config
 func NewAutoTunerWithConfig(cfg AutoTunerConfig) *AutoTuner {
 	t := &AutoTuner{
-		config:  cfg,
-		weights: make(map[string]map[string]float64),
-		history: make([]TuningRecord, 0, cfg.MaxHistory),
+		config:   cfg,
+		weights:  make(map[string]map[string]float64),
+		history:  make([]TuningRecord, 0, cfg.MaxHistory),
 		dataPath: cfg.DataPath,
 	}
 

@@ -51,8 +51,8 @@ const (
 func DefaultScopeConfig() ScopeConfig {
 	return ScopeConfig{
 		Enabled:            true,
-		PrefillBudgetRatio: 1.5,  // Preserve 50% more for initial context
-		DecodeBudgetRatio:  0.6,  // Compress 40% more for ongoing conversation
+		PrefillBudgetRatio: 1.5, // Preserve 50% more for initial context
+		DecodeBudgetRatio:  0.6, // Compress 40% more for ongoing conversation
 		ConversationTurns:  3,
 		MinContentLength:   200,
 	}

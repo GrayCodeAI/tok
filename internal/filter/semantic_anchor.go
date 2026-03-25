@@ -16,9 +16,9 @@ import (
 // 2. Information Aggregation - Merge surrounding tokens into anchors
 // 3. Prompt Reorganization - Restructure into anchor-based layout
 type SemanticAnchorFilter struct {
-	config          SemanticAnchorConfig
-	anchorTokens    []AnchorToken
-	anchorDensity   map[string]float64 // Token -> density score
+	config        SemanticAnchorConfig
+	anchorTokens  []AnchorToken
+	anchorDensity map[string]float64 // Token -> density score
 }
 
 // SemanticAnchorConfig holds configuration for semantic anchor compression
@@ -38,29 +38,29 @@ type SemanticAnchorConfig struct {
 
 // AnchorToken represents a semantic anchor point
 type AnchorToken struct {
-	Text        string
-	Position    int
-	Score       float64
-	Aggregated  []string // Tokens aggregated into this anchor
+	Text         string
+	Position     int
+	Score        float64
+	Aggregated   []string // Tokens aggregated into this anchor
 	IsStructural bool
 }
 
 // SemanticAnchorStats tracks compression statistics
 type SemanticAnchorStats struct {
-	TotalAnchors     int
-	TotalAggregated  int
-	NonAnchorPruned  int
-	TokensSaved      int
+	TotalAnchors    int
+	TotalAggregated int
+	NonAnchorPruned int
+	TokensSaved     int
 }
 
 // Anchor patterns - high-connectivity tokens that serve as semantic hubs
 var (
 	// Named entities and identifiers
 	identifierPattern = regexp.MustCompile(`[A-Z][a-zA-Z0-9_]*`)
-	
+
 	// Code symbols (functions, classes, etc.)
 	codeSymbolPattern = regexp.MustCompile(`(func|class|def|fn|struct|interface|type|const|var|let)\s+([a-zA-Z_][a-zA-Z0-9_]*)`)
-	
+
 	// Important keywords
 	importantKeywords = map[string]bool{
 		"main": true, "error": true, "return": true, "if": true,

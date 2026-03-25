@@ -19,44 +19,44 @@ func TestPipelineIntegration(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		input      string
-		wantOutput bool
+		name         string
+		input        string
+		wantOutput   bool
 		minReduction float64
 	}{
 		{
-			name:       "small_input",
-			input:      "This is a small test input.",
-			wantOutput: true,
+			name:         "small_input",
+			input:        "This is a small test input.",
+			wantOutput:   true,
 			minReduction: 0.0,
 		},
 		{
-			name:       "repeated_patterns",
-			input:      strings.Repeat("repeat pattern ", 50),
-			wantOutput: true,
+			name:         "repeated_patterns",
+			input:        strings.Repeat("repeat pattern ", 50),
+			wantOutput:   true,
 			minReduction: 50.0,
 		},
 		{
-			name:       "log_compression",
-			input:      strings.Repeat("2024-01-15 10:30:45 INFO [main] Processing request\n", 100),
-			wantOutput: true,
+			name:         "log_compression",
+			input:        strings.Repeat("2024-01-15 10:30:45 INFO [main] Processing request\n", 100),
+			wantOutput:   true,
 			minReduction: 80.0,
 		},
 		{
-			name:       "code_with_repetition",
-			input:      `func main() {
+			name: "code_with_repetition",
+			input: `func main() {
 	fmt.Println("Hello")
 	fmt.Println("Hello")
 	fmt.Println("Hello")
 	fmt.Println("Hello")
 }`,
-			wantOutput: true,
+			wantOutput:   true,
 			minReduction: 0.0,
 		},
 		{
-			name:       "large_input",
-			input:      strings.Repeat("Large content line with more text for testing. ", 1000),
-			wantOutput: true,
+			name:         "large_input",
+			input:        strings.Repeat("Large content line with more text for testing. ", 1000),
+			wantOutput:   true,
 			minReduction: 90.0,
 		},
 	}

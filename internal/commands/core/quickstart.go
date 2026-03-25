@@ -35,11 +35,11 @@ func init() {
 }
 
 type agentInfo struct {
-	Name        string
-	ConfigPath  string
-	HookPath    string
-	Detected    bool
-	Configured  bool
+	Name       string
+	ConfigPath string
+	HookPath   string
+	Detected   bool
+	Configured bool
 }
 
 func runQuickstart(cmd *cobra.Command, args []string) error {
@@ -52,7 +52,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	// Step 1: Detect agents
 	fmt.Println("🔍 Detecting AI agents...")
 	agents := detectAgents()
-	
+
 	detectedCount := 0
 	for _, agent := range agents {
 		if agent.Detected {
@@ -60,7 +60,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 			fmt.Printf("   ✓ %s detected\n", agent.Name)
 		}
 	}
-	
+
 	if detectedCount == 0 {
 		fmt.Println("   ℹ No AI agents detected in standard locations")
 		fmt.Println()
@@ -87,7 +87,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 			}
 		}
 	}
-	
+
 	if installedCount == 0 && detectedCount > 0 && !quickstartAll {
 		fmt.Println("   ℹ Run 'tokman quickstart --all' to install hooks for all detected agents")
 	}
@@ -112,7 +112,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 		fmt.Println("⚠️  Some issues detected. See above for details.")
 		return nil
 	}
-	
+
 	fmt.Println()
 	fmt.Println("🎉 Quickstart complete!")
 	fmt.Println()

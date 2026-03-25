@@ -230,7 +230,7 @@ func checkTierSystem() checkResult {
 	}
 
 	adaptive := filter.NewAdaptive(filter.PipelineConfig{})
-	
+
 	correct := 0
 	for _, tc := range testCases {
 		detected := adaptive.DetectTier(tc.input)

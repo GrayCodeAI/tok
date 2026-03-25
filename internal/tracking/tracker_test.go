@@ -8,8 +8,8 @@ import (
 
 func TestEstimateTokens(t *testing.T) {
 	tests := []struct {
-		name     string
-		input    string
+		name        string
+		input       string
 		minExpected int // BPE may differ from heuristic, use minimum
 	}{
 		{

@@ -276,8 +276,8 @@ func (f *SemanticCacheFilter) mergeToCores(clusters []semanticCluster, mode Mode
 			// Multi-item cluster: show representative + count
 			result.WriteString(cluster.core)
 			if cluster.frequency > 2 {
-			result.WriteString(" [×")
-			result.WriteString(intToA(cluster.frequency))
+				result.WriteString(" [×")
+				result.WriteString(intToA(cluster.frequency))
 				result.WriteString("]")
 			}
 		} else {

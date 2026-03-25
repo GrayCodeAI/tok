@@ -63,10 +63,10 @@ func economicsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 
 		response := map[string]any{
 			"total_tokens_saved": totalSaved,
-			"estimated_cost":      estimatedCost,
-			"records_count":       len(records),
+			"estimated_cost":     estimatedCost,
+			"records_count":      len(records),
 			"provider":           provider.Name,
-			"provider_type":       provider.Type,
+			"provider_type":      provider.Type,
 			"cost_per_million":   costPerMillion,
 		}
 
@@ -107,10 +107,10 @@ func modelBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		provider := detectLLMProvider()
 		response := map[string]any{
-			"provider":   provider.Name,
-			"model":      provider.Model,
-			"available":  provider.Type != "unknown",
-			"sessions":   []map[string]any{},
+			"provider":  provider.Name,
+			"model":     provider.Model,
+			"available": provider.Type != "unknown",
+			"sessions":  []map[string]any{},
 		}
 
 		if !ccusage.IsAvailable() {

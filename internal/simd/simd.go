@@ -342,12 +342,12 @@ func ContainsWord(s, w string) bool {
 			// Check prefix match
 			if s[i:i+len(w)] == w {
 				// Check word boundaries
-			startOK := i == 0 || !IsWordChar(s[i-1])
-			endOK := i+len(w) == len(s) || !IsWordChar(s[i+len(w)])
-			if startOK && endOK {
-				return true
+				startOK := i == 0 || !IsWordChar(s[i-1])
+				endOK := i+len(w) == len(s) || !IsWordChar(s[i+len(w)])
+				if startOK && endOK {
+					return true
+				}
 			}
-		}
 		}
 	}
 	return false

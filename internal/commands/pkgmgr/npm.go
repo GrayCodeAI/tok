@@ -154,27 +154,27 @@ func filterNpmTestOutput(output string) string {
 		if strings.Contains(line, "Tests:") || strings.Contains(line, "passed") {
 			parts := strings.Fields(line)
 			for i, p := range parts {
-			if p == "passed" || p == "passing" {
-				if i > 0 {
-					if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
-						passed = 0
+				if p == "passed" || p == "passing" {
+					if i > 0 {
+						if _, err := fmt.Sscanf(parts[i-1], "%d", &passed); err != nil {
+							passed = 0
+						}
 					}
 				}
-			}
-			if p == "failed" || p == "failing" {
-				if i > 0 {
-					if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
-						failed = 0
+				if p == "failed" || p == "failing" {
+					if i > 0 {
+						if _, err := fmt.Sscanf(parts[i-1], "%d", &failed); err != nil {
+							failed = 0
+						}
 					}
 				}
-			}
-			if p == "skipped" || p == "pending" {
-				if i > 0 {
-					if _, err := fmt.Sscanf(parts[i-1], "%d", &skipped); err != nil {
-						skipped = 0
+				if p == "skipped" || p == "pending" {
+					if i > 0 {
+						if _, err := fmt.Sscanf(parts[i-1], "%d", &skipped); err != nil {
+							skipped = 0
+						}
 					}
 				}
-			}
 			}
 		}
 

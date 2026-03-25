@@ -57,11 +57,11 @@ func TestLazyPrunerFilter_Disabled(t *testing.T) {
 
 func TestLazyPrunerFilter_BudgetAware(t *testing.T) {
 	cfg := LazyPrunerConfig{
-		BaseBudget:         50,
-		DecayRate:          0.9,
-		NumLayers:          10,
-		RevivalBudget:      20,
-		EnableRevival:      true,
+		BaseBudget:    50,
+		DecayRate:     0.9,
+		NumLayers:     10,
+		RevivalBudget: 20,
+		EnableRevival: true,
 	}
 	filter := NewLazyPrunerFilterWithConfig(cfg)
 
@@ -97,11 +97,11 @@ Important: Remember this value.`
 
 func TestLazyPrunerFilter_WithConfig(t *testing.T) {
 	cfg := LazyPrunerConfig{
-		BaseBudget:         100,
-		DecayRate:          0.9,
-		NumLayers:          10,
-		RevivalBudget:      30,
-		EnableRevival:      true,
+		BaseBudget:    100,
+		DecayRate:     0.9,
+		NumLayers:     10,
+		RevivalBudget: 30,
+		EnableRevival: true,
 	}
 	filter := NewLazyPrunerFilterWithConfig(cfg)
 

@@ -237,20 +237,20 @@ type PipelineConfig struct {
 	SemanticChunkThreshold float64
 
 	// Layer 17: Sketch-based Reversible Store (KVReviver style)
-	EnableSketchStore  bool
-	SketchBudgetRatio  float64
-	SketchMaxSize      int
-	SketchHeavyHitter  float64
+	EnableSketchStore bool
+	SketchBudgetRatio float64
+	SketchMaxSize     int
+	SketchHeavyHitter float64
 
 	// Layer 18: Budget-aware Dynamic Pruning (LazyLLM style)
-	EnableLazyPruner   bool
-	LazyBaseBudget     int
-	LazyDecayRate      float64
-	LazyRevivalBudget  int
+	EnableLazyPruner  bool
+	LazyBaseBudget    int
+	LazyDecayRate     float64
+	LazyRevivalBudget int
 
 	// Layer 19: Semantic-Anchor Compression (SAC style)
-	EnableSemanticAnchor bool
-	SemanticAnchorRatio  float64
+	EnableSemanticAnchor  bool
+	SemanticAnchorRatio   float64
 	SemanticAnchorSpacing int
 
 	// Layer 20: Agent Memory Mode (Focus-inspired)
@@ -273,8 +273,8 @@ type PipelineConfig struct {
 	TFIDFThreshold float64
 
 	// NEW: Reasoning Trace Compression (R-KV, 2025)
-	EnableReasoningTrace  bool
-	MaxReflectionLoops    int
+	EnableReasoningTrace bool
+	MaxReflectionLoops   int
 
 	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
 	EnableSymbolicCompress bool
@@ -287,8 +287,8 @@ type PipelineConfig struct {
 	DecimalPlaces        int
 
 	// NEW: Dynamic Compression Ratio (PruneSID, Mar 2026)
-	EnableDynamicRatio   bool
-	DynamicRatioBase     float64
+	EnableDynamicRatio bool
+	DynamicRatioBase   float64
 
 	// Phase 2: Hypernym Concept Compression (Mercury-style)
 	EnableHypernym bool
@@ -623,27 +623,27 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 
 	// Build layers in Process() execution order
 	p.layers = []filterLayer{
-		{p.entropyFilter, "1_entropy"},               // Layer 1
-		{p.perplexityFilter, "2_perplexity"},          // Layer 2
-		{p.goalDrivenFilter, "3_goal_driven"},         // Layer 3
-		{p.astPreserveFilter, "4_ast_preserve"},       // Layer 4
-		{p.contrastiveFilter, "5_contrastive"},        // Layer 5
-		{p.ngramAbbreviator, "6_ngram"},               // Layer 6
-		{p.evaluatorHeadsFilter, "7_evaluator"},       // Layer 7
-		{p.gistFilter, "8_gist"},                      // Layer 8
-		{p.hierarchicalSummaryFilter, "9_hierarchical"}, // Layer 9
-		{p.llmFilter, "neural"},                       // Neural (optional)
-		{p.compactionLayer, "11_compaction"},          // Layer 11
-		{p.attributionFilter, "12_attribution"},       // Layer 12
-		{p.h2oFilter, "13_h2o"},                       // Layer 13
-		{p.attentionSinkFilter, "14_attention_sink"},  // Layer 14
-		{p.metaTokenFilter, "15_meta_token"},          // Layer 15
-		{p.semanticChunkFilter, "16_semantic_chunk"},  // Layer 16
-		{p.sketchStoreFilter, "17_sketch_store"},      // Layer 17
-		{p.lazyPrunerFilter, "18_lazy_pruner"},        // Layer 18
-		{p.semanticAnchorFilter, "19_semantic_anchor"}, // Layer 19
-		{p.agentMemoryFilter, "20_agent_memory"},      // Layer 20
-		{p.questionAwareFilter, "21_question_aware"},  // T12
+		{p.entropyFilter, "1_entropy"},                   // Layer 1
+		{p.perplexityFilter, "2_perplexity"},             // Layer 2
+		{p.goalDrivenFilter, "3_goal_driven"},            // Layer 3
+		{p.astPreserveFilter, "4_ast_preserve"},          // Layer 4
+		{p.contrastiveFilter, "5_contrastive"},           // Layer 5
+		{p.ngramAbbreviator, "6_ngram"},                  // Layer 6
+		{p.evaluatorHeadsFilter, "7_evaluator"},          // Layer 7
+		{p.gistFilter, "8_gist"},                         // Layer 8
+		{p.hierarchicalSummaryFilter, "9_hierarchical"},  // Layer 9
+		{p.llmFilter, "neural"},                          // Neural (optional)
+		{p.compactionLayer, "11_compaction"},             // Layer 11
+		{p.attributionFilter, "12_attribution"},          // Layer 12
+		{p.h2oFilter, "13_h2o"},                          // Layer 13
+		{p.attentionSinkFilter, "14_attention_sink"},     // Layer 14
+		{p.metaTokenFilter, "15_meta_token"},             // Layer 15
+		{p.semanticChunkFilter, "16_semantic_chunk"},     // Layer 16
+		{p.sketchStoreFilter, "17_sketch_store"},         // Layer 17
+		{p.lazyPrunerFilter, "18_lazy_pruner"},           // Layer 18
+		{p.semanticAnchorFilter, "19_semantic_anchor"},   // Layer 19
+		{p.agentMemoryFilter, "20_agent_memory"},         // Layer 20
+		{p.questionAwareFilter, "21_question_aware"},     // T12
 		{p.densityAdaptiveFilter, "22_density_adaptive"}, // T17
 	}
 
@@ -934,27 +934,43 @@ func (p *PipelineCoordinator) shouldSkipEntropy(content string) bool {
 	if len(content) < 50 {
 		return true // Too short for meaningful entropy analysis
 	}
-	// Check if content has enough character diversity for entropy filtering
-	uniqueChars := make(map[rune]bool)
-	for _, r := range content {
-		uniqueChars[r] = true
-		if len(uniqueChars) > 30 {
-			return false // Diverse content, entropy filtering will help
+	// Quick character diversity check using a 256-bit lookup (32-byte array).
+	// Only scan first 500 bytes for diversity (sufficient for skip decision).
+	limit := len(content)
+	if limit > 500 {
+		limit = 500
+	}
+	var seen [32]byte // 256 bits = 32 bytes, one bit per ASCII byte value
+	uniqueCount := 0
+	for i := 0; i < limit; i++ {
+		b := content[i]
+		idx := b >> 3 // byte / 8
+		bit := byte(1) << (b & 7)
+		if seen[idx]&bit == 0 {
+			seen[idx] |= bit
+			uniqueCount++
+			if uniqueCount > 30 {
+				return false
+			}
 		}
 	}
-	// Very few unique chars - skip entropy filtering
-	// Low diversity content doesn't benefit from entropy-based compression
 	return true
 }
 
 // shouldSkipPerplexity checks if perplexity pruning would help.
 // Skip if content has no clear structure or is too short.
 func (p *PipelineCoordinator) shouldSkipPerplexity(content string) bool {
-	lines := strings.Count(content, "\n")
-	if lines < 5 {
-		return true // Too few lines for perplexity analysis
+	// Count newlines without allocation (avoid strings.Count overhead)
+	nlCount := 0
+	for i := 0; i < len(content); i++ {
+		if content[i] == '\n' {
+			nlCount++
+			if nlCount >= 5 {
+				return false
+			}
+		}
 	}
-	return false
+	return true
 }
 
 // shouldSkipQueryDependent checks if query-dependent layers apply.
@@ -970,12 +986,22 @@ func (p *PipelineCoordinator) shouldSkipNgram(content string) bool {
 	if len(content) < 200 {
 		return true // Too short for pattern extraction
 	}
-	// Quick check for potential patterns
-	words := strings.Fields(content)
-	if len(words) < 20 {
-		return true
+	// Count words without allocation (avoid strings.Fields overhead)
+	wordCount := 0
+	inWord := false
+	for i := 0; i < len(content); i++ {
+		isSpace := content[i] == ' ' || content[i] == '\t' || content[i] == '\n' || content[i] == '\r'
+		if isSpace {
+			inWord = false
+		} else if !inWord {
+			inWord = true
+			wordCount++
+			if wordCount >= 20 {
+				return false
+			}
+		}
 	}
-	return false
+	return true
 }
 
 // shouldSkipCompaction checks if compaction would help.
@@ -1031,11 +1057,7 @@ func (p *PipelineCoordinator) shouldSkipBudgetDependent() bool {
 
 // computeTotalSaved returns total tokens saved across all layers.
 func (s *PipelineStats) computeTotalSaved() int {
-	total := 0
-	for _, ls := range s.LayerStats {
-		total += ls.TokensSaved
-	}
-	return total
+	return s.runningSaved
 }
 
 // finalizeStats computes final pipeline statistics.
@@ -1050,9 +1072,17 @@ func (p *PipelineCoordinator) finalizeStats(stats *PipelineStats, output string)
 
 // processLayer runs a single filter layer and records its stats.
 func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stats *PipelineStats) string {
-	start := time.Now()
+	var start time.Time
+	if p.config.SessionTracking {
+		start = time.Now()
+	}
 	output, saved := layer.filter.Apply(input, p.config.Mode)
-	stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: time.Since(start).Microseconds()}
+	if p.config.SessionTracking {
+		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: time.Since(start).Microseconds()}
+	} else {
+		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved}
+	}
+	stats.runningSaved += saved
 	return output
 }
 
@@ -1076,6 +1106,7 @@ func (p *PipelineCoordinator) processBudgetLayer(input string, stats *PipelineSt
 	}
 
 	stats.LayerStats["10_total"] = LayerStat{TokensSaved: totalSaved}
+	stats.runningSaved += totalSaved
 	return output
 }
 
@@ -1086,6 +1117,7 @@ type PipelineStats struct {
 	TotalSaved       int
 	ReductionPercent float64
 	LayerStats       map[string]LayerStat
+	runningSaved     int // O(1) accumulator to avoid O(n) recomputation in early exit
 }
 
 // LayerStat holds statistics for a single layer
@@ -1167,12 +1199,12 @@ func QuickProcess(input string, mode Mode, opts ...QuickProcessOpt) (string, int
 		EnableSemanticAnchor: true,
 		EnableAgentMemory:    true,
 		// NEW layers enabled by default
-		EnableTFIDF:           true,
-		EnableReasoningTrace:  true,
+		EnableTFIDF:            true,
+		EnableReasoningTrace:   true,
 		EnableSymbolicCompress: true,
-		EnablePhraseGrouping:  true,
-		EnableNumericalQuant:  true,
-		EnableDynamicRatio:    true,
+		EnablePhraseGrouping:   true,
+		EnableNumericalQuant:   true,
+		EnableDynamicRatio:     true,
 		// Phase 2 layers
 		EnableHypernym:      true,
 		EnableSemanticCache: true,

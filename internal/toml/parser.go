@@ -49,7 +49,7 @@ type MatchOutputRule struct {
 type TOMLFilter struct {
 	SchemaVersion int                     `toml:"schema_version"`
 	Filters       map[string]FilterConfig `toml:"-"`
-	RawContent    map[string]any  `toml:"-"`
+	RawContent    map[string]any          `toml:"-"`
 }
 
 // Parser handles parsing TOML filter files

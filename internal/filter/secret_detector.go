@@ -12,7 +12,7 @@ import (
 // Detects: API keys, tokens, passwords, private keys, connection strings,
 // JWT tokens, AWS credentials, GitHub tokens, and common secret patterns.
 type SecretDetector struct {
-	config  SecretConfig
+	config   SecretConfig
 	patterns []secretPattern
 }
 

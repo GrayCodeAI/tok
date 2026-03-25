@@ -14,8 +14,8 @@ import (
 // This compresses common instruction patterns found in system prompts, CLI help text,
 // and configuration documentation into compact symbolic representations.
 type SymbolicCompressFilter struct {
-	config     SymbolicConfig
-	patterns   []symbolicPattern
+	config   SymbolicConfig
+	patterns []symbolicPattern
 }
 
 // SymbolicConfig holds configuration for symbolic compression

@@ -2,6 +2,52 @@
 
 All notable changes to TokMan will be documented in this file.
 
+## [2.2.0] - 2026-03-25
+
+### Added
+
+#### Bundle Install TOML Filter
+- **`bundle-install.toml`** - New TOML filter for `bundle install` and `bundle update`
+- Strips `Using`, `Fetching gem metadata`, `Resolving dependencies` lines
+- Compact summary on completion: `ok bundle: complete` / `ok bundle: updated`
+- Inline tests included for validation
+
+#### Unit Tests for Ruby Toolchain
+- **`bundle_test.go`** - 10 tests covering install, update, list, outdated, errors
+- **`rspec_test.go`** - 12 tests covering JSON/text parsing, noise stripping, failures
+- **`rake_test.go`** - 14 tests covering minitest output, runner selection, ANSI stripping
+- **`rubocop_test.go`** - 9 tests covering JSON/text parsing, severity sorting, overflow
+
+#### Hook Test Script
+- **`scripts/test-hook-rewrite.sh`** - CI validation for hook rewrite behavior
+- Tests git, gh, docker, kubectl, npm, cargo, pip, test runners, linters, edge cases
+- 30+ test cases with pass/fail reporting
+
+### Fixed
+- **`numerical_quant.go`** - Removed unreachable code after premature `return` in `compressTimestamps`
+- **`presets.go`** - Fixed `EnableGoalDriven` and `EnableContrastive` flags for fast/balanced presets
+- **Stage gates** - Entropy density check was too coarse; replaced 4-bit grouping with 256-bit lookup table
+
+### Performance
+- **Pipeline hot path optimizations**:
+  - O(1) running total for early exit checks (was O(n) per check)
+  - Conditional `time.Now()` syscalls (only when session tracking enabled)
+  - Zero-allocation stage gates: `shouldSkipPerplexity`, `shouldSkipNgram`, `shouldSkipEntropy`
+  - 256-bit lookup table for character diversity (replaces map allocation)
+- **Benchmark results** (31-layer pipeline):
+  - Full pipeline: 47.52ms avg (9% faster)
+  - Adaptive pipeline: 1.33x speedup over full
+  - Simple inputs: <0.5ms (3 layers)
+
+### RTK Feature Parity
+- **Full rtk feature comparison completed** - tokman already implements all rtk features:
+  - Ruby toolchain: rspec, rake, rubocop, bundle (all implemented)
+  - Trust/verification: trust, untrust, list-trusted, verify (all implemented)
+  - Session management: session, sessions, snapshot, restore, history (all implemented)
+  - AI agents: 14+ agents vs rtk's 9
+  - TOML filters: 93 vs rtk's 58
+  - Compression: 31 research-backed layers vs rtk's 3 filter levels
+
 ## [2.1.0] - 2026-03-21
 
 ### Added - Ecosystem Integration

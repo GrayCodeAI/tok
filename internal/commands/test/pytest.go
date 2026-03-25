@@ -251,19 +251,19 @@ func parseSummaryLine(summary string) (passed, failed, skipped int) {
 		words := strings.Fields(part)
 		for i, word := range words {
 			if i > 0 {
-			if strings.Contains(word, "passed") {
-				if _, err := fmt.Sscanf(words[i-1], "%d", &passed); err != nil {
-					passed = 0
+				if strings.Contains(word, "passed") {
+					if _, err := fmt.Sscanf(words[i-1], "%d", &passed); err != nil {
+						passed = 0
+					}
+				} else if strings.Contains(word, "failed") {
+					if _, err := fmt.Sscanf(words[i-1], "%d", &failed); err != nil {
+						failed = 0
+					}
+				} else if strings.Contains(word, "skipped") {
+					if _, err := fmt.Sscanf(words[i-1], "%d", &skipped); err != nil {
+						skipped = 0
+					}
 				}
-			} else if strings.Contains(word, "failed") {
-				if _, err := fmt.Sscanf(words[i-1], "%d", &failed); err != nil {
-					failed = 0
-				}
-			} else if strings.Contains(word, "skipped") {
-				if _, err := fmt.Sscanf(words[i-1], "%d", &skipped); err != nil {
-					skipped = 0
-				}
-			}
 			}
 		}
 	}

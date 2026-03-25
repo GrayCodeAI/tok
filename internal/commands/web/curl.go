@@ -88,5 +88,3 @@ func filterCurlOutput(output string, jsonDepth, maxLines, maxLineLen int) string
 	}
 	return strings.Join(result, "\n")
 }
-
-

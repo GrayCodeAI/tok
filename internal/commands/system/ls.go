@@ -39,7 +39,7 @@ func init() {
 func loadNoiseDirs() map[string]bool {
 	cfg, err := config.Load(shared.CfgFile)
 	noiseDirs := make(map[string]bool)
-	
+
 	// Use loaded config noise dirs, or fall back to defaults
 	var dirs []string
 	if err == nil && len(cfg.Filter.NoiseDirs) > 0 {
@@ -48,7 +48,7 @@ func loadNoiseDirs() map[string]bool {
 		// Fall back to default config values (centralized in config.go)
 		dirs = config.Defaults().Filter.NoiseDirs
 	}
-	
+
 	for _, dir := range dirs {
 		noiseDirs[dir] = true
 	}

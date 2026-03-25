@@ -35,17 +35,17 @@ const (
 
 // Alert represents a triggered alert
 type Alert struct {
-	ID           string                 `json:"id"`
-	Type         AlertType              `json:"type"`
-	Severity     AlertSeverity          `json:"severity"`
-	Title        string                 `json:"title"`
-	Message      string                 `json:"message"`
+	ID           string         `json:"id"`
+	Type         AlertType      `json:"type"`
+	Severity     AlertSeverity  `json:"severity"`
+	Title        string         `json:"title"`
+	Message      string         `json:"message"`
 	Value        any            `json:"value,omitempty"`
 	Threshold    any            `json:"threshold,omitempty"`
-	Timestamp    time.Time              `json:"timestamp"`
-	Acknowledged bool                   `json:"acknowledged"`
-	Resolved     bool                   `json:"resolved"`
-	ResolvedAt   *time.Time             `json:"resolved_at,omitempty"`
+	Timestamp    time.Time      `json:"timestamp"`
+	Acknowledged bool           `json:"acknowledged"`
+	Resolved     bool           `json:"resolved"`
+	ResolvedAt   *time.Time     `json:"resolved_at,omitempty"`
 	Metadata     map[string]any `json:"metadata,omitempty"`
 }
 

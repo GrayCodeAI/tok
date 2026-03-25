@@ -445,7 +445,7 @@ func (t *Tracker) Vacuum() error {
 func (t *Tracker) GetSavings(projectPath string) (*SavingsSummary, error) {
 	var query string
 	var args []any
-	
+
 	if projectPath == "" {
 		query = `
 			SELECT 

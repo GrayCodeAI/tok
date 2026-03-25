@@ -22,9 +22,9 @@ type DelayedPruner struct {
 
 // DelayedConfig holds configuration for delayed pruning
 type DelayedConfig struct {
-	Enabled         bool
-	DelaySteps      int     // Number of steps to delay before final eviction
-	RescueThreshold float64 // If marked token's info not found in survivors, rescue it
+	Enabled          bool
+	DelaySteps       int     // Number of steps to delay before final eviction
+	RescueThreshold  float64 // If marked token's info not found in survivors, rescue it
 	MinContentLength int
 }
 
@@ -48,9 +48,9 @@ func (d *DelayedPruner) Name() string { return "delayed_pruner" }
 
 // pendingLine represents a line marked for removal but not yet evicted
 type pendingLine struct {
-	content  string
+	content    string
 	stepMarked int
-	words    map[string]bool
+	words      map[string]bool
 }
 
 // Apply applies delayed pruning

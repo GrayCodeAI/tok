@@ -21,11 +21,11 @@ type CIBFilter struct {
 
 // CIBConfig holds configuration for CIB compression
 type CIBConfig struct {
-	Enabled            bool
-	SurprisalThreshold float64 // Tokens above this surprisal are kept
-	MaxReasoningTokens int       // Maximum tokens for reasoning traces
+	Enabled             bool
+	SurprisalThreshold  float64 // Tokens above this surprisal are kept
+	MaxReasoningTokens  int     // Maximum tokens for reasoning traces
 	PreserveConclusions bool
-	MinContentLength   int
+	MinContentLength    int
 }
 
 // DefaultCIBConfig returns default configuration

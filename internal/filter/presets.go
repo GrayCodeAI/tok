@@ -38,10 +38,10 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		// Fast preset: Minimal layers for speed
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = false
-		cfg.EnableGoalDriven = false
+		cfg.EnableGoalDriven = true
 		cfg.EnableAST = false
 		cfg.EnableContrastive = false
-		cfg.NgramEnabled = true
+		cfg.NgramEnabled = false
 		cfg.EnableEvaluator = false
 		cfg.EnableGist = false
 		cfg.EnableHierarchical = false
@@ -60,15 +60,15 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		// Balanced preset: Core layers for most use cases
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
-		cfg.EnableGoalDriven = false
+		cfg.EnableGoalDriven = true
 		cfg.EnableAST = true
-		cfg.EnableContrastive = false
+		cfg.EnableContrastive = true
 		cfg.NgramEnabled = true
 		cfg.EnableEvaluator = false
 		cfg.EnableGist = false
 		cfg.EnableHierarchical = false
 		cfg.EnableCompaction = false
-		cfg.EnableAttribution = true
+		cfg.EnableAttribution = false
 		cfg.EnableH2O = false
 		cfg.EnableAttentionSink = true
 		cfg.EnableTFIDF = true
@@ -114,14 +114,14 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 // For PresetAuto, uses the adaptive pipeline to select optimal tier.
 func QuickProcessPreset(input string, mode Mode, preset PipelinePreset) (string, int) {
 	cfg := PresetConfig(preset, mode)
-	
+
 	if preset == PresetAuto {
 		// Use adaptive pipeline for auto preset
 		adaptive := NewAdaptive(cfg)
 		output, stats := adaptive.Process(input)
 		return output, stats.TotalSaved
 	}
-	
+
 	p := NewPipelineCoordinator(cfg)
 	output, stats := p.Process(input)
 	return output, stats.TotalSaved

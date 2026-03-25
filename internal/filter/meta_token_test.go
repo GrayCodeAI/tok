@@ -74,9 +74,9 @@ func TestMetaTokenFilter_RepeatedPatterns(t *testing.T) {
 
 func TestMetaTokenFilter_WithConfig(t *testing.T) {
 	cfg := MetaTokenConfig{
-		WindowSize:          50,
-		MinPattern:          3,
-		MaxMetaTokens:       100,
+		WindowSize:    50,
+		MinPattern:    3,
+		MaxMetaTokens: 100,
 	}
 	filter := NewMetaTokenFilterWithConfig(cfg)
 
@@ -114,6 +114,6 @@ func TestMetaTokenFilter_Stats(t *testing.T) {
 	_, saved := filter.Apply(input, ModeAggressive)
 
 	stats := filter.Stats()
-	t.Logf("Stats: UniquePatterns=%d, TotalPatterns=%d, EstTokensSaved=%d, Saved=%d", 
+	t.Logf("Stats: UniquePatterns=%d, TotalPatterns=%d, EstTokensSaved=%d, Saved=%d",
 		stats.UniquePatterns, stats.TotalPatterns, stats.EstTokensSaved, saved)
 }

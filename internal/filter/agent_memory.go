@@ -112,10 +112,10 @@ func NewAgentMemoryFilter() *AgentMemoryFilter {
 // NewAgentMemoryFilterWithConfig creates a filter with custom config
 func NewAgentMemoryFilterWithConfig(cfg AgentMemoryConfig) *AgentMemoryFilter {
 	return &AgentMemoryFilter{
-		config:             cfg,
-		lastConsolidation:  time.Now(),
-		consolidationRate:  0,
-		totalPruned:        0,
+		config:            cfg,
+		lastConsolidation: time.Now(),
+		consolidationRate: 0,
+		totalPruned:       0,
 	}
 }
 
@@ -330,7 +330,7 @@ func (f *AgentMemoryFilter) summarizeAction(action string) string {
 // pruneHistory removes redundant or low-value history entries
 func (f *AgentMemoryFilter) pruneHistory(history string) string {
 	lines := strings.Split(history, "\n")
-	
+
 	// Safety: if empty or single line, return as-is
 	if len(lines) <= 1 {
 		return history

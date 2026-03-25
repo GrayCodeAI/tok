@@ -42,22 +42,22 @@ type ASTPreserveFilter struct {
 	preserveTypes   bool
 
 	// LongCodeZip dual-stage settings
-	enableDualStage  bool
-	queryIntent      string
-	functionBudget   float64 // Percentage of functions to keep
-	blockBudget      float64 // Percentage of blocks to keep within functions
+	enableDualStage bool
+	queryIntent     string
+	functionBudget  float64 // Percentage of functions to keep
+	blockBudget     float64 // Percentage of blocks to keep within functions
 }
 
 // CodeChunk represents a parsed code unit for dual-stage compression
 type CodeChunk struct {
-	Type        string // "function", "class", "method", "block"
-	Name        string
-	Content     string
-	StartLine   int
-	EndLine     int
-	Score       float64 // Importance score
-	Tokens      int
-	Children    []CodeChunk // Nested blocks
+	Type      string // "function", "class", "method", "block"
+	Name      string
+	Content   string
+	StartLine int
+	EndLine   int
+	Score     float64 // Importance score
+	Tokens    int
+	Children  []CodeChunk // Nested blocks
 }
 
 // NewASTPreserveFilter creates a new AST-aware filter

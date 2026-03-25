@@ -14,8 +14,8 @@ import (
 
 // TOMLFilterEngine applies TOML-defined filter rules to output
 type TOMLFilterEngine struct {
-	config     *FilterConfig
-	compiledRe []*regexp.Regexp // pre-compiled replace patterns
+	config      *FilterConfig
+	compiledRe  []*regexp.Regexp // pre-compiled replace patterns
 	compileOnce sync.Once
 }
 

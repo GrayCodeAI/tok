@@ -15,15 +15,15 @@ import (
 // previous compressions and predict importance based on content type, position,
 // and structural patterns. This is faster than computing importance from scratch.
 type AttentionPredictor struct {
-	config    PredictorConfig
-	patterns  map[string]PredictorPattern
+	config   PredictorConfig
+	patterns map[string]PredictorPattern
 }
 
 // PredictorConfig holds configuration for attention prediction
 type PredictorConfig struct {
-	Enabled         bool
-	LearningRate    float64
-	MinSamples      int
+	Enabled          bool
+	LearningRate     float64
+	MinSamples       int
 	MinContentLength int
 }
 

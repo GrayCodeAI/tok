@@ -48,12 +48,12 @@ type LazyPrunerConfig struct {
 
 // Token represents a scored token for pruning decisions
 type Token struct {
-	Text      string
-	Score     float64
-	Position  int
-	Layer     int
-	Pruned    bool
-	Revived   bool
+	Text     string
+	Score    float64
+	Position int
+	Layer    int
+	Pruned   bool
+	Revived  bool
 }
 
 // LazyPrunerStats tracks pruning statistics

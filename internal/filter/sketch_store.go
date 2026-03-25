@@ -49,11 +49,11 @@ type SketchCache struct {
 
 // Sketch represents a compressed content entry
 type Sketch struct {
-	CompressedInfo []byte // Quantized/low-rank representation
-	OriginalHash   string // For verification
-	TokenCount     int    // Original token count
+	CompressedInfo []byte  // Quantized/low-rank representation
+	OriginalHash   string  // For verification
+	TokenCount     int     // Original token count
 	Importance     float64 // Original importance score
-	ContentType    string // "code", "text", "mixed"
+	ContentType    string  // "code", "text", "mixed"
 }
 
 // SketchStats tracks compression statistics
@@ -66,20 +66,20 @@ type SketchStats struct {
 
 // SketchEntry represents a revivable content block
 type SketchEntry struct {
-	Hash        string
-	Content     string
-	Sketch      *Sketch
-	Revived     bool
+	Hash         string
+	Content      string
+	Sketch       *Sketch
+	Revived      bool
 	RevivalCount int
 }
 
 // DefaultSketchStoreConfig returns default configuration
 func DefaultSketchStoreConfig() SketchStoreConfig {
 	return SketchStoreConfig{
-		BudgetRatio:      0.1,  // 10% budget
+		BudgetRatio:      0.1, // 10% budget
 		EnableRecovery:   true,
-		MaxSketchSize:    256,  // bytes per sketch
-		HeavyHitterRatio: 0.2,  // Top 20% stay uncompressed
+		MaxSketchSize:    256, // bytes per sketch
+		HeavyHitterRatio: 0.2, // Top 20% stay uncompressed
 	}
 }
 
@@ -241,7 +241,7 @@ func (f *SketchStoreFilter) compressWithSketches(chunks []scoredChunk, mode Mode
 		} else {
 			// Create sketch for low-importance content
 			sketch := f.createSketch(sc.content, sc.score)
-			
+
 			// Store in cache
 			f.mu.Lock()
 			f.sketchCache.TokenSketches[sketch.OriginalHash[:8]] = sketch

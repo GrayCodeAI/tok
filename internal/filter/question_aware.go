@@ -46,7 +46,7 @@ func DefaultQuestionAwareConfig() QuestionAwareConfig {
 	return QuestionAwareConfig{
 		Enabled:            true,
 		RelevanceThreshold: 0.3,
-		ContextWindow:      20,  // tokens
+		ContextWindow:      20, // tokens
 		ExactMatchBoost:    1.0,
 		PartialMatchBoost:  0.6,
 	}
@@ -97,7 +97,7 @@ func (q *QuestionAwareFilter) Apply(input string, mode Mode) (string, int) {
 		if s.score >= q.config.RelevanceThreshold {
 			keep[s.index] = true
 			// Also preserve context window around match
-			for j := s.index - 2; j <= s.index + 2 && j < len(segments); j++ {
+			for j := s.index - 2; j <= s.index+2 && j < len(segments); j++ {
 				if j >= 0 {
 					keep[j] = true
 				}

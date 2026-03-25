@@ -78,20 +78,20 @@ func runClean(cmd *cobra.Command, args []string) error {
 		}
 		if home != "" {
 			teeDir := filepath.Join(home, ".local", "share", "tokman", "tee")
-		if entries, err := os.ReadDir(teeDir); err == nil {
-			cleaned := 0
-			for _, e := range entries {
-				if !e.IsDir() {
-					if err := os.Remove(filepath.Join(teeDir, e.Name())); err != nil {
-						fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
-					} else {
-						cleaned++
+			if entries, err := os.ReadDir(teeDir); err == nil {
+				cleaned := 0
+				for _, e := range entries {
+					if !e.IsDir() {
+						if err := os.Remove(filepath.Join(teeDir, e.Name())); err != nil {
+							fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
+						} else {
+							cleaned++
+						}
 					}
 				}
+				fmt.Printf("  Removed %d tee files\n", cleaned)
+				totalRemoved += cleaned
 			}
-			fmt.Printf("  Removed %d tee files\n", cleaned)
-			totalRemoved += cleaned
-		}
 		}
 	}
 
@@ -106,15 +106,15 @@ func runClean(cmd *cobra.Command, args []string) error {
 			if entries, err := os.ReadDir(revDir); err == nil {
 				cutoff := time.Now().AddDate(0, 0, -cleanDays)
 				removed := 0
-			for _, e := range entries {
-				if info, err := e.Info(); err == nil && info.ModTime().Before(cutoff) {
-					if err := os.Remove(filepath.Join(revDir, e.Name())); err != nil {
-						fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
-					} else {
-						removed++
+				for _, e := range entries {
+					if info, err := e.Info(); err == nil && info.ModTime().Before(cutoff) {
+						if err := os.Remove(filepath.Join(revDir, e.Name())); err != nil {
+							fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
+						} else {
+							removed++
+						}
 					}
 				}
-			}
 				fmt.Printf("  Removed %d reversible entries\n", removed)
 				totalRemoved += removed
 			}

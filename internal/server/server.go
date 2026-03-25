@@ -19,7 +19,7 @@ import (
 const (
 	maxRequestBodySize = 10 * 1024 * 1024 // 10MB
 	defaultLayerCount  = 31
-	defaultRateLimit   = 100              // requests per minute
+	defaultRateLimit   = 100 // requests per minute
 )
 
 // Server provides REST API for token compression
@@ -31,10 +31,10 @@ type Server struct {
 	selector    *filter.AdaptiveLayerSelector
 	metrics     *Metrics
 	logger      *Logger
-	
+
 	// Rate limiting
 	rateLimiter *rateLimiter
-	
+
 	// Readiness state
 	ready   bool
 	readyMu sync.RWMutex
@@ -64,10 +64,10 @@ func newRateLimiter(limit int) *rateLimiter {
 func (rl *rateLimiter) Allow(ip string) bool {
 	rl.mu.Lock()
 	defer rl.mu.Unlock()
-	
+
 	now := time.Now()
 	info, exists := rl.requests[ip]
-	
+
 	if !exists || now.After(info.resetTime) {
 		rl.requests[ip] = &clientInfo{
 			count:     1,
@@ -75,22 +75,22 @@ func (rl *rateLimiter) Allow(ip string) bool {
 		}
 		return true
 	}
-	
+
 	if info.count >= rl.limit {
 		return false
 	}
-	
+
 	info.count++
 	return true
 }
 
 // Config holds server configuration
 type Config struct {
-	Port       int
-	APIKey     string // Optional API key for authentication (empty = no auth)
-	LogLevel   string // "debug", "info", "error"
-	Version    string
-	RateLimit  int    // Requests per minute (0 = unlimited)
+	Port      int
+	APIKey    string // Optional API key for authentication (empty = no auth)
+	LogLevel  string // "debug", "info", "error"
+	Version   string
+	RateLimit int // Requests per minute (0 = unlimited)
 }
 
 // New creates a new server
@@ -181,19 +181,19 @@ func (s *Server) rateLimitMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		
+
 		// Get client IP (check X-Forwarded-For header first)
 		ip := r.Header.Get("X-Forwarded-For")
 		if ip == "" {
 			ip = r.RemoteAddr
 		}
-		
+
 		if !s.rateLimiter.Allow(ip) {
 			s.metrics.RecordError()
 			http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
 			return
 		}
-		
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -302,12 +302,12 @@ func (s *Server) handleHealthReady(w http.ResponseWriter, r *http.Request) {
 	s.readyMu.RLock()
 	ready := s.ready
 	s.readyMu.RUnlock()
-	
+
 	if !ready {
 		http.Error(w, `{"status":"not ready"}`, http.StatusServiceUnavailable)
 		return
 	}
-	
+
 	jsonResponse(w, http.StatusOK, map[string]any{
 		"status":  "ready",
 		"version": s.version,

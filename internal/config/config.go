@@ -113,14 +113,14 @@ type PipelineConfig struct {
 	ChunkMaxSize        int     `mapstructure:"chunk_max_size"`        // Maximum chunk size in tokens
 
 	// Sketch Store (Layer 17) - Reversible compression with KVReviver
-	EnableSketchStore bool  `mapstructure:"enable_sketch_store"` // Enable sketch-based storage
-	SketchMemoryRatio int   `mapstructure:"sketch_memory_ratio"` // Memory reduction ratio (default: 90%)
-	SketchOnDemand    bool  `mapstructure:"sketch_on_demand"`    // Reconstruct on-demand when needed
+	EnableSketchStore bool `mapstructure:"enable_sketch_store"` // Enable sketch-based storage
+	SketchMemoryRatio int  `mapstructure:"sketch_memory_ratio"` // Memory reduction ratio (default: 90%)
+	SketchOnDemand    bool `mapstructure:"sketch_on_demand"`    // Reconstruct on-demand when needed
 
 	// Lazy Pruner (Layer 18) - Budget-aware dynamic pruning
-	EnableLazyPruner  bool    `mapstructure:"enable_lazy_pruner"`   // Enable lazy pruning
-	LazyBudgetRatio   float64 `mapstructure:"lazy_budget_ratio"`    // Ratio of budget to use for lazy pruning
-	LazyLayerDecay    float64 `mapstructure:"lazy_layer_decay"`     // Decay factor for layer-wise pruning
+	EnableLazyPruner bool    `mapstructure:"enable_lazy_pruner"` // Enable lazy pruning
+	LazyBudgetRatio  float64 `mapstructure:"lazy_budget_ratio"`  // Ratio of budget to use for lazy pruning
+	LazyLayerDecay   float64 `mapstructure:"lazy_layer_decay"`   // Decay factor for layer-wise pruning
 
 	// Semantic Anchor (Layer 19) - Attention gradient detection
 	EnableSemanticAnchor bool    `mapstructure:"enable_semantic_anchor"` // Enable semantic anchor preservation
@@ -328,24 +328,24 @@ func Defaults() *Config {
 
 			// Layer 15: Meta-Token Compression (LZ77-style lossless)
 			EnableMetaToken:   true,
-			MetaTokenWindow:   512,  // Sliding window for token matching
-			MetaTokenMinMatch: 3,    // Minimum match length
+			MetaTokenWindow:   512, // Sliding window for token matching
+			MetaTokenMinMatch: 3,   // Minimum match length
 
 			// Layer 16: Semantic Chunking (Dynamic boundaries)
 			EnableSemanticChunk: true,
-			SemanticThreshold:   0.5,  // Semantic shift threshold
-			ChunkMinSize:        50,   // Minimum chunk size
-			ChunkMaxSize:        500,  // Maximum chunk size
+			SemanticThreshold:   0.5, // Semantic shift threshold
+			ChunkMinSize:        50,  // Minimum chunk size
+			ChunkMaxSize:        500, // Maximum chunk size
 
 			// Layer 17: Sketch Store (KVReviver-style)
 			EnableSketchStore: true,
-			SketchMemoryRatio: 90,  // 90% memory reduction
+			SketchMemoryRatio: 90,   // 90% memory reduction
 			SketchOnDemand:    true, // Reconstruct when needed
 
 			// Layer 18: Lazy Pruner (LazyLLM-style)
 			EnableLazyPruner: true,
-			LazyBudgetRatio:  0.3,  // Use 30% of budget for lazy pruning
-			LazyLayerDecay:   0.9,  // Decay factor per layer
+			LazyBudgetRatio:  0.3, // Use 30% of budget for lazy pruning
+			LazyLayerDecay:   0.9, // Decay factor per layer
 
 			// Layer 19: Semantic Anchor (Attention gradient)
 			EnableSemanticAnchor: true,
@@ -354,8 +354,8 @@ func Defaults() *Config {
 
 			// Layer 20: Agent Memory (Knowledge graph)
 			EnableAgentMemory:    true,
-			AgentMemoryMaxNodes:  100,  // Max graph nodes
-			AgentMemoryMaxEdges:  200,  // Max graph edges
+			AgentMemoryMaxNodes:  100,       // Max graph nodes
+			AgentMemoryMaxEdges:  200,       // Max graph edges
 			AgentMemoryExtractFn: "default", // Extraction function
 		},
 		Hooks: HooksConfig{

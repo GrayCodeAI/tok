@@ -520,8 +520,8 @@ type K8sPodStatus struct {
 }
 
 type K8sContainerStatus struct {
-	Name         string                 `json:"name"`
-	RestartCount int                    `json:"restartCount"`
+	Name         string         `json:"name"`
+	RestartCount int            `json:"restartCount"`
 	State        map[string]any `json:"state"`
 }
 

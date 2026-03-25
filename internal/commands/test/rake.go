@@ -235,7 +235,7 @@ func buildMinitestSummary(summary string, failures []string) string {
 			}
 			result.WriteString(fmt.Sprintf("   %s\n", trimmed))
 		}
-		if i < rakeMin(len(failures), 10)-1 {
+		if i < min(len(failures), 10)-1 {
 			result.WriteString("\n")
 		}
 	}
@@ -272,11 +272,4 @@ func parseMinitestSummary(summary string) (runs, assertions, failures, errors, s
 		}
 	}
 	return
-}
-
-func rakeMin(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }

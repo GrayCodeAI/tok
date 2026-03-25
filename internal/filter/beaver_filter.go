@@ -49,12 +49,12 @@ func (b *BeaverFilter) Name() string { return "beaver" }
 
 // beaverPage represents a page of content
 type beaverPage struct {
-	content    string
-	score      float64
-	pageType   string // "anchor", "flow", "filler"
-	startLine  int
-	endLine    int
-	lineCount  int
+	content   string
+	score     float64
+	pageType  string // "anchor", "flow", "filler"
+	startLine int
+	endLine   int
+	lineCount int
 }
 
 // Apply applies BEAVER hierarchical compression

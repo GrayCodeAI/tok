@@ -80,9 +80,9 @@ func (f *LoPaceCompressor) Apply(input string, mode Mode) (string, int) {
 
 // CompressedOutput holds compressed data with metadata for reconstruction
 type CompressedOutput struct {
-	Content     string
-	Dictionary  map[string]string
-	OrigSize    int
+	Content        string
+	Dictionary     map[string]string
+	OrigSize       int
 	CompressedSize int
 }
 
@@ -90,8 +90,8 @@ type CompressedOutput struct {
 func (f *LoPaceCompressor) Compress(input string) *CompressedOutput {
 	if len(input) < f.config.MinContentLength {
 		return &CompressedOutput{
-			Content:     input,
-			OrigSize:    len(input),
+			Content:        input,
+			OrigSize:       len(input),
 			CompressedSize: len(input),
 		}
 	}

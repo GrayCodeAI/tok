@@ -14,29 +14,29 @@ import (
 //
 // Storage: ~/.local/share/tokman/learned_weights.json
 type CrossSessionLearner struct {
-	config    LearnerConfig
-	data      *LearnedData
-	mu        sync.RWMutex
-	dataPath  string
+	config   LearnerConfig
+	data     *LearnedData
+	mu       sync.RWMutex
+	dataPath string
 }
 
 // LearnerConfig holds configuration for cross-session learning
 type LearnerConfig struct {
-	Enabled       bool
-	DataDir       string
-	SaveInterval  time.Duration
-	MaxRecords    int
+	Enabled      bool
+	DataDir      string
+	SaveInterval time.Duration
+	MaxRecords   int
 }
 
 // LearnedData persists across sessions
 type LearnedData struct {
-	Version       int                          `json:"version"`
-	Weights       map[string]map[string]float64 `json:"weights"` // contentType -> layer -> weight
-	History       []LearnerRecord              `json:"history"`
-	TotalRuns     int64                        `json:"total_runs"`
-	TotalSaved    int64                        `json:"total_saved"`
-	LastUpdated   time.Time                    `json:"last_updated"`
-	ContentTypes  map[string]int64             `json:"content_types"` // contentType -> count
+	Version      int                           `json:"version"`
+	Weights      map[string]map[string]float64 `json:"weights"` // contentType -> layer -> weight
+	History      []LearnerRecord               `json:"history"`
+	TotalRuns    int64                         `json:"total_runs"`
+	TotalSaved   int64                         `json:"total_saved"`
+	LastUpdated  time.Time                     `json:"last_updated"`
+	ContentTypes map[string]int64              `json:"content_types"` // contentType -> count
 }
 
 // LearnerRecord captures a compression result
@@ -163,11 +163,11 @@ func (l *CrossSessionLearner) GetStats() LearnerStats {
 	defer l.mu.RUnlock()
 
 	return LearnerStats{
-		TotalRuns:     l.data.TotalRuns,
-		TotalSaved:    l.data.TotalSaved,
-		ContentTypes:  l.data.ContentTypes,
-		LastUpdated:   l.data.LastUpdated,
-		HistorySize:   len(l.data.History),
+		TotalRuns:    l.data.TotalRuns,
+		TotalSaved:   l.data.TotalSaved,
+		ContentTypes: l.data.ContentTypes,
+		LastUpdated:  l.data.LastUpdated,
+		HistorySize:  len(l.data.History),
 	}
 }
 
