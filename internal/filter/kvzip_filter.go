@@ -320,4 +320,3 @@ func (f *KVzipFilter) isBlockRelevant(blockType, query string) bool {
 		return false
 	}
 }
-

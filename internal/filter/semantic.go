@@ -386,5 +386,3 @@ func (f *SemanticFilter) compressSegment(segment string) string {
 
 	return strings.Join(result, "\n")
 }
-
-

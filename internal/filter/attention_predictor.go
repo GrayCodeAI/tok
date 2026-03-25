@@ -260,4 +260,3 @@ func (a *AttentionPredictor) learnFromCompression(original, compressed, contentT
 	pattern.ContentType = contentType
 	a.patterns[contentType] = pattern
 }
-

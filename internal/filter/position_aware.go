@@ -271,4 +271,3 @@ func (f *PositionAwareFilter) reorderByImportance(segments []scoredPositionSegme
 
 	return result
 }
-

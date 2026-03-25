@@ -217,4 +217,3 @@ func (s *SmallKVCompensator) addSectionMarkers(input string) string {
 
 	return input
 }
-

@@ -497,5 +497,3 @@ func filterComposeBuild(output string) string {
 
 	return result.String()
 }
-
-
