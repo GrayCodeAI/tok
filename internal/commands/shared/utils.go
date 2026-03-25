@@ -46,12 +46,6 @@ func Truncate(s string, maxLen int) string {
 	return s[:maxLen] + "..."
 }
 
-// BuildGitCmd creates a git command with the given subcommand and args.
-func BuildGitCmd(subCmd string, args ...string) *exec.Cmd {
-	gitArgs := []string{}
-	return exec.Command("git", append(append(gitArgs, subCmd), args...)...)
-}
-
 // TryJSONSchema generates a JSON schema from a JSON string.
 func TryJSONSchema(jsonStr string, maxDepth int) string {
 	var v any
@@ -116,29 +110,6 @@ func SanitizeArgs(args []string) error {
 		}
 	}
 	return nil
-}
-
-// SanitizePath validates a file path to prevent traversal attacks.
-// Returns the cleaned path or an error.
-func SanitizePath(path string) (string, error) {
-	if path == "" {
-		return "", fmt.Errorf("empty path")
-	}
-	if len(path) > 4096 {
-		return "", fmt.Errorf("path too long: %d chars", len(path))
-	}
-	if strings.ContainsRune(path, '\x00') {
-		return "", fmt.Errorf("path contains null byte")
-	}
-	cleaned := filepath.Clean(path)
-	// Reject absolute paths and traversal attempts
-	if filepath.IsAbs(cleaned) {
-		return "", fmt.Errorf("absolute paths not allowed")
-	}
-	if strings.HasPrefix(cleaned, "..") {
-		return "", fmt.Errorf("path traversal not allowed")
-	}
-	return cleaned, nil
 }
 
 // RubyExec returns an exec.Cmd for a Ruby tool, using "bundle exec" if a

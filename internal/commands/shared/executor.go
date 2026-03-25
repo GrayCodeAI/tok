@@ -1,13 +1,11 @@
 package shared
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/tee"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -23,14 +21,6 @@ func TeeOnFailure(raw string, commandSlug string, err error) string {
 	exitCode := 1
 	if exitErr, ok := err.(*os.PathError); ok {
 		_ = exitErr
-	}
-	return tee.WriteAndHint(raw, commandSlug, exitCode)
-}
-
-// TeeOnFailureWithCode writes output to tee file with explicit exit code.
-func TeeOnFailureWithCode(raw string, commandSlug string, exitCode int) string {
-	if exitCode == 0 {
-		return ""
 	}
 	return tee.WriteAndHint(raw, commandSlug, exitCode)
 }
@@ -89,22 +79,4 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) {
 	if rerr := RecordCommand(name, raw, filtered, execTime, true); rerr != nil && Verbose > 0 {
 		fmt.Fprintf(os.Stderr, "Warning: failed to record: %v\n", rerr)
 	}
-}
-
-// RunAndFilter executes a command, applies a filter, prints output, and tracks tokens.
-// This eliminates the boilerplate pattern duplicated across 77+ command files.
-func RunAndFilter(name string, cmdArgs []string, filterFunc func(string) string, trackCmd string) error {
-	timer := tracking.Start()
-	if Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: %s %s\n", name, cmdArgs)
-	}
-	runner := core.NewOSCommandRunner()
-	output, _, err := runner.Run(context.Background(), append([]string{name}, cmdArgs...))
-	raw := output
-	filtered := filterFunc(raw)
-	fmt.Print(filtered)
-	originalTokens := core.EstimateTokens(raw)
-	filteredTokens := core.EstimateTokens(filtered)
-	timer.Track(trackCmd, "tokman "+name, originalTokens, filteredTokens)
-	return err
 }
