@@ -287,36 +287,6 @@ func initConfig() {
 	}
 }
 
-// GetConfig returns the current configuration.
-func GetConfig() (*config.Config, error) {
-	return shared.GetConfig()
-}
-
-// IsVerbose returns whether verbose mode is enabled.
-func IsVerbose() bool {
-	return shared.IsVerbose()
-}
-
-// VerbosityLevel returns the verbosity level (0-3).
-func VerbosityLevel() int {
-	return shared.VerbosityLevel()
-}
-
-// IsUltraCompact returns whether ultra-compact mode is enabled.
-func IsUltraCompact() bool {
-	return shared.IsUltraCompact()
-}
-
-// IsSkipEnv returns whether SKIP_ENV_VALIDATION should be set.
-func IsSkipEnv() bool {
-	return shared.IsSkipEnv()
-}
-
-// IsDryRun returns whether dry-run mode is enabled.
-func IsDryRun() bool {
-	return shared.IsDryRun()
-}
-
 // isOperationalCommand returns true for commands that process CLI output
 // and need runtime integrity verification. Meta commands (init, verify,
 // config, economics, status, report, summary) are excluded.
@@ -356,77 +326,4 @@ func isOperationalCommand(cmd *cobra.Command) bool {
 	}
 
 	return true
-}
-
-// GetQueryIntent returns the query intent for query-aware compression
-// Can be set via --query flag or TOKMAN_QUERY environment variable
-func GetQueryIntent() string {
-	return shared.GetQueryIntent()
-}
-
-// IsLLMEnabled returns whether LLM-based compression is enabled
-func IsLLMEnabled() bool {
-	return shared.IsLLMEnabled()
-}
-
-// GetTokenBudget returns the token budget for compression
-// Can be set via --budget flag or TOKMAN_BUDGET environment variable
-func GetTokenBudget() int {
-	return shared.GetTokenBudget()
-}
-
-// IsCompactionEnabled returns whether compaction is enabled
-func IsCompactionEnabled() bool {
-	return shared.IsCompactionEnabled()
-}
-
-// GetCompactionThreshold returns the compaction threshold
-func GetCompactionThreshold() int {
-	return shared.GetCompactionThreshold()
-}
-
-// GetCompactionPreserveTurns returns the number of turns to preserve
-func GetCompactionPreserveTurns() int {
-	return shared.GetCompactionPreserveTurns()
-}
-
-// GetCompactionMaxTokens returns the max summary tokens
-func GetCompactionMaxTokens() int {
-	return shared.GetCompactionMaxTokens()
-}
-
-// IsCompactionSnapshotEnabled returns whether state snapshot format is enabled
-func IsCompactionSnapshotEnabled() bool {
-	return shared.IsCompactionSnapshotEnabled()
-}
-
-// IsCompactionAutoDetect returns whether auto-detect is enabled
-func IsCompactionAutoDetect() bool {
-	return shared.IsCompactionAutoDetect()
-}
-
-// GetLayerPreset returns the pipeline preset (fast/balanced/full).
-// T90: Pipeline mode presets.
-func GetLayerPreset() string {
-	return shared.GetLayerPreset()
-}
-
-// GetOutputFile returns the output file path.
-func GetOutputFile() string {
-	return shared.GetOutputFile()
-}
-
-// IsQuietMode returns whether quiet mode is enabled.
-func IsQuietMode() bool {
-	return shared.IsQuietMode()
-}
-
-// IsJSONOutput returns whether JSON output is enabled.
-func IsJSONOutput() bool {
-	return shared.IsJSONOutput()
-}
-
-// IsReversibleEnabled returns whether reversible compression is enabled.
-func IsReversibleEnabled() bool {
-	return shared.IsReversibleEnabled()
 }
