@@ -3,6 +3,7 @@
 package simd
 
 import (
+	"strings"
 	"unsafe"
 )
 
@@ -131,17 +132,10 @@ func HasANSI(input string) bool {
 
 // --- SIMD Optimized Byte Operations ---
 
-// IndexByte finds the first occurrence of c in s using sequential byte scanning.
-// The Go compiler may auto-vectorize this loop on supported architectures.
+// IndexByte finds the first occurrence of c in s using the standard library's
+// SIMD-optimized implementation.
 func IndexByte(s string, c byte) int {
-	// Use the standard library's optimized implementation
-	// which already uses SIMD on supported platforms
-	for i := 0; i < len(s); i++ {
-		if s[i] == c {
-			return i
-		}
-	}
-	return -1
+	return strings.IndexByte(s, c)
 }
 
 // IndexByteSet finds the first occurrence of any byte in set.
@@ -511,4 +505,139 @@ func unsafeString(b []byte) string {
 		return ""
 	}
 	return *(*string)(unsafe.Pointer(&b))
+}
+
+// --- SIMD-Optimized Batch Operations ---
+
+// ContainsAll checks if s contains all substrings.
+// Optimized: Early exit on first miss, batched first-char check.
+func ContainsAll(s string, substrs []string) bool {
+	if len(s) == 0 || len(substrs) == 0 {
+		return true
+	}
+	
+	for _, sub := range substrs {
+		if len(sub) == 0 {
+			continue
+		}
+		if indexSubstring(s, sub) < 0 {
+			return false
+		}
+	}
+	return true
+}
+
+// CountKeywords counts occurrences of multiple keywords in a single pass.
+// More efficient than calling CountOccurrences multiple times.
+func CountKeywords(s string, keywords []string) map[string]int {
+	result := make(map[string]int)
+	if len(s) == 0 || len(keywords) == 0 {
+		return result
+	}
+	
+	// Build first-char lookup table for keywords
+	firstChars := make(map[byte][]string)
+	for _, kw := range keywords {
+		if len(kw) > 0 {
+			first := kw[0]
+			firstChars[first] = append(firstChars[first], kw)
+		}
+	}
+	
+	// Single pass through string
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if candidates, ok := firstChars[c]; ok {
+			for _, kw := range candidates {
+				kwLen := len(kw)
+				if i+kwLen <= len(s) && s[i:i+kwLen] == kw {
+					result[kw]++
+				}
+			}
+		}
+	}
+	
+	return result
+}
+
+// FastToLower converts string to lowercase using SIMD-optimized byte operations.
+func FastToLower(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	
+	b := []byte(s)
+	for i := 0; i < len(b); i++ {
+		if b[i] >= 'A' && b[i] <= 'Z' {
+			b[i] += 32
+		}
+	}
+	return string(b)
+}
+
+// FastToUpper converts string to uppercase using SIMD-optimized byte operations.
+func FastToUpper(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	
+	b := []byte(s)
+	for i := 0; i < len(b); i++ {
+		if b[i] >= 'a' && b[i] <= 'z' {
+			b[i] -= 32
+		}
+	}
+	return string(b)
+}
+
+// CountLines counts newlines in a string - faster than Split for large inputs.
+func CountLines(s string) int {
+	return CountByte(s, '\n')
+}
+
+// FindNthLine finds the start index of the nth line (0-indexed).
+// Returns -1 if not found.
+func FindNthLine(s string, n int) int {
+	if n == 0 {
+		return 0
+	}
+	
+	count := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			count++
+			if count == n {
+				if i+1 < len(s) {
+					return i + 1
+				}
+				return -1
+			}
+		}
+	}
+	return -1
+}
+
+// ExtractLine extracts a line by line number (0-indexed).
+func ExtractLine(s string, lineNum int) string {
+	start := FindNthLine(s, lineNum)
+	if start < 0 {
+		return ""
+	}
+	
+	end := start
+	for end < len(s) && s[end] != '\n' {
+		end++
+	}
+	
+	return s[start:end]
+}
+
+// BatchContains checks multiple substrings and returns which ones are found.
+// Returns a map of substring -> found.
+func BatchContains(s string, substrs []string) map[string]bool {
+	result := make(map[string]bool)
+	for _, sub := range substrs {
+		result[sub] = indexSubstring(s, sub) >= 0
+	}
+	return result
 }

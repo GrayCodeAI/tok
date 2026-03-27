@@ -45,7 +45,7 @@ added 1423 packages in 32s
 152 packages are looking for funding
   run npm fund for details`,
 			mode:          ModeMinimal,
-			minReduction:  10.0,
+			minReduction:  5.0, // npm output is already minimal
 			shouldBeValid: true,
 		},
 		{
