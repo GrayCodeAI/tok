@@ -532,11 +532,6 @@ func runAwsCfnDescribeStacks(extraArgs []string) error {
 	return nil
 }
 
-func isValidJSON(s string) bool {
-	var js any
-	return json.Unmarshal([]byte(s), &js) == nil
-}
-
 func unmarshalJSON(data string, v any) error {
 	return json.Unmarshal([]byte(data), v)
 }

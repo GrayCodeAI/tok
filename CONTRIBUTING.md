@@ -11,7 +11,7 @@
 
 ## What is TokMan?
 
-**TokMan (Token Manager)** is a CLI proxy that cuts noise from command outputs. It filters and compresses CLI output before it reaches your LLM context, saving 60-99% of tokens on common operations. TokMan is written in Go and features a research-based 14-layer compression pipeline.
+**TokMan (Token Manager)** is a CLI proxy that cuts noise from command outputs. It filters and compresses CLI output before it reaches your LLM context, saving 60-99% of tokens on common operations. TokMan is written in Go and features a research-based 31-layer compression pipeline.
 
 ---
 
@@ -145,7 +145,7 @@ tokman/
 ├── internal/
 │   ├── commands/        # CLI command implementations
 │   ├── core/            # Runner, estimator, interfaces
-│   ├── filter/          # 14-layer compression pipeline
+│   ├── filter/          # 31-layer compression pipeline
 │   ├── toml/            # TOML filter system
 │   │   └── builtin/     # 93+ built-in filter definitions
 │   ├── tracking/        # SQLite token tracking

@@ -3,8 +3,6 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 )
@@ -110,18 +108,4 @@ func SanitizeArgs(args []string) error {
 		}
 	}
 	return nil
-}
-
-// RubyExec returns an exec.Cmd for a Ruby tool, using "bundle exec" if a
-// Gemfile exists in the current directory. This consolidates the duplicate
-// rubyExec/rspecRubyExec/rakeRubyExec functions across packages.
-func RubyExec(tool string, args ...string) *exec.Cmd {
-	if _, err := os.Stat("Gemfile"); err == nil {
-		if bundlePath, err := exec.LookPath("bundle"); err == nil {
-			bundleArgs := []string{"exec", tool}
-			bundleArgs = append(bundleArgs, args...)
-			return exec.Command(bundlePath, bundleArgs...)
-		}
-	}
-	return exec.Command(tool, args...)
 }

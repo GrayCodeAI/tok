@@ -271,9 +271,13 @@ func runCommandSuggestion(args []string) error {
 	fmt.Printf("Command: %s\n", strings.Join(args, " "))
 	fmt.Printf("Output: %d lines, ~%d tokens\n\n", len(lines), originalTokens)
 
-	// Detect content type
-	router := filter.NewContentRouter()
-	ct, _ := router.Route(rawOutput)
+	// Detect content type (simple heuristic)
+	ct := "text"
+	if strings.HasPrefix(strings.TrimSpace(rawOutput), "{") || strings.HasPrefix(strings.TrimSpace(rawOutput), "[") {
+		ct = "json"
+	} else if strings.Contains(rawOutput, "diff --git") || strings.Contains(rawOutput, "--- ") {
+		ct = "diff"
+	}
 
 	fmt.Printf("Detected content type: %s\n\n", ct)
 

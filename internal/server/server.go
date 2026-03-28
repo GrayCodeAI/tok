@@ -14,6 +14,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/httpmw"
 )
@@ -144,7 +146,10 @@ func (s *Server) Start() error {
 
 	// Stats and metrics endpoints
 	mux.HandleFunc("/stats", s.handleStats)
-	mux.HandleFunc("/metrics", s.handleMetrics)
+	// Prometheus metrics endpoint
+	mux.Handle("/metrics", promhttp.Handler())
+	// Custom metrics endpoint for backward compatibility
+	mux.HandleFunc("/metrics/custom", s.handleMetrics)
 
 	var handler http.Handler = mux
 	// Apply rate limiting
@@ -331,12 +336,6 @@ func (s *Server) handleHealthReady(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// SetReady sets the readiness state for health checks
-func (s *Server) SetReady(ready bool) {
-	s.readyMu.Lock()
-	s.ready = ready
-	s.readyMu.Unlock()
-}
 
 func (s *Server) handleCompress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {

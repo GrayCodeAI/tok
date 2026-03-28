@@ -364,9 +364,3 @@ var (
 	pathPattern = regexp.MustCompile(`[\w./\\]+\.\w+`)
 )
 
-// isPhraseAtomic checks if a word sequence should never be split
-func isPhraseAtomic(phrase string) bool {
-	return funcCallPattern.MatchString(phrase) ||
-		kvPattern.MatchString(phrase) ||
-		pathPattern.MatchString(phrase)
-}

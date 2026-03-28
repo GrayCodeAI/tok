@@ -158,21 +158,21 @@ func (a *AttributionFilter) tokenize(content string) []token {
 	if n == 0 {
 		return nil
 	}
-	
+
 	var tokens []token
 	start := 0
 	inWhitespace := false
-	
+
 	// Fast byte scanning (no regex)
 	for i := 0; i < n; i++ {
 		c := content[i]
 		isWhitespace := c == ' ' || c == '\t' || c == '\n' || c == '\r'
-		
+
 		if i == 0 {
 			inWhitespace = isWhitespace
 			continue
 		}
-		
+
 		// State transition: whitespace <-> non-whitespace
 		if isWhitespace != inWhitespace {
 			// Extract token from start to i
@@ -181,12 +181,12 @@ func (a *AttributionFilter) tokenize(content string) []token {
 			inWhitespace = isWhitespace
 		}
 	}
-	
+
 	// Add final token
 	if start < n {
 		tokens = append(tokens, token{text: content[start:]})
 	}
-	
+
 	return tokens
 }
 

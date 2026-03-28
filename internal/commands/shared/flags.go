@@ -27,6 +27,12 @@ var (
 	QuietMode    bool
 	JSONOutput   bool
 
+	// Remote mode flags (Phase 4)
+	RemoteMode      bool
+	CompressionAddr string
+	AnalyticsAddr   string
+	RemoteTimeout   int // seconds
+
 	// Compaction flags
 	CompactionEnabled    bool
 	CompactionThreshold  int
@@ -49,32 +55,11 @@ func IsVerbose() bool {
 	return Verbose > 0
 }
 
-// VerbosityLevel returns the verbosity level (0-3).
-func VerbosityLevel() int {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return Verbose
-}
-
 // IsUltraCompact returns true if ultra-compact mode is enabled.
 func IsUltraCompact() bool {
 	configMu.RLock()
 	defer configMu.RUnlock()
 	return UltraCompact
-}
-
-// IsSkipEnv returns true if environment sanitization is skipped.
-func IsSkipEnv() bool {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return SkipEnv
-}
-
-// IsDryRun returns true if dry-run mode is enabled.
-func IsDryRun() bool {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return DryRun
 }
 
 // GetQueryIntent returns the query intent from flag or environment.
@@ -114,61 +99,6 @@ func GetTokenBudget() int {
 	return 0
 }
 
-// IsCompactionEnabled returns true if compaction is enabled.
-func IsCompactionEnabled() bool {
-	configMu.RLock()
-	enabled := CompactionEnabled
-	configMu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_COMPACTION") == "true"
-}
-
-// GetCompactionThreshold returns the compaction token threshold.
-func GetCompactionThreshold() int {
-	configMu.RLock()
-	threshold := CompactionThreshold
-	configMu.RUnlock()
-	if threshold > 0 {
-		return threshold
-	}
-	return 500
-}
-
-// GetCompactionPreserveTurns returns the number of recent turns to preserve.
-func GetCompactionPreserveTurns() int {
-	configMu.RLock()
-	preserve := CompactionPreserve
-	configMu.RUnlock()
-	if preserve > 0 {
-		return preserve
-	}
-	return 10
-}
-
-// GetCompactionMaxTokens returns the max summary tokens for compaction.
-func GetCompactionMaxTokens() int {
-	configMu.RLock()
-	maxTokens := CompactionMaxTokens
-	configMu.RUnlock()
-	if maxTokens > 0 {
-		return maxTokens
-	}
-	return 5000
-}
-
-// IsCompactionSnapshotEnabled returns true if state snapshot format is enabled.
-func IsCompactionSnapshotEnabled() bool {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return CompactionSnapshot
-}
-
-// IsCompactionAutoDetect returns true if auto-detection is enabled.
-func IsCompactionAutoDetect() bool {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return CompactionAutoDetect
-}
-
 // GetLayerPreset returns the layer preset from flag or environment.
 func GetLayerPreset() string {
 	configMu.RLock()
@@ -180,25 +110,11 @@ func GetLayerPreset() string {
 	return os.Getenv("TOKMAN_PRESET")
 }
 
-// GetOutputFile returns the output file path.
-func GetOutputFile() string {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return OutputFile
-}
-
 // IsQuietMode returns true if quiet mode is enabled.
 func IsQuietMode() bool {
 	configMu.RLock()
 	defer configMu.RUnlock()
 	return QuietMode
-}
-
-// IsJSONOutput returns true if JSON output is enabled.
-func IsJSONOutput() bool {
-	configMu.RLock()
-	defer configMu.RUnlock()
-	return JSONOutput
 }
 
 // IsReversibleEnabled returns true if reversible mode is enabled.
@@ -207,6 +123,46 @@ func IsReversibleEnabled() bool {
 	enabled := ReversibleEnabled
 	configMu.RUnlock()
 	return enabled || os.Getenv("TOKMAN_REVERSIBLE") == "true"
+}
+
+// IsRemoteMode returns true if remote mode is enabled.
+func IsRemoteMode() bool {
+	configMu.RLock()
+	defer configMu.RUnlock()
+	return RemoteMode || os.Getenv("TOKMAN_REMOTE") == "true"
+}
+
+// GetCompressionAddr returns the compression service address.
+func GetCompressionAddr() string {
+	configMu.RLock()
+	addr := CompressionAddr
+	configMu.RUnlock()
+	if addr != "" {
+		return addr
+	}
+	return os.Getenv("TOKMAN_COMPRESSION_ADDR")
+}
+
+// GetAnalyticsAddr returns the analytics service address.
+func GetAnalyticsAddr() string {
+	configMu.RLock()
+	addr := AnalyticsAddr
+	configMu.RUnlock()
+	if addr != "" {
+		return addr
+	}
+	return os.Getenv("TOKMAN_ANALYTICS_ADDR")
+}
+
+// GetRemoteTimeout returns the remote operation timeout in seconds.
+func GetRemoteTimeout() int {
+	configMu.RLock()
+	timeout := RemoteTimeout
+	configMu.RUnlock()
+	if timeout > 0 {
+		return timeout
+	}
+	return 30
 }
 
 // FlagConfig holds all flag values for atomic setting.
@@ -223,6 +179,10 @@ type FlagConfig struct {
 	OutputFile           string
 	QuietMode            bool
 	JSONOutput           bool
+	RemoteMode           bool
+	CompressionAddr      string
+	AnalyticsAddr        string
+	RemoteTimeout        int
 	CompactionEnabled    bool
 	CompactionThreshold  int
 	CompactionPreserve   int
@@ -247,6 +207,10 @@ func SetFlags(cfg FlagConfig) {
 	OutputFile = cfg.OutputFile
 	QuietMode = cfg.QuietMode
 	JSONOutput = cfg.JSONOutput
+	RemoteMode = cfg.RemoteMode
+	CompressionAddr = cfg.CompressionAddr
+	AnalyticsAddr = cfg.AnalyticsAddr
+	RemoteTimeout = cfg.RemoteTimeout
 	CompactionEnabled = cfg.CompactionEnabled
 	CompactionThreshold = cfg.CompactionThreshold
 	CompactionPreserve = cfg.CompactionPreserve

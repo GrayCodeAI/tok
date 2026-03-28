@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  # Compression Service - 31-layer pipeline
+  compression:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.compression
+    ports:
+      - "50051:50051"  # gRPC
+      - "8081:8081"    # HTTP
+    environment:
+      - TOKMAN_LOG_LEVEL=info
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Analytics Service - Metrics & Tracking
+  analytics:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.analytics
+    ports:
+      - "50053:50053"  # gRPC
+      - "8083:8083"    # HTTP
+    volumes:
+      - tokman-data:/data
+    environment:
+      - TOKMAN_DB_PATH=/data/tokman.db
+    depends_on:
+      - compression
+
+  # API Gateway
+  gateway:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.gateway
+    ports:
+      - "8080:8080"    # HTTP
+      - "8443:8443"    # HTTPS
+    environment:
+      - COMPRESSION_ADDR=compression:50051
+      - ANALYTICS_ADDR=analytics:50053
+    depends_on:
+      - compression
+      - analytics
+
+volumes:
+  tokman-data:

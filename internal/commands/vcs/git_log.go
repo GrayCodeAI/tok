@@ -1,9 +1,9 @@
 package vcs
 
 import (
-	"os"
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -137,46 +137,6 @@ func filterLog(output string) string {
 	return strings.Join(lines, "\n")
 }
 
-// filterLogVerbose processes verbose git log output (with commit bodies).
-// Splits on ---END--- markers, keeps first body line, strips trailers.
-func filterLogVerbose(output string, maxCommits int) string {
-	output = filter.StripANSI(output)
-
-	commits := strings.Split(output, "---END---")
-	var result []string
-
-	for i, block := range commits {
-		if i >= maxCommits {
-			break
-		}
-		block = strings.TrimSpace(block)
-		if block == "" {
-			continue
-		}
-
-		blockLines := strings.Split(block, "\n")
-		header := truncateLogLine(strings.TrimSpace(blockLines[0]), 80)
-
-		// Find first non-empty body line, skip trailers
-		var bodyLine string
-		for _, l := range blockLines[1:] {
-			l = strings.TrimSpace(l)
-			if l == "" || strings.HasPrefix(l, "Signed-off-by:") || strings.HasPrefix(l, "Co-authored-by:") {
-				continue
-			}
-			bodyLine = truncateLogLine(l, 80)
-			break
-		}
-
-		if bodyLine != "" {
-			result = append(result, header+"\n  "+bodyLine)
-		} else {
-			result = append(result, header)
-		}
-	}
-
-	return strings.Join(result, "\n")
-}
 
 func truncateLogLine(line string, width int) string {
 	runes := []rune(line)

@@ -460,7 +460,3 @@ func DefaultTemplatesDir() string {
 	return filepath.Join(homeDir, ".local", "share", "tokman", "prompts")
 }
 
-// NewDefaultPromptTemplateManager creates a manager with default settings
-func NewDefaultPromptTemplateManager() *PromptTemplateManager {
-	return NewPromptTemplateManager(DefaultTemplatesDir())
-}

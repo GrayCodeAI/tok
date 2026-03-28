@@ -127,8 +127,7 @@ type PipelineCoordinator struct {
 	// NEW: TF-IDF Coarse Filter (DSPC, Sep 2025)
 	tfidfFilter *TFIDFFilter
 
-	// NEW: Reasoning Trace Compression (R-KV, 2025)
-	reasoningTraceFilter *ReasoningTraceFilter
+
 
 	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
 	symbolicCompressFilter *SymbolicCompressFilter
@@ -556,15 +555,6 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		p.tfidfFilter = NewTFIDFFilterWithConfig(tfidfCfg)
 	}
 
-	// NEW: Reasoning Trace Compression (R-KV, 2025)
-	if cfg.EnableReasoningTrace {
-		reasonCfg := DefaultReasoningTraceConfig()
-		if cfg.MaxReflectionLoops > 0 {
-			reasonCfg.MaxReflectionLoops = cfg.MaxReflectionLoops
-		}
-		p.reasoningTraceFilter = &ReasoningTraceFilter{config: reasonCfg}
-	}
-
 	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
 	if cfg.EnableSymbolicCompress {
 		p.symbolicCompressFilter = NewSymbolicCompressFilter()
@@ -817,14 +807,7 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		}
 	}
 
-	// NEW Layers: Reasoning Trace, Symbolic, Phrase Grouping, Numerical, Dynamic Ratio
-	if p.reasoningTraceFilter != nil {
-		output = p.processLayer(filterLayer{p.reasoningTraceFilter, "21_reasoning_trace"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output, p.finalizeStats(stats, output)
-		}
-	}
-
+	// NEW Layers: Symbolic, Phrase Grouping, Numerical, Dynamic Ratio
 	if p.symbolicCompressFilter != nil {
 		output = p.processLayer(filterLayer{p.symbolicCompressFilter, "22_symbolic_compress"}, output, stats)
 		if p.shouldEarlyExit(stats) {
@@ -1120,7 +1103,7 @@ type PipelineStats struct {
 	TotalSaved       int
 	ReductionPercent float64
 	LayerStats       map[string]LayerStat
-	runningSaved     int // O(1) accumulator to avoid O(n) recomputation in early exit
+	runningSaved     int  // O(1) accumulator to avoid O(n) recomputation in early exit
 	CacheHit         bool // Phase 2: Indicates if result was served from cache
 }
 
@@ -1168,26 +1151,8 @@ func (s *PipelineStats) String() string {
 	return sb.String()
 }
 
-// QuickProcessOpt is a functional option for QuickProcess
-type QuickProcessOpt func(*PipelineConfig)
-
-// WithBudget sets the token budget
-func WithBudget(budget int) QuickProcessOpt {
-	return func(cfg *PipelineConfig) { cfg.Budget = budget }
-}
-
-// WithQuery sets the query intent
-func WithQuery(query string) QuickProcessOpt {
-	return func(cfg *PipelineConfig) { cfg.QueryIntent = query }
-}
-
-// WithLLM enables LLM compression
-func WithLLM() QuickProcessOpt {
-	return func(cfg *PipelineConfig) { cfg.LLMEnabled = true }
-}
-
-// QuickProcess compresses input with optional configuration
-func QuickProcess(input string, mode Mode, opts ...QuickProcessOpt) (string, int) {
+// QuickProcess compresses input with default configuration
+func QuickProcess(input string, mode Mode) (string, int) {
 	cfg := PipelineConfig{
 		Mode:                 mode,
 		SessionTracking:      true,
@@ -1215,9 +1180,6 @@ func QuickProcess(input string, mode Mode, opts ...QuickProcessOpt) (string, int
 		EnableScope:         true,
 		EnableSmallKV:       true,
 		EnableKVzip:         true,
-	}
-	for _, opt := range opts {
-		opt(&cfg)
 	}
 	p := NewPipelineCoordinator(cfg)
 	output, stats := p.Process(input)
@@ -1327,4 +1289,3 @@ func (c *PipelineCoordinator) GetSemanticAnchorFilter() *SemanticAnchorFilter {
 func (c *PipelineCoordinator) GetAgentMemoryFilter() *AgentMemoryFilter {
 	return c.agentMemoryFilter
 }
-

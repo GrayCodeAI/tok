@@ -1,7 +1,5 @@
 package core
 
-import "fmt"
-
 // ModelPricing holds per-token pricing for a model.
 type ModelPricing struct {
 	Model            string
@@ -42,13 +40,4 @@ func CalculateSavings(tokensSaved int, model string) float64 {
 	}
 	// Assume all saved tokens would have been input tokens
 	return float64(tokensSaved) / 1_000_000 * pricing.InputPerMillion
-}
-
-// formatSavings returns a human-readable savings string.
-func formatSavings(tokensSaved int, model string) string {
-	savings := CalculateSavings(tokensSaved, model)
-	if savings < 0.01 {
-		return "<$0.01"
-	}
-	return fmt.Sprintf("$%.4f", savings)
 }

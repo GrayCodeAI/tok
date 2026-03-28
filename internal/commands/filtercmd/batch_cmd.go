@@ -50,11 +50,11 @@ func init() {
 }
 
 type batchResult struct {
-	path          string
-	compressed    string
-	origTokens    int
-	finalTokens   int
-	err           error
+	path        string
+	compressed  string
+	origTokens  int
+	finalTokens int
+	err         error
 }
 
 func runBatch(cmd *cobra.Command, args []string) error {

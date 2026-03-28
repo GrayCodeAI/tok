@@ -6,7 +6,7 @@
 
 | System | Reduction | Method | Research Basis |
 |--------|-----------|--------|----------------|
-| **TokMan** | **95-99.9%** | 14-layer pipeline | 50+ papers |
+| **TokMan** | **95-99.9%** | 31-layer pipeline | 120+ papers |
 | LLMLingua | 20x | Perplexity pruning | Microsoft 2023 |
 | Selective Context | 2-3x | Entropy filtering | Mila 2023 |
 | AutoCompressor | 98%+ | Hierarchical summary | Princeton/MIT 2023 |

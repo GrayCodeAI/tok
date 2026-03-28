@@ -65,12 +65,6 @@ func ComputeFingerprint(content string) string {
 	return hex.EncodeToString(h.Sum(nil))[:16] // Use first 16 chars for efficiency
 }
 
-// ComputeFingerprintBytes generates a SHA-256 hash of byte content
-func ComputeFingerprintBytes(content []byte) string {
-	h := sha256.New()
-	h.Write(content)
-	return hex.EncodeToString(h.Sum(nil))[:16]
-}
 
 // Get retrieves a cached result by content fingerprint
 func (fc *FingerprintCache) Get(content string) *FingerprintResult {

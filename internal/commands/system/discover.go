@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"sort"
 	"strings"
 
@@ -246,16 +245,3 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen-3] + "..."
 }
 
-// Get git history for discover (using git log)
-func getGitCommandHistory(sinceDays int) ([]string, error) {
-	since := fmt.Sprintf("--since=%d days ago", sinceDays)
-	cmd := exec.Command("git", "log", since, "--all", "--pretty=format:%s", "--grep=")
-
-	output, err := cmd.Output()
-	if err != nil {
-		return nil, err
-	}
-
-	lines := strings.Split(string(output), "\n")
-	return lines, nil
-}

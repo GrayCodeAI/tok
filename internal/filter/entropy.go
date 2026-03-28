@@ -67,8 +67,8 @@ func NewEntropyFilterWithThreshold(threshold float64) *EntropyFilter {
 		totalTokens:      1000000, // Normalized corpus size
 		entropyThreshold: threshold,
 		dynamicFreq:      make(map[string]int),
-		zipfExponent:     1.07, // Standard Zipf exponent for English
-		useDynamicEst:    true, // T11: Enable by default
+		zipfExponent:     1.07,                   // Standard Zipf exponent for English
+		useDynamicEst:    true,                   // T11: Enable by default
 		freqCache:        cache.GetGlobalCache(), // Phase 2: Use global cache
 		cacheEnabled:     true,                   // Phase 2: Enable caching
 	}
@@ -358,7 +358,7 @@ func (f *EntropyFilter) buildDynamicFrequencies(input string) {
 	f.dynamicTotal = 0
 
 	inputLen := len(input)
-	
+
 	// For very large inputs, sample instead of processing all words
 	// This reduces O(n) to O(n/samplingRate) for frequency counting
 	samplingRate := 1
@@ -368,25 +368,25 @@ func (f *EntropyFilter) buildDynamicFrequencies(input string) {
 	if inputLen > 500000 {
 		samplingRate = 10 // Sample 1 in 10 words
 	}
-	
+
 	// SIMD-optimized word splitting
 	words := simd.SplitWords(input)
 	count := 0
-	
+
 	for _, word := range words {
 		count++
 		if samplingRate > 1 && count%samplingRate != 0 {
 			continue
 		}
-		
+
 		// Fast lowercase using SIMD
 		wordLower := strings.ToLower(word)
-		
+
 		// Skip very short words
 		if len(wordLower) < 2 {
 			continue
 		}
-		
+
 		// SIMD check if it's a word character
 		isWord := true
 		for i := 0; i < len(wordLower); i++ {
@@ -400,7 +400,7 @@ func (f *EntropyFilter) buildDynamicFrequencies(input string) {
 			f.dynamicTotal++
 		}
 	}
-	
+
 	// Scale up counts if sampling
 	if samplingRate > 1 && f.dynamicTotal > 0 {
 		for w := range f.dynamicFreq {
@@ -486,16 +486,6 @@ func (f *EntropyFilter) getEffectiveFrequency(word string) float64 {
 	return estimatedFreq
 }
 
-// calculateEntropy calculates the self-information of a token
-func (f *EntropyFilter) calculateEntropy(token string) float64 {
-	freq, exists := f.frequencies[strings.ToLower(token)]
-	if !exists {
-		return 10.0 // High entropy for unknown tokens
-	}
-
-	probability := freq / f.totalTokens
-	return -math.Log2(probability)
-}
 
 // SetThreshold allows customizing the entropy threshold
 func (f *EntropyFilter) SetThreshold(threshold float64) {

@@ -114,29 +114,7 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 // For PresetAuto, uses the adaptive pipeline to select optimal tier.
 func QuickProcessPreset(input string, mode Mode, preset PipelinePreset) (string, int) {
 	cfg := PresetConfig(preset, mode)
-
-	if preset == PresetAuto {
-		// Use adaptive pipeline for auto preset
-		adaptive := NewAdaptive(cfg)
-		output, stats := adaptive.Process(input)
-		return output, stats.TotalSaved
-	}
-
 	p := NewPipelineCoordinator(cfg)
 	output, stats := p.Process(input)
 	return output, stats.TotalSaved
-}
-
-// PresetToTier maps a preset to the adaptive tier system.
-func PresetToTier(preset PipelinePreset) Tier {
-	switch preset {
-	case PresetFast:
-		return Tier1_Simple
-	case PresetBalanced:
-		return Tier2_Medium
-	case PresetFull:
-		return Tier3_Full
-	default:
-		return Tier3_Full
-	}
 }

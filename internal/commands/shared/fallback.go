@@ -126,6 +126,23 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 func (h *FallbackHandler) rawPassthrough(args []string) (string, bool, error) {
 	output, exitCode, err := h.executeCommand(args)
 
+	// Apply remote compression even without TOML filter
+	if IsRemoteMode() && len(output) > 100 {
+		mode := filter.ModeMinimal
+		if IsUltraCompact() {
+			mode = filter.ModeAggressive
+		}
+		filtered, saved, rerr := RemoteCompress(output, string(mode), GetTokenBudget())
+		if rerr == nil {
+			if IsVerbose() && saved > 0 {
+				fmt.Fprintf(os.Stderr, "[remote compression: %d tokens saved]\n", saved)
+			}
+			output = filtered
+		} else if IsVerbose() {
+			fmt.Fprintf(os.Stderr, "[remote compression failed: %v]\n", rerr)
+		}
+	}
+
 	if h.tracker != nil && len(args) > 0 {
 		h.tracker.RecordParseFailure(strings.Join(args, " "), "no filter matched", err == nil)
 	}
@@ -207,6 +224,22 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.FilterCo
 	mode := filter.ModeMinimal
 	if IsUltraCompact() {
 		mode = filter.ModeAggressive
+	}
+
+	// Remote mode: use gRPC compression service
+	if IsRemoteMode() {
+		filtered, saved, err := RemoteCompress(output, string(mode), GetTokenBudget())
+		if err != nil {
+			if IsVerbose() {
+				fmt.Fprintf(os.Stderr, "[remote compression failed: %v, falling back to local]\n", err)
+			}
+			// Fall through to local processing
+		} else {
+			if IsVerbose() && saved > 0 {
+				fmt.Fprintf(os.Stderr, "[remote pipeline: %d tokens saved]\n", saved)
+			}
+			return filtered
+		}
 	}
 
 	preset := GetLayerPreset()

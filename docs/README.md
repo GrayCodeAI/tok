@@ -9,7 +9,7 @@ A research-backed, production-ready token compression system with 14 layers of o
 - [Getting Started](./getting-started.md) - Install and run TokMan in 5 minutes
 - [API Reference](./api-reference.md) - Complete REST API documentation
 - [SDK Reference](./sdk-reference.md) - Go, Python, TypeScript SDKs
-- [Architecture](./architecture.md) - Deep dive into the 14-layer pipeline
+- [Architecture](./architecture.md) - Deep dive into the 31-layer pipeline
 - [Benchmarks](./BENCHMARKS.md) - Performance comparisons
 - [Examples](./examples/) - Integration examples
 
@@ -95,7 +95,7 @@ console.log(`Reduced from ${result.originalTokens} to ${result.finalTokens} toke
 
 ## Architecture
 
-TokMan uses a 14-layer compression pipeline:
+TokMan uses a 31-layer compression pipeline:
 
 | Layer | Method | Typical Reduction |
 |-------|--------|-------------------|

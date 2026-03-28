@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -298,44 +297,6 @@ func NewFilterRegistry() *FilterRegistry {
 	}
 }
 
-// LoadDirectory loads all TOML files from a directory
-func (r *FilterRegistry) LoadDirectory(dir string) error {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil // Directory doesn't exist, skip
-		}
-		return fmt.Errorf("failed to read filters directory %s: %w", dir, err)
-	}
-
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
-		}
-
-		ext := strings.ToLower(filepath.Ext(entry.Name()))
-		if ext != ".toml" {
-			continue
-		}
-
-		path := filepath.Join(dir, entry.Name())
-		filter, err := r.parser.ParseFile(path)
-		if err != nil {
-			return fmt.Errorf("failed to load filter %s: %w", path, err)
-		}
-
-		if err := filter.Validate(); err != nil {
-			return fmt.Errorf("invalid filter %s: %w", path, err)
-		}
-
-		r.filters[entry.Name()] = filter
-	}
-
-	return nil
-}
 
 // LoadFile loads a single TOML filter file
 func (r *FilterRegistry) LoadFile(path string) error {
@@ -368,17 +329,6 @@ func (r *FilterRegistry) FindMatchingFilter(command string) (string, string, *Fi
 	return "", "", nil
 }
 
-// ListFilters returns all loaded filter names
-func (r *FilterRegistry) ListFilters() []string {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-
-	names := make([]string, 0, len(r.filters))
-	for name := range r.filters {
-		names = append(names, name)
-	}
-	return names
-}
 
 // Count returns the number of loaded filters
 func (r *FilterRegistry) Count() int {

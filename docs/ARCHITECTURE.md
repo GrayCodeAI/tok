@@ -6,7 +6,7 @@
 
 ## Overview
 
-TokMan is a token reduction system implementing a 20-layer compression pipeline for CLI output. It wraps common CLI tools (Git, Docker, npm, etc.) to intercept and compress their output using research-backed techniques.
+TokMan is a token reduction system implementing a 31-layer compression pipeline for CLI output. It wraps common CLI tools (Git, Docker, npm, etc.) to intercept and compress their output using research-backed techniques.
 
 ## Core Components
 
@@ -42,7 +42,7 @@ The commands package is organized into functional categories:
 
 ### 3. Compression Pipeline (`internal/filter/`)
 
-The 20-layer compression pipeline:
+The 31-layer compression pipeline:
 
 ```
 internal/filter/
@@ -143,7 +143,7 @@ internal/filter/
                                 ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                   internal/filter/pipeline.go                    │
-│              Apply 20-layer compression pipeline                 │
+│              Apply 31-layer compression pipeline                 │
 │                                                                  │
 │  L1→L2→L3→L4→L5→L6→L7→L8→L9→L10→L11→L12→L13→L14→L15→L16→L17→L18→L19→L20 │
 │  Entropy → Perplexity → Goal → AST → Contrast → Ngram → Eval → │
@@ -329,4 +329,209 @@ go build -o tokman ./cmd/tokman
 GOOS=linux GOARCH=amd64 go build -o tokman-linux ./cmd/tokman
 GOOS=darwin GOARCH=amd64 go build -o tokman-darwin ./cmd/tokman
 GOOS=windows GOARCH=amd64 go build -o tokman-windows ./cmd/tokman
+```
+
+---
+
+## Architecture Diagrams
+
+### High-Level Architecture
+
+```mermaid
+graph TB
+    subgraph "Client Layer"
+        CLI[CLI Client]
+        API[HTTP/gRPC Client]
+        Agent[AI Agent Integration]
+    end
+
+    subgraph "Gateway Layer"
+        GW[API Gateway<br/>:8080]
+    end
+
+    subgraph "Service Layer"
+        COMPRESS[Compress Service<br/>:50051]
+        ANALYTICS[Analytics Service<br/>:50052]
+        DISCOVER[Discovery Service<br/>:50053]
+    end
+
+    subgraph "Core Layer"
+        PIPELINE[31-Layer Pipeline]
+        TRACKER[Command Tracker]
+        CACHE[Result Cache]
+    end
+
+    subgraph "Data Layer"
+        DB[(SQLite DB)]
+        FS[File System]
+    end
+
+    CLI --> GW
+    API --> GW
+    Agent --> CLI
+    
+    GW --> COMPRESS
+    GW --> ANALYTICS
+    GW --> DISCOVER
+    
+    COMPRESS --> PIPELINE
+    COMPRESS --> CACHE
+    
+    ANALYTICS --> TRACKER
+    ANALYTICS --> DB
+    
+    DISCOVER --> FS
+    
+    PIPELINE --> CACHE
+    TRACKER --> DB
+```
+
+### Compression Pipeline Flow
+
+```mermaid
+flowchart LR
+    subgraph "Input Processing"
+        INPUT[Raw Input] --> ESTIMATE[Token Estimator]
+    end
+
+    subgraph "Stage 1: Content Analysis"
+        ESTIMATE --> ENTROPY[Entropy Filter]
+        ENTROPY --> PERPLEX[Perplexity Pruner]
+        PERPLEX --> GOAL[Goal-Driven Selection]
+    end
+
+    subgraph "Stage 2: Structure Preservation"
+        GOAL --> AST[AST Preserve]
+        AST --> CONTRAST[Contrastive Ranking]
+        CONTRAST --> NGRAM[N-Gram Abbreviation]
+    end
+
+    subgraph "Stage 3: Intelligent Compression"
+        NGRAM --> EVAL[Evaluator Heads]
+        EVAL --> GIST[Gist Compression]
+        GIST --> HIER[Hierarchical Summary]
+    end
+
+    subgraph "Stage 4: Budget Enforcement"
+        HIER --> BUDGET[Budget Enforcement]
+        BUDGET --> COMPACT[Compaction]
+        COMPACT --> ATTRIB[Attribution Filter]
+    end
+
+    subgraph "Stage 5: Memory Optimization"
+        ATTRIB --> H2O[H2O Filter]
+        H2O --> ATTENTION[Attention Sink]
+        ATTENTION --> META[Meta-Token]
+    end
+
+    subgraph "Stage 6: Advanced Processing"
+        META --> SEMANTIC[Semantic Chunk]
+        SEMANTIC --> SKETCH[Sketch Store]
+        SKETCH --> LAZY[Lazy Pruner]
+        LAZY --> OUTPUT[Compressed Output]
+    end
+```
+
+### Microservice Communication
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant GW as Gateway
+    participant CS as Compress Service
+    participant AS as Analytics Service
+    participant DB as Database
+
+    C->>GW: POST /api/v1/compress
+    GW->>CS: gRPC Compress()
+    
+    CS->>CS: Apply Pipeline Layers
+    CS->>CS: Check Cache
+    CS-->>GW: CompressedResult
+    
+    GW->>AS: gRPC RecordCommand()
+    AS->>DB: Store Command Record
+    AS-->>GW: Ack
+    
+    GW-->>C: CompressResponse
+```
+
+### Performance Optimizations
+
+```mermaid
+graph LR
+    subgraph "Memory Management"
+        POOL[sync.Pool for Builders]
+        CACHE[LRU Cache for Tokens]
+        STREAM[Streaming for >1MB]
+    end
+
+    subgraph "SIMD Operations"
+        ANSI[ANSI Strip]
+        COUNT[Byte Counting]
+        WORD[Word Detection]
+    end
+
+    subgraph "Concurrency"
+        PARALLEL[Parallel Layer Processing]
+        LAZY[Lazy Initialization]
+        WARMUP[Pipeline Warmup]
+    end
+
+    POOL --> PERF[3-5x Throughput]
+    CACHE --> PERF
+    STREAM --> PERF
+    ANSI --> PERF
+    COUNT --> PERF
+    WORD --> PERF
+    PARALLEL --> PERF
+    LAZY --> PERF
+    WARMUP --> PERF
+```
+
+### Deployment Architecture
+
+```mermaid
+graph TB
+    subgraph "Production Environment"
+        LB[Load Balancer]
+        
+        subgraph "Kubernetes Cluster"
+            GW1[Gateway Pod 1]
+            GW2[Gateway Pod 2]
+            
+            CS1[Compress Pod 1]
+            CS2[Compress Pod 2]
+            
+            AS1[Analytics Pod 1]
+            
+            DS1[Discovery Pod 1]
+        end
+        
+        subgraph "Persistence"
+            PVC[Persistent Volume]
+            CM[ConfigMap]
+            SEC[Secrets]
+        end
+    end
+
+    LB --> GW1
+    LB --> GW2
+    
+    GW1 --> CS1
+    GW1 --> AS1
+    GW1 --> DS1
+    
+    GW2 --> CS2
+    GW2 --> AS1
+    GW2 --> DS1
+    
+    CS1 --> PVC
+    CS2 --> PVC
+    AS1 --> PVC
+    
+    CM --> GW1
+    CM --> GW2
+    SEC --> GW1
+    SEC --> GW2
 ```

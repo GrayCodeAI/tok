@@ -86,25 +86,6 @@ func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filter
 	})
 }
 
-// TrackPassthrough records a passthrough command (no filtering).
-func (t *TimedExecution) TrackPassthrough(command, tokmanCmd string) {
-	t.once.Do(func() {
-		execTime := time.Since(t.startTime)
-
-		tracker := getGlobalTracker()
-		if tracker == nil {
-			return
-		}
-
-		cwd, _ := os.Getwd()
-		tracker.Record(&CommandRecord{
-			Command:      command,
-			ProjectPath:  cwd,
-			ExecTimeMs:   execTime.Milliseconds(),
-			ParseSuccess: false,
-		})
-	})
-}
 
 // getGlobalTracker returns the global tracker instance.
 func getGlobalTracker() *Tracker {

@@ -1,7 +1,6 @@
 package core
 
 import (
-	"context"
 	"testing"
 )
 
@@ -48,70 +47,9 @@ func TestCalculateTokensSaved(t *testing.T) {
 	}
 }
 
-func TestHeuristicEstimator(t *testing.T) {
-	e := newHeuristicEstimator()
-
-	if e.Encoding() != "heuristic" {
-		t.Errorf("Encoding() = %q, want %q", e.Encoding(), "heuristic")
-	}
-
-	got := e.Estimate("hello world")
-	if got <= 0 {
-		t.Errorf("Estimate returned %d, want > 0", got)
-	}
-
-	h, a, ratio := e.Compare("test")
-	if h <= 0 || a <= 0 {
-		t.Errorf("Compare returned invalid values: h=%d, a=%d", h, a)
-	}
-	if ratio != 0 {
-		t.Errorf("HeuristicEstimator ratio should be 0, got %f", ratio)
-	}
-}
-
-func TestMockCommandRunner(t *testing.T) {
-	runner := newMockCommandRunner()
-	runner.Outputs["echo"] = "hello"
-	runner.ExitCodes["echo"] = 0
-
-	output, exitCode, err := runner.Run(context.Background(), []string{"echo", "test"})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if output != "hello" {
-		t.Errorf("output = %q, want %q", output, "hello")
-	}
-	if exitCode != 0 {
-		t.Errorf("exitCode = %d, want 0", exitCode)
-	}
-	if len(runner.Calls) != 1 {
-		t.Errorf("expected 1 call, got %d", len(runner.Calls))
-	}
-}
-
-func TestBufferedOutputWriter(t *testing.T) {
-	w := newBufferedOutputWriter()
-
-	w.WriteOutput([]byte("hello "))
-	w.WriteOutput([]byte("world"))
-	w.WriteDiagnostic([]byte("debug info"))
-
-	if string(w.Output()) != "hello world" {
-		t.Errorf("Output = %q, want %q", string(w.Output()), "hello world")
-	}
-	if string(w.Diagnostic()) != "debug info" {
-		t.Errorf("Diagnostic = %q, want %q", string(w.Diagnostic()), "debug info")
-	}
-}
-
 func TestCalculateSavings(t *testing.T) {
 	savings := CalculateSavings(1000000, "gpt-4o")
 	if savings <= 0 {
 		t.Errorf("CalculateSavings returned %f, want > 0", savings)
-	}
-
-	formatted := formatSavings(1000, "gpt-4o")
-	if formatted == "" {
-		t.Errorf("formatSavings returned empty string")
 	}
 }

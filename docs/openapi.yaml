@@ -1,0 +1,505 @@
+openapi: 3.0.3
+info:
+  title: TokMan API
+  description: |
+    TokMan is a token-aware CLI proxy that intercepts commands and applies
+    a 31-layer compression pipeline to reduce token usage for AI coding assistants.
+    
+    ## Authentication
+    Most endpoints require an API key via the `X-API-Key` header.
+    
+    ## Rate Limiting
+    Rate limits are applied per API key. Check `X-RateLimit-Remaining` header.
+  version: 1.0.0
+  contact:
+    name: TokMan Support
+    url: https://github.com/GrayCodeAI/tokman
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.tokman.dev/v1
+    description: Production server
+
+tags:
+  - name: compress
+    description: Text compression operations
+  - name: analyze
+    description: Token analysis and estimation
+  - name: session
+    description: Session management
+  - name: health
+    description: Health and status endpoints
+  - name: metrics
+    description: Prometheus metrics
+
+paths:
+  /compress:
+    post:
+      tags:
+        - compress
+      summary: Compress text content
+      description: |
+        Apply the 31-layer compression pipeline to reduce token count.
+        Supports multiple presets (fast, balanced, full) and custom configurations.
+      operationId: compressText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompressRequest'
+      responses:
+        '200':
+          description: Successfully compressed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompressResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /compress/stream:
+    post:
+      tags:
+        - compress
+      summary: Stream compress large content
+      description: |
+        Streaming compression for inputs larger than 1MB.
+        Uses chunked processing with progressive results.
+      operationId: compressStream
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompressRequest'
+      responses:
+        '200':
+          description: Streaming compression started
+          content:
+            application/x-ndjson:
+              schema:
+                $ref: '#/components/schemas/StreamChunk'
+
+  /analyze:
+    post:
+      tags:
+        - analyze
+      summary: Analyze text tokens
+      description: |
+        Get detailed token analysis including count, entropy,
+        and compression potential estimation.
+      operationId: analyzeText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+      responses:
+        '200':
+          description: Analysis complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyzeResponse'
+
+  /analyze/batch:
+    post:
+      tags:
+        - analyze
+      summary: Batch analyze multiple texts
+      description: Analyze multiple texts in a single request.
+      operationId: analyzeBatch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchAnalyzeRequest'
+      responses:
+        '200':
+          description: Batch analysis complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchAnalyzeResponse'
+
+  /sessions:
+    get:
+      tags:
+        - session
+      summary: List active sessions
+      operationId: listSessions
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionList'
+    post:
+      tags:
+        - session
+      summary: Create a new session
+      operationId: createSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSessionRequest'
+      responses:
+        '201':
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+
+  /sessions/{sessionId}:
+    get:
+      tags:
+        - session
+      summary: Get session details
+      operationId: getSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          description: Session not found
+    delete:
+      tags:
+        - session
+      summary: Delete a session
+      operationId: deleteSession
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Session deleted
+        '404':
+          description: Session not found
+
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /ready:
+    get:
+      tags:
+        - health
+      summary: Readiness check
+      operationId: readinessCheck
+      responses:
+        '200':
+          description: Service is ready
+        '503':
+          description: Service not ready
+
+  /metrics:
+    get:
+      tags:
+        - metrics
+      summary: Prometheus metrics
+      operationId: getMetrics
+      responses:
+        '200':
+          description: Prometheus text format metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  schemas:
+    CompressRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: Text content to compress
+        preset:
+          type: string
+          enum: [fast, balanced, full]
+          default: balanced
+          description: Compression preset
+        mode:
+          type: string
+          enum: [none, minimal, aggressive]
+          default: minimal
+          description: Compression mode
+        budget:
+          type: integer
+          minimum: 100
+          description: Token budget limit
+        queryIntent:
+          type: string
+          description: Query context for goal-driven compression
+        enableLLM:
+          type: boolean
+          default: false
+          description: Enable LLM-based summarization
+        sessionId:
+          type: string
+          format: uuid
+          description: Optional session for context persistence
+
+    CompressResponse:
+      type: object
+      properties:
+        compressed:
+          type: string
+          description: Compressed text content
+        originalTokens:
+          type: integer
+          description: Original token count
+        compressedTokens:
+          type: integer
+          description: Compressed token count
+        tokensSaved:
+          type: integer
+          description: Tokens saved by compression
+        compressionRatio:
+          type: number
+          format: float
+          description: Compression ratio (0.0-1.0)
+        layersApplied:
+          type: array
+          items:
+            type: string
+          description: List of layers that were applied
+        processingTimeMs:
+          type: integer
+          description: Processing time in milliseconds
+
+    StreamChunk:
+      type: object
+      properties:
+        chunk:
+          type: integer
+          description: Chunk number
+        compressed:
+          type: string
+          description: Compressed chunk content
+        tokens:
+          type: integer
+          description: Tokens in this chunk
+        done:
+          type: boolean
+          description: Whether this is the last chunk
+
+    AnalyzeRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          description: Text content to analyze
+        detailed:
+          type: boolean
+          default: false
+          description: Include detailed layer analysis
+
+    AnalyzeResponse:
+      type: object
+      properties:
+        tokenCount:
+          type: integer
+          description: Total token count
+        lineCount:
+          type: integer
+          description: Number of lines
+        charCount:
+          type: integer
+          description: Character count
+        entropy:
+          type: number
+          format: float
+          description: Content entropy score
+        estimatedCompression:
+          type: number
+          format: float
+          description: Estimated compression potential (0.0-1.0)
+        language:
+          type: string
+          description: Detected programming language
+        layerAnalysis:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/LayerAnalysis'
+
+    LayerAnalysis:
+      type: object
+      properties:
+        applicable:
+          type: boolean
+        estimatedSavings:
+          type: integer
+        priority:
+          type: integer
+
+    BatchAnalyzeRequest:
+      type: object
+      required:
+        - contents
+      properties:
+        contents:
+          type: array
+          items:
+            type: string
+          maxItems: 100
+
+    BatchAnalyzeResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AnalyzeResponse'
+
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        lastAccessed:
+          type: string
+          format: date-time
+        totalTokensProcessed:
+          type: integer
+        totalTokensSaved:
+          type: integer
+        commandCount:
+          type: integer
+        config:
+          $ref: '#/components/schemas/SessionConfig'
+
+    SessionConfig:
+      type: object
+      properties:
+        preset:
+          type: string
+        mode:
+          type: string
+        budget:
+          type: integer
+
+    SessionList:
+      type: object
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    CreateSessionRequest:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum: [fast, balanced, full]
+        budget:
+          type: integer
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        version:
+          type: string
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        checks:
+          type: object
+          additionalProperties:
+            type: boolean
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+security:
+  - ApiKeyAuth: []

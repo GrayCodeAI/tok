@@ -207,9 +207,6 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 
 	// Group 7: Parallel NEW Phase 1 layers (skip if not initialized)
 	var group7Layers []filterLayer
-	if p.coordinator.reasoningTraceFilter != nil {
-		group7Layers = append(group7Layers, filterLayer{p.coordinator.reasoningTraceFilter, "21_reasoning_trace"})
-	}
 	if p.coordinator.symbolicCompressFilter != nil {
 		group7Layers = append(group7Layers, filterLayer{p.coordinator.symbolicCompressFilter, "22_symbolic_compress"})
 	}

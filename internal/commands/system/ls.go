@@ -1,9 +1,9 @@
 package system
 
 import (
-	"os"
 	"bytes"
 	"fmt"
+	"os"
 	"os/exec"
 	"sort"
 	"strings"

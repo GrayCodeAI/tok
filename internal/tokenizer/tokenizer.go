@@ -1,10 +1,7 @@
 package tokenizer
 
 import (
-	"bufio"
 	"fmt"
-	"io"
-	"os"
 	"strings"
 
 	tiktoken "github.com/tiktoken-go/tokenizer"
@@ -105,82 +102,6 @@ func (t *Tokenizer) Count(text string) int {
 	return count
 }
 
-// CountWithDetails returns token count and tokens.
-func (t *Tokenizer) CountWithDetails(text string) (int, []string) {
-	if text == "" {
-		return 0, nil
-	}
-	ids, tokens, err := t.codec.Encode(text)
-	if err != nil {
-		return EstimateTokens(text), nil
-	}
-	return len(ids), tokens
-}
-
-// EncodingName returns the encoding name.
-func (t *Tokenizer) EncodingName() Encoding {
-	return t.encName
-}
-
-// CountFile counts tokens in a file.
-func (t *Tokenizer) CountFile(path string) (int, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return 0, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer file.Close()
-
-	return t.CountReader(file)
-}
-
-// CountReader counts tokens from an io.Reader.
-func (t *Tokenizer) CountReader(r io.Reader) (int, error) {
-	scanner := bufio.NewScanner(r)
-	total := 0
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		total += t.Count(line)
-		// Add 1 for the newline character (models see newlines as tokens)
-		total += 1
-	}
-
-	if err := scanner.Err(); err != nil {
-		return 0, fmt.Errorf("error reading: %w", err)
-	}
-
-	return total, nil
-}
-
-// CountMessages counts tokens in OpenAI chat message format.
-func (t *Tokenizer) CountMessages(messages []Message) int {
-	// Every message follows <im_start>{role/name}\n{content}<im_end>\n
-	// This adds approximately 4 tokens per message
-	tokensPerMessage := 4
-
-	total := 0
-	for _, msg := range messages {
-		total += tokensPerMessage
-		total += t.Count(msg.Role)
-		total += t.Count(msg.Content)
-		if msg.Name != "" {
-			total += t.Count(msg.Name)
-			// Name field adds 1 token
-			total += 1
-		}
-	}
-	// Every reply is primed with <im_start>assistant
-	total += 3
-	return total
-}
-
-// Message represents a chat message.
-type Message struct {
-	Role    string `json:"role"`
-	Content string `json:"content"`
-	Name    string `json:"name,omitempty"`
-}
-
 // EstimateTokens provides a quick heuristic token count.
 // Delegates to core.EstimateTokens for single source of truth (T22).
 func EstimateTokens(text string) int {
@@ -205,23 +126,6 @@ func CompareCounts(text string) (heuristic, actual int, diff float64) {
 	return
 }
 
-// FormatCount formats a token count with model context limits.
-func FormatCount(count int, model string) string {
-	var limit int
-	switch {
-	case strings.HasPrefix(model, "gpt-4o") || strings.HasPrefix(model, "claude-3"):
-		limit = 128000
-	case strings.HasPrefix(model, "gpt-4"):
-		limit = 128000
-	case strings.HasPrefix(model, "gpt-3.5"):
-		limit = 16385
-	default:
-		limit = 8192
-	}
-
-	pct := float64(count) / float64(limit) * 100
-	return fmt.Sprintf("%d tokens (%.1f%% of %d context)", count, pct, limit)
-}
 
 // CountStats holds statistics about token counting.
 type CountStats struct {

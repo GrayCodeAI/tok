@@ -133,8 +133,8 @@ var numLargeRe = regexp.MustCompile(`\b(\d{4,})(\.\d+)?\b`)
 
 // numDecimalMinRe / numDecimalAggrRe match floats with more precision than needed.
 var (
-	numDecimalMinRe  = regexp.MustCompile(`\d+\.\d{4,}`)  // >3 decimals → keep 2
-	numDecimalAggrRe = regexp.MustCompile(`\d+\.\d{3,}`)  // >2 decimals → keep 1
+	numDecimalMinRe  = regexp.MustCompile(`\d+\.\d{4,}`) // >3 decimals → keep 2
+	numDecimalAggrRe = regexp.MustCompile(`\d+\.\d{3,}`) // >2 decimals → keep 1
 	numPercentRe     = regexp.MustCompile(`(\d+\.\d{3,})%`)
 )
 

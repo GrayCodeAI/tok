@@ -115,30 +115,3 @@ func compactGrepOutputSimple(output string, maxLen, maxResults int) string {
 	return result.String()
 }
 
-func compactGrepOutput(output string, maxLen, maxResults int) string {
-	var result strings.Builder
-	count := 0
-
-	for _, line := range strings.Split(output, "\n") {
-		if count >= maxResults {
-			result.WriteString(fmt.Sprintf("// ... truncated (showing %d of more results)\n", maxResults))
-			break
-		}
-		if strings.HasPrefix(line, "{\"type\":\"match\"") {
-			// Parse match JSON and format compactly
-			result.WriteString(compactGrepMatch(line, maxLen))
-			count++
-		}
-	}
-
-	return result.String()
-}
-
-func compactGrepMatch(jsonLine string, maxLen int) string {
-	// Simplified: just extract file and line number
-	// In production, parse JSON properly
-	if strings.Contains(jsonLine, "\"path\":") {
-		return "// match found\n"
-	}
-	return ""
-}

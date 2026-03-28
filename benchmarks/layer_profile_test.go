@@ -42,22 +42,22 @@ func TestLayerProfiling(t *testing.T) {
 	layerTokensSaved := make(map[string]int)
 
 	for i, tc := range testCases {
-		fmt.Printf("Profiling input %d/%d (%s, %d tokens)...\n", 
+		fmt.Printf("Profiling input %d/%d (%s, %d tokens)...\n",
 			i+1, len(testCases), tc.Type, tc.TokenCount)
 
 		cfg := filter.PipelineConfig{
-			Mode:              tc.Mode,
-			EnableEntropy:      true,
-			EnablePerplexity:   true,
-			EnableGoalDriven:   true,
-			EnableAST:          true,
-			EnableContrastive:  true,
-			EnableEvaluator:    true,
-			EnableGist:         true,
-			EnableHierarchical: true,
-			EnableCompaction:   true,
-			EnableAttribution:  true,
-			EnableH2O:          true,
+			Mode:                tc.Mode,
+			EnableEntropy:       true,
+			EnablePerplexity:    true,
+			EnableGoalDriven:    true,
+			EnableAST:           true,
+			EnableContrastive:   true,
+			EnableEvaluator:     true,
+			EnableGist:          true,
+			EnableHierarchical:  true,
+			EnableCompaction:    true,
+			EnableAttribution:   true,
+			EnableH2O:           true,
 			EnableAttentionSink: true,
 		}
 

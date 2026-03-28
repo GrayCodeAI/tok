@@ -132,7 +132,7 @@ func (h *H2OFilter) Apply(input string, mode Mode) (string, int) {
 func (h *H2OFilter) applySampled(input string, mode Mode, originalTokens int) (string, int) {
 	tokens := h.tokenize(input)
 	n := len(tokens)
-	
+
 	if n < h.config.SinkSize+h.config.RecentSize+h.config.HeavyHitterSize {
 		return input, 0
 	}

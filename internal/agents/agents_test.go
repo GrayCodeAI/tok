@@ -40,13 +40,6 @@ func TestGetAgent(t *testing.T) {
 	}
 }
 
-func TestGetAgentBinaryPath(t *testing.T) {
-	// This tests the function exists and doesn't panic
-	// The actual result depends on what's installed
-	path := GetAgentBinaryPath("claude-code")
-	// Path can be empty if claude isn't installed
-	_ = path
-}
 
 func TestInstallInstructions(t *testing.T) {
 	// Test known agent

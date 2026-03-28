@@ -52,6 +52,12 @@ var (
 	quietMode    bool     // R36: Suppress all non-essential output
 	jsonOutput   bool     // R37: Machine-readable JSON output
 
+	// Remote mode flags (Phase 4)
+	remoteMode      bool
+	compressionAddr string
+	analyticsAddr   string
+	remoteTimeout   int // seconds
+
 	// Compaction flags (Layer 11)
 	compactionEnabled    bool
 	compactionThreshold  int
@@ -95,6 +101,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 				OutputFile           string
 				QuietMode            bool
 				JSONOutput           bool
+				RemoteMode           bool
+				CompressionAddr      string
+				AnalyticsAddr        string
+				RemoteTimeout        int
 				CompactionEnabled    bool
 				CompactionThreshold  int
 				CompactionPreserve   int
@@ -115,6 +125,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 				OutputFile:           outputFile,
 				QuietMode:            quietMode,
 				JSONOutput:           jsonOutput,
+				RemoteMode:           remoteMode,
+				CompressionAddr:      compressionAddr,
+				AnalyticsAddr:        analyticsAddr,
+				RemoteTimeout:        remoteTimeout,
 				CompactionEnabled:    compactionEnabled,
 				CompactionThreshold:  compactionThreshold,
 				CompactionPreserve:   compactionPreserve,
@@ -245,6 +259,16 @@ func init() {
 	// Reversible compression flag (R1)
 	rootCmd.PersistentFlags().BoolVar(&reversibleEnabled, "reversible", false,
 		"store original output for later restoration (use 'tokman restore' to retrieve)")
+
+	// Remote mode flags (Phase 4 - Microservice)
+	rootCmd.PersistentFlags().BoolVar(&remoteMode, "remote", false,
+		"enable remote mode - connect to TokMan services via gRPC")
+	rootCmd.PersistentFlags().StringVar(&compressionAddr, "compression-addr", "localhost:50051",
+		"compression service address (default: localhost:50051)")
+	rootCmd.PersistentFlags().StringVar(&analyticsAddr, "analytics-addr", "localhost:50053",
+		"analytics service address (default: localhost:50053)")
+	rootCmd.PersistentFlags().IntVar(&remoteTimeout, "remote-timeout", 30,
+		"remote operation timeout in seconds (default: 30)")
 
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))

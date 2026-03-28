@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/tee"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -75,6 +76,16 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 	}
 
 	fmt.Print(filtered)
+
+	// Use remote analytics if in remote mode
+	if IsRemoteMode() {
+		origTokens := core.EstimateTokens(raw)
+		filteredTokens := core.EstimateTokens(filtered)
+		if rerr := RemoteRecordAnalytics(name, origTokens, filteredTokens, execTime, true); rerr != nil && Verbose > 0 {
+			fmt.Fprintf(os.Stderr, "Warning: failed to record remote analytics: %v\n", rerr)
+		}
+		return nil
+	}
 
 	if rerr := RecordCommand(name, raw, filtered, execTime, true); rerr != nil && Verbose > 0 {
 		fmt.Fprintf(os.Stderr, "Warning: failed to record: %v\n", rerr)

@@ -3,7 +3,6 @@ package utils
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 )
 
 // ShortenPath truncates a path to fit within maxLen characters.
@@ -80,11 +79,6 @@ func FormatDuration(ms int64) string {
 	default:
 		return fmt.Sprintf("%dms", ms)
 	}
-}
-
-// Contains checks if a string contains a substring (case-sensitive).
-func Contains(s, substr string) bool {
-	return strings.Contains(s, substr)
 }
 
 // FormatTokens formats a token count with K/M/B suffixes.

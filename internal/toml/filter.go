@@ -14,13 +14,13 @@ import (
 
 // TOMLFilterEngine applies TOML-defined filter rules to output
 type TOMLFilterEngine struct {
-	config            *FilterConfig
-	compiledRe        []*regexp.Regexp // pre-compiled replace patterns
-	compiledMatchRe   []*regexp.Regexp // pre-compiled match_output patterns
-	compiledUnlessRe  []*regexp.Regexp // pre-compiled unless patterns (nil if no unless clause)
-	compiledStripRe   []*regexp.Regexp // pre-compiled strip_lines_matching patterns
-	compiledKeepRe    []*regexp.Regexp // pre-compiled keep_lines_matching patterns
-	compileOnce       sync.Once
+	config           *FilterConfig
+	compiledRe       []*regexp.Regexp // pre-compiled replace patterns
+	compiledMatchRe  []*regexp.Regexp // pre-compiled match_output patterns
+	compiledUnlessRe []*regexp.Regexp // pre-compiled unless patterns (nil if no unless clause)
+	compiledStripRe  []*regexp.Regexp // pre-compiled strip_lines_matching patterns
+	compiledKeepRe   []*regexp.Regexp // pre-compiled keep_lines_matching patterns
+	compileOnce      sync.Once
 }
 
 // NewTOMLFilterEngine creates a new filter engine from a TOML config

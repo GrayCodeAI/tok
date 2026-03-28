@@ -1,0 +1,21 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tokman
+
+resources:
+  - compression-deployment.yaml
+  - analytics-deployment.yaml
+  - gateway-deployment.yaml
+
+commonLabels:
+  app.kubernetes.io/name: tokman
+  app.kubernetes.io/version: "2.2.0"
+
+images:
+  - name: tokman/compression
+    newTag: "2.2.0"
+  - name: tokman/analytics
+    newTag: "2.2.0"
+  - name: tokman/gateway
+    newTag: "2.2.0"

@@ -15,6 +15,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/GrayCodeAI/tokman/internal/cache"
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/filter"
@@ -142,7 +143,7 @@ func runMCP(cmd *cobra.Command, args []string) error {
 			CompressedTokens: stats.FinalTokens,
 			SavedTokens:      stats.TotalSaved,
 			ReductionPct:     stats.ReductionPercent,
-			Hash:             filter.Fingerprint(req.Text),
+			Hash:             cache.ComputeFingerprint(req.Text),
 		}
 
 		w.Header().Set("Content-Type", "application/json")

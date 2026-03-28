@@ -233,12 +233,8 @@ func FormatHint(path string) string {
 // Global default tee instance
 var defaultTee = New(DefaultConfig())
 
-// Write writes using the default tee instance.
-func Write(raw string, commandSlug string, exitCode int) string {
-	return defaultTee.Write(raw, commandSlug, exitCode)
-}
-
 // WriteAndHint writes and returns hint using the default tee instance.
 func WriteAndHint(raw string, commandSlug string, exitCode int) string {
 	return defaultTee.WriteAndHint(raw, commandSlug, exitCode)
 }
+

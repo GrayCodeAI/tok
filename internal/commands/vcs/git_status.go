@@ -1,9 +1,9 @@
 package vcs
 
 import (
-	"os"
 	"bytes"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"

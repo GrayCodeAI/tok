@@ -1,0 +1,67 @@
+syntax = "proto3";
+
+package tokman.analytics.v1;
+
+option go_package = "github.com/GrayCodeAI/tokman/pkg/api/proto/analyticsv1";
+
+import "google/protobuf/timestamp.proto";
+
+// Analytics service handles token tracking and metrics.
+service AnalyticsService {
+  // Record saves a command execution record.
+  rpc Record(RecordRequest) returns (RecordResponse);
+  
+  // GetMetrics returns aggregated metrics.
+  rpc GetMetrics(GetMetricsRequest) returns (GetMetricsResponse);
+  
+  // GetEconomics returns cost analysis.
+  rpc GetEconomics(GetEconomicsRequest) returns (GetEconomicsResponse);
+}
+
+message RecordRequest {
+  string command = 1;
+  int32 original_tokens = 2;
+  int32 filtered_tokens = 3;
+  int64 duration_ms = 4;
+  int32 exit_code = 5;
+  string filter_mode = 6;
+  string session_id = 7;
+}
+
+message RecordResponse {
+  bool success = 1;
+}
+
+message GetMetricsRequest {
+  google.protobuf.Timestamp start_time = 1;
+  google.protobuf.Timestamp end_time = 2;
+  string session_id = 3;
+}
+
+message GetMetricsResponse {
+  int64 total_commands = 1;
+  int64 total_tokens_saved = 2;
+  int64 total_tokens_in = 3;
+  int64 total_tokens_out = 4;
+  double average_savings = 5;
+  double p50_latency_ms = 6;
+  double p99_latency_ms = 7;
+  repeated FilterUsage top_filters = 8;
+}
+
+message FilterUsage {
+  string filter_name = 1;
+  int64 count = 2;
+  double avg_savings = 3;
+}
+
+message GetEconomicsRequest {}
+
+message GetEconomicsResponse {
+  int64 tokens_saved = 1;
+  double estimated_cost_saved = 2;
+  string model_used = 3;
+  double cost_per_token = 4;
+  double quota_used = 5;
+  double quota_remaining = 6;
+}

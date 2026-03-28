@@ -326,9 +326,3 @@ func (f *BodyFilter) isFunctionStart(line string, lang string) bool {
 	return false
 }
 
-// StripBodies is a utility function to strip function bodies.
-func StripBodies(code string, lang string, mode Mode) string {
-	filter := NewBodyFilter()
-	output, _ := filter.Apply(code, mode)
-	return output
-}

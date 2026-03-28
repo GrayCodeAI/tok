@@ -16,12 +16,12 @@ import (
 type SymbolicCompressFilter struct {
 	config   SymbolicConfig
 	patterns []symbolicPattern
-	
+
 	// Pre-compiled patterns for compressInstructionPatterns (Phase 1 optimization)
-	followingPattern    *regexp.Regexp
-	thisFuncPattern     *regexp.Regexp
-	returnsPattern      *regexp.Regexp
-	paramPattern        *regexp.Regexp
+	followingPattern *regexp.Regexp
+	thisFuncPattern  *regexp.Regexp
+	returnsPattern   *regexp.Regexp
+	paramPattern     *regexp.Regexp
 }
 
 // SymbolicConfig holds configuration for symbolic compression

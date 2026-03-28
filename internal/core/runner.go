@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"time"
 )
 
 // OSCommandRunner executes real shell commands using os/exec.
@@ -56,47 +55,4 @@ func (r *OSCommandRunner) RunCombined(ctx context.Context, args []string) (strin
 // LookPath resolves a command name to its full path.
 func (r *OSCommandRunner) LookPath(name string) (string, error) {
 	return exec.LookPath(name)
-}
-
-// MockCommandRunner is a test double for CommandRunner.
-type MockCommandRunner struct {
-	Outputs   map[string]string
-	ExitCodes map[string]int
-	Errors    map[string]error
-	Calls     []MockCall
-}
-
-// MockCall records a command invocation.
-type MockCall struct {
-	Args     []string
-	Duration time.Duration
-}
-
-// newMockCommandRunner creates a mock runner for testing.
-func newMockCommandRunner() *MockCommandRunner {
-	return &MockCommandRunner{
-		Outputs:   make(map[string]string),
-		ExitCodes: make(map[string]int),
-		Errors:    make(map[string]error),
-	}
-}
-
-// Run returns a pre-configured output for testing.
-func (m *MockCommandRunner) Run(ctx context.Context, args []string) (string, int, error) {
-	if len(args) == 0 {
-		return "", 1, fmt.Errorf("no command provided")
-	}
-	key := args[0]
-	m.Calls = append(m.Calls, MockCall{Args: args})
-	return m.Outputs[key], m.ExitCodes[key], m.Errors[key]
-}
-
-// RunCombined delegates to Run for the mock.
-func (m *MockCommandRunner) RunCombined(ctx context.Context, args []string) (string, int, error) {
-	return m.Run(ctx, args)
-}
-
-// LookPath returns the command name as-is for the mock.
-func (m *MockCommandRunner) LookPath(name string) (string, error) {
-	return name, nil
 }

@@ -179,5 +179,5 @@ curl http://localhost:8080/metrics
 ## Next Steps
 
 - [API Reference](./api-reference.md) - Full API documentation
-- [Architecture](./architecture.md) - Understanding the 14-layer pipeline
+- [Architecture](./architecture.md) - Understanding the 31-layer pipeline
 - [Examples](./examples/) - Integration with LangChain, LlamaIndex

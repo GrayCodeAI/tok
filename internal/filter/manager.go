@@ -5,13 +5,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
-	"unicode/utf8"
 )
 
 // CommandContext provides metadata about the command being executed.
@@ -122,7 +120,8 @@ func (m *PipelineManager) Process(input string, mode Mode, ctx CommandContext) (
 
 	// Try LRU cache first (faster, TTL-aware)
 	if m.lruCache != nil {
-		if cached := m.lruCache.Get(cacheKey); cached != nil {
+		if val := m.lruCache.Get(cacheKey); val != nil {
+			cached := val.(*CachedResult)
 			result.Output = cached.Output
 			result.FinalTokens = EstimateTokens(result.Output)
 			result.SavedTokens = result.OriginalTokens - result.FinalTokens
@@ -429,24 +428,6 @@ func (m *PipelineManager) cacheKey(input string, mode Mode, ctx CommandContext) 
 	)
 }
 
-// GetStats returns pipeline statistics
-func (m *PipelineManager) GetStats() map[string]any {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	stats := map[string]any{
-		"max_context_tokens": m.config.MaxContextTokens,
-		"chunk_size":         m.config.ChunkSize,
-		"stream_threshold":   m.config.StreamThreshold,
-		"cache_enabled":      m.config.CacheEnabled,
-	}
-
-	if m.cache != nil {
-		stats["cache_size"] = m.cache.Size()
-	}
-
-	return stats
-}
 
 // CompressionCache provides caching for compression results
 type CompressionCache struct {
@@ -550,99 +531,3 @@ func (m *PipelineManager) ProcessWithQuery(input string, mode Mode, query string
 	return m.Process(input, mode, ctx)
 }
 
-// ProcessFile processes a file with streaming for large files
-func (m *PipelineManager) ProcessFile(path string, mode Mode, ctx CommandContext) (*ProcessResult, error) {
-	// Open file
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open file: %w", err)
-	}
-	defer f.Close()
-
-	// Check file size
-	stat, err := f.Stat()
-	if err != nil {
-		return nil, fmt.Errorf("failed to stat file: %w", err)
-	}
-
-	// Estimate tokens from file size (rough: 1 token ≈ 4 bytes)
-	estimatedTokens := int(stat.Size() / 4)
-
-	m.mu.RLock()
-	maxCtx := m.config.MaxContextTokens
-	streamThreshold := m.config.StreamThreshold
-	m.mu.RUnlock()
-
-	if estimatedTokens > maxCtx {
-		return nil, fmt.Errorf("file exceeds max context tokens (%d > %d)", estimatedTokens, maxCtx)
-	}
-
-	// Read file
-	if estimatedTokens > streamThreshold {
-		// Stream processing for large files
-		return m.processFileStream(f, mode, ctx)
-	}
-
-	// Read entire file for small inputs
-	content, err := io.ReadAll(f)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read file: %w", err)
-	}
-
-	return m.Process(string(content), mode, ctx)
-}
-
-// processFileStream processes a large file in streaming fashion
-func (m *PipelineManager) processFileStream(r io.Reader, mode Mode, ctx CommandContext) (*ProcessResult, error) {
-	result := &ProcessResult{
-		LayerStats: make(map[string]LayerStat),
-	}
-
-	m.mu.RLock()
-	chunkSize := m.config.ChunkSize
-	m.mu.RUnlock()
-
-	// Read in chunks
-	buf := make([]byte, chunkSize*4) // Convert tokens to bytes
-	var chunks []string
-	totalOriginal := 0
-	totalFinal := 0
-
-	for {
-		n, err := r.Read(buf)
-		if err != nil && err != io.EOF {
-			return nil, fmt.Errorf("read error: %w", err)
-		}
-
-		if n == 0 {
-			break
-		}
-
-		// Ensure we don't split a multi-byte UTF-8 character
-		chunk := string(buf[:n])
-		for !utf8.ValidString(chunk) && n > 0 {
-			n--
-			chunk = string(buf[:n])
-		}
-
-		chunkResult, err := m.Process(chunk, mode, ctx)
-		if err != nil {
-			return nil, fmt.Errorf("chunk processing error: %w", err)
-		}
-
-		chunks = append(chunks, chunkResult.Output)
-		totalOriginal += chunkResult.OriginalTokens
-		totalFinal += chunkResult.FinalTokens
-		result.Chunks++
-	}
-
-	result.Output = strings.Join(chunks, "\n\n--- Chunk Boundary ---\n\n")
-	result.OriginalTokens = totalOriginal
-	result.FinalTokens = totalFinal
-	result.SavedTokens = totalOriginal - totalFinal
-	if totalOriginal > 0 {
-		result.ReductionPercent = float64(result.SavedTokens) / float64(totalOriginal) * 100
-	}
-
-	return result, nil
-}

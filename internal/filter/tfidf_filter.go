@@ -47,12 +47,6 @@ func DefaultTFIDFConfig() TFIDFConfig {
 	}
 }
 
-// NewTFIDFFilter creates a new TF-IDF filter
-func NewTFIDFFilter() *TFIDFFilter {
-	return &TFIDFFilter{
-		config: DefaultTFIDFConfig(),
-	}
-}
 
 // NewTFIDFFilterWithConfig creates a filter with custom config
 func NewTFIDFFilterWithConfig(cfg TFIDFConfig) *TFIDFFilter {

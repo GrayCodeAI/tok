@@ -885,16 +885,6 @@ func formatOptionalInt(v *int) string {
 	return fmt.Sprintf("%d", *v)
 }
 
-// GetDailyStats is a public wrapper for daily stats (used by dashboard)
-func GetDailyStats(tracker *tracking.Tracker) []DayStats {
-	return getDailyStats(tracker)
-}
-
-// MergeDailyLite merges ccusage and tokman daily data (used by dashboard)
-func MergeDailyLite(cc []ccusage.Period, tm []DayStats) []PeriodEconomics {
-	return mergeDaily(cc, tm)
-}
-
 // alignWeekStart converts Saturday-based week starts to Monday for alignment.
 // Tokman legacy data uses Saturday as week start; ccusage uses Monday.
 func alignWeekStart(dateStr string) string {
@@ -912,3 +902,4 @@ func alignWeekStart(dateStr string) string {
 	}
 	return dateStr
 }
+

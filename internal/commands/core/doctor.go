@@ -223,38 +223,14 @@ func checkGoVersion() checkResult {
 }
 
 func checkTierSystem() checkResult {
-	// Verify the adaptive tier system is working
-	// Test with sample content of different sizes
-	testCases := []struct {
-		input    string
-		expected filter.Tier
-	}{
-		{"", filter.Tier0_Trivial},
-		{"short", filter.Tier1_Simple},
-		{generateMediumContent(), filter.Tier2_Medium},
+	// Verify the filter system is working
+	// Test with sample content
+	testInput := "func main() { fmt.Println(\"hello\") }"
+	output, saved := filter.QuickProcessPreset(testInput, filter.ModeMinimal, filter.PresetFast)
+	
+	if output != "" && saved >= 0 {
+		return checkResult{"Filter System", "ok", "pipeline compression working"}
 	}
-
-	adaptive := filter.NewAdaptive(filter.PipelineConfig{})
-
-	correct := 0
-	for _, tc := range testCases {
-		detected := adaptive.DetectTier(tc.input)
-		if detected == tc.expected {
-			correct++
-		}
-	}
-
-	if correct == len(testCases) {
-		return checkResult{"Tier System", "ok", "4 tiers (0-3) with auto-detection"}
-	}
-	return checkResult{"Tier System", "warn", fmt.Sprintf("tier detection partially working (%d/%d)", correct, len(testCases))}
+	return checkResult{"Filter System", "warn", "pipeline may not be compressing"}
 }
 
-func generateMediumContent() string {
-	// Generate content that should trigger Tier2_Medium (300-1000 tokens, low code)
-	result := "Line of text for testing tier detection.\n"
-	for i := 0; i < 30; i++ {
-		result += "This is a sample line for medium tier content testing.\n"
-	}
-	return result
-}

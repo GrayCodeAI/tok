@@ -79,7 +79,6 @@ func NewEngineWithConfig(cfg EngineConfig) *Engine {
 		NewANSIFilter(),
 		newCommentFilter(),
 		NewImportFilter(),
-		newLogAggregator(),
 	}
 
 	// Add multi-file filter early if enabled (for cross-file optimization)
@@ -113,42 +112,6 @@ func NewEngineWithConfig(cfg EngineConfig) *Engine {
 	}
 }
 
-// NewEngineWithLLM creates a filter engine with LLM-aware compression enabled.
-// Falls back to heuristic-based filters if LLM is unavailable.
-func NewEngineWithLLM(mode Mode, queryIntent string, llmEnabled bool) *Engine {
-	return NewEngineWithConfig(EngineConfig{
-		Mode:        mode,
-		QueryIntent: queryIntent,
-		LLMEnabled:  llmEnabled,
-	})
-}
-
-// NewEngineWithLLMAndConfig creates a fully configured engine with LLM support.
-func NewEngineWithLLMAndConfig(cfg EngineConfig) *Engine {
-	engine := NewEngineWithConfig(cfg)
-
-	if cfg.LLMEnabled {
-		// Insert LLM-aware filter after semantic filter
-		llmFilter := NewLLMAwareFilter(LLMAwareConfig{
-			Threshold:      2000,
-			Enabled:        true,
-			CacheEnabled:   true,
-			PromptTemplate: cfg.PromptTemplate,
-		})
-
-		// Find position after semantic filter
-		filters := make([]Filter, 0, len(engine.filters)+1)
-		for _, f := range engine.filters {
-			filters = append(filters, f)
-			if f.Name() == "semantic" {
-				filters = append(filters, llmFilter)
-			}
-		}
-		engine.filters = filters
-	}
-
-	return engine
-}
 
 // Process applies all filters to the input.
 func (e *Engine) Process(input string) (string, int) {
@@ -192,10 +155,6 @@ func EstimateTokens(text string) int {
 	return core.EstimateTokens(text)
 }
 
-// CalculateTokensSaved computes token savings between original and filtered.
-func CalculateTokensSaved(original, filtered string) int {
-	return core.CalculateTokensSaved(original, filtered)
-}
 
 // IsCode checks if the output looks like source code.
 func IsCode(output string) bool {
@@ -242,3 +201,9 @@ func DetectLanguage(output string) string {
 	}
 	return "unknown"
 }
+
+// estimateTokens is a local token estimator for filter internal use.
+func estimateTokens(text string) int {
+	return len(text) / 4
+}
+

@@ -7,31 +7,6 @@ import (
 	tiktoken "github.com/tiktoken-go/tokenizer"
 )
 
-// HeuristicEstimator uses len/4 approximation for token counting.
-// Fast but ~20-30% inaccurate vs real tiktoken counts.
-type HeuristicEstimator struct{}
-
-// newHeuristicEstimator creates a heuristic token estimator.
-func newHeuristicEstimator() *HeuristicEstimator {
-	return &HeuristicEstimator{}
-}
-
-// Estimate returns ceil(len(text) / 4.0).
-func (e *HeuristicEstimator) Estimate(text string) int {
-	return (len(text) + 3) / 4
-}
-
-// Compare returns heuristic vs heuristic (no actual tokenizer).
-func (e *HeuristicEstimator) Compare(text string) (int, int, float64) {
-	h := e.Estimate(text)
-	return h, h, 0
-}
-
-// Encoding returns the estimator type.
-func (e *HeuristicEstimator) Encoding() string {
-	return "heuristic"
-}
-
 // BPETokenizer wraps tiktoken for accurate BPE token counting.
 // P1.1: Replaces heuristic len/4 with real BPE tokenization.
 // ~20-30% more accurate than heuristic estimation.
@@ -129,11 +104,6 @@ var useBPE atomic.Bool
 
 func init() {
 	useBPE.Store(true)
-}
-
-// setBPEEnabled enables or disables BPE token counting.
-func setBPEEnabled(enabled bool) {
-	useBPE.Store(enabled)
 }
 
 // EstimateTokens is the single source of truth for token estimation.

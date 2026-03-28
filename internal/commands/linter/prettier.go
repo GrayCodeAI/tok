@@ -89,8 +89,3 @@ func runPrettier(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func parseInt(s string) (int, bool) {
-	var n int
-	_, err := fmt.Sscanf(s, "%d", &n)
-	return n, err == nil
-}

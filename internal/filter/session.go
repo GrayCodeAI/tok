@@ -53,27 +53,6 @@ func NewSessionTracker() *SessionTracker {
 	}
 }
 
-// NewSessionTrackerWithConfig creates a session tracker with config.
-func NewSessionTrackerWithConfig(cfg SessionConfig) *SessionTracker {
-	if cfg.SessionFile == "" {
-		cacheDir := getCacheDir()
-		cfg.SessionFile = filepath.Join(cacheDir, "tokman", "session.json")
-	}
-	if cfg.MaxEntries == 0 {
-		cfg.MaxEntries = 10000
-	}
-
-	st := &SessionTracker{
-		sessionFile: cfg.SessionFile,
-		seenHashes:  make(map[string]seenEntry),
-		maxEntries:  cfg.MaxEntries,
-	}
-
-	// Load existing session data
-	st.load()
-
-	return st
-}
 
 // Name returns the filter name.
 func (f *SessionTracker) Name() string {
@@ -270,19 +249,6 @@ func isOnlyNumbers(s string) bool {
 	return true
 }
 
-// load loads session data from file
-func (f *SessionTracker) load() error {
-	f.mu.Lock()
-	defer f.mu.Unlock()
-
-	data, err := os.ReadFile(f.sessionFile)
-	if err != nil {
-		// File doesn't exist - that's fine
-		return nil
-	}
-
-	return json.Unmarshal(data, &f.seenHashes)
-}
 
 // Save saves session data to file
 func (f *SessionTracker) Save() error {

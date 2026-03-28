@@ -1,6 +1,6 @@
 # TokMan 🌸
 
-**World's Most Advanced Token Reduction System** — 20-layer research-based compression pipeline achieving 95-99% token reduction.
+**World's Most Advanced Token Reduction System** — 31-layer research-based compression pipeline achieving 95-99% token reduction.
 
 TokMan intercepts CLI commands, applies 20 research-backed compression layers, and tracks token savings. Built on 120+ papers from top institutions (Mila, Microsoft, Stanford, Berkeley, NeurIPS 2023-2025).
 
@@ -28,7 +28,7 @@ TokMan intercepts CLI commands, applies 20 research-backed compression layers, a
 - 💰 **Economics Analysis** — Compare spending vs savings with quota estimates
 - 💾 **Tee on Failure** — Auto-saves full output when commands fail for debugging
 
-## 20-Layer Compression Pipeline
+## 31-Layer Compression Pipeline
 
 TokMan implements the world's most advanced token reduction system based on 120+ research papers:
 
@@ -619,6 +619,65 @@ Override with environment variables:
 - `XDG_CONFIG_HOME`
 - `TOKMAN_DATABASE_PATH`
 
+## Microservice Architecture
+
+TokMan supports both monolithic CLI and microservice deployment modes:
+
+### Services
+
+| Service | Port (gRPC) | Port (HTTP) | Purpose |
+|---------|-------------|-------------|---------|
+| Compression | 50051 | 8081 | 31-layer compression pipeline |
+| Analytics | 50053 | 8083 | Token tracking & metrics |
+| Agent | 50054 | 8084 | AI agent integrations |
+| LLM | 50055 | 8085 | LLM-based summarization |
+| Gateway | - | 8080 | API gateway (aggregates all services) |
+
+### Running in Microservice Mode
+
+```bash
+# Start compression service
+tokman-server --service=compression --grpc --http
+
+# Start analytics service
+tokman-server --service=analytics --grpc --http
+
+# Start API gateway
+tokman-server --service=gateway
+
+# Use remote compression from CLI
+tokman --remote --compression-addr=localhost:50051 compress < input.txt
+```
+
+### Docker Compose
+
+```bash
+cd deployments/docker
+docker-compose up -d
+```
+
+### Kubernetes
+
+```bash
+kubectl apply -f deployments/kubernetes/
+```
+
+### Service Discovery
+
+TokMan includes built-in service discovery with load balancing:
+- **Static Discovery**: For development and single deployments
+- **Kubernetes Discovery**: Auto-discovers services via DNS/endpoints
+- **Load Balancers**: Round-robin, weighted, least-connection
+
+### Observability
+
+Prometheus metrics available at `/metrics` endpoint:
+- `tokman_compression_requests_total` - Compression requests by mode/status
+- `tokman_compression_duration_ms` - Latency histogram
+- `tokman_tokens_saved_total` - Cumulative token savings
+- `tokman_grpc_requests_total` - gRPC method call counts
+- `tokman_discovery_instances` - Healthy/unhealthy instance counts
+
 ## Roadmap
 
 - [x] ~~Git command wrappers~~
@@ -636,6 +695,10 @@ Override with environment variables:
 - [x] LLM API integration (direct token counting)
 - [x] Homebrew formula
 - [x] Docker image
+- [x] Microservice architecture
+- [x] gRPC services
+- [x] Service discovery & load balancing
+- [x] Prometheus metrics
 
 ## License
 

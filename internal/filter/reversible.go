@@ -136,41 +136,6 @@ func (s *ReversibleStore) ListRecent(n int) ([]StoredEntry, error) {
 	return results, nil
 }
 
-// Cleanup removes entries older than the given duration.
-func (s *ReversibleStore) Cleanup(maxAge time.Duration) int {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	cutoff := time.Now().Add(-maxAge)
-	entries, _ := os.ReadDir(s.baseDir)
-	removed := 0
-
-	for _, e := range entries {
-		if e.IsDir() {
-			continue
-		}
-		info, err := e.Info()
-		if err != nil {
-			continue
-		}
-		if info.ModTime().Before(cutoff) {
-			if err := os.Remove(filepath.Join(s.baseDir, e.Name())); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
-			} else {
-				removed++
-			}
-		}
-	}
-	return removed
-}
-
-// Size returns the number of stored entries.
-func (s *ReversibleStore) Size() int {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	entries, _ := os.ReadDir(s.baseDir)
-	return len(entries)
-}
 
 func (s *ReversibleStore) computeHash(content string) string {
 	h := sha256.Sum256([]byte(content))

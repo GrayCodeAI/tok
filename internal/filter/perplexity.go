@@ -25,7 +25,7 @@ type PerplexityFilter struct {
 
 	// Context window for perplexity calculation
 	contextWindow int
-	
+
 	// Convergence threshold for early exit (Phase 1 optimization)
 	convergenceThreshold float64
 }
@@ -59,7 +59,7 @@ func (f *PerplexityFilter) Apply(input string, mode Mode) (string, int) {
 	// Iterative pruning with convergence check
 	for i := 0; i < f.iterationSteps; i++ {
 		output = f.pruneIteration(output, mode)
-		
+
 		// Early exit if convergence detected (Phase 1 optimization)
 		currentLen := len(output)
 		changeRatio := float64(prevLen-currentLen) / float64(prevLen)

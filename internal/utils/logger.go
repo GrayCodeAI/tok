@@ -62,32 +62,6 @@ func InitLogger(logPath string, level LogLevel) error {
 	return nil
 }
 
-// SetVerbose enables debug logging.
-func SetVerbose() {
-	if Logger == nil {
-		return
-	}
-	Logger = slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
-}
-
-// Debug logs a debug message.
-func Debug(msg string, args ...any) {
-	if Logger == nil {
-		return
-	}
-	Logger.Debug(msg, args...)
-}
-
-// Info logs an info message.
-func Info(msg string, args ...any) {
-	if Logger == nil {
-		return
-	}
-	Logger.Info(msg, args...)
-}
-
 // Warn logs a warning message.
 func Warn(msg string, args ...any) {
 	if Logger == nil {
@@ -96,26 +70,3 @@ func Warn(msg string, args ...any) {
 	Logger.Warn(msg, args...)
 }
 
-// Error logs an error message.
-func Error(msg string, args ...any) {
-	if Logger == nil {
-		return
-	}
-	Logger.Error(msg, args...)
-}
-
-// With returns a logger with additional context.
-func With(args ...any) *slog.Logger {
-	if Logger == nil {
-		return nil
-	}
-	return Logger.With(args...)
-}
-
-// CloseLogger closes the log file handle.
-func CloseLogger() {
-	if logFile != nil {
-		logFile.Close()
-		logFile = nil
-	}
-}
