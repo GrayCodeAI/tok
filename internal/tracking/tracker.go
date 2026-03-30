@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -59,6 +60,10 @@ func Start() *TimedExecution {
 }
 
 // Track records the execution with token savings.
+// Automatically captures AI agent attribution from environment variables:
+//   - TOKMAN_AGENT: AI agent name (e.g., "Claude Code", "OpenCode", "Cursor")
+//   - TOKMAN_MODEL: Model name (e.g., "claude-3-opus", "gpt-4")
+//   - TOKMAN_PROVIDER: Provider name (e.g., "Anthropic", "OpenAI")
 func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filteredTokens int) {
 	t.once.Do(func() {
 		execTime := time.Since(t.startTime)
@@ -83,8 +88,77 @@ func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filter
 			ExecTimeMs:     execTime.Milliseconds(),
 			Timestamp:      time.Now(),
 			ParseSuccess:   true,
+			// AI Agent attribution from environment
+			AgentName:   os.Getenv("TOKMAN_AGENT"),
+			ModelName:   os.Getenv("TOKMAN_MODEL"),
+			Provider:    os.Getenv("TOKMAN_PROVIDER"),
+			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
 		})
 	})
+}
+
+// TrackWithAgent records execution with AI agent attribution.
+// Environment variables:
+//   - TOKMAN_AGENT: AI agent name (e.g., "Claude Code", "OpenCode", "Cursor")
+//   - TOKMAN_MODEL: Model name (e.g., "claude-3-opus", "gpt-4")
+//   - TOKMAN_PROVIDER: Provider name (e.g., "Anthropic", "OpenAI")
+func (t *TimedExecution) TrackWithAgent(command, tokmanCmd string, originalTokens, filteredTokens int) {
+	t.once.Do(func() {
+		execTime := time.Since(t.startTime)
+		saved := originalTokens - filteredTokens
+		if saved < 0 {
+			saved = 0
+		}
+
+		// Get or create global tracker
+		tracker := getGlobalTracker()
+		if tracker == nil {
+			return
+		}
+
+		cwd, _ := os.Getwd()
+		tracker.Record(&CommandRecord{
+			Command:        command,
+			OriginalTokens: originalTokens,
+			FilteredTokens: filteredTokens,
+			SavedTokens:    saved,
+			ProjectPath:    cwd,
+			ExecTimeMs:     execTime.Milliseconds(),
+			Timestamp:      time.Now(),
+			ParseSuccess:   true,
+			// AI Agent attribution from environment
+			AgentName:   os.Getenv("TOKMAN_AGENT"),
+			ModelName:   os.Getenv("TOKMAN_MODEL"),
+			Provider:    os.Getenv("TOKMAN_PROVIDER"),
+			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
+		})
+	})
+}
+
+// getModelFamily extracts the model family from a model name.
+func getModelFamily(modelName string) string {
+	if modelName == "" {
+		return ""
+	}
+	modelLower := strings.ToLower(modelName)
+	switch {
+	case strings.Contains(modelLower, "claude"):
+		return "claude"
+	case strings.Contains(modelLower, "gpt") || strings.Contains(modelLower, "o1") || strings.Contains(modelLower, "o3"):
+		return "gpt"
+	case strings.Contains(modelLower, "gemini"):
+		return "gemini"
+	case strings.Contains(modelLower, "llama") || strings.Contains(modelLower, "meta"):
+		return "llama"
+	case strings.Contains(modelLower, "qwen"):
+		return "qwen"
+	case strings.Contains(modelLower, "deepseek"):
+		return "deepseek"
+	case strings.Contains(modelLower, "mistral") || strings.Contains(modelLower, "mixtral"):
+		return "mistral"
+	default:
+		return "other"
+	}
 }
 
 
@@ -158,6 +232,12 @@ func NewTracker(dbPath string) (*Tracker, error) {
 		}
 	}
 
+	// Safely add agent attribution columns (idempotent)
+	if err := addAgentAttributionColumns(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to add agent attribution columns: %w", err)
+	}
+
 	t := &Tracker{
 		db:        db,
 		cleanupCh: make(chan struct{}, 1),
@@ -180,6 +260,47 @@ func (t *Tracker) cleanupWorker() {
 	for range t.cleanupCh {
 		t.cleanupOld()
 	}
+}
+
+// addAgentAttributionColumns safely adds agent attribution columns if they don't exist.
+// This is idempotent and won't fail if columns already exist.
+func addAgentAttributionColumns(db *sql.DB) error {
+	// Get existing columns
+	rows, err := db.Query("PRAGMA table_info(commands)")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	existingCols := make(map[string]bool)
+	for rows.Next() {
+		var cid int
+		var name, colType string
+		var notNull int
+		var dfltValue interface{}
+		var pk int
+		if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
+			continue
+		}
+		existingCols[name] = true
+	}
+
+	// Add missing columns
+	for _, col := range AgentAttributionColumnDefs {
+		if !existingCols[col.Name] {
+			_, err := db.Exec(fmt.Sprintf("ALTER TABLE commands ADD COLUMN %s %s", col.Name, col.Type))
+			if err != nil {
+				return fmt.Errorf("failed to add column %s: %w", col.Name, err)
+			}
+		}
+	}
+
+	// Create indexes (IF NOT EXISTS handles duplicates)
+	if _, err := db.Exec(AgentAttributionIndexes); err != nil {
+		return fmt.Errorf("failed to create indexes: %w", err)
+	}
+
+	return nil
 }
 
 // Query executes a raw SQL query and returns the rows.
@@ -206,8 +327,9 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		INSERT INTO commands (
 			command, original_output, filtered_output,
 			original_tokens, filtered_tokens, saved_tokens,
-			project_path, session_id, exec_time_ms, parse_success
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+			project_path, session_id, exec_time_ms, parse_success,
+			agent_name, model_name, provider, model_family
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := t.db.ExecContext(ctx, query,
@@ -221,6 +343,10 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		record.SessionID,
 		record.ExecTimeMs,
 		record.ParseSuccess,
+		record.AgentName,
+		record.ModelName,
+		record.Provider,
+		record.ModelFamily,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to record command: %w", err)

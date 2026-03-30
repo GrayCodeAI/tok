@@ -111,6 +111,11 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 			ExecTimeMs:     execTime.Milliseconds(),
 			Timestamp:      start,
 			ParseSuccess:   exitCode == 0,
+			// AI Agent attribution from environment
+			AgentName:   os.Getenv("TOKMAN_AGENT"),
+			ModelName:   os.Getenv("TOKMAN_MODEL"),
+			Provider:    os.Getenv("TOKMAN_PROVIDER"),
+			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
 		}
 		h.tracker.Record(record)
 	}

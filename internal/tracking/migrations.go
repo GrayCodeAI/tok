@@ -1,7 +1,7 @@
 package tracking
 
 // SchemaVersion is the current database schema version.
-const SchemaVersion = 2
+const SchemaVersion = 3
 
 // CreateCommandsTable creates the main commands table.
 const CreateCommandsTable = `
@@ -77,6 +77,48 @@ CREATE INDEX IF NOT EXISTS idx_layer_stats_command ON layer_stats(command_id);
 CREATE INDEX IF NOT EXISTS idx_layer_stats_name ON layer_stats(layer_name);
 `
 
+// AddAgentAttributionColumns adds columns for tracking AI agent context.
+// Enables per-model, per-provider, per-agent token savings analysis.
+const AddAgentAttributionColumns = `
+-- SQLite doesn't support IF NOT EXISTS for ALTER TABLE, so we use a safe approach
+-- These are run via safeAddColumn which checks if column exists first
+`
+
+// AgentAttributionColumnDefs defines the columns to add for agent attribution.
+var AgentAttributionColumnDefs = []struct {
+	Name string
+	Type string
+}{
+	{"agent_name", "TEXT"},
+	{"model_name", "TEXT"},
+	{"provider", "TEXT"},
+	{"model_family", "TEXT"},
+}
+
+// AgentAttributionIndexes defines indexes for agent attribution.
+const AgentAttributionIndexes = `
+CREATE INDEX IF NOT EXISTS idx_commands_agent ON commands(agent_name);
+CREATE INDEX IF NOT EXISTS idx_commands_model ON commands(model_name);
+CREATE INDEX IF NOT EXISTS idx_commands_provider ON commands(provider);
+`
+
+// CreateAgentSummaryView creates a view for per-agent statistics.
+const CreateAgentSummaryView = `
+CREATE VIEW IF NOT EXISTS agent_summary AS
+SELECT 
+    agent_name,
+    model_name,
+    provider,
+    project_path,
+    COUNT(*) as execution_count,
+    SUM(saved_tokens) as total_saved,
+    SUM(original_tokens) as total_original,
+    ROUND(100.0 * SUM(saved_tokens) / NULLIF(SUM(original_tokens), 0), 2) as reduction_percent
+FROM commands
+WHERE agent_name IS NOT NULL
+GROUP BY agent_name, model_name, provider, project_path;
+`
+
 // Migrations contains all migration statements in order.
 var Migrations = []string{
 	CreateCommandsTable,
@@ -84,6 +126,8 @@ var Migrations = []string{
 	CreateParseFailuresTable,
 	AddCompositeIndexes,
 	CreateLayerStatsTable,
+	AddAgentAttributionColumns,
+	CreateAgentSummaryView,
 }
 
 // MigrationHistory tracks applied migrations.

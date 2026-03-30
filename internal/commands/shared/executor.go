@@ -3,6 +3,7 @@ package shared
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
@@ -58,6 +59,11 @@ func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 		ExecTimeMs:     execTimeMs,
 		Timestamp:      time.Now(),
 		ParseSuccess:   success,
+		// AI Agent attribution from environment
+		AgentName:   os.Getenv("TOKMAN_AGENT"),
+		ModelName:   os.Getenv("TOKMAN_MODEL"),
+		Provider:    os.Getenv("TOKMAN_PROVIDER"),
+		ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
 	}
 
 	return tracker.Record(record)
@@ -91,4 +97,30 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 		fmt.Fprintf(os.Stderr, "Warning: failed to record: %v\n", rerr)
 	}
 	return nil
+}
+
+// getModelFamily extracts the model family from a model name.
+func getModelFamily(modelName string) string {
+	if modelName == "" {
+		return ""
+	}
+	modelLower := strings.ToLower(modelName)
+	switch {
+	case strings.Contains(modelLower, "claude"):
+		return "claude"
+	case strings.Contains(modelLower, "gpt") || strings.Contains(modelLower, "o1") || strings.Contains(modelLower, "o3"):
+		return "gpt"
+	case strings.Contains(modelLower, "gemini"):
+		return "gemini"
+	case strings.Contains(modelLower, "llama") || strings.Contains(modelLower, "meta"):
+		return "llama"
+	case strings.Contains(modelLower, "qwen"):
+		return "qwen"
+	case strings.Contains(modelLower, "deepseek"):
+		return "deepseek"
+	case strings.Contains(modelLower, "mistral") || strings.Contains(modelLower, "mixtral"):
+		return "mistral"
+	default:
+		return "other"
+	}
 }

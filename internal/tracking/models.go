@@ -16,6 +16,11 @@ type CommandRecord struct {
 	ExecTimeMs     int64     `json:"exec_time_ms"`
 	Timestamp      time.Time `json:"timestamp"`
 	ParseSuccess   bool      `json:"parse_success"`
+	// AI Agent attribution fields
+	AgentName   string `json:"agent_name,omitempty"`   // e.g., "Claude Code", "OpenCode", "Cursor"
+	ModelName   string `json:"model_name,omitempty"`   // e.g., "claude-3-opus", "gpt-4", "gemini-pro"
+	Provider    string `json:"provider,omitempty"`     // e.g., "Anthropic", "OpenAI", "Google"
+	ModelFamily string `json:"model_family,omitempty"` // e.g., "claude", "gpt", "gemini"
 }
 
 // SavingsSummary represents aggregated token savings.
