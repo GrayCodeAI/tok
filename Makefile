@@ -6,9 +6,8 @@ BUILD_DIR := bin
 
 # Go with SIMD support (Go 1.26+ recommended, 1.25+ supported)
 GO ?= go
+GO126 ?= $(HOME)/sdk/go1.26.0/bin/go
 GOEXPERIMENT ?= simd
-# Check if SIMD is available at runtime
-SIMD_AVAILABLE := $(shell go version | grep -q 'go1\.2[6-9]' && echo 'true' || echo 'false')
 
 # T30: Aggressive optimization flags for smaller binary
 LDFLAGS := -s -w -X github.com/GrayCodeAI/tokman/internal/commands.Version=$(VERSION)
@@ -33,8 +32,14 @@ build-tiny:
 
 # SIMD-optimized build (requires Go 1.26+)
 build-simd:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman
-	@echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"
+	@if [ -x "$(GO126)" ]; then \
+		GOEXPERIMENT=$(GOEXPERIMENT) $(GO126) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman; \
+		echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"; \
+	else \
+		echo "Error: Go 1.26 SDK not found at $(GO126)"; \
+		echo "Install with: go install golang.org/dl/go1.26.0@latest && go1.26.0 download"; \
+		exit 1; \
+	fi
 
 # Multi-platform build with SIMD
 build-all:
