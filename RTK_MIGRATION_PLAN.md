@@ -156,15 +156,15 @@ This plan migrates high-value features from RTK (Rust Token Killer) to TokMan, f
 
 ---
 
-## Phase 8: Configuration & UX (Tasks 86-92)
+## Phase 8: Configuration & UX (Tasks 86-92) ✅
 
-- [ ] **Task 86**: Add hook exclusion configuration (`hooks.exclude_commands`)
-- [ ] **Task 87**: Enhance tee configuration with modes (`failures`, `always`, `never`)
-- [ ] **Task 88**: Add `--auto-patch` flag for non-interactive init
-- [ ] **Task 89**: Implement progress bar utility function
-- [ ] **Task 90**: Add color-coded output for analytics
-- [ ] **Task 91**: Improve verbose logging structure
-- [ ] **Task 92**: Add configuration validation command
+- [x] **Task 86**: Add hook exclusion configuration (`hooks.exclude_commands`)
+- [x] **Task 87**: Enhance tee configuration with modes (`failures`, `always`, `never`)
+- [x] **Task 88**: Add `--auto-patch` flag for non-interactive init
+- [x] **Task 89**: Implement progress bar utility function
+- [x] **Task 90**: Add color-coded output for analytics
+- [x] **Task 91**: Improve verbose logging structure
+- [x] **Task 92**: Add configuration validation command
 
 ---
 
