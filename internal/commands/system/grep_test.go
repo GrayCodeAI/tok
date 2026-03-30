@@ -31,8 +31,8 @@ file2.go:5:var x int`,
 			wantLines:  3,
 		},
 		{
-			name: "truncate long lines",
-			input: `file.go:1:` + strings.Repeat("a", 200),
+			name:       "truncate long lines",
+			input:      `file.go:1:` + strings.Repeat("a", 200),
 			maxLen:     80,
 			maxResults: 50,
 			wantLines:  1,
@@ -65,7 +65,7 @@ file.go:2:more code
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := compactGrepOutputSimple(tt.input, tt.maxLen, tt.maxResults)
-			
+
 			// Count non-empty lines
 			lines := strings.Split(strings.TrimSpace(result), "\n")
 			var nonEmptyLines int
@@ -74,11 +74,11 @@ file.go:2:more code
 					nonEmptyLines++
 				}
 			}
-			
+
 			if tt.wantLines > 0 && nonEmptyLines < tt.wantLines {
 				t.Errorf("compactGrepOutputSimple() got %d lines, want at least %d", nonEmptyLines, tt.wantLines)
 			}
-			
+
 			if tt.wantTrunc {
 				if !strings.Contains(result, "...") {
 					t.Errorf("compactGrepOutputSimple() expected truncation but no '...' found")
@@ -92,14 +92,14 @@ func TestCompactGrepOutputSimple_Truncation(t *testing.T) {
 	// Test that lines longer than maxLen are truncated
 	longLine := strings.Repeat("x", 200)
 	input := "file.go:1:" + longLine
-	
+
 	result := compactGrepOutputSimple(input, 50, 10)
-	
+
 	// Result should be truncated
 	if len(result) > 60 { // 50 + some overhead for filename and "..."
 		t.Errorf("compactGrepOutputSimple() line not truncated properly, got length %d", len(result))
 	}
-	
+
 	// Should contain truncation indicator
 	if !strings.Contains(result, "...") {
 		t.Error("compactGrepOutputSimple() missing truncation indicator '...'")
@@ -113,9 +113,9 @@ func TestCompactGrepOutputSimple_MaxResults(t *testing.T) {
 		lines = append(lines, "file.go:line content")
 	}
 	input := strings.Join(lines, "\n")
-	
+
 	result := compactGrepOutputSimple(input, 80, 10)
-	
+
 	// Should indicate overflow
 	if !strings.Contains(result, "more") {
 		t.Error("compactGrepOutputSimple() missing overflow indicator for max results")
@@ -131,7 +131,7 @@ file.go:2:more code
 
 `
 	result := compactGrepOutputSimple(input, 80, 50)
-	
+
 	// Should not contain empty lines
 	lines := strings.Split(result, "\n")
 	for _, line := range lines {

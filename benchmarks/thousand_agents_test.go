@@ -94,7 +94,6 @@ func (mc *MetricCollector) RecordSuccess(latency time.Duration, tokensIn, tokens
 	mc.mu.Unlock()
 }
 
-
 func (mc *MetricCollector) RecordBottleneck(layer string) {
 	mc.mu.Lock()
 	defer mc.mu.Unlock()

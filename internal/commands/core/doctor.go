@@ -227,10 +227,9 @@ func checkTierSystem() checkResult {
 	// Test with sample content
 	testInput := "func main() { fmt.Println(\"hello\") }"
 	output, saved := filter.QuickProcessPreset(testInput, filter.ModeMinimal, filter.PresetFast)
-	
+
 	if output != "" && saved >= 0 {
 		return checkResult{"Filter System", "ok", "pipeline compression working"}
 	}
 	return checkResult{"Filter System", "warn", "pipeline may not be compressing"}
 }
-

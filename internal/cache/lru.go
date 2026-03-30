@@ -95,7 +95,6 @@ func (c *LRUCache) Set(key string, value interface{}) {
 	c.entries[key] = elem
 }
 
-
 func (c *LRUCache) evictOldest() {
 	elem := c.order.Back()
 	if elem == nil {

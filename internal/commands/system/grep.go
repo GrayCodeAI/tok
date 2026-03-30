@@ -114,4 +114,3 @@ func compactGrepOutputSimple(output string, maxLen, maxResults int) string {
 
 	return result.String()
 }
-

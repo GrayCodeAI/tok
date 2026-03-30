@@ -40,7 +40,6 @@ func TestGetAgent(t *testing.T) {
 	}
 }
 
-
 func TestInstallInstructions(t *testing.T) {
 	// Test known agent
 	inst := InstallInstructions("aider")

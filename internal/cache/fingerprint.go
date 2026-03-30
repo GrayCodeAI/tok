@@ -65,7 +65,6 @@ func ComputeFingerprint(content string) string {
 	return hex.EncodeToString(h.Sum(nil))[:16] // Use first 16 chars for efficiency
 }
 
-
 // Get retrieves a cached result by content fingerprint
 func (fc *FingerprintCache) Get(content string) *FingerprintResult {
 	fp := ComputeFingerprint(content)

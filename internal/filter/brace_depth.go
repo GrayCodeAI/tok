@@ -325,4 +325,3 @@ func (f *BodyFilter) isFunctionStart(line string, lang string) bool {
 	}
 	return false
 }
-

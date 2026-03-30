@@ -488,7 +488,6 @@ func (f *EntropyFilter) getEffectiveFrequency(word string) float64 {
 	return estimatedFreq
 }
 
-
 // SetThreshold allows customizing the entropy threshold
 func (f *EntropyFilter) SetThreshold(threshold float64) {
 	f.entropyThreshold = threshold

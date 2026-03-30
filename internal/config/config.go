@@ -134,17 +134,17 @@ type PipelineConfig struct {
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
 	// Perplexity Filter (Layer 2) - Detailed settings
-	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`           // Target compression ratio (default: 0.3)
-	PerplexityIterationSteps       int     `mapstructure:"perplexity_iteration_steps"`        // Number of pruning iterations (default: 2)
-	PerplexityPruneRatio           float64 `mapstructure:"perplexity_prune_ratio"`            // Prune ratio per iteration (default: 0.7)
-	PerplexityConvergenceThreshold float64 `mapstructure:"perplexity_convergence_threshold"`  // Early exit threshold (default: 0.05)
-	PerplexityContextWindow        int     `mapstructure:"perplexity_context_window"`         // Context window size (default: 10)
+	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`          // Target compression ratio (default: 0.3)
+	PerplexityIterationSteps       int     `mapstructure:"perplexity_iteration_steps"`       // Number of pruning iterations (default: 2)
+	PerplexityPruneRatio           float64 `mapstructure:"perplexity_prune_ratio"`           // Prune ratio per iteration (default: 0.7)
+	PerplexityConvergenceThreshold float64 `mapstructure:"perplexity_convergence_threshold"` // Early exit threshold (default: 0.05)
+	PerplexityContextWindow        int     `mapstructure:"perplexity_context_window"`        // Context window size (default: 10)
 
 	// Entropy Filter (Layer 1) - Sampling settings
-	EntropySamplingLarge  int `mapstructure:"entropy_sampling_large"`   // Sample threshold for large inputs (default: 100000)
-	EntropySamplingHuge   int `mapstructure:"entropy_sampling_huge"`    // Sample threshold for huge inputs (default: 500000)
-	EntropySamplingRate   int `mapstructure:"entropy_sampling_rate"`    // Sample rate for huge inputs (default: 10)
-	EntropyMinWordLength  int `mapstructure:"entropy_min_word_length"`  // Minimum word length (default: 2)
+	EntropySamplingLarge int `mapstructure:"entropy_sampling_large"`  // Sample threshold for large inputs (default: 100000)
+	EntropySamplingHuge  int `mapstructure:"entropy_sampling_huge"`   // Sample threshold for huge inputs (default: 500000)
+	EntropySamplingRate  int `mapstructure:"entropy_sampling_rate"`   // Sample rate for huge inputs (default: 10)
+	EntropyMinWordLength int `mapstructure:"entropy_min_word_length"` // Minimum word length (default: 2)
 }
 
 // CommandContext provides metadata about the command being executed.
@@ -379,10 +379,10 @@ func Defaults() *Config {
 			PerplexityContextWindow:        10,   // Words to consider for context
 
 			// Entropy Filter (Layer 1) - Sampling settings
-			EntropySamplingLarge:  100000, // Sample threshold for large inputs
-			EntropySamplingHuge:   500000, // Sample threshold for huge inputs
-			EntropySamplingRate:   10,     // Sample 1 in 10 words for huge inputs
-			EntropyMinWordLength:  2,      // Minimum word length for frequency counting
+			EntropySamplingLarge: 100000, // Sample threshold for large inputs
+			EntropySamplingHuge:  500000, // Sample threshold for huge inputs
+			EntropySamplingRate:  10,     // Sample 1 in 10 words for huge inputs
+			EntropyMinWordLength: 2,      // Minimum word length for frequency counting
 		},
 		Hooks: HooksConfig{
 			ExcludedCommands: []string{},

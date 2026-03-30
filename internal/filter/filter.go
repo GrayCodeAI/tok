@@ -112,7 +112,6 @@ func NewEngineWithConfig(cfg EngineConfig) *Engine {
 	}
 }
 
-
 // Process applies all filters to the input.
 func (e *Engine) Process(input string) (string, int) {
 	output := input
@@ -154,7 +153,6 @@ func (e *Engine) SetMode(mode Mode) {
 func EstimateTokens(text string) int {
 	return core.EstimateTokens(text)
 }
-
 
 // IsCode checks if the output looks like source code.
 func IsCode(output string) bool {
@@ -206,4 +204,3 @@ func DetectLanguage(output string) string {
 func estimateTokens(text string) int {
 	return len(text) / 4
 }
-

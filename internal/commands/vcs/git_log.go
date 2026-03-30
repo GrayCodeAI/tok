@@ -137,7 +137,6 @@ func filterLog(output string) string {
 	return strings.Join(lines, "\n")
 }
 
-
 func truncateLogLine(line string, width int) string {
 	runes := []rune(line)
 	if len(runes) > width {

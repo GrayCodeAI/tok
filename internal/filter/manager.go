@@ -428,7 +428,6 @@ func (m *PipelineManager) cacheKey(input string, mode Mode, ctx CommandContext) 
 	)
 }
 
-
 // CompressionCache provides caching for compression results
 type CompressionCache struct {
 	maxSize int
@@ -530,4 +529,3 @@ func (m *PipelineManager) ProcessWithQuery(input string, mode Mode, query string
 
 	return m.Process(input, mode, ctx)
 }
-

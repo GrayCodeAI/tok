@@ -57,19 +57,19 @@ func (c *tokenCache) get(text string) (int, bool) {
 func (c *tokenCache) set(text string, count int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	// Check if already exists (update in place)
 	if entry, ok := c.items[text]; ok {
 		entry.count = count
 		entry.lastHit = nanoTime()
 		return
 	}
-	
+
 	// Evict LRU entries if at capacity
 	if c.size >= c.max {
 		c.evictLRU()
 	}
-	
+
 	c.items[text] = &cacheEntry{
 		count:   count,
 		lastHit: nanoTime(),
@@ -84,7 +84,7 @@ func (c *tokenCache) evictLRU() {
 	if toRemove < 1 {
 		toRemove = 1
 	}
-	
+
 	// Find the oldest entries
 	type kv struct {
 		key     string
@@ -94,7 +94,7 @@ func (c *tokenCache) evictLRU() {
 	for k, v := range c.items {
 		entries = append(entries, kv{k, v.lastHit})
 	}
-	
+
 	// Sort by lastHit (oldest first)
 	for i := 0; i < len(entries)-1; i++ {
 		for j := i + 1; j < len(entries); j++ {
@@ -103,7 +103,7 @@ func (c *tokenCache) evictLRU() {
 			}
 		}
 	}
-	
+
 	// Remove oldest entries
 	for i := 0; i < toRemove && i < len(entries); i++ {
 		delete(c.items, entries[i].key)

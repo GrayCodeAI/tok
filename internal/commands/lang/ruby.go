@@ -94,32 +94,32 @@ func runRspecCmd(args []string) error {
 
 // RSpecJSON represents the JSON output from rspec --format json
 type RSpecJSON struct {
-	Version  string        `json:"version"`
+	Version  string         `json:"version"`
 	Examples []RSpecExample `json:"examples"`
-	Summary  RSpecSummary  `json:"summary"`
+	Summary  RSpecSummary   `json:"summary"`
 }
 
 type RSpecExample struct {
-	ID          string `json:"id"`
-	Description string `json:"description"`
-	FullDescription string `json:"full_description"`
-	Status      string `json:"status"`
-	FilePath    string `json:"file_path"`
-	LineNumber  int    `json:"line_number"`
-	Exception   *RSpecException `json:"exception,omitempty"`
+	ID              string          `json:"id"`
+	Description     string          `json:"description"`
+	FullDescription string          `json:"full_description"`
+	Status          string          `json:"status"`
+	FilePath        string          `json:"file_path"`
+	LineNumber      int             `json:"line_number"`
+	Exception       *RSpecException `json:"exception,omitempty"`
 }
 
 type RSpecException struct {
-	Class     string `json:"class"`
-	Message   string `json:"message"`
+	Class     string   `json:"class"`
+	Message   string   `json:"message"`
 	Backtrace []string `json:"backtrace"`
 }
 
 type RSpecSummary struct {
-	Duration       float64 `json:"duration"`
-	ExampleCount   int     `json:"example_count"`
-	FailureCount   int     `json:"failure_count"`
-	PendingCount   int     `json:"pending_count"`
+	Duration     float64 `json:"duration"`
+	ExampleCount int     `json:"example_count"`
+	FailureCount int     `json:"failure_count"`
+	PendingCount int     `json:"pending_count"`
 }
 
 func filterRspecOutput(raw string) string {
@@ -156,11 +156,11 @@ func filterRspecOutput(raw string) string {
 			}
 			failures++
 			if failures <= 10 {
-				result = append(result, fmt.Sprintf("   • %s:%d: %s", 
-					shared.TruncateLine(ex.FilePath, 40), 
-					ex.LineNumber, 
+				result = append(result, fmt.Sprintf("   • %s:%d: %s",
+					shared.TruncateLine(ex.FilePath, 40),
+					ex.LineNumber,
 					shared.TruncateLine(ex.Description, 50)))
-				result = append(result, fmt.Sprintf("     %s", 
+				result = append(result, fmt.Sprintf("     %s",
 					shared.TruncateLine(ex.Exception.Message, 80)))
 			}
 		}
@@ -297,14 +297,14 @@ type RuboCopMetadata struct {
 }
 
 type RuboCopFile struct {
-	Path     string         `json:"path"`
+	Path     string           `json:"path"`
 	Offenses []RuboCopOffense `json:"offenses"`
 }
 
 type RuboCopOffense struct {
-	Severity string `json:"severity"`
-	Message  string `json:"message"`
-	CopName  string `json:"cop_name"`
+	Severity string          `json:"severity"`
+	Message  string          `json:"message"`
+	CopName  string          `json:"cop_name"`
 	Location RuboCopLocation `json:"location"`
 }
 
@@ -313,8 +313,8 @@ type RuboCopLocation struct {
 }
 
 type RuboCopSummary struct {
-	OffenseCount int `json:"offense_count"`
-	TargetFileCount int `json:"target_file_count"`
+	OffenseCount       int `json:"offense_count"`
+	TargetFileCount    int `json:"target_file_count"`
 	InspectedFileCount int `json:"inspected_file_count"`
 }
 
@@ -373,8 +373,8 @@ func filterRubocopOutput(raw string) string {
 				if offense.Severity == "error" || offense.Severity == "fatal" {
 					severityIcon = "❌"
 				}
-				result = append(result, fmt.Sprintf("      %s L%d: %s", 
-					severityIcon, 
+				result = append(result, fmt.Sprintf("      %s L%d: %s",
+					severityIcon,
 					offense.Location.StartLine,
 					shared.TruncateLine(offense.Message, 60)))
 			}
@@ -428,7 +428,7 @@ func filterRubocopTextOutput(raw string) string {
 			fileCount++
 		} else if strings.Contains(line, " offenses detected") || strings.Contains(line, " offense detected") {
 			result = append(result, line)
-		} else if strings.Contains(line, ":") && (strings.Contains(line, "Error") || 
+		} else if strings.Contains(line, ":") && (strings.Contains(line, "Error") ||
 			strings.Contains(line, "Warning") || strings.Contains(line, "Convention") ||
 			strings.Contains(line, "Style")) {
 			offenses = append(offenses, shared.TruncateLine(line, 100))
@@ -681,7 +681,7 @@ func filterBundleInstallOutput(raw string) string {
 				if len(gems) > 0 && len(gems) <= 5 {
 					result = append(result, fmt.Sprintf("      %s", strings.Join(gems, ", ")))
 				} else if len(gems) > 5 {
-					result = append(result, fmt.Sprintf("      %s ... +%d more", 
+					result = append(result, fmt.Sprintf("      %s ... +%d more",
 						strings.Join(gems[:5], ", "), len(gems)-5))
 				}
 			}
