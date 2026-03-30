@@ -8,12 +8,14 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"github.com/GrayCodeAI/tokman/internal/cache"
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
 var statsJSON bool
+var statsCache bool
 
 var statsCmd = &cobra.Command{
 	Use:   "stats",
@@ -24,6 +26,7 @@ var statsCmd = &cobra.Command{
 
 func init() {
 	statsCmd.Flags().BoolVar(&statsJSON, "json", false, "JSON output for machine consumption")
+	statsCmd.Flags().BoolVar(&statsCache, "cache", false, "show cache statistics")
 	registry.Add(func() { registry.Register(statsCmd) })
 }
 
@@ -99,5 +102,36 @@ func runStats(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	// Show cache statistics if requested
+	if statsCache {
+		showCacheStats()
+	}
+
 	return nil
+}
+
+func showCacheStats() {
+	fc := cache.GetGlobalCache()
+	stats := fc.Stats()
+
+	fmt.Printf("\nCache Statistics\n")
+	fmt.Printf("================\n")
+	fmt.Printf("Entries:     %d / %d\n", stats.Entries, stats.MaxEntries)
+	fmt.Printf("Hits:        %d\n", stats.Hits)
+	fmt.Printf("Misses:      %d\n", stats.Misses)
+	fmt.Printf("Hit Rate:    %.1f%%\n", stats.HitRate*100)
+	fmt.Printf("Efficiency:  %s\n", getCacheEfficiency(stats.HitRate))
+}
+
+func getCacheEfficiency(hitRate float64) string {
+	switch {
+	case hitRate >= 0.8:
+		return "Excellent (hot cache)"
+	case hitRate >= 0.5:
+		return "Good (warm cache)"
+	case hitRate >= 0.2:
+		return "Fair (cold cache)"
+	default:
+		return "Low (cache warming)"
+	}
 }

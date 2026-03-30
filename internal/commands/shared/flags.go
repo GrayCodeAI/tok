@@ -44,6 +44,11 @@ var (
 	// Reversible mode
 	ReversibleEnabled bool
 
+	// Custom layer configuration (Task 5)
+	EnableLayers  []string
+	DisableLayers []string
+	StreamMode    bool
+
 	// Version (set at build time)
 	Version string = "dev"
 )
@@ -190,6 +195,9 @@ type FlagConfig struct {
 	CompactionSnapshot   bool
 	CompactionAutoDetect bool
 	ReversibleEnabled    bool
+	EnableLayers         []string
+	DisableLayers        []string
+	StreamMode           bool
 }
 
 // SetFlags sets all flag values atomically under a single lock.
@@ -218,5 +226,29 @@ func SetFlags(cfg FlagConfig) {
 	CompactionSnapshot = cfg.CompactionSnapshot
 	CompactionAutoDetect = cfg.CompactionAutoDetect
 	ReversibleEnabled = cfg.ReversibleEnabled
+	EnableLayers = cfg.EnableLayers
+	DisableLayers = cfg.DisableLayers
+	StreamMode = cfg.StreamMode
 	configMu.Unlock()
+}
+
+// GetEnableLayers returns layers to explicitly enable.
+func GetEnableLayers() []string {
+	configMu.RLock()
+	defer configMu.RUnlock()
+	return EnableLayers
+}
+
+// GetDisableLayers returns layers to explicitly disable.
+func GetDisableLayers() []string {
+	configMu.RLock()
+	defer configMu.RUnlock()
+	return DisableLayers
+}
+
+// IsStreamMode returns true if streaming mode is enabled for large inputs.
+func IsStreamMode() bool {
+	configMu.RLock()
+	defer configMu.RUnlock()
+	return StreamMode
 }

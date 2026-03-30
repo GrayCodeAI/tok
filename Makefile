@@ -4,9 +4,11 @@ BINARY_NAME := tokman
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_DIR := bin
 
-# Go 1.26+ with SIMD support
-GO ?= ~/sdk/go1.26.0/bin/go
+# Go with SIMD support (Go 1.26+ recommended, 1.25+ supported)
+GO ?= go
 GOEXPERIMENT ?= simd
+# Check if SIMD is available at runtime
+SIMD_AVAILABLE := $(shell go version | grep -q 'go1\.2[6-9]' && echo 'true' || echo 'false')
 
 # T30: Aggressive optimization flags for smaller binary
 LDFLAGS := -s -w -X github.com/GrayCodeAI/tokman/internal/commands.Version=$(VERSION)

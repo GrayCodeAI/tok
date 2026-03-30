@@ -147,6 +147,10 @@ type PipelineCoordinator struct {
 	// NEW: Quality Estimator for feedback
 	qualityEstimator *QualityEstimator
 
+	// TOML Filter Integration (declarative filters)
+	tomlFilterWrapper Filter // Interface type, set via SetTOMLFilter
+	tomlFilterName    string
+
 	// Phase 2: Hypernym Concept Compression (Mercury-style)
 	hypernymCompressor *HypernymCompressor
 
@@ -307,6 +311,10 @@ type PipelineConfig struct {
 
 	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
 	EnableKVzip bool
+
+	// TOML Filter Integration
+	EnableTOMLFilter bool
+	TOMLFilterCommand string // Command string to match TOML filter
 }
 
 // NewPipelineCoordinator creates a new 10-layer pipeline coordinator.
@@ -614,6 +622,13 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		p.kvzipFilter = NewKVzipFilter()
 	}
 
+	// TOML Filter Integration: Load and initialize TOML filters
+	// Use SetTOMLFilter() to set from outside the package (avoids import cycle)
+	if cfg.EnableTOMLFilter && cfg.TOMLFilterCommand != "" {
+		// TOML filter will be set via SetTOMLFilter() by the caller
+		// who has access to the toml package
+	}
+
 	// Build layers in Process() execution order
 	p.layers = []filterLayer{
 		{p.entropyFilter, "1_entropy"},                   // Layer 1
@@ -653,6 +668,22 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	}
 
 	output := input
+
+	// TOML Filter: Apply first if configured (declarative filter takes precedence)
+	if p.tomlFilterWrapper != nil && p.config.EnableTOMLFilter {
+		filtered, saved := p.tomlFilterWrapper.Apply(output, ModeMinimal)
+		if saved > 0 {
+			stats.LayerStats["0_toml_filter"] = LayerStat{
+				TokensSaved: saved,
+				Duration:    0, // TOML filters are fast
+			}
+			output = filtered
+			stats.TotalSaved += saved
+			if p.shouldEarlyExit(stats) {
+				return output, p.finalizeStats(stats, output)
+			}
+		}
+	}
 
 	// L0: TF-IDF Coarse Pre-filter (NEW - DSPC 2025)
 	// Runs before expensive layers to remove low-information content early
@@ -902,6 +933,18 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 }
 
 // shouldEarlyExit returns true if budget is already met (T81).
+// SetTOMLFilter sets a TOML filter to be applied first in the pipeline.
+// This is called from outside the filter package to avoid import cycles.
+func (p *PipelineCoordinator) SetTOMLFilter(filter Filter, name string) {
+	p.tomlFilterWrapper = filter
+	p.tomlFilterName = name
+}
+
+// GetTOMLFilterName returns the name of the configured TOML filter.
+func (p *PipelineCoordinator) GetTOMLFilterName() string {
+	return p.tomlFilterName
+}
+
 func (p *PipelineCoordinator) shouldEarlyExit(stats *PipelineStats) bool {
 	if p.config.Budget <= 0 {
 		return false

@@ -68,6 +68,11 @@ var (
 
 	// Reversible compression (R1: claw-compactor style)
 	reversibleEnabled bool
+
+	// Custom layer configuration (Task 5: Layer enable/disable)
+	enableLayers  []string // Layers to explicitly enable
+	disableLayers []string // Layers to explicitly disable
+	streamMode    bool     // Enable streaming for large inputs
 )
 
 // Version is set via ldflags during build
@@ -112,6 +117,9 @@ output, applies intelligent filtering, and tracks token savings.`,
 				CompactionSnapshot   bool
 				CompactionAutoDetect bool
 				ReversibleEnabled    bool
+				EnableLayers         []string
+				DisableLayers        []string
+				StreamMode           bool
 			}{
 				Verbose:              verbose,
 				DryRun:               dryRun,
@@ -136,6 +144,9 @@ output, applies intelligent filtering, and tracks token savings.`,
 				CompactionSnapshot:   compactionSnapshot,
 				CompactionAutoDetect: compactionAutoDetect,
 				ReversibleEnabled:    reversibleEnabled,
+				EnableLayers:         enableLayers,
+				DisableLayers:        disableLayers,
+				StreamMode:           streamMode,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -280,6 +291,18 @@ func init() {
 	viper.BindPFlag("pipeline.compaction_max_tokens", rootCmd.PersistentFlags().Lookup("compaction-max-tokens"))
 	viper.BindPFlag("pipeline.compaction_state_snapshot", rootCmd.PersistentFlags().Lookup("compaction-snapshot"))
 	viper.BindPFlag("pipeline.compaction_auto_detect", rootCmd.PersistentFlags().Lookup("compaction-auto-detect"))
+
+	// Custom layer configuration flags (Task 5)
+	rootCmd.PersistentFlags().StringSliceVar(&enableLayers, "enable-layer", []string{},
+		"enable specific layers (comma-separated: entropy,perplexity,h2o,etc.)")
+	rootCmd.PersistentFlags().StringSliceVar(&disableLayers, "disable-layer", []string{},
+		"disable specific layers (comma-separated: entropy,perplexity,h2o,etc.)")
+	rootCmd.PersistentFlags().BoolVar(&streamMode, "stream", false,
+		"enable streaming mode for large inputs (>500K tokens)")
+
+	viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
+	viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
+	viper.BindPFlag("pipeline.streaming", rootCmd.PersistentFlags().Lookup("stream"))
 
 	registry.RegisterAll()
 }
