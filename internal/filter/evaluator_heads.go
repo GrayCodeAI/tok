@@ -4,6 +4,8 @@ import (
 	"math"
 	"sort"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // EvaluatorHeadsFilter implements EHPC-style compression (Tsinghua/Huawei, 2025).
@@ -117,8 +119,6 @@ func (f *EvaluatorHeadsFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
-
 	// Phase 1: Skim mode - identify important chunks
 	chunks := f.skimChunks(input)
 
@@ -128,7 +128,10 @@ func (f *EvaluatorHeadsFilter) Apply(input string, mode Mode) (string, int) {
 	// Phase 3: Select top chunks
 	output := f.selectTopChunks(chunks, scores, mode)
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

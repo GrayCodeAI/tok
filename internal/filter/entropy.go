@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/GrayCodeAI/tokman/internal/cache"
+	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/simd"
 )
 
@@ -327,8 +328,6 @@ func (f *EntropyFilter) Apply(input string, mode Mode) (string, int) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 
-	original := len(input)
-
 	// T11: Build dynamic frequency table from this input
 	if f.useDynamicEst {
 		f.buildDynamicFrequencies(input)
@@ -344,7 +343,10 @@ func (f *EntropyFilter) Apply(input string, mode Mode) (string, int) {
 	}
 
 	output := strings.Join(result, "\n")
-	saved := (original - len(output)) / 4 // Rough token estimate
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 
 	return output, saved
 }

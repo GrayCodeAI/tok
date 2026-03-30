@@ -3,6 +3,8 @@ package filter
 import (
 	"regexp"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 var codeSymbolRe = regexp.MustCompile(`[{}\[\]();:]`)
@@ -181,8 +183,6 @@ func (f *GoalDrivenFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
-
 	lines := strings.Split(input, "\n")
 
 	// Score each line
@@ -200,7 +200,10 @@ func (f *GoalDrivenFilter) Apply(input string, mode Mode) (string, int) {
 	}
 
 	output := strings.Join(result, "\n")
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 
 	return output, saved
 }

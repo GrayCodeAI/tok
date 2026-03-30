@@ -2,6 +2,8 @@ package filter
 
 import (
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // HierarchicalSummaryFilter implements AutoCompressor-style compression (Princeton/MIT, 2023).
@@ -50,8 +52,6 @@ func (f *HierarchicalSummaryFilter) Apply(input string, mode Mode) (string, int)
 		return input, 0
 	}
 
-	original := len(input)
-
 	// Level 0: Split into sections
 	sections := f.splitSections(input)
 
@@ -61,7 +61,10 @@ func (f *HierarchicalSummaryFilter) Apply(input string, mode Mode) (string, int)
 	// Level 2: Create hierarchical summary
 	output := f.createHierarchicalSummary(summaries, sections, mode)
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

@@ -4,6 +4,8 @@ import (
 	"math"
 	"sort"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // ContrastiveFilter implements LongLLMLingua contrastive perplexity (Microsoft, 2024).
@@ -63,8 +65,6 @@ func (f *ContrastiveFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
-
 	// Reset context n-grams for fresh extraction each call
 	f.contextNgrams = make(map[string]float64)
 
@@ -74,7 +74,10 @@ func (f *ContrastiveFilter) Apply(input string, mode Mode) (string, int) {
 	// Score and reorder content
 	output := f.processWithContrastive(input, mode)
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

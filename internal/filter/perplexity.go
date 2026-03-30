@@ -4,6 +4,8 @@ import (
 	"math"
 	"sort"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // PerplexityFilter implements LLMLingua-style compression (Microsoft/Tsinghua, 2023).
@@ -52,9 +54,8 @@ func (f *PerplexityFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
 	output := input
-	prevLen := original
+	prevLen := len(input)
 
 	// Iterative pruning with convergence check
 	for i := 0; i < f.iterationSteps; i++ {
@@ -69,7 +70,10 @@ func (f *PerplexityFilter) Apply(input string, mode Mode) (string, int) {
 		prevLen = currentLen
 	}
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

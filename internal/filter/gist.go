@@ -3,6 +3,8 @@ package filter
 import (
 	"strconv"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // GistFilter implements Gisting compression (Stanford/Berkeley, 2023).
@@ -85,15 +87,16 @@ func (f *GistFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
-
 	// Identify semantic chunks
 	chunks := f.identifyChunks(input)
 
 	// Create gist representations
 	output := f.createGist(input, chunks, mode)
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

@@ -1,9 +1,10 @@
 package tracking
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -99,11 +100,13 @@ func getGlobalTracker() *Tracker {
 	// Initialize tracker
 	dbPath := DatabasePath()
 	if dbPath == "" {
+		slog.Info("tracker: no database path configured, tracking disabled")
 		return nil
 	}
 
 	tracker, err := NewTracker(dbPath)
 	if err != nil {
+		slog.Warn("tracker: failed to initialize database", "path", dbPath, "error", err)
 		return nil
 	}
 
@@ -193,6 +196,12 @@ func EstimateTokens(text string) int {
 
 // Record saves a command execution to the database.
 func (t *Tracker) Record(record *CommandRecord) error {
+	return t.RecordContext(context.Background(), record)
+}
+
+// RecordContext saves a command execution to the database with context support.
+// P3: Enables cancellation for long-running database operations.
+func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) error {
 	query := `
 		INSERT INTO commands (
 			command, original_output, filtered_output,
@@ -201,7 +210,7 @@ func (t *Tracker) Record(record *CommandRecord) error {
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := t.db.Exec(query,
+	result, err := t.db.ExecContext(ctx, query,
 		record.Command,
 		record.OriginalOutput,
 		record.FilteredOutput,
@@ -354,7 +363,7 @@ func (t *Tracker) cleanupOld() {
 		"DELETE FROM commands WHERE timestamp < ?",
 		cutoff.Format(time.RFC3339),
 	); err != nil {
-		log.Printf("[tokman] tracking cleanup failed: %v", err)
+		slog.Error("tracking cleanup failed", "error", err)
 	}
 }
 
@@ -391,7 +400,7 @@ func (t *Tracker) CleanupWithRetention(days int) (int64, error) {
 		"DELETE FROM layer_stats WHERE command_id IN (SELECT id FROM commands WHERE timestamp < ?)",
 		cutoff.Format(time.RFC3339),
 	); err != nil {
-		log.Printf("[tokman] layer_stats cleanup failed: %v", err)
+		slog.Warn("layer_stats cleanup failed", "error", err)
 	}
 
 	// Delete old commands
@@ -408,7 +417,7 @@ func (t *Tracker) CleanupWithRetention(days int) (int64, error) {
 		"DELETE FROM parse_failures WHERE timestamp < ?",
 		cutoff.Format(time.RFC3339),
 	); err != nil {
-		log.Printf("[tokman] parse_failures cleanup failed: %v", err)
+		slog.Warn("parse_failures cleanup failed", "error", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -829,7 +838,7 @@ func (t *Tracker) GetParseFailureSummary() (*ParseFailureSummary, error) {
 		if err := recentRows.Scan(&pfr.ID, &ts, &pfr.RawCommand, &pfr.ErrorMessage, &fb); err == nil {
 			parsed, parseErr := time.Parse(time.RFC3339, ts)
 			if parseErr != nil {
-				log.Printf("[tokman] failed to parse timestamp %q: %v", ts, parseErr)
+				slog.Warn("failed to parse timestamp", "timestamp", ts, "error", parseErr)
 			}
 			pfr.Timestamp = parsed
 			pfr.FallbackSucceeded = fb == 1
@@ -837,7 +846,7 @@ func (t *Tracker) GetParseFailureSummary() (*ParseFailureSummary, error) {
 		}
 	}
 	if err := recentRows.Err(); err != nil {
-		log.Printf("[tokman] error iterating parse failure rows: %v", err)
+		slog.Error("error iterating parse failure rows", "error", err)
 	}
 
 	return summary, nil

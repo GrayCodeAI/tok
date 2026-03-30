@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 var javaMethodRe = regexp.MustCompile(`^\w+\s+\w+\s*\([^)]*\)\s*\{?$`)
@@ -83,8 +85,6 @@ func (f *ASTPreserveFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	original := len(input)
-
 	// Reset per-call state
 	f.braceDepth = 0
 	f.bracketDepth = 0
@@ -105,7 +105,10 @@ func (f *ASTPreserveFilter) Apply(input string, mode Mode) (string, int) {
 	// Process while preserving AST structure
 	output := f.processWithAST(input, mode)
 
-	saved := (original - len(output)) / 4
+	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
+	if saved < 0 {
+		saved = 0
+	}
 	return output, saved
 }
 

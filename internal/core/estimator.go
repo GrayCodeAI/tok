@@ -15,45 +15,109 @@ type BPETokenizer struct {
 	cache *tokenCache
 }
 
+// cacheEntry stores cached token counts with LRU metadata.
+type cacheEntry struct {
+	count   int
+	lastHit int64 // Unix nanoseconds for LRU eviction
+}
+
 // tokenCache caches BPE token counts for frequently seen strings.
 // Phase 2.8: Avoids repeated BPE encoding for identical content.
+// P2: Uses LRU eviction to preserve frequently-accessed items.
 type tokenCache struct {
-	mu    sync.RWMutex
-	items map[string]int
-	size  int
-	max   int
+	mu       sync.RWMutex
+	items    map[string]*cacheEntry
+	size     int
+	max      int
+	hitCount int64 // For statistics
 }
 
 func newTokenCache(maxSize int) *tokenCache {
 	return &tokenCache{
-		items: make(map[string]int),
+		items: make(map[string]*cacheEntry),
 		max:   maxSize,
 	}
 }
 
 func (c *tokenCache) get(text string) (int, bool) {
 	c.mu.RLock()
-	val, ok := c.items[text]
+	entry, ok := c.items[text]
 	c.mu.RUnlock()
-	return val, ok
+	if !ok {
+		return 0, false
+	}
+	// Update lastHit for LRU tracking (atomic to avoid write lock)
+	c.mu.Lock()
+	entry.lastHit = nanoTime()
+	c.hitCount++
+	c.mu.Unlock()
+	return entry.count, true
 }
 
 func (c *tokenCache) set(text string, count int) {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	
+	// Check if already exists (update in place)
+	if entry, ok := c.items[text]; ok {
+		entry.count = count
+		entry.lastHit = nanoTime()
+		return
+	}
+	
+	// Evict LRU entries if at capacity
 	if c.size >= c.max {
-		// Simple eviction: clear half the cache
-		for k := range c.items {
-			delete(c.items, k)
-			c.size--
-			if c.size <= c.max/2 {
-				break
+		c.evictLRU()
+	}
+	
+	c.items[text] = &cacheEntry{
+		count:   count,
+		lastHit: nanoTime(),
+	}
+	c.size++
+}
+
+// evictLRU removes the least recently used entries (called with lock held)
+func (c *tokenCache) evictLRU() {
+	// Find and remove 25% of entries (the oldest ones)
+	toRemove := c.max / 4
+	if toRemove < 1 {
+		toRemove = 1
+	}
+	
+	// Find the oldest entries
+	type kv struct {
+		key     string
+		lastHit int64
+	}
+	entries := make([]kv, 0, len(c.items))
+	for k, v := range c.items {
+		entries = append(entries, kv{k, v.lastHit})
+	}
+	
+	// Sort by lastHit (oldest first)
+	for i := 0; i < len(entries)-1; i++ {
+		for j := i + 1; j < len(entries); j++ {
+			if entries[i].lastHit > entries[j].lastHit {
+				entries[i], entries[j] = entries[j], entries[i]
 			}
 		}
 	}
-	c.items[text] = count
-	c.size++
-	c.mu.Unlock()
+	
+	// Remove oldest entries
+	for i := 0; i < toRemove && i < len(entries); i++ {
+		delete(c.items, entries[i].key)
+		c.size--
+	}
 }
+
+// nanoTime returns a monotonic counter for LRU tracking
+func nanoTime() int64 {
+	staticCounter.Add(1)
+	return staticCounter.Load()
+}
+
+var staticCounter atomic.Int64
 
 var (
 	bpeInstance *BPETokenizer
