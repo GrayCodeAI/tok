@@ -1,6 +1,6 @@
 # TokMan
 
-> Token-aware CLI proxy & AI gateway for coding assistants. 31-layer compression pipeline built on 120+ research papers, achieving 60–90% token savings.
+> Token-aware CLI proxy & AI gateway for coding assistants. 31-layer compression pipeline built on 30+ research papers, achieving 60–90% token savings.
 
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -9,7 +9,7 @@
 
 ---
 
-TokMan intercepts CLI commands and applies a **31-layer compression pipeline** to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves **60–90% token reduction** on common development operations — far beyond simple output filtering.
+TokMan intercepts CLI commands and applies a **31-layer compression pipeline** to reduce token usage for AI coding assistants. Built on research from 30+ papers, it achieves **60–90% token reduction** on common development operations — far beyond simple output filtering.
 
 ## Token Savings (30-min Claude Code Session)
 
