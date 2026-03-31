@@ -27,18 +27,16 @@ var reportCmd = &cobra.Command{
 	Short: "Generate detailed usage reports",
 	Long: `Generate detailed reports of token savings with various filters
 and output formats.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := shared.GetConfig()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading config: %w", err)
 		}
 
 		dbPath := cfg.GetDatabasePath()
 		tracker, err := tracking.NewTracker(dbPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error connecting to database: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error connecting to database: %w", err)
 		}
 		defer tracker.Close()
 
@@ -55,30 +53,28 @@ and output formats.`,
 		// Get daily savings
 		daily, err := tracker.GetDailySavings(projectPath, days)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting daily savings: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error getting daily savings: %w", err)
 		}
 
 		// Get command stats
 		stats, err := tracker.GetCommandStats(projectPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting command stats: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error getting command stats: %w", err)
 		}
 
 		// Get recent commands
 		recent, err := tracker.GetRecentCommands(projectPath, reportLimit)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting recent commands: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error getting recent commands: %w", err)
 		}
 
 		if reportJSON {
 			outputJSON(daily, stats, recent)
-			return
+			return nil
 		}
 
 		outputTable(daily, stats, recent)
+		return nil
 	},
 }
 

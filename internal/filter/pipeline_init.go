@@ -303,6 +303,35 @@ func (p *PipelineCoordinator) initPhase2Filters(cfg PipelineConfig) {
 	if cfg.EnableKVzip {
 		p.kvzipFilter = NewKVzipFilter()
 	}
+
+	// 2026 Research Layers
+	if cfg.EnableSWEzze {
+		p.swezzeFilter = NewSWEzzeFilter()
+	}
+
+	if cfg.EnableMixedDim {
+		p.mixedDimFilter = NewMixedDimFilter()
+	}
+
+	if cfg.EnableBEAVER {
+		p.beaverFilter = NewBEAVERFilter()
+	}
+
+	if cfg.EnablePoC {
+		p.pocFilter = NewPoCFilter()
+	}
+
+	if cfg.EnableTokenQuant {
+		p.tokenQuantFilter = NewTokenQuantFilter()
+	}
+
+	if cfg.EnableTokenRetention {
+		p.tokenRetentionFilter = NewTokenRetentionFilter()
+	}
+
+	if cfg.EnableACON {
+		p.aconFilter = NewACONFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -329,5 +358,12 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.agentMemoryFilter, "20_agent_memory"},
 		{p.questionAwareFilter, "21_question_aware"},
 		{p.densityAdaptiveFilter, "22_density_adaptive"},
+		{p.swezzeFilter, "23_swezze"},
+		{p.mixedDimFilter, "24_mixed_dim"},
+		{p.beaverFilter, "25_beaver"},
+		{p.pocFilter, "26_poc"},
+		{p.tokenQuantFilter, "27_token_quant"},
+		{p.tokenRetentionFilter, "28_token_retention"},
+		{p.aconFilter, "29_acon"},
 	}
 }

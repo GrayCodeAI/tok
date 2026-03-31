@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+// Paper: "LongLLMLingua" — Jiang et al., Microsoft, 2024
+// https://arxiv.org/abs/2310.06839
+// Paper: "LongLLMLingua" — Jiang et al., Microsoft, 2024
+// https://arxiv.org/abs/2310.06839
 // QuestionAwareFilter implements LongLLMLingua-style question-aware recovery.
 // Research basis: "LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios"
 // (Jiang et al., ACL 2024) - preserves query-relevant subsequences during compression.

@@ -3,7 +3,6 @@ package test
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -23,13 +22,10 @@ var testCmd = &cobra.Command{
 - Aggregates multiple test suites into single summary
 - Shows full output only on failures
 - Tracks token savings from condensed output`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("go test", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("go test", func() (string, string, error) {
 			return runGoTest(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -39,13 +35,10 @@ var buildCmd = &cobra.Command{
 	Long: `Run go build with output filtering:
 - Strips verbose build output
 - Shows errors and warnings only`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("go build", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("go build", func() (string, string, error) {
 			return runGoBuild(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 

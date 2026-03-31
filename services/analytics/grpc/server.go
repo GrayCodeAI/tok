@@ -107,4 +107,3 @@ func (s *AnalyticsServer) GetEconomics(ctx context.Context, req *pb.GetEconomics
 		QuotaRemaining:     econ.QuotaRemaining,
 	}, nil
 }
-

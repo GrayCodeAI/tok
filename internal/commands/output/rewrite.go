@@ -2,7 +2,6 @@ package output
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,7 +26,7 @@ Example:
   tokman rewrite "ls -la"         # Output: tokman ls, exit 0
   tokman rewrite "cat file.txt"   # No output, exit 1 (no rewrite)`,
 	Args: cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		fullCmd := args[0]
 		for i := 1; i < len(args); i++ {
 			fullCmd += " " + args[i]
@@ -36,7 +35,7 @@ Example:
 		rewritten, changed := discover.RewriteCommand(fullCmd, nil)
 
 		if !changed {
-			os.Exit(1)
+			return fmt.Errorf("no rewrite available for: %s", fullCmd)
 		}
 
 		fmt.Println(rewritten)
@@ -46,6 +45,7 @@ Example:
 			green := color.New(color.FgGreen).SprintFunc()
 			fmt.Fprintf(cmd.ErrOrStderr(), "%s → %s\n", cyan(fullCmd), green(rewritten))
 		}
+		return nil
 	},
 }
 

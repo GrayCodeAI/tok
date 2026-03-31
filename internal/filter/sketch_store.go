@@ -8,6 +8,10 @@ import (
 	"sync"
 )
 
+// Paper: "KVReviver: Reversible KV Cache Compression" — Yuan et al., 2025
+// https://arxiv.org/abs/2512.17917
+// Paper: "KVReviver: Reversible KV Cache Compression" — Yuan et al., 2025
+// https://arxiv.org/abs/2512.17917
 // SketchStoreFilter implements Layer 17: Sketch-based Reversible Compression (KVReviver style).
 //
 // Research Source: "KVReviver: Sketch-based KV Cache Recovery" (December 2025)

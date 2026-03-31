@@ -1,10 +1,7 @@
 package system
 
 import (
-	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -42,21 +39,11 @@ func runFind(cmd *cobra.Command, args []string) error {
 		findArgs = []string{"."}
 	}
 
-	c := exec.Command("find", findArgs...)
-
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
-
-	err := c.Run()
-	output := stdout.String()
-	if output == "" && stderr.Len() > 0 {
-		output = stderr.String()
-	}
+	output, _, err := shared.RunAndCapture("find", findArgs)
 
 	// Apply filtering - compact output
 	engine := filter.NewEngine(filter.ModeMinimal)
-	filtered, tokensSaved := engine.Process(output)
+	filtered, _ := engine.Process(output)
 
 	// Further compact: one file per line, strip common prefix
 	filtered = compactFindOutput(filtered)
@@ -67,9 +54,7 @@ func runFind(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("find %s", strings.Join(args, " ")), "tokman find", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 && tokensSaved > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", tokensSaved)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	return err
 }

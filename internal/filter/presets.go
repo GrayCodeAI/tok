@@ -1,85 +1,61 @@
 package filter
 
-// PipelinePreset defines a compression pipeline mode with specific layers enabled.
-// Provide fast/balanced/full presets for different use cases.
-// Maps to the adaptive tier system for automatic layer selection.
-type PipelinePreset string
+// Tier defines the depth of the compression pipeline.
+// Higher tiers activate more layers for deeper compression.
+type Tier string
 
 const (
-	// PresetFast maps to Tier1_Simple (3 layers).
-	// ~3x faster than full, ~60% of the compression.
-	// Best for: Quick commands, small output, speed-critical operations.
-	PresetFast PipelinePreset = "fast"
+	// Tier 1: Surface — removes obvious noise, keeps everything intact
+	TierSurface Tier = "surface" // 3 layers, 30-50% reduction
 
-	// PresetBalanced maps to Tier2_Medium (8 layers).
-	// ~1.5x faster than full, ~85% of the compression.
-	// Best for: Most CLI output, git status, build logs, test results.
-	PresetBalanced PipelinePreset = "balanced"
+	// Tier 2: Trim — cuts dead weight, keeps structure
+	TierTrim Tier = "trim" // 12 layers, 50-70% reduction
 
-	// PresetFull maps to Tier3_Full (20 layers).
-	// Best for: Large outputs, documentation, conversation history.
-	PresetFull PipelinePreset = "full"
+	// Tier 3: Extract — pulls out the essence
+	TierExtract Tier = "extract" // 24 layers, 70-90% reduction
 
-	// PresetAuto automatically selects tier based on content analysis.
-	// Analyzes content size, type, and complexity to pick optimal tier.
-	// Best for: When you don't know the content size/type in advance.
-	PresetAuto PipelinePreset = "auto"
+	// Tier 4: Core — bare minimum, maximum compression
+	TierCore Tier = "core" // All 37 layers, 90%+ reduction
+
+	// Tier C: Code — code-aware, preserves syntax structure
+	TierCode Tier = "code" // 8 layers, 50-70% reduction
+
+	// Tier L: Log — log-aware, deduplicates and groups
+	TierLog Tier = "log" // 7 layers, 60-80% reduction
+
+	// Tier T: Thread — conversation-aware, preserves context
+	TierThread Tier = "thread" // 6 layers, 55-75% reduction
 )
 
-// PresetConfig returns a PipelineConfig for the given preset.
-func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
+// TierConfig returns a PipelineConfig for the given tier.
+func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 	cfg := PipelineConfig{
 		Mode:            baseMode,
 		SessionTracking: true,
 	}
 
-	switch preset {
-	case PresetFast:
-		// Fast preset: Minimal layers for speed
+	switch tier {
+	case TierSurface:
 		cfg.EnableEntropy = true
-		cfg.EnablePerplexity = false
 		cfg.EnableGoalDriven = true
-		cfg.EnableAST = false
-		cfg.EnableContrastive = false
-		cfg.NgramEnabled = false
-		cfg.EnableEvaluator = false
-		cfg.EnableGist = false
-		cfg.EnableHierarchical = false
-		cfg.EnableCompaction = false
-		cfg.EnableAttribution = false
-		cfg.EnableH2O = false
-		cfg.EnableAttentionSink = false
-		cfg.EnableTFIDF = false
-		cfg.EnableReasoningTrace = false
-		cfg.EnableSymbolicCompress = false
-		cfg.EnablePhraseGrouping = false
-		cfg.EnableNumericalQuant = false
-		cfg.EnableDynamicRatio = false
+		cfg.EnableH2O = true
+		cfg.EnableNumericalQuant = true
 
-	case PresetBalanced:
-		// Balanced preset: Core layers for most use cases
+	case TierTrim:
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
 		cfg.EnableGoalDriven = true
 		cfg.EnableAST = true
 		cfg.EnableContrastive = true
 		cfg.NgramEnabled = true
-		cfg.EnableEvaluator = false
-		cfg.EnableGist = false
-		cfg.EnableHierarchical = false
-		cfg.EnableCompaction = false
-		cfg.EnableAttribution = false
-		cfg.EnableH2O = false
+		cfg.EnableEvaluator = true
+		cfg.EnableH2O = true
 		cfg.EnableAttentionSink = true
-		cfg.EnableTFIDF = true
-		cfg.EnableReasoningTrace = false
-		cfg.EnableSymbolicCompress = false
-		cfg.EnablePhraseGrouping = false
+		cfg.EnableMetaToken = true
 		cfg.EnableNumericalQuant = true
 		cfg.EnableDynamicRatio = true
 
-	default: // PresetFull + PresetAuto
-		// Full preset: All layers for maximum compression
+	case TierExtract:
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
 		cfg.EnableGoalDriven = true
@@ -93,25 +69,152 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 		cfg.EnableAttribution = true
 		cfg.EnableH2O = true
 		cfg.EnableAttentionSink = true
-		cfg.EnableTFIDF = true
-		cfg.EnableReasoningTrace = true
+		cfg.EnableMetaToken = true
+		cfg.EnableSemanticChunk = true
+		cfg.EnableLazyPruner = true
+		cfg.EnableSemanticAnchor = true
+		cfg.EnableAgentMemory = true
 		cfg.EnableSymbolicCompress = true
 		cfg.EnablePhraseGrouping = true
 		cfg.EnableNumericalQuant = true
 		cfg.EnableDynamicRatio = true
-		// Phase 2 layers
+		cfg.EnableHypernym = true
+		cfg.EnableSemanticCache = true
+		cfg.EnableKVzip = true
+
+	case TierCore:
+		cfg.EnableEntropy = true
+		cfg.EnablePerplexity = true
+		cfg.EnableGoalDriven = true
+		cfg.EnableAST = true
+		cfg.EnableContrastive = true
+		cfg.NgramEnabled = true
+		cfg.EnableEvaluator = true
+		cfg.EnableGist = true
+		cfg.EnableHierarchical = true
+		cfg.EnableCompaction = true
+		cfg.EnableAttribution = true
+		cfg.EnableH2O = true
+		cfg.EnableAttentionSink = true
+		cfg.EnableMetaToken = true
+		cfg.EnableSemanticChunk = true
+		cfg.EnableSketchStore = true
+		cfg.EnableLazyPruner = true
+		cfg.EnableSemanticAnchor = true
+		cfg.EnableAgentMemory = true
+		cfg.EnableQuestionAware = true
+		cfg.EnableDensityAdaptive = true
+		cfg.EnableSymbolicCompress = true
+		cfg.EnablePhraseGrouping = true
+		cfg.EnableNumericalQuant = true
+		cfg.EnableDynamicRatio = true
 		cfg.EnableHypernym = true
 		cfg.EnableSemanticCache = true
 		cfg.EnableScope = true
 		cfg.EnableSmallKV = true
 		cfg.EnableKVzip = true
+		cfg.EnableSWEzze = true
+		cfg.EnableMixedDim = true
+		cfg.EnableBEAVER = true
+		cfg.EnablePoC = true
+		cfg.EnableTokenQuant = true
+		cfg.EnableTokenRetention = true
+		cfg.EnableACON = true
+
+	case TierCode:
+		cfg.EnableEntropy = true
+		cfg.EnableAST = true
+		cfg.EnableGoalDriven = true
+		cfg.EnableH2O = true
+		cfg.EnableMetaToken = true
+		cfg.EnableSymbolicCompress = true
+		cfg.EnableNumericalQuant = true
+		cfg.EnableSWEzze = true
+
+	case TierLog:
+		cfg.EnableEntropy = true
+		cfg.EnablePerplexity = true
+		cfg.EnableEvaluator = true
+		cfg.EnableH2O = true
+		cfg.EnableAttribution = true
+		cfg.EnableSketchStore = true
+		cfg.EnableNumericalQuant = true
+
+	case TierThread:
+		cfg.EnableEntropy = true
+		cfg.EnableCompaction = true
+		cfg.EnableAttentionSink = true
+		cfg.EnableLazyPruner = true
+		cfg.EnableSemanticAnchor = true
+		cfg.EnableAgentMemory = true
 	}
 
 	return cfg
 }
 
-// QuickProcessPreset runs compression with a named preset.
-// For PresetAuto, uses the adaptive pipeline to select optimal tier.
+// ApplyTier compresses input using the specified tier.
+func ApplyTier(input string, mode Mode, tier Tier) (string, int) {
+	cfg := TierConfig(tier, mode)
+	p := NewPipelineCoordinator(cfg)
+	output, stats := p.Process(input)
+	return output, stats.TotalSaved
+}
+
+// Backwards compatibility aliases
+type Profile = Tier
+type CompressionMode = Tier
+
+const (
+	ProfileFast     Tier = TierSurface
+	ProfileBalanced Tier = TierTrim
+	ProfileCode     Tier = TierCode
+	ProfileLog      Tier = TierLog
+	ProfileChat     Tier = TierThread
+	ProfileMax      Tier = TierCore
+
+	ModeSkim       Tier = TierSurface
+	ModeRefine     Tier = TierTrim
+	ModeDistill    Tier = TierExtract
+	ModeAnnihilate Tier = TierCore
+)
+
+// ProfileConfig is an alias for TierConfig (backwards compat).
+func ProfileConfig(profile Profile, baseMode Mode) PipelineConfig {
+	return TierConfig(profile, baseMode)
+}
+
+// ApplyProfile is an alias for ApplyTier (backwards compat).
+func ApplyProfile(input string, mode Mode, profile Profile) (string, int) {
+	return ApplyTier(input, mode, Tier(profile))
+}
+
+// ModeConfig is an alias for TierConfig (backwards compat).
+func ModeConfig(mode CompressionMode, baseMode Mode) PipelineConfig {
+	return TierConfig(mode, baseMode)
+}
+
+// ApplyMode is an alias for ApplyTier (backwards compat).
+func ApplyMode(input string, mode Mode, cm CompressionMode) (string, int) {
+	return ApplyTier(input, mode, Tier(cm))
+}
+
+// PresetConfig for backwards compatibility.
+type PipelinePreset = Tier
+
+const (
+	PresetFast     Tier = TierSurface
+	PresetBalanced Tier = TierTrim
+	PresetFull     Tier = TierCore
+	PresetAuto     Tier = ""
+)
+
+func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
+	if preset == PresetAuto {
+		return PipelineConfig{Mode: baseMode, SessionTracking: true}
+	}
+	return TierConfig(preset, baseMode)
+}
+
 func QuickProcessPreset(input string, mode Mode, preset PipelinePreset) (string, int) {
 	cfg := PresetConfig(preset, mode)
 	p := NewPipelineCoordinator(cfg)

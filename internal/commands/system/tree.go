@@ -1,10 +1,7 @@
 package system
 
 import (
-	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -41,21 +38,11 @@ func runTree(cmd *cobra.Command, args []string) error {
 	// Build tree command
 	treeArgs := append([]string{}, args...)
 
-	c := exec.Command("tree", treeArgs...)
-
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
-
-	err := c.Run()
-	output := stdout.String()
-	if output == "" && stderr.Len() > 0 {
-		output = stderr.String()
-	}
+	output, _, err := shared.RunAndCapture("tree", treeArgs)
 
 	// Apply filtering
 	engine := filter.NewEngine(filter.ModeMinimal)
-	filtered, tokensSaved := engine.Process(output)
+	filtered, _ := engine.Process(output)
 
 	fmt.Print(filtered)
 
@@ -64,9 +51,7 @@ func runTree(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("tree %s", strings.Join(args, " ")), "tokman tree", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 && tokensSaved > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", tokensSaved)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	if err != nil {
 		return err

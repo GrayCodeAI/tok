@@ -13,9 +13,9 @@ import (
 // Benchmark_GitStatus tests git status compression
 func Benchmark_GitStatus(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeMinimal,
-		EnableEntropy:  true,
-		EnableH2O:      true,
+		Mode:             filter.ModeMinimal,
+		EnableEntropy:    true,
+		EnableH2O:        true,
 		EnableCompaction: true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
@@ -32,9 +32,9 @@ func Benchmark_GitStatus(b *testing.B) {
 // Benchmark_GitLog tests git log compression
 func Benchmark_GitLog(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeAggressive,
-		EnableEntropy:  true,
-		EnableH2O:      true,
+		Mode:             filter.ModeAggressive,
+		EnableEntropy:    true,
+		EnableH2O:        true,
 		EnableCompaction: true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
@@ -51,10 +51,10 @@ func Benchmark_GitLog(b *testing.B) {
 // Benchmark_GitDiff tests git diff compression
 func Benchmark_GitDiff(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeMinimal,
-		EnableEntropy:  true,
-		EnableAST:      true, // AST preservation for code
-		EnableH2O:      true,
+		Mode:          filter.ModeMinimal,
+		EnableEntropy: true,
+		EnableAST:     true, // AST preservation for code
+		EnableH2O:     true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
 	input := fixtures.GitDiffOutput
@@ -106,9 +106,9 @@ func Benchmark_KubectlGetPods(b *testing.B) {
 // Benchmark_NpmInstall tests npm install output compression
 func Benchmark_NpmInstall(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeAggressive,
-		EnableEntropy:  true,
-		EnableH2O:      true,
+		Mode:             filter.ModeAggressive,
+		EnableEntropy:    true,
+		EnableH2O:        true,
 		EnableCompaction: true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
@@ -125,8 +125,8 @@ func Benchmark_NpmInstall(b *testing.B) {
 // Benchmark_Pytest tests pytest output compression
 func Benchmark_Pytest(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeMinimal,
-		EnableEntropy:  true,
+		Mode:             filter.ModeMinimal,
+		EnableEntropy:    true,
 		EnableCompaction: true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
@@ -161,11 +161,11 @@ func Benchmark_GoTest(b *testing.B) {
 // Benchmark_LargeLogFile tests large log compression
 func Benchmark_LargeLogFile(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeAggressive,
-		EnableEntropy:  true,
-		EnableH2O:      true,
+		Mode:             filter.ModeAggressive,
+		EnableEntropy:    true,
+		EnableH2O:        true,
 		EnableCompaction: true,
-		EnableTFIDF:    true, // TF-IDF for large inputs
+		EnableTFIDF:      true, // TF-IDF for large inputs
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)
 	input := fixtures.LargeLogFile
@@ -182,9 +182,9 @@ func Benchmark_LargeLogFile(b *testing.B) {
 // Benchmark_AllFixtures runs compression on all fixture types
 func Benchmark_AllFixtures(b *testing.B) {
 	cfg := filter.PipelineConfig{
-		Mode:           filter.ModeMinimal,
-		EnableEntropy:  true,
-		EnableH2O:      true,
+		Mode:             filter.ModeMinimal,
+		EnableEntropy:    true,
+		EnableH2O:        true,
 		EnableCompaction: true,
 	}
 	pipeline := filter.NewPipelineCoordinator(cfg)

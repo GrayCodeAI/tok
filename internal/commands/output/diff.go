@@ -3,7 +3,6 @@ package output
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 
@@ -64,9 +63,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 	filteredTokens := core.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("diff %s", strings.Join(args, " ")), "tokman diff", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	return err
 }

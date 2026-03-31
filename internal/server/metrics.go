@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 )
@@ -149,54 +150,53 @@ type MetricsSnapshot struct {
 func (m *Metrics) PrometheusFormat() string {
 	snap := m.Snapshot()
 
-	var output string
-	output += fmt.Sprintf("# HELP tokman_requests_total Total number of requests\n")
-	output += fmt.Sprintf("# TYPE tokman_requests_total counter\n")
-	output += fmt.Sprintf("tokman_requests_total %d\n", snap.TotalRequests)
+	var b strings.Builder
+	b.WriteString("# HELP tokman_requests_total Total number of requests\n")
+	b.WriteString("# TYPE tokman_requests_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_requests_total %d\n", snap.TotalRequests))
 
-	output += fmt.Sprintf("\n# HELP tokman_compressions_total Total number of compressions\n")
-	output += fmt.Sprintf("# TYPE tokman_compressions_total counter\n")
-	output += fmt.Sprintf("tokman_compressions_total %d\n", snap.TotalCompressions)
+	b.WriteString("\n# HELP tokman_compressions_total Total number of compressions\n")
+	b.WriteString("# TYPE tokman_compressions_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_compressions_total %d\n", snap.TotalCompressions))
 
-	output += fmt.Sprintf("\n# HELP tokman_tokens_in_total Total input tokens\n")
-	output += fmt.Sprintf("# TYPE tokman_tokens_in_total counter\n")
-	output += fmt.Sprintf("tokman_tokens_in_total %d\n", snap.TotalTokensIn)
+	b.WriteString("\n# HELP tokman_tokens_in_total Total input tokens\n")
+	b.WriteString("# TYPE tokman_tokens_in_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_tokens_in_total %d\n", snap.TotalTokensIn))
 
-	output += fmt.Sprintf("\n# HELP tokman_tokens_out_total Total output tokens\n")
-	output += fmt.Sprintf("# TYPE tokman_tokens_out_total counter\n")
-	output += fmt.Sprintf("tokman_tokens_out_total %d\n", snap.TotalTokensOut)
+	b.WriteString("\n# HELP tokman_tokens_out_total Total output tokens\n")
+	b.WriteString("# TYPE tokman_tokens_out_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_tokens_out_total %d\n", snap.TotalTokensOut))
 
-	output += fmt.Sprintf("\n# HELP tokman_tokens_saved_total Total tokens saved\n")
-	output += fmt.Sprintf("# TYPE tokman_tokens_saved_total counter\n")
-	output += fmt.Sprintf("tokman_tokens_saved_total %d\n", snap.TotalTokensSaved)
+	b.WriteString("\n# HELP tokman_tokens_saved_total Total tokens saved\n")
+	b.WriteString("# TYPE tokman_tokens_saved_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_tokens_saved_total %d\n", snap.TotalTokensSaved))
 
-	output += fmt.Sprintf("\n# HELP tokman_errors_total Total errors\n")
-	output += fmt.Sprintf("# TYPE tokman_errors_total counter\n")
-	output += fmt.Sprintf("tokman_errors_total %d\n", snap.TotalErrors)
+	b.WriteString("\n# HELP tokman_errors_total Total errors\n")
+	b.WriteString("# TYPE tokman_errors_total counter\n")
+	b.WriteString(fmt.Sprintf("tokman_errors_total %d\n", snap.TotalErrors))
 
-	output += fmt.Sprintf("\n# HELP tokman_avg_processing_ms Average processing time in ms\n")
-	output += fmt.Sprintf("# TYPE tokman_avg_processing_ms gauge\n")
-	output += fmt.Sprintf("tokman_avg_processing_ms %d\n", snap.AvgProcessingMs)
+	b.WriteString("\n# HELP tokman_avg_processing_ms Average processing time in ms\n")
+	b.WriteString("# TYPE tokman_avg_processing_ms gauge\n")
+	b.WriteString(fmt.Sprintf("tokman_avg_processing_ms %d\n", snap.AvgProcessingMs))
 
-	output += fmt.Sprintf("\n# HELP tokman_avg_reduction_pct Average reduction percentage\n")
-	output += fmt.Sprintf("# TYPE tokman_avg_reduction_pct gauge\n")
-	output += fmt.Sprintf("tokman_avg_reduction_pct %.2f\n", snap.AvgReductionPct)
+	b.WriteString("\n# HELP tokman_avg_reduction_pct Average reduction percentage\n")
+	b.WriteString("# TYPE tokman_avg_reduction_pct gauge\n")
+	b.WriteString(fmt.Sprintf("tokman_avg_reduction_pct %.2f\n", snap.AvgReductionPct))
 
-	output += fmt.Sprintf("\n# HELP tokman_uptime_seconds Server uptime in seconds\n")
-	output += fmt.Sprintf("# TYPE tokman_uptime_seconds gauge\n")
-	output += fmt.Sprintf("tokman_uptime_seconds %.0f\n", snap.Uptime.Seconds())
+	b.WriteString("\n# HELP tokman_uptime_seconds Server uptime in seconds\n")
+	b.WriteString("# TYPE tokman_uptime_seconds gauge\n")
+	b.WriteString(fmt.Sprintf("tokman_uptime_seconds %.0f\n", snap.Uptime.Seconds()))
 
-	// Content type metrics
 	if len(snap.ContentTypeCounts) > 0 {
-		output += fmt.Sprintf("\n# HELP tokman_content_type_total Requests by content type\n")
-		output += fmt.Sprintf("# TYPE tokman_content_type_total counter\n")
+		b.WriteString("\n# HELP tokman_content_type_total Requests by content type\n")
+		b.WriteString("# TYPE tokman_content_type_total counter\n")
 		for ct, count := range snap.ContentTypeCounts {
 			sanitizedCt := sanitizePrometheusLabel(ct)
-			output += fmt.Sprintf("tokman_content_type_total{type=\"%s\"} %d\n", sanitizedCt, count)
+			b.WriteString(fmt.Sprintf("tokman_content_type_total{type=\"%s\"} %d\n", sanitizedCt, count))
 		}
 	}
 
-	return output
+	return b.String()
 }
 
 // labelSanitizer replaces any character not in [a-zA-Z0-9_] with an underscore.

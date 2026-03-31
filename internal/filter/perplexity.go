@@ -8,6 +8,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "LLMLingua" — Jiang et al., Microsoft/Tsinghua, 2023
+// https://arxiv.org/abs/2310.05736
+// Paper: "LLMLingua" — Jiang et al., Microsoft/Tsinghua, 2023
+// https://arxiv.org/abs/2310.05736
 // PerplexityFilter implements LLMLingua-style compression (Microsoft/Tsinghua, 2023).
 // Uses perplexity-based iterative pruning with a budget controller.
 //

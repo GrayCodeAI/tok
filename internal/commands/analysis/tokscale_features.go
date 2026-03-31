@@ -55,7 +55,7 @@ type LeaderboardEntry struct {
 }
 
 func runLeaderboard(tracker *tracking.Tracker) error {
-	savings, _ := tracker.GetSavings("")
+	savings, _ := tracker.GetSavings("") // best-effort; tracker may be unavailable
 	if savings == nil {
 		fmt.Println("No data for leaderboard")
 		return nil
@@ -76,14 +76,14 @@ func runLeaderboard(tracker *tracking.Tracker) error {
 }
 
 func runWrapped(tracker *tracking.Tracker) error {
-	savings, _ := tracker.GetSavings("")
+	savings, _ := tracker.GetSavings("") // best-effort; tracker may be unavailable
 	if savings == nil {
 		fmt.Println("No data for wrapped")
 		return nil
 	}
 
-	tokens24h, _ := tracker.TokensSaved24h()
-	totalTokens, _ := tracker.TokensSavedTotal()
+	tokens24h, _ := tracker.TokensSaved24h()     // best-effort
+	totalTokens, _ := tracker.TokensSavedTotal() // best-effort
 	year := time.Now().Year()
 
 	fmt.Println("╔════════════════════════════════════════════════════╗")
@@ -104,7 +104,7 @@ func runWrapped(tracker *tracking.Tracker) error {
 }
 
 func runWidget(tracker *tracking.Tracker) error {
-	savings, _ := tracker.GetSavings("")
+	savings, _ := tracker.GetSavings("") // best-effort; tracker may be unavailable
 	if savings == nil {
 		return fmt.Errorf("no data")
 	}
@@ -325,11 +325,7 @@ func NewRemoteGainSync(token, endpoint string) *RemoteGainSync {
 
 // Sync uploads local gain data to remote.
 func (rgs *RemoteGainSync) Sync(data map[string]any) error {
-	// In production, this would POST to the endpoint with GitHub auth
-	_ = rgs.githubToken
-	_ = rgs.endpoint
-	_ = data
-	return nil
+	return fmt.Errorf("remote gain sync not yet implemented")
 }
 
 // AutoValidationPipeline implements auto-validation after file changes.

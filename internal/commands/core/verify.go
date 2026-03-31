@@ -23,7 +23,7 @@ matches its stored SHA-256 hash to detect any unauthorized modifications.
 
 The integrity check protects against command injection attacks where
 an attacker might modify the hook to execute malicious commands.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		green := color.New(color.FgGreen).SprintFunc()
 		red := color.New(color.FgRed).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
@@ -31,8 +31,7 @@ an attacker might modify the hook to execute malicious commands.`,
 
 		result, err := integrity.VerifyHook()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error verifying hook: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error verifying hook: %w", err)
 		}
 
 		if shared.Verbose > 0 {
@@ -59,7 +58,7 @@ an attacker might modify the hook to execute malicious commands.`,
 			fmt.Fprintln(os.Stderr)
 			fmt.Fprintln(os.Stderr, "  To restore: tokman init")
 			fmt.Fprintf(os.Stderr, "  To inspect: cat %s\n", result.HookPath)
-			os.Exit(1)
+			return fmt.Errorf("hook integrity check failed")
 
 		case integrity.StatusNoBaseline:
 			fmt.Printf("%s  no baseline hash found\n", yellow("WARN"))
@@ -79,6 +78,7 @@ an attacker might modify the hook to execute malicious commands.`,
 		fmt.Println()
 		fmt.Println(strings.Repeat("─", 50))
 		fmt.Println("Security: This check prevents command injection via hook tampering.")
+		return nil
 	},
 }
 

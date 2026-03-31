@@ -25,6 +25,7 @@ type AppState struct {
 	TokenBudget  int
 	FallbackArgs []string
 	LayerPreset  string
+	LayerProfile string
 	OutputFile   string
 	QuietMode    bool
 	JSONOutput   bool
@@ -82,6 +83,7 @@ type FlagConfig struct {
 	TokenBudget          int
 	FallbackArgs         []string
 	LayerPreset          string
+	LayerProfile         string
 	OutputFile           string
 	QuietMode            bool
 	JSONOutput           bool
@@ -113,6 +115,7 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.TokenBudget = cfg.TokenBudget
 	s.FallbackArgs = cfg.FallbackArgs
 	s.LayerPreset = cfg.LayerPreset
+	s.LayerProfile = cfg.LayerProfile
 	s.OutputFile = cfg.OutputFile
 	s.QuietMode = cfg.QuietMode
 	s.JSONOutput = cfg.JSONOutput
@@ -402,6 +405,16 @@ func GetTokenBudget() int {
 func GetLayerPreset() string {
 	globalState.syncFromGlobals()
 	return globalState.GetLayerPreset()
+}
+
+// GetLayerProfile returns the compression profile from flag or environment.
+func GetLayerProfile() string {
+	globalState.syncFromGlobals()
+	profile := globalState.LayerProfile
+	if profile != "" {
+		return profile
+	}
+	return os.Getenv("TOKMAN_PROFILE")
 }
 
 // IsQuietMode returns true if quiet mode is enabled.

@@ -6,19 +6,19 @@ import "time"
 // CompressionRequest is the public API request for compression.
 type CompressionRequest struct {
 	Input       string `json:"input"`
-	Mode        string `json:"mode,omitempty"`        // none, minimal, aggressive
+	Mode        string `json:"mode,omitempty"` // none, minimal, aggressive
 	QueryIntent string `json:"query_intent,omitempty"`
 	Budget      int    `json:"budget,omitempty"`
-	Preset      string `json:"preset,omitempty"`      // fast, balanced, full
+	Preset      string `json:"preset,omitempty"` // fast, balanced, full
 }
 
 // CompressionResponse is the public API response for compression.
 type CompressionResponse struct {
-	Output          string   `json:"output"`
-	OriginalTokens  int      `json:"original_tokens"`
-	CompressedTokens int     `json:"compressed_tokens"`
-	SavingsPercent  float64  `json:"savings_percent"`
-	LayersApplied   []string `json:"layers_applied,omitempty"`
+	Output           string   `json:"output"`
+	OriginalTokens   int      `json:"original_tokens"`
+	CompressedTokens int      `json:"compressed_tokens"`
+	SavingsPercent   float64  `json:"savings_percent"`
+	LayersApplied    []string `json:"layers_applied,omitempty"`
 }
 
 // ExecuteRequest is the public API request for command execution.
@@ -50,18 +50,18 @@ type MetricsResponse struct {
 
 // AgentInfo is the public API type for agent information.
 type AgentInfo struct {
-	Name        string   `json:"name"`
-	DisplayName string   `json:"display_name"`
-	Status      string   `json:"status"`
-	HookPath    string   `json:"hook_path,omitempty"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
+	Status      string `json:"status"`
+	HookPath    string `json:"hook_path,omitempty"`
 }
 
 // HealthResponse is the public API response for health checks.
 type HealthResponse struct {
-	Status    string            `json:"status"`
-	Version   string            `json:"version"`
-	Uptime    time.Duration     `json:"uptime"`
-	Services  map[string]string `json:"services"`
+	Status   string            `json:"status"`
+	Version  string            `json:"version"`
+	Uptime   time.Duration     `json:"uptime"`
+	Services map[string]string `json:"services"`
 }
 
 // ErrorResponse is the public API error response.

@@ -8,6 +8,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "LongLLMLingua" — Jiang et al., Microsoft, 2024
+// https://arxiv.org/abs/2310.06839
+// Paper: "LongLLMLingua" — Jiang et al., Microsoft, 2024
+// https://arxiv.org/abs/2310.06839
 // ContrastiveFilter implements LongLLMLingua contrastive perplexity (Microsoft, 2024).
 // Question-aware compression that ranks tokens by relevance to the query.
 //

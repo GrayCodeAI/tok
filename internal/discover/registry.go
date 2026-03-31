@@ -252,7 +252,7 @@ func RewriteCommand(cmd string, excluded []string) (string, bool) {
 
 // rewriteCompound handles compound commands with &&, ||, ;, |
 func rewriteCompound(cmd string, excluded []string) (string, bool) {
-	result := ""
+	var b strings.Builder
 	anyChanged := false
 	segStart := 0
 	inSingle := false
@@ -260,81 +260,83 @@ func rewriteCompound(cmd string, excluded []string) (string, bool) {
 	bytes := []byte(cmd)
 
 	for i := 0; i < len(bytes); i++ {
-		b := bytes[i]
+		bb := bytes[i]
 		switch {
-		case b == '\'' && !inDouble:
+		case bb == '\'' && !inDouble:
 			inSingle = !inSingle
-		case b == '"' && !inSingle:
+		case bb == '"' && !inSingle:
 			inDouble = !inDouble
-		case b == '|' && !inSingle && !inDouble:
+		case bb == '|' && !inSingle && !inDouble:
 			if i+1 < len(bytes) && bytes[i+1] == '|' {
-				// || operator
 				seg := strings.TrimSpace(cmd[segStart:i])
 				rewritten, changed := rewriteSegment(seg, excluded)
 				if changed {
 					anyChanged = true
 				}
-				result += rewritten + " || "
+				b.WriteString(rewritten)
+				b.WriteString(" || ")
 				i += 2
 				for i < len(bytes) && bytes[i] == ' ' {
 					i++
 				}
 				segStart = i
 			} else {
-				// | pipe — rewrite first segment only, pass through rest
-				// Skip rewriting if the command uses piped output format (find, fd, etc.)
 				seg := strings.TrimSpace(cmd[segStart:i])
 				if isInPipe(cmd, segStart, i) {
-					result += seg + " " + strings.TrimSpace(cmd[i:])
-					return result, anyChanged
+					b.WriteString(seg)
+					b.WriteByte(' ')
+					b.WriteString(strings.TrimSpace(cmd[i:]))
+					return b.String(), anyChanged
 				}
 				rewritten, changed := rewriteSegment(seg, excluded)
 				if changed {
 					anyChanged = true
 				}
-				result += rewritten + " " + strings.TrimSpace(cmd[i:])
-				return result, anyChanged
+				b.WriteString(rewritten)
+				b.WriteByte(' ')
+				b.WriteString(strings.TrimSpace(cmd[i:]))
+				return b.String(), anyChanged
 			}
-		case b == '&' && !inSingle && !inDouble && i+1 < len(bytes) && bytes[i+1] == '&':
-			// && operator
+		case bb == '&' && !inSingle && !inDouble && i+1 < len(bytes) && bytes[i+1] == '&':
 			seg := strings.TrimSpace(cmd[segStart:i])
 			rewritten, changed := rewriteSegment(seg, excluded)
 			if changed {
 				anyChanged = true
 			}
-			result += rewritten + " && "
+			b.WriteString(rewritten)
+			b.WriteString(" && ")
 			i += 2
 			for i < len(bytes) && bytes[i] == ' ' {
 				i++
 			}
 			segStart = i
-		case b == '&' && !inSingle && !inDouble:
-			// Check for redirect (2>&1 or &>)
+		case bb == '&' && !inSingle && !inDouble:
 			isRedirect := (i > 0 && bytes[i-1] == '>') || (i+1 < len(bytes) && bytes[i+1] == '>')
 			if !isRedirect {
-				// Background execution
 				seg := strings.TrimSpace(cmd[segStart:i])
 				rewritten, changed := rewriteSegment(seg, excluded)
 				if changed {
 					anyChanged = true
 				}
-				result += rewritten + " & "
+				b.WriteString(rewritten)
+				b.WriteString(" & ")
 				i++
 				for i < len(bytes) && bytes[i] == ' ' {
 					i++
 				}
 				segStart = i
 			}
-		case b == ';' && !inSingle && !inDouble:
+		case bb == ';' && !inSingle && !inDouble:
 			seg := strings.TrimSpace(cmd[segStart:i])
 			rewritten, changed := rewriteSegment(seg, excluded)
 			if changed {
 				anyChanged = true
 			}
-			result += rewritten + ";"
+			b.WriteString(rewritten)
+			b.WriteByte(';')
 			i++
 			if i < len(bytes) && bytes[i] == ' ' {
-				result += " "
+				b.WriteByte(' ')
 			}
 			segStart = i
 		}
@@ -346,9 +348,9 @@ func rewriteCompound(cmd string, excluded []string) (string, bool) {
 	if changed {
 		anyChanged = true
 	}
-	result += rewritten
+	b.WriteString(rewritten)
 
-	return result, anyChanged
+	return b.String(), anyChanged
 }
 
 // rewriteHeadNumeric handles head -N file → tokman read file --max-lines N

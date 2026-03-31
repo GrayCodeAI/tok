@@ -464,13 +464,17 @@ func extractModelName(body []byte, format APIFormat) string {
 		var req struct {
 			Model string `json:"model"`
 		}
-		_ = json.Unmarshal(body, &req)
+		if err := json.Unmarshal(body, &req); err != nil {
+			return ""
+		}
 		return req.Model
 	case APIFormatAnthropic:
 		var req struct {
 			Model string `json:"model"`
 		}
-		_ = json.Unmarshal(body, &req)
+		if err := json.Unmarshal(body, &req); err != nil {
+			return ""
+		}
 		return req.Model
 	default:
 		return ""

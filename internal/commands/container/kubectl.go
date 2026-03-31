@@ -1,7 +1,6 @@
 package container
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -65,12 +64,15 @@ func runKubectlPassthrough(args []string) error {
 	c := exec.Command("kubectl", args...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	fmt.Print(output)
 
@@ -79,9 +81,9 @@ func runKubectlPassthrough(args []string) error {
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			os.Exit(exitErr.ExitCode())
+			return fmt.Errorf("command failed with exit code %d: %w", exitErr.ExitCode(), err)
 		}
-		os.Exit(1)
+		return fmt.Errorf("command failed: %w", err)
 	}
 	return nil
 }
@@ -96,15 +98,18 @@ func runKubectlPods(args []string) error {
 	c := exec.Command("kubectl", kargs...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	raw := stdout.String()
+	raw := stdoutBuf.String()
 
 	if err != nil {
-		fmt.Print(stderr.String())
+		fmt.Print(stderrBuf.String())
 		return err
 	}
 
@@ -200,15 +205,18 @@ func runKubectlServices(args []string) error {
 	c := exec.Command("kubectl", kargs...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	raw := stdout.String()
+	raw := stdoutBuf.String()
 
 	if err != nil {
-		fmt.Print(stderr.String())
+		fmt.Print(stderrBuf.String())
 		return err
 	}
 
@@ -298,12 +306,15 @@ func runKubectlLogs(args []string) error {
 	c := exec.Command("kubectl", kargs...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
 	fmt.Printf("☸️  Logs for %s:\n%s", pod, filtered)

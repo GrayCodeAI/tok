@@ -10,6 +10,10 @@ import (
 
 var paragraphSplitRe = regexp.MustCompile(`\n\s*\n`)
 
+// Paper: "SemantiCache: Efficient KV Cache Compression" — Wu et al., Tsinghua, 2026
+// https://arxiv.org/abs/2603.14303
+// Paper: "SemantiCache: Efficient KV Cache Compression" — Wu et al., Tsinghua, 2026
+// https://arxiv.org/abs/2603.14303
 // SemanticCacheFilter implements SemantiCache-style clustered merging.
 // Research Source: "SemantiCache: Efficient KV Cache Compression via Semantic
 // Chunking and Clustered Merging" (Mar 2026)

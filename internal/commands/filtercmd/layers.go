@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -152,41 +153,23 @@ func wrapText(s string, width int) string {
 		return s
 	}
 
-	var result string
-	words := splitWords(s)
+	var b strings.Builder
+	words := strings.Fields(s)
 	lineLen := 0
 
 	for _, word := range words {
 		if lineLen+len(word) > width {
-			result += "║   " + word
+			b.WriteString("║   ")
+			b.WriteString(word)
 			lineLen = len(word)
 		} else {
 			if lineLen > 0 {
-				result += " "
+				b.WriteByte(' ')
 			}
-			result += word
+			b.WriteString(word)
 			lineLen += len(word) + 1
 		}
 	}
 
-	return result
-}
-
-func splitWords(s string) []string {
-	var words []string
-	word := ""
-	for _, c := range s {
-		if c == ' ' || c == '\n' {
-			if word != "" {
-				words = append(words, word)
-				word = ""
-			}
-		} else {
-			word += string(c)
-		}
-	}
-	if word != "" {
-		words = append(words, word)
-	}
-	return words
+	return b.String()
 }

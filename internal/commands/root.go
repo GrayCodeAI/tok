@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -48,6 +47,7 @@ var (
 	tokenBudget  int      // Token budget for compression (0 = unlimited)
 	fallbackArgs []string // Args for fallback handler
 	layerPreset  string   // Pipeline preset: fast/balanced/full (T90)
+	layerProfile string   // Compression tier: surface/trim/extract/core/code/log/thread
 	outputFile   string   // R35: Write output to file
 	quietMode    bool     // R36: Suppress all non-essential output
 	jsonOutput   bool     // R37: Machine-readable JSON output
@@ -75,7 +75,7 @@ var (
 	streamMode    bool     // Enable streaming for large inputs
 )
 
-// Version is set via ldflags during build
+// Version is set via ldflags during build (also set in main.go for consistency)
 var Version = "dev"
 
 // rootCmd represents the base command when called without any subcommands.
@@ -103,6 +103,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 				TokenBudget          int
 				FallbackArgs         []string
 				LayerPreset          string
+				LayerProfile         string
 				OutputFile           string
 				QuietMode            bool
 				JSONOutput           bool
@@ -130,6 +131,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 				TokenBudget:          tokenBudget,
 				FallbackArgs:         fallbackArgs,
 				LayerPreset:          layerPreset,
+				LayerProfile:         layerProfile,
 				OutputFile:           outputFile,
 				QuietMode:            quietMode,
 				JSONOutput:           jsonOutput,
@@ -198,14 +200,14 @@ func Execute() {
 				if handled {
 					fmt.Print(output)
 					if ferr != nil {
-						os.Exit(1)
+						return
 					}
 					return
 				}
 			}
 		}
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		return
 	}
 }
 
@@ -246,6 +248,8 @@ func init() {
 		"token budget for output (0 = unlimited, e.g., --budget 2000)")
 	rootCmd.PersistentFlags().StringVar(&layerPreset, "preset", "",
 		"pipeline preset: fast, balanced, or full (T90)")
+	rootCmd.PersistentFlags().StringVar(&layerProfile, "profile", "",
+		"compression mode: surface, trim, extract, core, code, log, thread (auto-detects if unset)")
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "",
 		"write output to file instead of stdout")
 	rootCmd.PersistentFlags().BoolVarP(&quietMode, "quiet", "q", false,
@@ -308,23 +312,10 @@ func init() {
 }
 
 // initConfig reads in config file and ENV variables if set.
+// Delegates to config.Load() for a single source of truth.
 func initConfig() {
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	} else {
-		if home, err := os.UserHomeDir(); err == nil {
-			viper.AddConfigPath(filepath.Join(home, ".config", "tokman"))
-		}
-		viper.SetConfigName("config")
-		viper.SetConfigType("toml")
-	}
-
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("TOKMAN")
-
-	// Read config file if exists
-	if err := viper.ReadInConfig(); err == nil && verbose > 0 {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if _, err := config.Load(cfgFile); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
 	}
 
 	// Initialize logger

@@ -54,6 +54,9 @@ func (f *BodyFilter) Apply(input string, mode Mode) (string, int) {
 
 	bytesSaved := original - len(output)
 	tokensSaved := bytesSaved / 4
+	if tokensSaved < 0 {
+		tokensSaved = 0
+	}
 
 	return output, tokensSaved
 }

@@ -27,7 +27,7 @@ func alertsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			return
 		}
 
-		// Check daily token limit
+		// Check daily token limit (best-effort)
 		saved24h, _ := tracker.TokensSaved24h()
 		if saved24h > cfg.DailyTokenLimit {
 			alerts = append(alerts, map[string]any{
@@ -142,25 +142,25 @@ func exportJSONHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			"type":        exportType,
 		}
 
-		// Include stats
+		// Include stats (best-effort)
 		stats, _ := tracker.GetSavings("")
 		if stats != nil {
 			response["stats"] = stats
 		}
 
-		// Include recent commands
+		// Include recent commands (best-effort)
 		records, _ := tracker.GetRecentCommands("", 1000)
 		if records != nil {
 			response["commands"] = records
 		}
 
-		// Include daily breakdown
+		// Include daily breakdown (best-effort)
 		daily, _ := tracker.GetDailySavings("", 30)
 		if daily != nil {
 			response["daily"] = daily
 		}
 
-		// Include command stats
+		// Include command stats (best-effort)
 		cmdStats, _ := tracker.GetCommandStats("")
 		if cmdStats != nil {
 			response["command_stats"] = cmdStats
@@ -267,9 +267,9 @@ func reportHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			response["daily_breakdown"] = daily
 		}
 
-		// Get top commands
+		// Get top commands (best-effort)
 		cmdStats, _ := tracker.GetCommandStats("")
-		if cmdStats != nil && len(cmdStats) > 0 {
+		if len(cmdStats) > 0 {
 			response["top_commands"] = cmdStats[:min(5, len(cmdStats))]
 		}
 
@@ -307,7 +307,7 @@ func reportHandler(tracker *tracking.Tracker) http.HandlerFunc {
 // cacheMetricsHandler returns cache efficiency metrics
 func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Get total stats
+		// Get total stats (best-effort)
 		stats, _ := tracker.GetSavings("")
 		if stats == nil {
 			httpmw.JSONResponse(w, http.StatusOK, map[string]any{"error": "no data"})
@@ -359,7 +359,7 @@ func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 
 		// Add ccusage cache stats if available
 		if ccusage.IsAvailable() {
-			monthly, _ := ccusage.Fetch(ccusage.Monthly)
+			monthly, _ := ccusage.Fetch(ccusage.Monthly) // best-effort
 			if len(monthly) > 0 {
 				var totalCacheRead, totalCacheCreate uint64
 				for _, m := range monthly {

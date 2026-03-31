@@ -3,6 +3,7 @@ package agents
 import (
 	"fmt"
 	"os"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/spf13/cobra"
@@ -79,18 +80,16 @@ func agentsStatusCmd() *cobra.Command {
 		
 If no agent is specified, shows status of all detected agents.`,
 		Args: cobra.MaximumNArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
 				agent := agents.GetAgent(args[0])
 				if agent == nil {
-					fmt.Fprintf(os.Stderr, "Unknown agent: %s\n", args[0])
-					os.Exit(1)
+					return fmt.Errorf("unknown agent: %s", args[0])
 				}
 
 				status, err := agent.StatusFunc()
 				if err != nil {
-					fmt.Fprintf(os.Stderr, "Error getting status: %v\n", err)
-					os.Exit(1)
+					return fmt.Errorf("error getting status: %w", err)
 				}
 
 				printAgentStatus(status)
@@ -101,6 +100,7 @@ If no agent is specified, shows status of all detected agents.`,
 					fmt.Println()
 				}
 			}
+			return nil
 		},
 	}
 }
@@ -116,34 +116,26 @@ This will:
   - Write configuration files with TokMan settings
   - Enable token caching and optimization`,
 		Args: cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			agentName := args[0]
 
 			agent := agents.GetAgent(agentName)
 			if agent == nil {
-				fmt.Fprintf(os.Stderr, "Unknown agent: %s\n", agentName)
-				fmt.Fprintln(os.Stderr, "\nSupported agents:")
-				for _, a := range agents.AllAgents {
-					fmt.Fprintf(os.Stderr, "  - %s (%s)\n", a.Name, a.DisplayName)
-				}
-				os.Exit(1)
+				return fmt.Errorf("unknown agent: %s\n\nSupported agents:\n%s", agentName, formatSupportedAgents())
 			}
 
 			if !agent.DetectFunc() {
-				fmt.Fprintf(os.Stderr, "%s is not installed.\n", agent.DisplayName)
-				fmt.Fprintln(os.Stderr, "\nInstallation instructions:")
-				fmt.Fprintln(os.Stderr, agents.InstallInstructions(agentName))
-				os.Exit(1)
+				return fmt.Errorf("%s is not installed.\n\nInstallation instructions:\n%s", agent.DisplayName, agents.InstallInstructions(agentName))
 			}
 
 			fmt.Printf("Setting up %s for TokMan integration...\n", agent.DisplayName)
 			if err := agents.SetupAgent(agentName); err != nil {
-				fmt.Fprintf(os.Stderr, "Setup failed: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("setup failed: %w", err)
 			}
 
 			fmt.Printf("Successfully configured %s!\n", agent.DisplayName)
 			fmt.Printf("Config file: %s\n", agent.ConfigPath)
+			return nil
 		},
 	}
 }
@@ -154,23 +146,27 @@ func agentsInstallCmd() *cobra.Command {
 		Short: "Show installation instructions for an agent",
 		Long:  `Display installation instructions for supported AI agents.`,
 		Args:  cobra.ExactArgs(1),
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			agentName := args[0]
 			agent := agents.GetAgent(agentName)
 
 			if agent == nil {
-				fmt.Fprintf(os.Stderr, "Unknown agent: %s\n", agentName)
-				fmt.Fprintln(os.Stderr, "\nSupported agents:")
-				for _, a := range agents.AllAgents {
-					fmt.Fprintf(os.Stderr, "  - %s\n", a.Name)
-				}
-				os.Exit(1)
+				return fmt.Errorf("unknown agent: %s\n\nSupported agents:\n%s", agentName, formatSupportedAgents())
 			}
 
 			fmt.Printf("# Installation: %s\n\n", agent.DisplayName)
 			fmt.Println(agents.InstallInstructions(agentName))
+			return nil
 		},
 	}
+}
+
+func formatSupportedAgents() string {
+	var sb strings.Builder
+	for _, a := range agents.AllAgents {
+		sb.WriteString(fmt.Sprintf("  - %s (%s)\n", a.Name, a.DisplayName))
+	}
+	return sb.String()
 }
 
 func printAgentStatus(s *agents.AgentStatus) {

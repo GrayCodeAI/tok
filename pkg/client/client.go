@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	compressionpb "github.com/GrayCodeAI/tokman/pkg/api/proto/compressionv1"
 	analyticspb "github.com/GrayCodeAI/tokman/pkg/api/proto/analyticsv1"
+	compressionpb "github.com/GrayCodeAI/tokman/pkg/api/proto/compressionv1"
 )
 
 // Config holds client configuration.
@@ -32,11 +32,11 @@ func DefaultConfig() *Config {
 // Client provides access to all TokMan services.
 type Client struct {
 	config *Config
-	
+
 	// gRPC connections
 	compressionConn *grpc.ClientConn
 	analyticsConn   *grpc.ClientConn
-	
+
 	// Service clients
 	Compression CompressionClient
 	Analytics   AnalyticsClient
@@ -56,11 +56,11 @@ type AnalyticsClient interface {
 
 // CompressResult holds compression results.
 type CompressResult struct {
-	Output          string
-	OriginalTokens  int
+	Output           string
+	OriginalTokens   int
 	CompressedTokens int
-	SavingsPercent  float64
-	LayersApplied   []string
+	SavingsPercent   float64
+	LayersApplied    []string
 }
 
 // LayerInfo describes a compression layer.
@@ -81,9 +81,9 @@ type MetricsResult struct {
 
 // EconomicsResult holds economics data.
 type EconomicsResult struct {
-	TokensSaved       int64
+	TokensSaved        int64
 	EstimatedCostSaved float64
-	ModelUsed         string
+	ModelUsed          string
 }
 
 // New creates a new TokMan client.

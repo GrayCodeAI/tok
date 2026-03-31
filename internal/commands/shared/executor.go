@@ -2,7 +2,10 @@ package shared
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
@@ -21,15 +24,15 @@ func TeeOnFailure(raw string, commandSlug string, err error) string {
 		return ""
 	}
 	exitCode := 1
-	if exitErr, ok := err.(*os.PathError); ok {
-		_ = exitErr
+	if exitErr, ok := err.(*exec.ExitError); ok {
+		exitCode = exitErr.ExitCode()
 	}
 	return tee.WriteAndHint(raw, commandSlug, exitCode)
 }
 
 // RecordCommand records command execution metrics to the tracking database.
 func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs int64, success bool) error {
-	cfg := GetCachedConfig()
+	cfg, _ := GetCachedConfig() // Error already logged in GetCachedConfig; returns defaults on failure
 
 	if !cfg.Tracking.Enabled {
 		return nil
@@ -97,4 +100,51 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 		fmt.Fprintf(os.Stderr, "Warning: failed to record: %v\n", rerr)
 	}
 	return nil
+}
+
+// RunAndCapture executes a command and captures stdout/stderr.
+// This consolidates the common pattern of: exec.Command -> StdoutPipe -> StderrPipe -> Start -> Wait.
+// Returns combined stdout and stderr, exit code, and any execution error.
+func RunAndCapture(cmd string, args []string) (output string, exitCode int, err error) {
+	execCmd := exec.Command(cmd, args...)
+
+	stdoutPipe, pipeErr := execCmd.StdoutPipe()
+	if pipeErr != nil {
+		return "", 1, fmt.Errorf("creating stdout pipe: %w", pipeErr)
+	}
+
+	stderrPipe, pipeErr := execCmd.StderrPipe()
+	if pipeErr != nil {
+		return "", 1, fmt.Errorf("creating stderr pipe: %w", pipeErr)
+	}
+
+	if startErr := execCmd.Start(); startErr != nil {
+		return "", 1, fmt.Errorf("starting command: %w", startErr)
+	}
+
+	var stdoutBuf, stderrBuf strings.Builder
+	doneOut := make(chan struct{})
+	doneErr := make(chan struct{})
+
+	go func() {
+		io.Copy(&stdoutBuf, stdoutPipe)
+		close(doneOut)
+	}()
+
+	go func() {
+		io.Copy(&stderrBuf, stderrPipe)
+		close(doneErr)
+	}()
+
+	<-doneOut
+	<-doneErr
+
+	waitErr := execCmd.Wait()
+	exitCode = 0
+	if execCmd.ProcessState != nil {
+		exitCode = execCmd.ProcessState.ExitCode()
+	}
+
+	output = stdoutBuf.String() + stderrBuf.String()
+	return output, exitCode, waitErr
 }

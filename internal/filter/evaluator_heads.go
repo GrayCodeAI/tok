@@ -8,6 +8,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "EHPC" — Fei et al., Tsinghua/Huawei, 2025
+// https://arxiv.org/abs/2501.12959
+// Paper: "EHPC" — Fei et al., Tsinghua/Huawei, 2025
+// https://arxiv.org/abs/2501.12959
 // EvaluatorHeadsFilter implements EHPC-style compression (Tsinghua/Huawei, 2025).
 // Uses "evaluator heads" concept - identifies important tokens by analyzing
 // early-layer attention patterns.

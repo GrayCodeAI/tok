@@ -77,8 +77,8 @@ func economicsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 
 func llmStatusHandler(tracker *tracking.Tracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		saved24h, _ := tracker.TokensSaved24h()
-		savedTotal, _ := tracker.TokensSavedTotal()
+		saved24h, _ := tracker.TokensSaved24h()     // best-effort; partial data acceptable in HTTP handler
+		savedTotal, _ := tracker.TokensSavedTotal() // best-effort
 		provider := detectLLMProvider()
 
 		response := map[string]any{

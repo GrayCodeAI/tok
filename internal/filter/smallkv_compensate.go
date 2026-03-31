@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// Paper: "SmallKV: Small Model Assisted Compensation" — Zhao et al., NeurIPS, 2025
+// https://arxiv.org/abs/2508.02751
+// Paper: "SmallKV: Small Model Assisted Compensation" — Zhao et al., NeurIPS, 2025
+// https://arxiv.org/abs/2508.02751
 // SmallKVCompensator implements SmallKV-style small model compensation.
 // Research Source: "SmallKV: Small Model Assisted Compensation of KV Cache
 // Compression for Efficient LLM Inference" (2025)

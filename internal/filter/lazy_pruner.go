@@ -7,6 +7,10 @@ import (
 	"sync"
 )
 
+// Paper: "LazyLLM: Dynamic Token Pruning" — Fu et al., Apple, 2024
+// https://arxiv.org/abs/2407.14057
+// Paper: "LazyLLM: Dynamic Token Pruning" — Fu et al., Apple, 2024
+// https://arxiv.org/abs/2407.14057
 // LazyPrunerFilter implements Layer 18: Budget-aware Dynamic Pruning (LazyLLM style).
 //
 // Research Source: "LazyLLM: Dynamic Token Pruning" (July 2024)

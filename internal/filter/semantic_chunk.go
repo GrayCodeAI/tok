@@ -5,6 +5,10 @@ import (
 	"strings"
 )
 
+// Paper: "ChunkKV: Semantic-Preserving KV Compression" — Liu et al., NeurIPS, 2025
+// https://arxiv.org/abs/2502.00299
+// Paper: "ChunkKV: Semantic-Preserving KV Compression" — Liu et al., NeurIPS, 2025
+// https://arxiv.org/abs/2502.00299
 // SemanticChunkFilter implements Layer 16: Semantic Chunk-based Compression (ChunkKV style).
 //
 // Research Source: "ChunkKV: Semantic-Guided KV Cache Compression" (NeurIPS 2025)

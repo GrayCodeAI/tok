@@ -75,13 +75,17 @@ func runBatch(cmd *cobra.Command, args []string) error {
 					continue
 				}
 				if info.IsDir() {
-					// Walk directory
-					_ = filepath.WalkDir(m, func(p string, d fs.DirEntry, err error) error {
-						if err == nil && !d.IsDir() {
+					if walkErr := filepath.WalkDir(m, func(p string, d fs.DirEntry, err error) error {
+						if err != nil {
+							return err
+						}
+						if !d.IsDir() {
 							paths = append(paths, p)
 						}
 						return nil
-					})
+					}); walkErr != nil {
+						return fmt.Errorf("batch: failed to walk directory %s: %w", m, walkErr)
+					}
 				} else {
 					paths = append(paths, m)
 				}

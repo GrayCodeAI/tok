@@ -8,6 +8,10 @@ import (
 	"sync"
 )
 
+// Paper: "Lossless Token Compression via Meta-Tokens" — 2025
+// https://arxiv.org/abs/2506.00307
+// Paper: "Lossless Token Compression via Meta-Tokens" — 2025
+// https://arxiv.org/abs/2506.00307
 // MetaTokenFilter implements Layer 15: Lossless Token Sequence Compression via Meta-Tokens.
 //
 // Research Source: "Lossless Token Sequence Compression via Meta-Tokens" (arXiv:2506.00307)

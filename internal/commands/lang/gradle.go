@@ -256,7 +256,7 @@ func filterGradleDependenciesOutput(raw string) string {
 		if shared.UltraCompact {
 			if depth == 0 && (strings.HasPrefix(line, "+---") || strings.HasPrefix(line, "\\---")) {
 				// Extract dependency name
-				dep := strings.TrimLeft(line, "+\\--- ")
+				dep := strings.TrimLeft(line, "+-\\ ")
 				dep = strings.Split(dep, ":")[0] // Just the group/name
 				result = append(result, dep)
 			}

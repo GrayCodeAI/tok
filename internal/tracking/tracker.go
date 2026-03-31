@@ -78,7 +78,10 @@ func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filter
 			return
 		}
 
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			slog.Warn("tracker: failed to get working directory", "error", err)
+		}
 		tracker.Record(&CommandRecord{
 			Command:        command,
 			OriginalTokens: originalTokens,

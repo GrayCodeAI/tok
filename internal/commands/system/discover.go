@@ -36,11 +36,8 @@ Examples:
   tokman discover
   tokman discover --project myproject
   tokman discover --all --since 7`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runDiscover(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runDiscover()
 	},
 }
 
@@ -80,7 +77,10 @@ func runDiscover() error {
 	cyan := color.New(color.FgCyan).SprintFunc()
 
 	// Get current working directory for project filtering
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
 	projectFilter := discoverProject
 	if projectFilter == "" && !discoverAll {
 		projectFilter = cwd

@@ -4,9 +4,8 @@ BINARY_NAME := tokman
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_DIR := bin
 
-# Go with SIMD support (Go 1.26+ recommended, 1.25+ supported)
+# Go with SIMD support (Go 1.24+ recommended)
 GO ?= go
-GO126 ?= $(HOME)/sdk/go1.26.0/bin/go
 GOEXPERIMENT ?= simd
 
 # T30: Aggressive optimization flags for smaller binary
@@ -30,16 +29,10 @@ build-tiny:
 		echo "UPX compressed size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-upx 2>/dev/null | cut -f1 || echo 'N/A')"; \
 	fi
 
-# SIMD-optimized build (requires Go 1.26+)
+# SIMD-optimized build (requires GOEXPERIMENT=simd support)
 build-simd:
-	@if [ -x "$(GO126)" ]; then \
-		GOEXPERIMENT=$(GOEXPERIMENT) $(GO126) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman; \
-		echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"; \
-	else \
-		echo "Error: Go 1.26 SDK not found at $(GO126)"; \
-		echo "Install with: go install golang.org/dl/go1.26.0@latest && go1.26.0 download"; \
-		exit 1; \
-	fi
+	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman
+	@echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"
 
 # Multi-platform build with SIMD
 build-all:
@@ -98,11 +91,11 @@ fmt:
 clean:
 	rm -rf $(BUILD_DIR)/ coverage.out coverage.html
 
-benchmark:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -bench=. -benchmem ./...
+# bench: run benchmarks (alias for benchmark)
+bench: benchmark
 
 # Run all checks
-check: fmt vet typecheck lint test
+check: vet typecheck lint test fmt
 
 # Quick check (skip slow tests)
 check-quick: fmt vet typecheck lint test-short

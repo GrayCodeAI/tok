@@ -8,8 +8,8 @@ import (
 
 // mockRepository implements AnalyticsRepository for testing
 type mockRepository struct {
-	records    []*RecordRequest
-	metrics    *MetricsResponse
+	records     []*RecordRequest
+	metrics     *MetricsResponse
 	topCommands []CommandStats
 }
 
@@ -33,7 +33,7 @@ func TestServiceRecord(t *testing.T) {
 	mock := &mockRepository{}
 	svc := NewService(mock)
 	ctx := context.Background()
-	
+
 	record := &RecordRequest{
 		Command:        "git status",
 		OriginalTokens: 1000,
@@ -43,16 +43,16 @@ func TestServiceRecord(t *testing.T) {
 		FilterMode:     "minimal",
 		SessionID:      "test-session",
 	}
-	
+
 	err := svc.Record(ctx, record)
 	if err != nil {
 		t.Fatalf("Record returned error: %v", err)
 	}
-	
+
 	if len(mock.records) != 1 {
 		t.Errorf("Expected 1 record, got %d", len(mock.records))
 	}
-	
+
 	if mock.records[0].Command != "git status" {
 		t.Errorf("Expected command 'git status', got '%s'", mock.records[0].Command)
 	}
@@ -68,12 +68,12 @@ func TestServiceGetMetrics(t *testing.T) {
 	}
 	svc := NewService(mock)
 	ctx := context.Background()
-	
+
 	metrics, err := svc.GetMetrics(ctx, &MetricsRequest{})
 	if err != nil {
 		t.Fatalf("GetMetrics returned error: %v", err)
 	}
-	
+
 	if metrics.TotalCommands != 100 {
 		t.Errorf("Expected 100 commands, got %d", metrics.TotalCommands)
 	}
@@ -87,20 +87,20 @@ func TestServiceGetEconomics(t *testing.T) {
 	}
 	svc := NewService(mock)
 	ctx := context.Background()
-	
+
 	econ, err := svc.GetEconomics(ctx)
 	if err != nil {
 		t.Fatalf("GetEconomics returned error: %v", err)
 	}
-	
+
 	if econ == nil {
 		t.Fatal("GetEconomics returned nil")
 	}
-	
+
 	if econ.TokensSaved != 100000 {
 		t.Errorf("Expected 100000 tokens saved, got %d", econ.TokensSaved)
 	}
-	
+
 	// Cost should be calculated
 	if econ.EstimatedCostSaved <= 0 {
 		t.Error("Expected positive cost savings")
@@ -116,12 +116,12 @@ func TestServiceGetTopCommands(t *testing.T) {
 	}
 	svc := NewService(mock)
 	ctx := context.Background()
-	
+
 	commands, err := svc.GetTopCommands(ctx, 10)
 	if err != nil {
 		t.Fatalf("GetTopCommands returned error: %v", err)
 	}
-	
+
 	if len(commands) != 2 {
 		t.Errorf("Expected 2 commands, got %d", len(commands))
 	}

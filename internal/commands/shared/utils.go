@@ -3,6 +3,7 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -86,6 +87,13 @@ func generateSchemaFromJSON(v any, depth, maxDepth int) string {
 		return fmt.Sprintf("{\n%s  %s\n%s}", indent, strings.Join(parts, ",\n"+indent+"  "), indent)
 	default:
 		return fmt.Sprintf("%T", v)
+	}
+}
+
+// PrintTokenSavings prints token savings info to stderr when in verbose mode.
+func PrintTokenSavings(originalTokens, filteredTokens int) {
+	if !QuietMode && Verbose > 0 {
+		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
 	}
 }
 

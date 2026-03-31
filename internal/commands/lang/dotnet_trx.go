@@ -17,7 +17,7 @@ type TRXFile struct {
 	Name      string   `xml:"name,attr"`
 	RunConfig struct {
 		XMLName xml.Name `xml:"RunConfiguration"`
-	} `xml:"TestSettings"`
+	} `xml:"RunConfiguration"`
 	Times    TRXTimes   `xml:"Times"`
 	Results  TRXResults `xml:"Results"`
 	TestDefs struct {

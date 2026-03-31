@@ -69,13 +69,17 @@ func runCount(cmd *cobra.Command, args []string) error {
 	var enc tokenizer.Encoding
 	var t *tokenizer.Tokenizer
 	var err error
+	var ok bool
 
 	if countEncoding != "" {
 		enc = tokenizer.Encoding(countEncoding)
 		t, err = tokenizer.New(enc)
 	} else {
-		enc, _ = tokenizer.ModelToEncoding[countModel]
-		t, err = tokenizer.NewForModel(countModel)
+		if enc, ok = tokenizer.ModelToEncoding[countModel]; ok {
+			t, err = tokenizer.New(enc)
+		} else {
+			t, err = tokenizer.NewForModel(countModel)
+		}
 	}
 
 	if err != nil {
@@ -83,8 +87,8 @@ func runCount(cmd *cobra.Command, args []string) error {
 	}
 
 	// Check if stdin has data
-	stat, _ := os.Stdin.Stat()
-	hasStdin := (stat.Mode() & os.ModeCharDevice) == 0
+	stat, statErr := os.Stdin.Stat()
+	hasStdin := statErr == nil && (stat.Mode()&os.ModeCharDevice) == 0
 
 	// Mode 1: stdin
 	if hasStdin && len(args) == 0 {

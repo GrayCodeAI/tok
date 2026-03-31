@@ -13,13 +13,10 @@ import (
 var gitAddCmd = &cobra.Command{
 	Use:   "add [args...]",
 	Short: "Add files to staging (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git add", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git add", func() (string, string, error) {
 			return runGitAdd(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -37,7 +34,7 @@ func runGitAdd(args []string) (string, string, error) {
 	}
 
 	statCmd := buildGitCmd("diff", "--cached", "--stat", "--shortstat")
-	statOut, _ := statCmd.Output()
+	statOut, _ := statCmd.Output() // Stat is best-effort; empty stat is acceptable
 	stat := strings.TrimSpace(string(statOut))
 
 	if stat == "" {
@@ -52,13 +49,10 @@ func runGitAdd(args []string) (string, string, error) {
 var gitCommitCmd = &cobra.Command{
 	Use:   "commit [args...]",
 	Short: "Commit changes (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git commit", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git commit", func() (string, string, error) {
 			return runGitCommit(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -91,13 +85,10 @@ func runGitCommit(args []string) (string, string, error) {
 var gitPushCmd = &cobra.Command{
 	Use:   "push [args...]",
 	Short: "Push commits (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git push", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git push", func() (string, string, error) {
 			return runGitPush(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -131,13 +122,10 @@ func runGitPush(args []string) (string, string, error) {
 var gitPullCmd = &cobra.Command{
 	Use:   "pull [args...]",
 	Short: "Pull commits (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git pull", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git pull", func() (string, string, error) {
 			return runGitPull(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -190,13 +178,10 @@ var gitBranchCmd = &cobra.Command{
 	Use:                "branch [args...]",
 	Short:              "List or manage branches (compact output)",
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git branch", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git branch", func() (string, string, error) {
 			return runGitBranch(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -311,13 +296,10 @@ func filterBranchOutput(output string) string {
 var gitFetchCmd = &cobra.Command{
 	Use:   "fetch [args...]",
 	Short: "Fetch from remote (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git fetch", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git fetch", func() (string, string, error) {
 			return runGitFetch(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -347,13 +329,10 @@ func runGitFetch(args []string) (string, string, error) {
 var gitStashCmd = &cobra.Command{
 	Use:   "stash [subcommand] [args...]",
 	Short: "Stash changes (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git stash", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git stash", func() (string, string, error) {
 			return runGitStash(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -453,13 +432,10 @@ func filterStashList(output string) string {
 var gitWorktreeCmd = &cobra.Command{
 	Use:   "worktree [args...]",
 	Short: "Manage worktrees (compact output)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git worktree", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git worktree", func() (string, string, error) {
 			return runGitWorktree(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
