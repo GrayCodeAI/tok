@@ -336,7 +336,6 @@ func (s *Server) handleHealthReady(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-
 func (s *Server) handleCompress(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		s.metrics.RecordError()

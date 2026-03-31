@@ -1,0 +1,39 @@
+# Sample TOML Filter: API Testing Tool
+# Copy this file to ~/.config/tokman/filters/ to use it
+schema_version = 1
+
+[api_test]
+match_command = "^api-test\\s+(run|test)"
+strip_ansi = true
+
+# Strip verbose HTTP output
+strip_lines_matching = [
+    "^\\s*\\*\\*\\*.*",
+    "^\\s*---.*",
+    "^\\s*===.*",
+    "^\\s*HTTP/[0-9].*",
+    "^\\s*Content-Type:.*",
+    "^\\s*Content-Length:.*",
+    "^\\s*$",
+]
+
+# Keep test results and errors
+keep_lines_matching = [
+    "PASS.*",
+    "FAIL.*",
+    "ERROR.*",
+    "ok\\s+.*",
+    "not ok.*",
+    "Tests:.*",
+    "Suites:.*",
+    "Time:.*",
+]
+
+# Replace verbose patterns
+replace = [
+    { pattern = "\\d+ms", replacement = "Xms" },
+    { pattern = "\\d+\\.\\d+s", replacement = "Xs" },
+]
+
+max_lines = 50
+on_empty = "All tests passed"

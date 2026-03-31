@@ -1,0 +1,38 @@
+# Sample TOML Filter: Database Migration Tool
+# Copy this file to ~/.config/tokman/filters/ to use it
+schema_version = 1
+
+[db_migrate]
+match_command = "^db-migrate\\s+(up|down|status)"
+strip_ansi = true
+
+# Strip verbose migration output
+strip_lines_matching = [
+    "^\\s*Running migration:.*",
+    "^\\s*Applying:.*",
+    "^\\s*Executing:.*",
+    "^\\s*\\[info\\].*",
+    "^\\s*\\[debug\\].*",
+    "^\\s*$",
+]
+
+# Keep migration results
+keep_lines_matching = [
+    "Migration.*complete.*",
+    "Migration.*failed.*",
+    "Error:.*",
+    "Applied.*",
+    "Rolled back.*",
+    "Status:.*",
+    "Pending:.*",
+    "Current version:.*",
+]
+
+# Short-circuit on known errors
+match_output = [
+    { pattern = "connection refused", message = "Error: Database connection refused" },
+    { pattern = "permission denied", message = "Error: Database permission denied" },
+]
+
+max_lines = 30
+on_empty = "Migrations up to date"

@@ -1,0 +1,68 @@
+package analysis
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/spf13/cobra"
+
+	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/tracking"
+)
+
+var tuiCmd = &cobra.Command{
+	Use:   "tui",
+	Short: "Interactive TUI for token analytics",
+	Long:  `Interactive terminal UI for monitoring token usage.`,
+	RunE:  runTUI,
+}
+
+func init() {
+	registry.Add(func() { registry.Register(tuiCmd) })
+}
+
+func runTUI(cmd *cobra.Command, args []string) error {
+	tracker := tracking.GetGlobalTracker()
+	if tracker == nil {
+		return fmt.Errorf("tracker not initialized")
+	}
+	fmt.Println("╔════════════════════════════════════════════════════╗")
+	fmt.Println("║          TokMan Token Analytics TUI                ║")
+	fmt.Println("╠════════════════════════════════════════════════════╣")
+	savings, _ := tracker.GetSavings("")
+	if savings != nil {
+		fmt.Printf("║ Total Commands: %-6d                         ║\n", savings.TotalCommands)
+		fmt.Printf("║ Total Saved:    %-6d tokens                      ║\n", savings.TotalSaved)
+		fmt.Printf("║ Reduction:      %-5.1f%%                          ║\n", savings.ReductionPct)
+	}
+	tokens24h, _ := tracker.TokensSaved24h()
+	fmt.Printf("║ Saved (24h):    %-6d tokens                      ║\n", tokens24h)
+	totalTokens, _ := tracker.TokensSavedTotal()
+	fmt.Printf("║ Saved (total):  %-6d tokens                      ║\n", totalTokens)
+	fmt.Println("╠════════════════════════════════════════════════════╣")
+	topCmds, _ := tracker.TopCommands(5)
+	if len(topCmds) > 0 {
+		fmt.Println("║ Top Commands:                                    ║")
+		for i, c := range topCmds {
+			fmt.Printf("║   %d. %-40s ║\n", i+1, trunc(c, 40))
+		}
+	}
+	daily, _ := tracker.GetDailySavings("", 7)
+	if len(daily) > 0 {
+		fmt.Println("╠════════════════════════════════════════════════════╣")
+		fmt.Println("║ Last 7 Days:                                     ║")
+		for _, d := range daily {
+			bar := strings.Repeat("█", min(d.Saved/100, 40))
+			fmt.Printf("║   %s: %-4d %s ║\n", d.Date, d.Saved, bar)
+		}
+	}
+	fmt.Println("╚════════════════════════════════════════════════════╝")
+	return nil
+}
+
+func trunc(s string, n int) string {
+	if len(s) > n {
+		return s[:n-3] + "..."
+	}
+	return s
+}

@@ -363,4 +363,3 @@ var (
 	// "path/to/file" → treat as single unit
 	pathPattern = regexp.MustCompile(`[\w./\\]+\.\w+`)
 )
-

@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 // ShortenPath truncates a path to fit within maxLen characters.
@@ -107,4 +108,32 @@ func FormatTokens64(n uint64) string {
 		return fmt.Sprintf("%.1fK", float64(n)/1_000)
 	}
 	return fmt.Sprintf("%d", n)
+}
+
+// GetModelFamily extracts the model family from a model name.
+// Returns the family identifier (e.g., "claude", "gpt", "gemini") or "other".
+// Used by tracking and command execution for AI agent attribution.
+func GetModelFamily(modelName string) string {
+	if modelName == "" {
+		return ""
+	}
+	modelLower := strings.ToLower(modelName)
+	switch {
+	case strings.Contains(modelLower, "claude"):
+		return "claude"
+	case strings.Contains(modelLower, "gpt") || strings.Contains(modelLower, "o1") || strings.Contains(modelLower, "o3"):
+		return "gpt"
+	case strings.Contains(modelLower, "gemini"):
+		return "gemini"
+	case strings.Contains(modelLower, "llama") || strings.Contains(modelLower, "meta"):
+		return "llama"
+	case strings.Contains(modelLower, "qwen"):
+		return "qwen"
+	case strings.Contains(modelLower, "deepseek"):
+		return "deepseek"
+	case strings.Contains(modelLower, "mistral") || strings.Contains(modelLower, "mixtral"):
+		return "mistral"
+	default:
+		return "other"
+	}
 }

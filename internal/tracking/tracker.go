@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -15,6 +14,7 @@ import (
 
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 // HistoryRetentionDays is the number of days to retain tracking data.
@@ -34,8 +34,8 @@ type TrackerInterface interface {
 // Tracker manages token tracking persistence.
 type Tracker struct {
 	db            *sql.DB
-	lastCleanupMs int64         // atomic: unix timestamp of last cleanup
-	cleanupCh     chan struct{} // non-blocking cleanup trigger
+	lastCleanupMs int64          // atomic: unix timestamp of last cleanup
+	cleanupCh     chan struct{}  // non-blocking cleanup trigger
 	cleanupWg     sync.WaitGroup // waits for cleanup goroutine to finish
 }
 
@@ -92,7 +92,7 @@ func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filter
 			AgentName:   os.Getenv("TOKMAN_AGENT"),
 			ModelName:   os.Getenv("TOKMAN_MODEL"),
 			Provider:    os.Getenv("TOKMAN_PROVIDER"),
-			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
+			ModelFamily: utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
 		})
 	})
 }
@@ -130,37 +130,10 @@ func (t *TimedExecution) TrackWithAgent(command, tokmanCmd string, originalToken
 			AgentName:   os.Getenv("TOKMAN_AGENT"),
 			ModelName:   os.Getenv("TOKMAN_MODEL"),
 			Provider:    os.Getenv("TOKMAN_PROVIDER"),
-			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
+			ModelFamily: utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
 		})
 	})
 }
-
-// getModelFamily extracts the model family from a model name.
-func getModelFamily(modelName string) string {
-	if modelName == "" {
-		return ""
-	}
-	modelLower := strings.ToLower(modelName)
-	switch {
-	case strings.Contains(modelLower, "claude"):
-		return "claude"
-	case strings.Contains(modelLower, "gpt") || strings.Contains(modelLower, "o1") || strings.Contains(modelLower, "o3"):
-		return "gpt"
-	case strings.Contains(modelLower, "gemini"):
-		return "gemini"
-	case strings.Contains(modelLower, "llama") || strings.Contains(modelLower, "meta"):
-		return "llama"
-	case strings.Contains(modelLower, "qwen"):
-		return "qwen"
-	case strings.Contains(modelLower, "deepseek"):
-		return "deepseek"
-	case strings.Contains(modelLower, "mistral") || strings.Contains(modelLower, "mixtral"):
-		return "mistral"
-	default:
-		return "other"
-	}
-}
-
 
 // getGlobalTracker returns the global tracker instance.
 func getGlobalTracker() *Tracker {

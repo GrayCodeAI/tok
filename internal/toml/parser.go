@@ -94,11 +94,26 @@ func (p *Parser) ParseContent(content []byte, source string) (*TOMLFilter, error
 
 	// Parse individual filter configurations
 	for name, val := range raw {
-		if name == "schema_version" {
+		if name == "schema_version" || name == "tests" {
 			continue
 		}
 
 		if filterMap, ok := val.(map[string]any); ok {
+			// Check if this is a nested "filters" section (e.g., [filters.apt])
+			// In this case, the map contains filter names as keys
+			if name == "filters" {
+				for nestedName, nestedVal := range filterMap {
+					if nestedFilterMap, ok := nestedVal.(map[string]any); ok {
+						cfg, err := parseFilterConfig(nestedFilterMap)
+						if err != nil {
+							return nil, fmt.Errorf("failed to parse filter %q: %w", nestedName, err)
+						}
+						filter.Filters[nestedName] = cfg
+					}
+				}
+				continue
+			}
+
 			cfg, err := parseFilterConfig(filterMap)
 			if err != nil {
 				return nil, fmt.Errorf("failed to parse filter %q: %w", name, err)
@@ -153,6 +168,13 @@ func parseFilterConfig(m map[string]any) (FilterConfig, error) {
 		cfg.MaxLines = int(v)
 	} else if v, ok := m["max_lines"].(int); ok {
 		cfg.MaxLines = v
+	} else if v, ok := m["max_lines"].(map[string]any); ok {
+		// Handle nested format: [filters.x.max_lines] value = 30
+		if val, ok := v["value"].(int64); ok {
+			cfg.MaxLines = int(val)
+		} else if val, ok := v["value"].(int); ok {
+			cfg.MaxLines = val
+		}
 	}
 	if v, ok := m["on_empty"].(string); ok {
 		cfg.OnEmpty = v
@@ -163,6 +185,15 @@ func parseFilterConfig(m map[string]any) (FilterConfig, error) {
 		for _, item := range v {
 			if s, ok := item.(string); ok {
 				cfg.StripLinesMatching = append(cfg.StripLinesMatching, s)
+			}
+		}
+	} else if v, ok := m["strip_lines_matching"].(map[string]any); ok {
+		// Handle nested format: [filters.x.strip_lines_matching] patterns = [...]
+		if patterns, ok := v["patterns"].([]any); ok {
+			for _, item := range patterns {
+				if s, ok := item.(string); ok {
+					cfg.StripLinesMatching = append(cfg.StripLinesMatching, s)
+				}
 			}
 		}
 	}
@@ -297,7 +328,6 @@ func NewFilterRegistry() *FilterRegistry {
 	}
 }
 
-
 // LoadFile loads a single TOML filter file
 func (r *FilterRegistry) LoadFile(path string) error {
 	filter, err := r.parser.ParseFile(path)
@@ -328,7 +358,6 @@ func (r *FilterRegistry) FindMatchingFilter(command string) (string, string, *Fi
 	}
 	return "", "", nil
 }
-
 
 // Count returns the number of loaded filters
 func (r *FilterRegistry) Count() int {

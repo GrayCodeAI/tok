@@ -126,7 +126,6 @@ func CompareCounts(text string) (heuristic, actual int, diff float64) {
 	return
 }
 
-
 // CountStats holds statistics about token counting.
 type CountStats struct {
 	TotalTokens int

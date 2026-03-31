@@ -1,0 +1,48 @@
+# Sample TOML Filter: Deployment Tool
+# Copy this file to ~/.config/tokman/filters/ to use it
+schema_version = 1
+
+[deploy]
+match_command = "^deploy\\s+(push|rollout|status|rollback)"
+strip_ansi = true
+
+# Strip verbose deployment output
+strip_lines_matching = [
+    "^\\s*Deploying.*",
+    "^\\s*Pushing.*",
+    "^\\s*Building.*",
+    "^\\s*Waiting.*",
+    "^\\s*Pulling.*",
+    "^\\s*Creating.*",
+    "^\\s*Updating.*",
+    "^\\s*\\[.*\\].*",
+    "^\\s*$",
+]
+
+# Keep deployment results and errors
+keep_lines_matching = [
+    "successfully deployed.*",
+    "deployment failed.*",
+    "Error:.*",
+    "Warning:.*",
+    "rollback.*",
+    "status:.*",
+    "healthy.*",
+    "unhealthy.*",
+    "replicas.*",
+]
+
+# Short-circuit on known states
+match_output = [
+    { pattern = "already up to date", message = "Deployment already up to date" },
+    { pattern = "no changes detected", message = "No changes to deploy" },
+]
+
+# Replace verbose patterns
+replace = [
+    { pattern = "pod/[a-z0-9-]+", replacement = "pod/..." },
+    { pattern = "image:.*@sha256:[a-f0-9]+", replacement = "image:...@sha256:..." },
+]
+
+max_lines = 40
+on_empty = "Deployment completed"

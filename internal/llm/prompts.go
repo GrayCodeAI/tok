@@ -459,4 +459,3 @@ func DefaultTemplatesDir() string {
 	}
 	return filepath.Join(homeDir, ".local", "share", "tokman", "prompts")
 }
-

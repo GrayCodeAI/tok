@@ -10,8 +10,8 @@ import (
 
 var layersCmd = &cobra.Command{
 	Use:   "layers",
-	Short: "Show the 10-layer compression pipeline architecture",
-	Long: `Display information about Tokman's 10-layer compression pipeline.
+	Short: "Show the 26-layer compression pipeline architecture",
+	Long: `Display information about Tokman's 26-layer compression pipeline.
 
 Each layer is based on cutting-edge research from 2023-2026:
 
@@ -25,6 +25,22 @@ Layer 7: Evaluator Heads (EHPC, Tsinghua/Huawei 2025)
 Layer 8: Gist Compression (Stanford/Berkeley 2023)
 Layer 9: Hierarchical Summary (AutoCompressor, Princeton/MIT 2023)
 Layer 10: Budget Enforcement (Industry standard)
+Layer 11: Compaction (MemGPT, UC Berkeley 2023)
+Layer 12: Attribution Filter (ProCut, LinkedIn 2025)
+Layer 13: H2O Filter (Heavy-Hitter Oracle, NeurIPS 2023)
+Layer 14: Attention Sink (StreamingLLM 2023)
+Layer 15: Meta-Token (arXiv:2506.00307 2025)
+Layer 16: Semantic Chunk (ChunkKV-style)
+Layer 17: Sketch Store (KVReviver, Dec 2025)
+Layer 18: Lazy Pruner (LazyLLM, July 2024)
+Layer 19: Semantic Anchor (Attention Gradient Detection)
+Layer 20: Agent Memory (Knowledge Graph Extraction)
+Layer 21: Question-Aware (LongLLMLingua-style relevance)
+Layer 22: Density-Adaptive (DAST-style allocation)
+Layer 23: Hypernym Compression
+Layer 24: SemantiCache
+Layer 25: SCOPE Filter
+Layer 26: SmallKV/ZipKV
 
 Use --verbose for detailed algorithm explanations.
 `,
@@ -40,7 +56,7 @@ func runLayers(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 
 	fmt.Println("╔═══════════════════════════════════════════════════════════════════════╗")
-	fmt.Println("║           TOKMAN 10-LAYER COMPRESSION PIPELINE                        ║")
+	fmt.Println("║           TOKMAN 26-LAYER COMPRESSION PIPELINE                       ║")
 	fmt.Println("╠═══════════════════════════════════════════════════════════════════════╣")
 
 	layers := []struct {
@@ -70,10 +86,42 @@ func runLayers(cmd *cobra.Command, args []string) {
 			"Recursive summarization that compresses context into hierarchical summary vectors."},
 		{10, "Budget Enforcement", "Industry Standard", "Guaranteed",
 			"Strict token limit enforcement with intelligent truncation preserving critical content."},
+		{11, "Compaction", "MemGPT (UC Berkeley 2023)", "10-50x",
+			"LLM-based semantic compression that summarizes conversation history into compact state."},
+		{12, "Attribution Filter", "ProCut (LinkedIn 2025)", "78%",
+			"Prunes low-attribution tokens using importance scoring with positional and frequency bias."},
+		{13, "H2O Filter", "Heavy-Hitter Oracle (NeurIPS 2023)", "30x+",
+			"Preserves attention sinks, recent tokens, and heavy hitters for efficient KV cache compression."},
+		{14, "Attention Sink", "StreamingLLM (2023)", "Infinite",
+			"Enables infinite context by preserving initial tokens as attention sinks with rolling cache."},
+		{15, "Meta-Token", "arXiv:2506.00307 (2025)", "27%",
+			"LZ77-style lossless compression using sliding window token matching for repeated patterns."},
+		{16, "Semantic Chunk", "ChunkKV-style", "Variable",
+			"Dynamic boundary detection for context-aware chunking that preserves semantic coherence."},
+		{17, "Sketch Store", "KVReviver (Dec 2025)", "90%",
+			"Sketch-based reversible compression with on-demand reconstruction for memory efficiency."},
+		{18, "Lazy Pruner", "LazyLLM (July 2024)", "2.34x",
+			"Budget-aware dynamic pruning that defers token decisions until necessary for speedup."},
+		{19, "Semantic Anchor", "Attention Gradient Detection", "Preserve",
+			"Identifies and preserves semantic anchors using attention gradient analysis."},
+		{20, "Agent Memory", "Knowledge Graph Extraction", "Graph",
+			"Extracts knowledge graphs from context for efficient agent memory management."},
+		{21, "Question-Aware", "LongLLMLingua-style", "Query",
+			"Query-dependent relevance scoring that aligns compression with user intent."},
+		{22, "Density-Adaptive", "DAST-style", "Adaptive",
+			"Dynamically allocates compression budget based on information density of content regions."},
+		{23, "Hypernym", "WordNet/Hypernym", "Semantic",
+			"Replaces specific terms with hypernyms for lossy but semantic-preserving compression."},
+		{24, "SemantiCache", "Semantic Caching", "Cache",
+			"Caches semantically similar outputs to avoid redundant processing of repeated queries."},
+		{25, "SCOPE", "SCOPE Framework", "Structured",
+			"Structured compression that preserves output-exposure patterns for code understanding."},
+		{26, "SmallKV/ZipKV", "KV Compression", "Memory",
+			"Advanced KV cache compression combining multiple strategies for maximum memory savings."},
 	}
 
 	for _, l := range layers {
-		fmt.Printf("║ Layer %d: %-20s %-15s          ║\n", l.num, l.name, "("+l.compression+")")
+		fmt.Printf("║ Layer %2d: %-20s %-15s         ║\n", l.num, l.name, "("+l.compression+")")
 		fmt.Printf("║   Research: %-56s ║\n", l.research)
 		if verbose {
 			fmt.Printf("║   %-68s ║\n", wrapText(l.desc, 68))
@@ -82,18 +130,20 @@ func runLayers(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("║ PIPELINE ORDER:                                                       ║")
-	fmt.Println("║   Statistical → Semantic → Structural → Budget                       ║")
+	fmt.Println("║   Statistical -> Semantic -> Structural -> LLM -> Budget             ║")
 	fmt.Println("║                                                                       ║")
 	fmt.Println("║ FEATURES:                                                             ║")
-	fmt.Println("║   • Streaming for large inputs (up to 2M tokens)                     ║")
-	fmt.Println("║   • Automatic validation and fail-safe mode                          ║")
-	fmt.Println("║   • Query-aware compression for specific intents                     ║")
-	fmt.Println("║   • Configurable layer thresholds                                     ║")
-	fmt.Println("║   • Cache for repeated compressions                                  ║")
+	fmt.Println("║   * Streaming for large inputs (up to 2M tokens)                     ║")
+	fmt.Println("║   * Automatic validation and fail-safe mode                          ║")
+	fmt.Println("║   * Query-aware compression for specific intents                     ║")
+	fmt.Println("║   * Configurable layer thresholds                                     ║")
+	fmt.Println("║   * Cache for repeated compressions                                  ║")
+	fmt.Println("║   * TOML declarative filter support                                   ║")
+	fmt.Println("║   * SIMD-optimized operations                                        ║")
 	fmt.Println("╚═══════════════════════════════════════════════════════════════════════╝")
 
 	if !verbose {
-		fmt.Println("\n💡 Use --verbose for detailed algorithm explanations")
+		fmt.Println("\nUse --verbose for detailed algorithm explanations")
 	}
 }
 

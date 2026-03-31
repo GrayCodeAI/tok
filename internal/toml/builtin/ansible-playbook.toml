@@ -1,15 +1,17 @@
-[filters.ansible-playbook]
-description = "Compact ansible-playbook output"
+# Ansible Playbook CLI filter
+schema_version = 1
+
+[ansible_playbook]
 match_command = "^ansible-playbook\\b"
 strip_ansi = true
 strip_lines_matching = [
-  "^\\s*$",
-  "^ok: \\[",
-  "^skipping: \\[",
+    "^\\s*$",
+    "^ok: \\[",
+    "^skipping: \\[",
 ]
 max_lines = 60
 
-[[tests.ansible-playbook]]
+[[tests.ansible_playbook]]
 name = "strips ok and skipping lines, keeps changed and failures"
 input = """
 PLAY [all] *********************************************************************
@@ -28,7 +30,7 @@ web02                      : ok=1    changed=0    unreachable=0    failed=0
 """
 expected = "PLAY [all] *********************************************************************\nTASK [Gathering Facts] *********************************************************\nTASK [Install nginx] ***********************************************************\nchanged: [web01]\nPLAY RECAP *********************************************************************\nweb01                      : ok=2    changed=1    unreachable=0    failed=0\nweb02                      : ok=1    changed=0    unreachable=0    failed=0"
 
-[[tests.ansible-playbook]]
+[[tests.ansible_playbook]]
 name = "failed task preserved"
 input = "TASK [Start service] ***\nfailed: [web01] => {\"msg\": \"Service not found\"}\nPLAY RECAP ***\nweb01 : ok=1 failed=1"
 expected = "TASK [Start service] ***\nfailed: [web01] => {\"msg\": \"Service not found\"}\nPLAY RECAP ***\nweb01 : ok=1 failed=1"

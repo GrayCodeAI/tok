@@ -13,10 +13,10 @@ import (
 // - DSPC (Sep 2025): Coarse filtering before expensive layers
 // - MemGPT (UC Berkeley 2023): Memory-efficient context management
 type StreamingProcessor struct {
-	chunkSize    int   // tokens per chunk
-	overlap      int   // token overlap between chunks
-	maxChunks    int   // maximum chunks to process
-	mode         Mode  // compression mode
+	chunkSize    int  // tokens per chunk
+	overlap      int  // token overlap between chunks
+	maxChunks    int  // maximum chunks to process
+	mode         Mode // compression mode
 	layerConfigs LayerConfigs
 
 	// Pool for reusing string builders
@@ -59,10 +59,10 @@ func (sp *StreamingProcessor) ProcessStream(input string) (string, *PipelineStat
 	if stats.OriginalTokens < 500000 {
 		// Small enough for standard processing
 		pipeline := NewPipelineCoordinator(PipelineConfig{
-			Mode:           sp.mode,
-			EnableEntropy:  sp.layerConfigs.EnableEntropy,
-			EnableTFIDF:    sp.layerConfigs.EnableTFIDF,
-			EnableH2O:      sp.layerConfigs.EnableH2O,
+			Mode:             sp.mode,
+			EnableEntropy:    sp.layerConfigs.EnableEntropy,
+			EnableTFIDF:      sp.layerConfigs.EnableTFIDF,
+			EnableH2O:        sp.layerConfigs.EnableH2O,
 			EnableCompaction: sp.layerConfigs.EnableCompaction,
 		})
 		return pipeline.Process(input)
@@ -162,11 +162,11 @@ func (sp *StreamingProcessor) splitIntoChunks(input string) []inputChunk {
 // processChunk processes a single chunk through lightweight layers
 func (sp *StreamingProcessor) processChunk(chunk string) (string, *PipelineStats) {
 	cfg := PipelineConfig{
-		Mode:           sp.mode,
-		EnableEntropy:  sp.layerConfigs.EnableEntropy,
-		EnableTFIDF:    sp.layerConfigs.EnableTFIDF,
-		EnableH2O:      sp.layerConfigs.EnableH2O,
-		EnableCompaction: sp.layerConfigs.EnableCompaction,
+		Mode:              sp.mode,
+		EnableEntropy:     sp.layerConfigs.EnableEntropy,
+		EnableTFIDF:       sp.layerConfigs.EnableTFIDF,
+		EnableH2O:         sp.layerConfigs.EnableH2O,
+		EnableCompaction:  sp.layerConfigs.EnableCompaction,
 		EnableAttribution: sp.layerConfigs.EnableAttribution,
 	}
 

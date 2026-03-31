@@ -25,7 +25,7 @@ Examples:
   echo "git status output" | tokman filter-test git --command "git status"
   tokman filter-test cargo --input "$(cat cargo_output.txt)" --command "cargo build"`,
 	Args: cobra.ExactArgs(1),
-	RunE:  runFilterTest,
+	RunE: runFilterTest,
 }
 
 func init() {

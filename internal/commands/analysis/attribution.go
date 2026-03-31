@@ -35,7 +35,7 @@ func init() {
 	attributionCmd.Flags().Bool("by-agent", true, "Group by agent name (default)")
 	attributionCmd.Flags().Bool("by-repo", false, "Also show per-repository breakdown")
 	attributionCmd.Flags().Int("limit", 20, "Limit number of results")
-	
+
 	registry.Add(func() { registry.Register(attributionCmd) })
 }
 
@@ -86,7 +86,7 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\n%s\n", "Token Savings by "+strings.Title(groupBy))
 	fmt.Printf("%s\n", strings.Repeat("═", 75))
 
-	fmt.Printf("%-30s %8s %12s %12s %8s\n", 
+	fmt.Printf("%-30s %8s %12s %12s %8s\n",
 		strings.Title(groupBy), "Commands", "Saved", "Original", "Reduction")
 	fmt.Println(strings.Repeat("─", 75))
 
@@ -101,16 +101,16 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 		if err := rows.Scan(&name, &count, &saved, &original, &pct); err != nil {
 			continue
 		}
-		
+
 		// Truncate long names
 		displayName := name
 		if len(displayName) > 28 {
 			displayName = displayName[:25] + "..."
 		}
-		
+
 		fmt.Printf("%-30s %8d %12s %12s %7.1f%%\n",
 			displayName, count, formatTokens(saved), formatTokens(original), pct)
-		
+
 		totalSaved += saved
 		totalOriginal += original
 		totalCommands += count
@@ -169,7 +169,7 @@ func showRepoBreakdown(tracker *tracking.Tracker, limit int) {
 		if err := rows.Scan(&path, &agent, &count, &saved, &original, &pct); err != nil {
 			continue
 		}
-		
+
 		// Extract repo name from path
 		repoName := path
 		if idx := strings.LastIndex(path, "/"); idx >= 0 {
@@ -181,7 +181,7 @@ func showRepoBreakdown(tracker *tracking.Tracker, limit int) {
 		if len(agent) > 13 {
 			agent = agent[:10] + "..."
 		}
-		
+
 		fmt.Printf("%-25s %-15s %10s %7.1f%%\n", repoName, agent, formatTokens(saved), pct)
 	}
 }

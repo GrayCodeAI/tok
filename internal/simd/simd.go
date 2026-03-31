@@ -245,7 +245,6 @@ func IsWhitespace(c byte) bool {
 	return c == ' ' || c == '\t' || c == '\n' || c == '\r'
 }
 
-
 // SplitWords splits string into words using SIMD-optimized scanning.
 func SplitWords(s string) []string {
 	if len(s) == 0 {
@@ -368,4 +367,3 @@ func Memcmp(a, b []byte) int {
 	}
 	return 0
 }
-

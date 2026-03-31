@@ -237,4 +237,3 @@ var defaultTee = New(DefaultConfig())
 func WriteAndHint(raw string, commandSlug string, exitCode int) string {
 	return defaultTee.WriteAndHint(raw, commandSlug, exitCode)
 }
-

@@ -13,6 +13,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/toml"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 // Fallback handler for TOML-based command filtering.
@@ -115,7 +116,7 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 			AgentName:   os.Getenv("TOKMAN_AGENT"),
 			ModelName:   os.Getenv("TOKMAN_MODEL"),
 			Provider:    os.Getenv("TOKMAN_PROVIDER"),
-			ModelFamily: getModelFamily(os.Getenv("TOKMAN_MODEL")),
+			ModelFamily: utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
 		}
 		h.tracker.Record(record)
 	}
@@ -268,10 +269,18 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.FilterCo
 			EnableAttribution:   true,
 			EnableH2O:           true,
 			EnableAttentionSink: true,
+			EnableTOMLFilter:    true,
 		}
 	}
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
+
+	// Integrate TOML filter into pipeline (Layer 0) instead of applying separately
+	if tomlConfig != nil && (len(tomlConfig.Replace) > 0 || len(tomlConfig.MatchOutput) > 0 || len(tomlConfig.StripLinesMatching) > 0) {
+		tomlWrapper := toml.NewTOMLFilterWrapper("toml_pre_filter", tomlConfig)
+		pipeline.SetTOMLFilter(tomlWrapper, "toml_pre_filter")
+	}
+
 	filtered, stats := pipeline.Process(output)
 
 	if IsVerbose() && stats.TotalSaved > 0 {
@@ -288,13 +297,6 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.FilterCo
 		hash := store.Store("", output, filtered, string(mode), GetTokenBudget(), layerStats)
 		if !IsQuietMode() {
 			fmt.Fprintf(os.Stderr, "[reversible: %s] ", hash)
-		}
-	}
-
-	if tomlConfig != nil && (len(tomlConfig.Replace) > 0 || len(tomlConfig.MatchOutput) > 0 || len(tomlConfig.StripLinesMatching) > 0) {
-		engine := toml.NewTOMLFilterEngine(tomlConfig)
-		if result, _ := engine.Apply(filtered, mode); result != "" {
-			filtered = result
 		}
 	}
 

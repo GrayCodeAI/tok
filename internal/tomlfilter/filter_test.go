@@ -85,7 +85,7 @@ func TestFilterMatching(t *testing.T) {
 		{"git log --oneline -5", true},
 		{"git commit", false},
 		{"cargo test", false},
-		{"rtk git status", false}, // doesn't match ^git
+		{"mytool git status", false}, // doesn't match ^git
 	}
 
 	for _, tt := range tests {
@@ -321,11 +321,11 @@ strip_lines_matching = ["^Progress:", "^\\s+$"]
 func TestApplyToCommand(t *testing.T) {
 	registry := NewRegistry()
 	filter := &TomlFilter{
-		Name:          "test",
-		MatchCommand:  "^echo\\s+test",
-		StripANSI:     true,
-		MaxLines:      1,
-		OnEmpty:       "ok",
+		Name:         "test",
+		MatchCommand: "^echo\\s+test",
+		StripANSI:    true,
+		MaxLines:     1,
+		OnEmpty:      "ok",
 	}
 	if err := filter.compileRegex(); err != nil {
 		t.Fatal(err)
@@ -431,7 +431,7 @@ func BenchmarkRegistryMatchFilter(b *testing.B) {
 
 	// Add multiple filters
 	filters := []struct {
-		name   string
+		name    string
 		pattern string
 	}{
 		{"git-status", "^git\\s+status"},

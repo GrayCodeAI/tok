@@ -69,4 +69,3 @@ func Warn(msg string, args ...any) {
 	}
 	Logger.Warn(msg, args...)
 }
-

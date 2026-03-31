@@ -52,12 +52,12 @@ type TomlFilter struct {
 	OnEmpty string `toml:"on_empty"`
 
 	// Compiled regex patterns (cached for performance)
-	matchCommandRegex     *regexp.Regexp
-	stripLinesRegex       []*regexp.Regexp
-	keepLinesRegex        []*regexp.Regexp
-	replaceRegex          []*regexp.Regexp
-	matchOutputRegex      []*regexp.Regexp
-	ansiStripRegex        *regexp.Regexp
+	matchCommandRegex *regexp.Regexp
+	stripLinesRegex   []*regexp.Regexp
+	keepLinesRegex    []*regexp.Regexp
+	replaceRegex      []*regexp.Regexp
+	matchOutputRegex  []*regexp.Regexp
+	ansiStripRegex    *regexp.Regexp
 }
 
 // ReplaceRule defines a regex substitution rule.
@@ -68,8 +68,8 @@ type ReplaceRule struct {
 
 // MatchRule defines a short-circuit rule based on output matching.
 type MatchRule struct {
-	Pattern  string `toml:"pattern"`
-	Message  string `toml:"message"`
+	Pattern string `toml:"pattern"`
+	Message string `toml:"message"`
 }
 
 // FilterTest represents an inline test case in a TOML filter.
@@ -81,7 +81,7 @@ type FilterTest struct {
 
 // TomlFilterFile represents the structure of a TOML filter file.
 type TomlFilterFile struct {
-	Filters map[string]TomlFilter `toml:"filters"`
+	Filters map[string]TomlFilter   `toml:"filters"`
 	Tests   map[string][]FilterTest `toml:"tests"`
 }
 
@@ -247,7 +247,7 @@ func (f *TomlFilter) Apply(input string) string {
 func (r *Registry) LoadFilters(directory string) error {
 	// Check if directory exists
 	if _, err := os.Stat(directory); os.IsNotExist(err) {
-		return fmt.Errorf("filter directory does not exist: %s", directory)
+		return nil // Directory doesn't exist yet, no filters to load
 	}
 
 	// Walk the directory and load .toml files

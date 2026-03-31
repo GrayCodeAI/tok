@@ -1,0 +1,38 @@
+# Sample TOML Filter: Custom Build Tool
+# Copy this file to ~/.config/tokman/filters/ to use it
+# Test with: tokman filter-test my-build --command "my-build compile" --input "..."
+schema_version = 1
+
+[my_build]
+match_command = "^my-build\\s+(compile|build|test)"
+strip_ansi = true
+
+# Strip verbose build output
+strip_lines_matching = [
+    "^\\s*\\[.*\\]",
+    "^\\s*Compiling.*",
+    "^\\s*Downloading.*",
+    "^\\s*Fetching.*",
+    "^\\s*$",
+]
+
+# Keep only important lines
+keep_lines_matching = [
+    "error.*",
+    "warning.*",
+    "Error:.*",
+    "Warning:.*",
+    "failed.*",
+    "FAIL.*",
+    "SUCCESS.*",
+    "Build.*",
+]
+
+# Truncate long lines
+truncate_lines_at = 200
+
+# Limit output
+max_lines = 100
+
+# Fallback when output is empty
+on_empty = "Build completed successfully"

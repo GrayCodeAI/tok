@@ -54,7 +54,7 @@ The integrated 31-layer compression pipeline demonstrates excellent performance 
 
 ## Layer Performance Breakdown
 
-### Advanced Layers (RTK Migration)
+### Advanced Layers
 
 | Layer | Latency | Tokens Saved | Memory | Purpose |
 |-------|---------|--------------|--------|---------|

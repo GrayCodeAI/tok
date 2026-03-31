@@ -1,0 +1,36 @@
+# Sample TOML Filter: Custom Linter
+# Copy this file to ~/.config/tokman/filters/ to use it
+schema_version = 1
+
+[my_linter]
+match_command = "^my-linter\\s+(check|lint|fix)"
+strip_ansi = true
+
+# Strip verbose linter output
+strip_lines_matching = [
+    "^\\s*Scanning.*",
+    "^\\s*Checking.*",
+    "^\\s*Processing.*",
+    "^\\s*\\d+ files? checked.*",
+    "^\\s*$",
+]
+
+# Keep lint results
+keep_lines_matching = [
+    "error.*",
+    "warning.*",
+    "Error.*",
+    "Warning.*",
+    "^\\s*\\d+:\\d+.*",
+    "found \\d+.*",
+    "fixed \\d+.*",
+]
+
+# Truncate long lines (file paths can be long)
+truncate_lines_at = 150
+
+# Use tail to show summary at the end
+tail = 20
+
+max_lines = 50
+on_empty = "No lint issues found"

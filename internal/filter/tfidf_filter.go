@@ -47,7 +47,6 @@ func DefaultTFIDFConfig() TFIDFConfig {
 	}
 }
 
-
 // NewTFIDFFilterWithConfig creates a filter with custom config
 func NewTFIDFFilterWithConfig(cfg TFIDFConfig) *TFIDFFilter {
 	return &TFIDFFilter{config: cfg}

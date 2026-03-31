@@ -53,7 +53,6 @@ func NewSessionTracker() *SessionTracker {
 	}
 }
 
-
 // Name returns the filter name.
 func (f *SessionTracker) Name() string {
 	return "session"
@@ -248,7 +247,6 @@ func isOnlyNumbers(s string) bool {
 	}
 	return true
 }
-
 
 // Save saves session data to file
 func (f *SessionTracker) Save() error {
