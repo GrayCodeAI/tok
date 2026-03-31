@@ -6,6 +6,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "AutoCompressor" — Chevalier et al., Princeton, 2023
+// https://arxiv.org/abs/2305.14788
+// Paper: "AutoCompressor" — Chevalier et al., Princeton, 2023
+// https://arxiv.org/abs/2305.14788
 // HierarchicalSummaryFilter implements AutoCompressor-style compression (Princeton/MIT, 2023).
 // Recursive summarization that compresses context into summary vectors.
 //

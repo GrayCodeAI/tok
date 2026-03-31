@@ -2,7 +2,6 @@ package core
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/fatih/color"
@@ -19,18 +18,16 @@ var statusCmd = &cobra.Command{
 	Short: "Quick token savings summary",
 	Long: `Display a quick one-line summary of token savings.
 For a comprehensive report with graphs and history, use 'tokman gain'.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := shared.GetConfig()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error loading config: %w", err)
 		}
 
 		dbPath := cfg.GetDatabasePath()
 		tracker, err := tracking.NewTracker(dbPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error connecting to database: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error connecting to database: %w", err)
 		}
 		defer tracker.Close()
 
@@ -50,13 +47,12 @@ For a comprehensive report with graphs and history, use 'tokman gain'.`,
 		// Get overall summary
 		summary, err := tracker.GetSavings(projectPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting savings: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error getting savings: %w", err)
 		}
 
 		if summary.TotalCommands == 0 {
 			fmt.Println(yellow("No commands recorded yet. Run some commands through TokMan."))
-			return
+			return nil
 		}
 
 		// Quick summary line
@@ -90,6 +86,7 @@ For a comprehensive report with graphs and history, use 'tokman gain'.`,
 
 		fmt.Printf("%s\n", strings.Repeat("─", 50))
 		fmt.Printf("Run %s for detailed report.\n", cyan("tokman gain"))
+		return nil
 	},
 }
 

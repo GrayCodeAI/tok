@@ -98,7 +98,7 @@ func runRead(cmd *cobra.Command, args []string) error {
 		tokensSaved = 0
 	} else {
 		engine := filter.NewEngine(mode)
-		filtered, tokensSaved = engine.ProcessWithLang(content, string(lang))
+		filtered, tokensSaved = engine.Process(content)
 	}
 
 	// Apply max lines if specified

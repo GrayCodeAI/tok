@@ -23,7 +23,7 @@ Examples:
   tokman enable        # Turn on automatic compression
   tokman disable       # Turn off automatic compression
   tokman status        # Check if TokMan is enabled`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		green := color.New(color.FgGreen).SprintFunc()
 
 		markerPath := getEnabledMarkerPath()
@@ -31,26 +31,25 @@ Examples:
 
 		// Ensure directory exists
 		if err := os.MkdirAll(markerDir, 0755); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error: %w", err)
 		}
 
 		// Check if already enabled
 		if isEnabled() {
 			fmt.Printf("%s TokMan is already enabled\n", green("✓"))
-			return
+			return nil
 		}
 
 		// Create marker file
 		if err := os.WriteFile(markerPath, []byte("enabled\n"), 0644); err != nil {
-			fmt.Fprintf(os.Stderr, "Error enabling TokMan: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error enabling TokMan: %w", err)
 		}
 
 		fmt.Printf("%s TokMan enabled globally\n", green("✓"))
 		fmt.Println()
 		fmt.Println("All commands will now be automatically compressed.")
 		fmt.Println("Run 'tokman disable' to turn off.")
+		return nil
 	},
 }
 
@@ -60,7 +59,7 @@ var disableCmd = &cobra.Command{
 	Long: `Disable TokMan interception. Commands will run normally without compression.
 
 Use 'tokman enable' to turn interception back on.`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		red := color.New(color.FgRed).SprintFunc()
 		green := color.New(color.FgGreen).SprintFunc()
 
@@ -68,18 +67,18 @@ Use 'tokman enable' to turn interception back on.`,
 
 		if !isEnabled() {
 			fmt.Printf("%s TokMan is already disabled\n", green("✓"))
-			return
+			return nil
 		}
 
 		if err := os.Remove(markerPath); err != nil {
-			fmt.Fprintf(os.Stderr, "Error disabling TokMan: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("error disabling TokMan: %w", err)
 		}
 
 		fmt.Printf("%s TokMan disabled\n", red("✗"))
 		fmt.Println()
 		fmt.Println("Commands will run normally without compression.")
 		fmt.Println("Run 'tokman enable' to turn back on.")
+		return nil
 	},
 }
 

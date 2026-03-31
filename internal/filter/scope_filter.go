@@ -6,6 +6,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "SCOPE: Optimizing KV Cache Compression" — Wu et al., ACL 2025
+// https://arxiv.org/abs/2412.13649
+// Paper: "SCOPE: Optimizing KV Cache Compression" — Wu et al., ACL 2025
+// https://arxiv.org/abs/2412.13649
 // ScopeFilter implements SCOPE-style separate prefill/decode optimization.
 // Research Source: "SCOPE: Optimizing Key-Value Cache Compression in Long-context
 // Generation" (ACL 2025)

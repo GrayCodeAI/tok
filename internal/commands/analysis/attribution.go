@@ -83,11 +83,11 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 	defer rows.Close()
 
 	// Print header
-	fmt.Printf("\n%s\n", "Token Savings by "+strings.Title(groupBy))
+	fmt.Printf("\n%s\n", "Token Savings by "+strings.ToUpper(groupBy[:1])+groupBy[1:])
 	fmt.Printf("%s\n", strings.Repeat("═", 75))
 
 	fmt.Printf("%-30s %8s %12s %12s %8s\n",
-		strings.Title(groupBy), "Commands", "Saved", "Original", "Reduction")
+		strings.ToUpper(groupBy[:1])+groupBy[1:], "Commands", "Saved", "Original", "Reduction")
 	fmt.Println(strings.Repeat("─", 75))
 
 	totalSaved := 0

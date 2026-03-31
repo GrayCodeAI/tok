@@ -47,11 +47,6 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 	return string(output), exitCode, err
 }
 
-// RunCombined executes a command and returns output, exit code, and duration.
-func (r *OSCommandRunner) RunCombined(ctx context.Context, args []string) (string, int, error) {
-	return r.Run(ctx, args)
-}
-
 // LookPath resolves a command name to its full path.
 func (r *OSCommandRunner) LookPath(name string) (string, error) {
 	return exec.LookPath(name)

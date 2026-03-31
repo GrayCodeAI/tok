@@ -7,6 +7,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
+// Paper: "Gisting" — Mu et al., Stanford, 2023
+// https://arxiv.org/abs/2304.08467
+// Paper: "Gisting" — Mu et al., Stanford, 2023
+// https://arxiv.org/abs/2304.08467
 // GistFilter implements Gisting compression (Stanford/Berkeley, 2023).
 // Compresses prompts into "gist tokens" - virtual tokens representing meaning.
 //

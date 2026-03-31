@@ -48,6 +48,10 @@ func runSummary(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Running and summarizing: %s\n", command)
 	}
 
+	if err := shared.SanitizeArgs(args); err != nil {
+		return fmt.Errorf("invalid arguments: %w", err)
+	}
+
 	execCmd := exec.Command(args[0], args[1:]...)
 
 	output, err := execCmd.CombinedOutput()
@@ -305,7 +309,7 @@ func extractNumber(text, after string) int {
 	re := regexp.MustCompile(`(\d+)\s*` + after)
 	matches := re.FindStringSubmatch(text)
 	if len(matches) > 1 {
-		n, _ := strconv.Atoi(matches[1])
+		n, _ := strconv.Atoi(matches[1]) // n==0 on parse error is acceptable default
 		return n
 	}
 	return 0

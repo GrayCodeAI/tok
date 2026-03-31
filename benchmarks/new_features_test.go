@@ -151,7 +151,6 @@ func BenchmarkPIIRedaction(b *testing.B) {
 	}
 }
 
-
 func BenchmarkGraphAnalysis(b *testing.B) {
 	g := graph.NewProjectGraph(".")
 	b.ResetTimer()

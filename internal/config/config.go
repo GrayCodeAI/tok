@@ -11,6 +11,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Default pipeline limits.
+const (
+	DefaultMaxContextTokens = 2000000 // 2M tokens max
+	DefaultChunkSize        = 100000  // 100K tokens per chunk
+	DefaultStreamThreshold  = 500000  // Stream if > 500K tokens
+	DefaultCacheMaxSize     = 1000    // Max cache entries
+)
+
 // Config represents the main configuration structure.
 type Config struct {
 	Tracking  TrackingConfig  `mapstructure:"tracking"`
@@ -270,8 +278,8 @@ func Defaults() *Config {
 		},
 		Pipeline: PipelineConfig{
 			// Context limits - supports up to 2M tokens
-			MaxContextTokens: 2000000, // 2M tokens max
-			ChunkSize:        100000,  // 100K tokens per chunk
+			MaxContextTokens: DefaultMaxContextTokens,
+			ChunkSize:        DefaultChunkSize,
 
 			// All layers enabled by default
 			EnableEntropy:      true,
@@ -310,8 +318,8 @@ func Defaults() *Config {
 			// Performance
 			ParallelLayers:  false, // Sequential for deterministic output
 			CacheEnabled:    true,
-			CacheMaxSize:    1000,
-			StreamThreshold: 500000, // Stream if > 500K tokens
+			CacheMaxSize:    DefaultCacheMaxSize,
+			StreamThreshold: DefaultStreamThreshold,
 
 			// Layer 11: Compaction (enabled by default for automatic chat compression)
 			EnableCompaction:        true,

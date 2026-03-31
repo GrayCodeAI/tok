@@ -1,6 +1,7 @@
 package shared
 
 import (
+	"log/slog"
 	"sync"
 
 	"github.com/GrayCodeAI/tokman/internal/config"
@@ -22,20 +23,25 @@ func SetConfigFile(path string) {
 
 // GetConfig returns the cached configuration.
 func GetConfig() (*config.Config, error) {
-	return GetCachedConfig(), nil
+	return GetCachedConfig()
 }
 
 // GetCachedConfig returns the cached config, loading it on first access.
-func GetCachedConfig() *config.Config {
+func GetCachedConfig() (*config.Config, error) {
+	var loadErr error
 	configOnce.Do(func() {
 		cfgFileToUse := cfgFile
 		if cfgFileToUse == "" {
 			cfgFileToUse = CfgFile
 		}
-		cachedConfig, _ = config.Load(cfgFileToUse)
+		cachedConfig, loadErr = config.Load(cfgFileToUse)
 	})
+	if loadErr != nil {
+		slog.Warn("config load failed, using defaults", "error", loadErr)
+		return config.Defaults(), loadErr
+	}
 	if cachedConfig == nil {
 		cachedConfig = config.Defaults()
 	}
-	return cachedConfig
+	return cachedConfig, nil
 }

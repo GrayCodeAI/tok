@@ -3,7 +3,6 @@ package vcs
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -35,13 +34,10 @@ type GitFile struct {
 var gitStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show working tree status (filtered)",
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git status", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git status", func() (string, string, error) {
 			return runGitStatus()
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 

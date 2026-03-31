@@ -60,7 +60,7 @@ func runHookAudit(sinceDays int, verbose int) {
 	file, err := os.Open(logPath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error reading audit log: %v\n", err)
-		os.Exit(1)
+		return
 	}
 	defer file.Close()
 

@@ -132,6 +132,15 @@ type PipelineCoordinator struct {
 	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
 	kvzipFilter *KVzipFilter
 
+	// 2026 Research Layers
+	swezzeFilter         *SWEzzeFilter         // SWEzze: Code Distillation (arXiv:2603.28119)
+	mixedDimFilter       *MixedDimFilter       // MixedDimKV: Beyond Token Eviction (arXiv:2603.20616)
+	beaverFilter         *BEAVERFilter         // BEAVER: Structure-Aware Selection (arXiv:2603.19635)
+	pocFilter            *PoCFilter            // PoC: Performance-oriented Compression (arXiv:2603.19733)
+	tokenQuantFilter     *TokenQuantFilter     // TurboQuant: Token Quantization (Google, 2026)
+	tokenRetentionFilter *TokenRetentionFilter // Token Retention (Yale/JPMorgan, 2026)
+	aconFilter           *ACONFilter           // ACON: Context Compression (ICLR 2026)
+
 	// Phase 2: Pipeline result cache for repeated inputs
 	resultCache    *cache.FingerprintCache
 	cacheEnabled   bool
@@ -214,6 +223,13 @@ type PipelineConfig struct {
 	EnableScope             bool
 	EnableSmallKV           bool
 	EnableKVzip             bool
+	EnableSWEzze            bool
+	EnableMixedDim          bool
+	EnableBEAVER            bool
+	EnablePoC               bool
+	EnableTokenQuant        bool
+	EnableTokenRetention    bool
+	EnableACON              bool
 	EnableTOMLFilter        bool
 	TOMLFilterCommand       string
 }

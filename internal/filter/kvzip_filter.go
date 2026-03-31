@@ -13,6 +13,8 @@ var (
 	kvzipImportRe    = regexp.MustCompile(`^(import|use|require|include|from|package)\s+`)
 )
 
+// Paper: "KVzip: Query-Agnostic KV Cache Compression" — Kim et al., SNU/NAVER, 2025
+// https://arxiv.org/abs/2505.23416
 // KVzipFilter implements KVzip-style query-agnostic compression with context reconstruction.
 // Research Source: "KVzip: Query-Agnostic KV Cache Compression with Context Reconstruction" (2025)
 // Key Innovation: Build a compressed representation that can reconstruct context

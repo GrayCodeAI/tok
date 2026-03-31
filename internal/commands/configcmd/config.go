@@ -19,20 +19,20 @@ The configuration file is stored at ~/.config/tokman/config.toml and controls:
 - Token tracking behavior
 - Output filtering settings
 - Shell hook exclusions`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		create, _ := cmd.Flags().GetBool("create")
 
 		if create {
 			path, err := createDefaultConfig()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating config: %v\n", err)
-				os.Exit(1)
+				return fmt.Errorf("error creating config: %w", err)
 			}
 			fmt.Printf("Created: %s\n", path)
-			return
+			return nil
 		}
 
 		showConfig()
+		return nil
 	},
 }
 
@@ -53,7 +53,7 @@ func createDefaultConfig() (string, error) {
 	return configPath, nil
 }
 
-func showConfig() {
+func showConfig() error {
 	configPath := config.ConfigPath()
 	fmt.Printf("Config: %s\n\n", configPath)
 
@@ -62,16 +62,16 @@ func showConfig() {
 		fmt.Println()
 		cfg := config.Defaults()
 		printConfig(cfg)
-		return
+		return nil
 	}
 
 	cfg, err := config.LoadFromFile(configPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error loading config: %w", err)
 	}
 
 	printConfig(cfg)
+	return nil
 }
 
 func printConfig(cfg *config.Config) {

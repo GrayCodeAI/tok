@@ -10,6 +10,10 @@ import (
 
 var javaMethodRe = regexp.MustCompile(`^\w+\s+\w+\s*\([^)]*\)\s*\{?$`)
 
+// Paper: "LongCodeZip" — Shi et al., SJTU/Stanford, 2025
+// https://arxiv.org/abs/2510.00446
+// Paper: "LongCodeZip" — Shi et al., SJTU/Stanford, 2025
+// https://arxiv.org/abs/2510.00446
 // ASTPreserveFilter implements LongCodeZip-style compression (NUS, 2025).
 // AST-aware compression that preserves syntactic validity of code.
 //

@@ -9,6 +9,10 @@ import (
 
 var codeSymbolRe = regexp.MustCompile(`[{}\[\]();:]`)
 
+// Paper: "SWE-Pruner" — Wang et al., Shanghai Jiao Tong, 2026
+// https://arxiv.org/abs/2601.16746
+// Paper: "SWE-Pruner" — Wang et al., Shanghai Jiao Tong, 2026
+// https://arxiv.org/abs/2601.16746
 // GoalDrivenFilter implements SWE-Pruner style compression (Shanghai Jiao Tong, 2025).
 // Goal-driven line-level pruning using CRF-inspired scoring.
 //

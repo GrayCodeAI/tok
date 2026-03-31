@@ -22,6 +22,10 @@ type frequencyCacheEntry struct {
 	total int
 }
 
+// Paper: "Selective Context" — Li et al., Mila, 2023
+// https://arxiv.org/abs/2310.06201
+// Paper: "Selective Context" — Li et al., Mila, 2023
+// https://arxiv.org/abs/2310.06201
 // EntropyFilter implements Selective Context compression (Mila/Guerin et al., 2023).
 // Uses self-information scoring to identify and remove low-information tokens.
 //

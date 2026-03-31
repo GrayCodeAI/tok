@@ -249,9 +249,15 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.FilterCo
 	}
 
 	preset := GetLayerPreset()
+	profile := GetLayerProfile()
 	var cfg filter.PipelineConfig
 
-	if preset != "" {
+	if profile != "" {
+		cfg = filter.ProfileConfig(filter.Profile(profile), mode)
+		cfg.QueryIntent = GetQueryIntent()
+		cfg.Budget = GetTokenBudget()
+		cfg.LLMEnabled = IsLLMEnabled()
+	} else if preset != "" {
 		cfg = filter.PresetConfig(filter.PipelinePreset(preset), mode)
 		cfg.QueryIntent = GetQueryIntent()
 		cfg.Budget = GetTokenBudget()

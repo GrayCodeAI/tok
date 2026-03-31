@@ -29,11 +29,8 @@ of Bash commands would be handled by TokMan wrappers.
 
 Examples:
   tokman session`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := runSession(); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return runSession()
 	},
 }
 

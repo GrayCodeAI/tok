@@ -16,8 +16,8 @@ func TestRubyCommands(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		args        []string
+		name          string
+		args          []string
 		skipIfMissing string
 	}{
 		{"rake_help", []string{"rake", "--help"}, "rake"},
@@ -56,8 +56,8 @@ func TestInfrastructureCommands(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		args         []string
+		name          string
+		args          []string
 		skipIfMissing string
 	}{
 		{"terraform_help", []string{"terraform", "--help"}, "terraform"},
@@ -93,8 +93,8 @@ func TestBuildToolCommands(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		args         []string
+		name          string
+		args          []string
 		skipIfMissing string
 	}{
 		{"gradle_help", []string{"gradle", "--help"}, "gradle"},

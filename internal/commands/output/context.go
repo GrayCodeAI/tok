@@ -27,7 +27,10 @@ func runContext(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("tracking not available")
 	}
 
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
 	savings, err := tracker.GetSavings(cwd)
 	if err != nil {
 		return fmt.Errorf("failed to get context data: %w", err)

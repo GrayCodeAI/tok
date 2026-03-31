@@ -4,6 +4,10 @@ import (
 	"strings"
 )
 
+// Paper: "StreamingLLM: Attention Sinks" — Xiao et al., MIT, 2023
+// https://arxiv.org/abs/2309.17453
+// Paper: "StreamingLLM: Attention Sinks" — Xiao et al., MIT, 2023
+// https://arxiv.org/abs/2309.17453
 // AttentionSinkFilter implements StreamingLLM-style attention sink preservation.
 // Research basis: "Efficient Streaming Language Models with Attention Sinks"
 // (Xiao et al., 2023) - enables infinite-length generation with bounded memory.

@@ -3,7 +3,6 @@ package system
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"os/exec"
 	"sort"
 	"strings"
@@ -25,13 +24,10 @@ var lsCmd = &cobra.Command{
 - Groups directories and files
 - Shows human-readable sizes`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("ls", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("ls", func() (string, string, error) {
 			return runLS(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 

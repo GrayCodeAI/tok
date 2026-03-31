@@ -1,14 +1,13 @@
 package system
 
 import (
-	"bytes"
 	"fmt"
-	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -46,16 +45,7 @@ const (
 func runWc(cmd *cobra.Command, args []string) error {
 	timer := tracking.Start()
 
-	c := exec.Command("wc", args...)
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
-
-	err := c.Run()
-	output := stdout.String()
-	if output == "" && stderr.Len() > 0 {
-		output = stderr.String()
-	}
+	output, _, err := shared.RunAndCapture("wc", args)
 
 	// Detect mode from args
 	mode := detectWcMode(args)

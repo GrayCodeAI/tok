@@ -9,6 +9,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
+// Paper: "H2O: Heavy-Hitter Oracle" — Zhang et al., NeurIPS, 2023
+// https://arxiv.org/abs/2306.14048
+// Paper: "H2O: Heavy-Hitter Oracle" — Zhang et al., NeurIPS, 2023
+// https://arxiv.org/abs/2306.14048
 // H2OFilter implements Heavy-Hitter Oracle compression.
 // Research basis: "H2O: Heavy-Hitter Oracle for Efficient Generative Inference"
 // (Zhang et al., NeurIPS 2023) - achieves 30x+ compression via intelligent eviction.

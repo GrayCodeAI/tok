@@ -3,7 +3,6 @@ package vcs
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -24,19 +23,16 @@ var gitLogCmd = &cobra.Command{
 - Commit count limited to 20
 - Full output only with --verbose flag`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		gitArgs := extractGitArgs(args)
 
 		if gitLogCount > 0 {
 			gitArgs = append([]string{fmt.Sprintf("-n%d", gitLogCount)}, gitArgs...)
 		}
 
-		if err := shared.ExecuteAndRecord("git log", func() (string, string, error) {
+		return shared.ExecuteAndRecord("git log", func() (string, string, error) {
 			return runGitLog(gitArgs, shared.Verbose > 0)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -46,13 +42,10 @@ var gitShowCmd = &cobra.Command{
 	Long: `Show git show with output filtering:
 - Compact summary first (hash + subject)
 - Diff limited to 30 lines per hunk`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git show", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git show", func() (string, string, error) {
 			return runGitShow(args, shared.Verbose)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 
@@ -185,7 +178,7 @@ func runGitShow(args []string, verboseLevel int) (string, string, error) {
 	diffCmd := buildGitCmd("show", diffArgs...)
 	var diffOut bytes.Buffer
 	diffCmd.Stdout = &diffOut
-	diffCmd.Run()
+	_ = diffCmd.Run() // Diff is best-effort; empty diff is acceptable
 
 	var result strings.Builder
 	result.WriteString(summaryOut.String())

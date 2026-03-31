@@ -3,7 +3,6 @@ package vcs
 import (
 	"bytes"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,13 +18,10 @@ var gitDiffCmd = &cobra.Command{
 - Diff hunks limited to 30 lines each
 - ANSI colors stripped`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
-	Run: func(cmd *cobra.Command, args []string) {
-		if err := shared.ExecuteAndRecord("git diff", func() (string, string, error) {
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return shared.ExecuteAndRecord("git diff", func() (string, string, error) {
 			return runGitDiff(args)
-		}); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
-		}
+		})
 	},
 }
 

@@ -155,7 +155,6 @@ func runProxyStart(cmd *cobra.Command, args []string) error {
 		}
 		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
-			os.Exit(1)
 		}
 	}()
 

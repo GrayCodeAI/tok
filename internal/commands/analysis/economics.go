@@ -1,9 +1,6 @@
 package analysis
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
@@ -32,7 +29,7 @@ Savings are calculated using Anthropic API price ratios:
 - Cache reads: 0.1x input token cost
 
 Requires ccusage installed (npm i -g ccusage).`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		verbose, _ := cmd.Flags().GetBool("verbose")
 
 		opts := economics.RunOptions{
@@ -45,9 +42,9 @@ Requires ccusage installed (npm i -g ccusage).`,
 		}
 
 		if err := economics.Run(opts); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			return err
 		}
+		return nil
 	},
 }
 

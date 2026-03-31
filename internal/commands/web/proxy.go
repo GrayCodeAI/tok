@@ -23,12 +23,12 @@ Unlike other TokMan commands that filter output to reduce tokens,
 proxy runs the command as-is while still tracking execution metrics.
 Useful for commands where you need full unfiltered output.`,
 	Args: cobra.ArbitraryArgs,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if shared.Verbose > 0 {
 			fmt.Fprintf(os.Stderr, "Proxy mode: %s\n", strings.Join(args, " "))
 		}
 
-		runProxy(args)
+		return runProxy(args)
 	},
 }
 
@@ -36,7 +36,15 @@ func init() {
 	registry.Add(func() { registry.Register(proxyCmd) })
 }
 
-func runProxy(args []string) {
+func runProxy(args []string) error {
+	if len(args) == 0 {
+		return fmt.Errorf("proxy requires a command to run")
+	}
+
+	if err := shared.SanitizeArgs(args); err != nil {
+		return fmt.Errorf("invalid arguments: %w", err)
+	}
+
 	timer := tracking.Start()
 
 	execCmd := exec.Command(args[0], args[1:]...)
@@ -44,19 +52,16 @@ func runProxy(args []string) {
 
 	stdoutPipe, err := execCmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating stdout pipe: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error creating stdout pipe: %w", err)
 	}
 
 	stderrPipe, err := execCmd.StderrPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating stderr pipe: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error creating stderr pipe: %w", err)
 	}
 
 	if err := execCmd.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error starting command: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error starting command: %w", err)
 	}
 
 	outputChan := make(chan []byte)
@@ -106,9 +111,10 @@ func runProxy(args []string) {
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				os.Exit(status.ExitStatus())
+				return fmt.Errorf("command failed with exit code %d: %w", status.ExitStatus(), err)
 			}
 		}
-		os.Exit(1)
+		return fmt.Errorf("command failed: %w", err)
 	}
+	return nil
 }

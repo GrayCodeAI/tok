@@ -16,7 +16,7 @@ func statsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			return
 		}
 
-		// Get 24h and total savings
+		// Get 24h and total savings (best-effort; partial data is acceptable)
 		saved24h, _ := tracker.TokensSaved24h()
 		savedTotal, _ := tracker.TokensSavedTotal()
 

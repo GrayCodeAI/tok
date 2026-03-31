@@ -118,15 +118,13 @@ func runRuff(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("ruff %s", strings.Join(args, " ")), "tokman ruff", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			os.Exit(exitErr.ExitCode())
+			return fmt.Errorf("ruff failed with exit code %d: %w", exitErr.ExitCode(), err)
 		}
-		os.Exit(1)
+		return fmt.Errorf("ruff failed: %w", err)
 	}
 	return nil
 }

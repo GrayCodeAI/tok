@@ -34,6 +34,10 @@ var (
 	reProceedTo  = regexp.MustCompile(`proceed\s+to\s+(.+)`)
 )
 
+// Paper: "MemGPT" — Packer et al., UC Berkeley, 2023
+// https://arxiv.org/abs/2310.08560
+// Paper: "MemGPT" — Packer et al., UC Berkeley, 2023
+// https://arxiv.org/abs/2310.08560
 // CompactionLayer provides semantic compression for chat/conversation content.
 // It creates state snapshots with 4 sections:
 //

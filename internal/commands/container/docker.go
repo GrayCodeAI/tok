@@ -1,7 +1,6 @@
 package container
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -71,12 +70,15 @@ func runDockerPassthrough(args []string) error {
 	c := exec.Command("docker", args...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	fmt.Print(output)
 
@@ -85,9 +87,9 @@ func runDockerPassthrough(args []string) error {
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			os.Exit(exitErr.ExitCode())
+			return fmt.Errorf("command failed with exit code %d: %w", exitErr.ExitCode(), err)
 		}
-		os.Exit(1)
+		return fmt.Errorf("command failed: %w", err)
 	}
 	return nil
 }
@@ -99,11 +101,12 @@ func runDockerPs(args []string) error {
 	c := exec.Command("docker", "ps", "--format", "{{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Image}}\t{{.Ports}}")
 	c.Env = os.Environ()
 
-	var stdout bytes.Buffer
-	c.Stdout = &stdout
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	c.Stdout = stdoutBuf
 
 	err := c.Run()
-	output := stdout.String()
+	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
 		fmt.Println("🐳 0 containers")
@@ -182,11 +185,12 @@ func runDockerImages(args []string) error {
 	c := exec.Command("docker", "images", "--format", "{{.Repository}}:{{.Tag}}\t{{.Size}}")
 	c.Env = os.Environ()
 
-	var stdout bytes.Buffer
-	c.Stdout = &stdout
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	c.Stdout = stdoutBuf
 
 	err := c.Run()
-	output := stdout.String()
+	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
 		fmt.Println("🐳 0 images")
@@ -266,12 +270,15 @@ func runDockerLogs(args []string) error {
 	c := exec.Command("docker", "logs", "--tail", "100", container)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
 	fmt.Printf("🐳 Logs for %s:\n%s", container, filtered)
@@ -289,11 +296,12 @@ func runComposePs(args []string) error {
 	c := exec.Command("docker", "compose", "ps", "--format", "{{.Name}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}")
 	c.Env = os.Environ()
 
-	var stdout bytes.Buffer
-	c.Stdout = &stdout
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	c.Stdout = stdoutBuf
 
 	err := c.Run()
-	output := stdout.String()
+	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
 		fmt.Println("🐳 0 compose services")
@@ -349,12 +357,15 @@ func runComposeLogs(args []string) error {
 	c.Args = append(c.Args, args...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
 	fmt.Printf("🐳 Compose logs:\n%s", filtered)
@@ -373,12 +384,15 @@ func runComposeBuild(args []string) error {
 	c.Args = append(c.Args, args...)
 	c.Env = os.Environ()
 
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
 
 	err := c.Run()
-	output := stdout.String() + stderr.String()
+	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterComposeBuild(output)
 	fmt.Print(filtered)

@@ -174,9 +174,7 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(output)
 	timer.Track("env", "tokman env", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	return nil
 }

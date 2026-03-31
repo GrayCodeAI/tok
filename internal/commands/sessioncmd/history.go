@@ -30,7 +30,10 @@ func runHistory(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("tracking not available")
 	}
 
-	cwd, _ := os.Getwd()
+	cwd, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("failed to get working directory: %w", err)
+	}
 	records, err := tracker.GetRecentCommands(cwd, historyLimit)
 	if err != nil {
 		return fmt.Errorf("failed to get history: %w", err)

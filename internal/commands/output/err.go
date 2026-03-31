@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/tee"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -33,15 +34,17 @@ Examples:
   tokman err npm run build
   tokman err cargo build
   tokman err go test ./...`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
-			fmt.Fprintln(os.Stderr, "Error: err requires a command to run")
-			os.Exit(1)
+			return fmt.Errorf("err requires a command to run")
 		}
 
 		verbose, _ := cmd.Flags().GetBool("verbose")
 		exitCode := runErr(args, verbose)
-		os.Exit(exitCode)
+		if exitCode != 0 {
+			return fmt.Errorf("command failed with exit code %d", exitCode)
+		}
+		return nil
 	},
 }
 
@@ -54,6 +57,11 @@ func runErr(args []string, verbose bool) int {
 
 	if verbose {
 		fmt.Fprintf(os.Stderr, "Running: %s\n", strings.Join(args, " "))
+	}
+
+	if err := shared.SanitizeArgs(args); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		return 1
 	}
 
 	execCmd := exec.Command(args[0], args[1:]...)

@@ -44,9 +44,9 @@ Shows statistics including:
 - Breakdown by command type
 
 Use flags for detailed views: --graph, --history, --quota, --daily, --weekly, --monthly`,
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		runGain(verbose)
+		return runGain(verbose)
 	},
 }
 
@@ -96,36 +96,38 @@ type DayBreakdown struct {
 	Original int
 }
 
-func runGain(verbose bool) {
+func runGain(verbose bool) error {
 	dbPath := tracking.DatabasePath()
 	tracker, err := tracking.NewTracker(dbPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error initializing tracker: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error initializing tracker: %w", err)
 	}
 	defer tracker.Close()
 
 	// Resolve project scope (default to current project)
 	var projectPath string
 	if gainProject || !gainAll {
-		cwd, _ := os.Getwd()
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("error getting working directory: %w", err)
+		}
 		projectPath = cwd
 	}
 
 	// Handle failure log
 	if gainFailures {
 		showFailures(tracker)
-		return
+		return nil
 	}
 
 	// Handle export formats
 	switch gainFormat {
 	case "json":
 		exportJSON(tracker, projectPath)
-		return
+		return nil
 	case "csv":
 		exportCSV(tracker, projectPath)
-		return
+		return nil
 	}
 
 	// Get summary
@@ -134,13 +136,13 @@ func runGain(verbose bool) {
 	if summary.TotalCommands == 0 {
 		fmt.Println("No tracking data yet.")
 		fmt.Println("Run some tokman commands to start tracking savings.")
-		return
+		return nil
 	}
 
 	// Default view
 	if !gainDaily && !gainWeekly && !gainMonthly && !gainAll {
 		printDefaultView(summary, projectPath, verbose)
-		return
+		return nil
 	}
 
 	// Time breakdown views
@@ -153,6 +155,7 @@ func runGain(verbose bool) {
 	if gainAll || gainMonthly {
 		printMonthly(tracker, projectPath)
 	}
+	return nil
 }
 
 func getSummary(tracker *tracking.Tracker, projectPath string) *GainSummary {
@@ -262,33 +265,37 @@ func printDefaultView(summary *GainSummary, projectPath string, verbose bool) {
 	// History
 	if gainHistory {
 		dbPath := tracking.DatabasePath()
-		tracker, _ := tracking.NewTracker(dbPath)
-		if tracker != nil {
-			defer tracker.Close()
-			recent, err := tracker.GetRecentCommands(projectPath, 10)
-			if err == nil && len(recent) > 0 {
-				fmt.Printf("%s\n", cyan("Recent Commands"))
-				fmt.Println(strings.Repeat("─", 60))
-				for _, r := range recent {
-					ts := r.Timestamp.Format("01-02 15:04")
-					cmd := r.Command
-					if len(cmd) > 25 {
-						cmd = cmd[:22] + "..."
-					}
-					sign := "•"
-					savedPct := 0.0
-					if r.OriginalTokens > 0 {
-						savedPct = float64(r.SavedTokens) / float64(r.OriginalTokens) * 100
-					}
-					if savedPct >= 70 {
-						sign = "▲"
-					} else if savedPct >= 30 {
-						sign = "■"
-					}
-					fmt.Printf("%s %s %-25s -%.0f%% (%s)\n", ts, sign, cmd, savedPct, utils.FormatTokens(r.SavedTokens))
-				}
-				fmt.Println()
+		histTracker, err := tracking.NewTracker(dbPath)
+		if err != nil {
+			if shared.Verbose > 0 {
+				fmt.Fprintf(os.Stderr, "Warning: failed to create tracker for history: %v\n", err)
 			}
+			return
+		}
+		defer histTracker.Close()
+		recent, err := histTracker.GetRecentCommands(projectPath, 10)
+		if err == nil && len(recent) > 0 {
+			fmt.Printf("%s\n", cyan("Recent Commands"))
+			fmt.Println(strings.Repeat("─", 60))
+			for _, r := range recent {
+				ts := r.Timestamp.Format("01-02 15:04")
+				cmd := r.Command
+				if len(cmd) > 25 {
+					cmd = cmd[:22] + "..."
+				}
+				sign := "•"
+				savedPct := 0.0
+				if r.OriginalTokens > 0 {
+					savedPct = float64(r.SavedTokens) / float64(r.OriginalTokens) * 100
+				}
+				if savedPct >= 70 {
+					sign = "▲"
+				} else if savedPct >= 30 {
+					sign = "■"
+				}
+				fmt.Printf("%s %s %-25s -%.0f%% (%s)\n", ts, sign, cmd, savedPct, utils.FormatTokens(r.SavedTokens))
+			}
+			fmt.Println()
 		}
 	}
 

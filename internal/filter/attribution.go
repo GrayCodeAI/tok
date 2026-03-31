@@ -23,7 +23,7 @@ var fileExtensions = []string{
 	".json:", ".yaml:", ".yml:", ".toml:", ".md:", ".txt:",
 }
 
-// AttributionFilter implements ProCut-style attribution-based token pruning.
+// AttributionFilter implements attribution-based token pruning.
 // Research basis: "ProCut: Progressive Pruning via Attribution" (LinkedIn, 2025)
 // Achieves 78% token reduction by using importance scoring.
 //

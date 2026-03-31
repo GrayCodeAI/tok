@@ -67,9 +67,7 @@ func runNpm(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tokman npm", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	return err
 }

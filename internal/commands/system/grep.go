@@ -1,10 +1,7 @@
 package system
 
 import (
-	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -53,18 +50,11 @@ func runGrep(cmd *cobra.Command, args []string) error {
 	// Add --color=never to avoid ANSI codes
 	grepArgs = append([]string{"--color=never"}, grepArgs...)
 
-	c := exec.Command("grep", grepArgs...)
-
-	var stdout, stderr bytes.Buffer
-	c.Stdout = &stdout
-	c.Stderr = &stderr
-
-	err := c.Run()
-	output := stdout.String()
+	output, exitCode, err := shared.RunAndCapture("grep", grepArgs)
 
 	// Grep returns exit code 1 when no matches - that's not an error for us
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+		if exitCode == 1 {
 			// No matches found - not an error
 			if output == "" {
 				fmt.Println("(no matches)")
@@ -72,7 +62,7 @@ func runGrep(cmd *cobra.Command, args []string) error {
 			}
 		} else {
 			// Real error
-			return fmt.Errorf("grep failed: %w\n%s", err, stderr.String())
+			return fmt.Errorf("grep failed: %w", err)
 		}
 	}
 
@@ -85,9 +75,7 @@ func runGrep(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(filtered)
 	timer.Track(fmt.Sprintf("grep %s", strings.Join(args, " ")), "tokman grep", originalTokens, filteredTokens)
 
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
-	}
+	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
 	return nil
 }

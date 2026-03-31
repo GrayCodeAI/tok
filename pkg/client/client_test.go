@@ -8,8 +8,8 @@ import (
 
 	"google.golang.org/grpc"
 
-	compressionpb "github.com/GrayCodeAI/tokman/pkg/api/proto/compressionv1"
 	analyticspb "github.com/GrayCodeAI/tokman/pkg/api/proto/analyticsv1"
+	compressionpb "github.com/GrayCodeAI/tokman/pkg/api/proto/compressionv1"
 )
 
 // Mock compression server for testing

@@ -198,10 +198,7 @@ func authMiddleware(apiKey string, next http.Handler) http.Handler {
 			return
 		}
 
-		key := r.Header.Get("Authorization")
-		if strings.HasPrefix(key, "Bearer ") {
-			key = key[7:]
-		}
+		key := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 
 		if subtle.ConstantTimeCompare([]byte(key), []byte(apiKey)) != 1 {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)

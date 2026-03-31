@@ -120,9 +120,9 @@ func runFormat(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			os.Exit(exitErr.ExitCode())
+			return fmt.Errorf("command failed with exit code %d: %w", exitErr.ExitCode(), err)
 		}
-		os.Exit(1)
+		return fmt.Errorf("command failed: %w", err)
 	}
 
 	return nil
