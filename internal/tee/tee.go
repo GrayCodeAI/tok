@@ -1,239 +1,170 @@
 package tee
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"sort"
 	"strings"
 	"time"
 )
 
-// Configuration defaults
-const (
-	MinTeeSize      = 500     // Minimum output size to tee (bytes)
-	DefaultMaxFiles = 20      // Default max files to keep
-	DefaultMaxSize  = 1 << 20 // Default max file size (1MB)
-)
+const defaultDir = "~/.local/share/tokman/tee"
+const maxFiles = 20
 
-// Mode controls when tee writes files.
-type Mode int
+type Mode string
 
 const (
-	ModeNever    Mode = iota // Never write tee files
-	ModeFailures             // Write only on command failures (default)
-	ModeAlways               // Always write tee files
+	ModeFailures Mode = "failures"
+	ModeAlways   Mode = "always"
+	ModeNever    Mode = "never"
 )
 
-// Config configures the tee feature.
 type Config struct {
-	Enabled     bool   // Whether tee is enabled
-	Mode        Mode   // When to write tee files
-	MaxFiles    int    // Maximum number of files to keep
-	MaxFileSize int    // Maximum file size in bytes
-	Directory   string // Directory for tee files (empty = default)
+	Enabled  bool
+	Mode     Mode
+	MaxFiles int
+	Dir      string
 }
 
-// DefaultConfig returns the default tee configuration.
 func DefaultConfig() Config {
 	return Config{
-		Enabled:     true,
-		Mode:        ModeFailures,
-		MaxFiles:    DefaultMaxFiles,
-		MaxFileSize: DefaultMaxSize,
-		Directory:   "",
+		Enabled:  true,
+		Mode:     ModeFailures,
+		MaxFiles: maxFiles,
+		Dir:      defaultDir,
 	}
 }
 
-// Tee handles writing raw output to recovery files.
-type Tee struct {
-	config Config
+type TeeEntry struct {
+	Timestamp      time.Time
+	Command        string
+	Filename       string
 }
 
-// New creates a new Tee instance with the given configuration.
-func New(config Config) *Tee {
-	return &Tee{config: config}
+func Save(command string, output string, exitCode int, cfg Config) (string, error) {
+	if !cfg.Enabled || cfg.Mode == ModeNever {
+		return "", nil
+	}
+	if cfg.Mode == ModeFailures && exitCode == 0 {
+		return "", nil
+	}
+
+	dir := expandTilde(cfg.Dir)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return "", err
+	}
+
+	ts := time.Now().Unix()
+	hash := sha256.Sum256([]byte(command))
+	shortHash := fmt.Sprintf("%x", hash[:4])
+	filename := fmt.Sprintf("%d_%s_%s.log", ts, shortHash, strings.ReplaceAll(command, " ", "_"))
+	if len(filename) > 120 {
+		filename = filename[:120] + ".log"
+	}
+	path := filepath.Join(dir, filename)
+
+	if err := os.WriteFile(path, []byte(output), 0644); err != nil {
+		return "", err
+	}
+
+	rotate(dir, cfg.MaxFiles)
+
+	return path, nil
 }
 
-// GetDirectory returns the tee directory path.
-func (t *Tee) GetDirectory() (string, error) {
-	// Check environment variable override
-	if dir := os.Getenv("TOKMAN_TEE_DIR"); dir != "" {
-		return dir, nil
-	}
-
-	// Use configured directory
-	if t.config.Directory != "" {
-		return t.config.Directory, nil
-	}
-
-	// Default: ~/.local/share/tokman/tee/
-	home, err := os.UserHomeDir()
+func List(cfg Config) ([]TeeEntry, error) {
+	dir := expandTilde(cfg.Dir)
+	entries, err := os.ReadDir(dir)
 	if err != nil {
-		return "", fmt.Errorf("failed to get home directory: %w", err)
-	}
-	return filepath.Join(home, ".local", "share", "tokman", "tee"), nil
-}
-
-// ShouldTee determines if output should be tee'd based on config and conditions.
-func (t *Tee) ShouldTee(rawLen int, exitCode int) bool {
-	// Check environment override
-	if os.Getenv("TOKMAN_TEE") == "0" {
-		return false
+		return nil, err
 	}
 
-	if !t.config.Enabled {
-		return false
-	}
-
-	switch t.config.Mode {
-	case ModeNever:
-		return false
-	case ModeFailures:
-		if exitCode == 0 {
-			return false
+	var result []TeeEntry
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".log") {
+			continue
 		}
-	case ModeAlways:
-		// Continue
+		name := strings.TrimSuffix(e.Name(), ".log")
+		parts := strings.SplitN(name, "_", 3)
+		if len(parts) < 2 {
+			continue
+		}
+		var ts int64
+		fmt.Sscanf(parts[0], "%d", &ts)
+		cmd := ""
+		if len(parts) >= 3 {
+			cmd = strings.ReplaceAll(parts[2], "_", " ")
+		}
+		result = append(result, TeeEntry{
+			Timestamp: time.Unix(ts, 0),
+			Command:   cmd,
+			Filename:  e.Name(),
+		})
 	}
 
-	// Skip small outputs
-	if rawLen < MinTeeSize {
-		return false
-	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Timestamp.After(result[j].Timestamp)
+	})
 
-	return true
+	return result, nil
 }
 
-// Write writes the raw output to a tee file.
-// Returns the file path if written, or empty string if skipped.
-func (t *Tee) Write(raw string, commandSlug string, exitCode int) string {
-	if !t.ShouldTee(len(raw), exitCode) {
-		return ""
-	}
-
-	dir, err := t.GetDirectory()
+func Read(filename string, cfg Config) (string, error) {
+	dir := expandTilde(cfg.Dir)
+	path := filepath.Join(dir, filename)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		return ""
+		return "", err
 	}
-
-	// Create directory if needed
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return ""
-	}
-
-	// Sanitize slug for filename
-	slug := sanitizeSlug(commandSlug)
-
-	// Generate filename with epoch timestamp
-	epoch := time.Now().Unix()
-	filename := fmt.Sprintf("%d_%s.log", epoch, slug)
-	outPath := filepath.Join(dir, filename)
-
-	// Truncate if needed
-	content := raw
-	if len(raw) > t.config.MaxFileSize {
-		content = fmt.Sprintf("%s\n\n--- truncated at %d bytes ---",
-			raw[:t.config.MaxFileSize], t.config.MaxFileSize)
-	}
-
-	// Write file
-	if err := os.WriteFile(outPath, []byte(content), 0600); err != nil {
-		return ""
-	}
-
-	// Rotate old files
-	t.cleanupOldFiles(dir)
-
-	return outPath
+	return string(data), nil
 }
 
-// WriteAndHint writes the raw output and returns a formatted hint.
-func (t *Tee) WriteAndHint(raw string, commandSlug string, exitCode int) string {
-	path := t.Write(raw, commandSlug, exitCode)
-	if path == "" {
-		return ""
-	}
-	return FormatHint(path)
-}
-
-// cleanupOldFiles removes old tee files, keeping only the newest MaxFiles.
-func (t *Tee) cleanupOldFiles(dir string) {
+func rotate(dir string, max int) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		return
 	}
 
-	// Filter .log files
-	var logFiles []os.DirEntry
-	for _, entry := range entries {
-		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".log") {
-			logFiles = append(logFiles, entry)
+	var files []os.DirEntry
+	for _, e := range entries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ".log") {
+			files = append(files, e)
 		}
 	}
 
-	if len(logFiles) <= t.config.MaxFiles {
+	if len(files) <= max {
 		return
 	}
 
-	// Sort by name (starts with epoch timestamp, so chronological)
-	// We want to keep newest, so sort ascending and remove oldest
-	sorted := make([]string, len(logFiles))
-	for i, e := range logFiles {
-		sorted[i] = e.Name()
-	}
-	sort.Strings(sorted)
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name() < files[j].Name()
+	})
 
-	// Remove oldest files
-	toRemove := len(sorted) - t.config.MaxFiles
-	for i := 0; i < toRemove; i++ {
-		if err := os.Remove(filepath.Join(dir, sorted[i])); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", sorted[i], err)
+	for i := 0; i < len(files)-max; i++ {
+		os.Remove(filepath.Join(dir, files[i].Name()))
+	}
+}
+
+func expandTilde(path string) string {
+	if strings.HasPrefix(path, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return path
 		}
+		return filepath.Join(home, path[1:])
 	}
+	return path
 }
 
-// sanitizeSlugRe is compiled once for use in sanitizeSlug.
-var sanitizeSlugRe = regexp.MustCompile(`[^a-zA-Z0-9_-]`)
-
-// sanitizeSlug sanitizes a command slug for use in filenames.
-// Replaces non-alphanumeric chars (except underscore/hyphen) with underscore,
-// truncates at 40 chars.
-func sanitizeSlug(slug string) string {
-	// Replace non-alphanumeric (except _ and -) with _
-	sanitized := sanitizeSlugRe.ReplaceAllString(slug, "_")
-
-	// Truncate at 40 chars
-	if len(sanitized) > 40 {
-		sanitized = sanitized[:40]
+// WriteAndHint saves output and returns a hint string for the LLM.
+func WriteAndHint(output string, command string, exitCode int) string {
+	cfg := DefaultConfig()
+	path, err := Save(command, output, exitCode, cfg)
+	if err != nil || path == "" {
+		return ""
 	}
-
-	return sanitized
+	return fmt.Sprintf("[full output saved: %s]", path)
 }
 
-// FormatHint formats a file path as a hint string with ~ shorthand.
-func FormatHint(path string) string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return path
-	}
-
-	display := path
-
-	if home != "" {
-		if strings.HasPrefix(path, home) {
-			display = "~" + strings.TrimPrefix(path, home)
-		}
-	}
-
-	return fmt.Sprintf("[full output: %s]", display)
-}
-
-// Global default tee instance
-var defaultTee = New(DefaultConfig())
-
-// WriteAndHint writes and returns hint using the default tee instance.
-func WriteAndHint(raw string, commandSlug string, exitCode int) string {
-	return defaultTee.WriteAndHint(raw, commandSlug, exitCode)
-}
