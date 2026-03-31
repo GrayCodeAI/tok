@@ -3,6 +3,7 @@ package dashboard
 import (
 	"net/http"
 
+	"github.com/GrayCodeAI/tokman/internal/httpmw"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -26,7 +27,7 @@ func commandsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"executions":   stats[i].ExecutionCount,
 			}
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -52,7 +53,7 @@ func recentHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"parse_success": r.ParseSuccess,
 			}
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -69,6 +70,6 @@ func failuresHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			"recovery_rate":  summary.RecoveryRate,
 			"top_failures":   summary.TopCommands,
 		}
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }

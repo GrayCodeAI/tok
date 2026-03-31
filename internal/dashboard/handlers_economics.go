@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/GrayCodeAI/tokman/internal/ccusage"
+	"github.com/GrayCodeAI/tokman/internal/httpmw"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -70,7 +71,7 @@ func economicsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			"cost_per_million":   costPerMillion,
 		}
 
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -99,7 +100,7 @@ func llmStatusHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			response["usage_tracking"] = "internal"
 		}
 
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -114,13 +115,13 @@ func modelBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		}
 
 		if !ccusage.IsAvailable() {
-			jsonResponse(w, http.StatusOK, response)
+			httpmw.JSONResponse(w, http.StatusOK, response)
 			return
 		}
 
 		monthly, err := ccusage.Fetch(ccusage.Monthly)
 		if err != nil || len(monthly) == 0 {
-			jsonResponse(w, http.StatusOK, response)
+			httpmw.JSONResponse(w, http.StatusOK, response)
 			return
 		}
 
@@ -135,7 +136,7 @@ func modelBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 		response["sessions"] = sessions
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
