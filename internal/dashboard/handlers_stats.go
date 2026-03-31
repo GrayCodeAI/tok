@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/GrayCodeAI/tokman/internal/httpmw"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -27,7 +28,7 @@ func statsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			"tokens_saved_24h":   saved24h,
 			"tokens_saved_total": savedTotal,
 		}
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -55,7 +56,7 @@ func dailyHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"commands":     r.Commands,
 			}
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -87,7 +88,7 @@ func weeklyHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"commands":     data.commands,
 			})
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -118,7 +119,7 @@ func monthlyHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"commands":     data.commands,
 			})
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -150,7 +151,7 @@ func performanceHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			"total_commands":   len(records),
 			"slow_commands":    slowCommands[:min(5, len(slowCommands))],
 		}
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -180,7 +181,7 @@ func topCommandsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"reduction_pct": stats[i].ReductionPct,
 			}
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -204,7 +205,7 @@ func hourlyHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"commands": hours[h],
 			}
 		}
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -246,7 +247,7 @@ func dailyBreakdownHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -296,7 +297,7 @@ func projectStatsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -342,7 +343,7 @@ func sessionStatsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 
@@ -396,6 +397,6 @@ func savingsTrendHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 
-		jsonResponse(w, http.StatusOK, result)
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }

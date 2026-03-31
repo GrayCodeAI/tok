@@ -314,7 +314,7 @@ type StatsResponse struct {
 // Handlers
 
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
-	jsonResponse(w, http.StatusOK, HealthResponse{
+	httpmw.JSONResponse(w, http.StatusOK, HealthResponse{
 		Status:  "ok",
 		Version: s.version,
 	})
@@ -330,7 +330,7 @@ func (s *Server) handleHealthReady(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jsonResponse(w, http.StatusOK, map[string]any{
+	httpmw.JSONResponse(w, http.StatusOK, map[string]any{
 		"status":  "ready",
 		"version": s.version,
 	})
@@ -393,7 +393,7 @@ func (s *Server) handleCompress(w http.ResponseWriter, r *http.Request) {
 		"processing_ms":   elapsed.Milliseconds(),
 	})
 
-	jsonResponse(w, http.StatusOK, CompressResponse{
+	httpmw.JSONResponse(w, http.StatusOK, CompressResponse{
 		Output:           output,
 		OriginalTokens:   stats.OriginalTokens,
 		FinalTokens:      stats.FinalTokens,
@@ -447,7 +447,7 @@ func (s *Server) handleCompressAdaptive(w http.ResponseWriter, r *http.Request) 
 		"processing_ms":   elapsed.Milliseconds(),
 	})
 
-	jsonResponse(w, http.StatusOK, CompressResponse{
+	httpmw.JSONResponse(w, http.StatusOK, CompressResponse{
 		Output:           output,
 		OriginalTokens:   stats.OriginalTokens,
 		FinalTokens:      stats.FinalTokens,
@@ -476,14 +476,14 @@ func (s *Server) handleAnalyze(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ct := s.selector.AnalyzeContent(req.Input)
-	jsonResponse(w, http.StatusOK, AnalyzeResponse{
+	httpmw.JSONResponse(w, http.StatusOK, AnalyzeResponse{
 		ContentType: ct.String(),
 	})
 }
 
 func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 	snapshot := s.metrics.Snapshot()
-	jsonResponse(w, http.StatusOK, map[string]any{
+	httpmw.JSONResponse(w, http.StatusOK, map[string]any{
 		"version":            s.version,
 		"layer_count":        defaultLayerCount,
 		"total_requests":     snapshot.TotalRequests,
@@ -496,14 +496,4 @@ func (s *Server) handleStats(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.Write([]byte(s.metrics.PrometheusFormat()))
-}
-
-// Helper
-
-func jsonResponse(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("json encode error: %v", err)
-	}
 }

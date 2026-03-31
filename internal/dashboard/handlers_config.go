@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/ccusage"
+	"github.com/GrayCodeAI/tokman/internal/httpmw"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -22,7 +23,7 @@ func alertsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		configMu.RUnlock()
 
 		if !cfg.Enabled {
-			jsonResponse(w, http.StatusOK, map[string]any{"enabled": false, "alerts": alerts})
+			httpmw.JSONResponse(w, http.StatusOK, map[string]any{"enabled": false, "alerts": alerts})
 			return
 		}
 
@@ -97,7 +98,7 @@ func alertsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 				"usage_spike_threshold": cfg.UsageSpikeThreshold,
 			},
 		}
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -180,7 +181,7 @@ func configHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			configMu.RLock()
 			cfg := defaultConfig
 			configMu.RUnlock()
-			jsonResponse(w, http.StatusOK, cfg)
+			httpmw.JSONResponse(w, http.StatusOK, cfg)
 			return
 		}
 
@@ -208,7 +209,7 @@ func configHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		cfg := defaultConfig
 		configMu.Unlock()
 
-		jsonResponse(w, http.StatusOK, cfg)
+		httpmw.JSONResponse(w, http.StatusOK, cfg)
 	}
 }
 
@@ -299,7 +300,7 @@ func reportHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			response["top_projects"] = projects
 		}
 
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }
 
@@ -309,7 +310,7 @@ func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		// Get total stats
 		stats, _ := tracker.GetSavings("")
 		if stats == nil {
-			jsonResponse(w, http.StatusOK, map[string]any{"error": "no data"})
+			httpmw.JSONResponse(w, http.StatusOK, map[string]any{"error": "no data"})
 			return
 		}
 
@@ -370,6 +371,6 @@ func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			}
 		}
 
-		jsonResponse(w, http.StatusOK, response)
+		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
 }

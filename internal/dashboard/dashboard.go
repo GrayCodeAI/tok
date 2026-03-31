@@ -3,7 +3,6 @@ package dashboard
 import (
 	"context"
 	"crypto/subtle"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -220,12 +219,4 @@ func logoHandler(w http.ResponseWriter, r *http.Request) {
 func dashboardIndexHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	fmt.Fprint(w, dashboardHTML)
-}
-
-func jsonResponse(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		log.Printf("json encode error: %v", err)
-	}
 }
