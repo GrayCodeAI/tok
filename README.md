@@ -7,9 +7,17 @@
 [![Tests](https://img.shields.io/badge/Tests-42%20packages-green)](#)
 [![Features](https://img.shields.io/badge/Features-200%2B%20from%2010%20repos-orange)](#)
 
+[Website](https://tokman.dev) · [Install](#installation) · [Quick Start](#quick-start) · [Architecture](#architecture) · [Contributing](#contributing)
+
 ---
 
 TokMan intercepts CLI commands and applies a **31-layer compression pipeline** to reduce token usage for AI coding assistants. Built on research from 30+ papers, it achieves **60–90% token reduction** on common development operations — far beyond simple output filtering.
+
+```
+Input:  10,000 tokens  ──►  TokMan  ──►  Output:  1,500 tokens
+                                        Savings:   85%
+                                        Cost:      $0.085 → $0.013
+```
 
 ## Token Savings (30-min Claude Code Session)
 
@@ -100,7 +108,7 @@ tokman tui                         # Analytics dashboard
     +-----------------------------------+        +---- (filtered) ------+ pipeline  +
 ```
 
-Unlike simple output filters, TokMan applies a **31-layer research-backed compression pipeline** with semantic understanding, AST preservation, and goal-driven selection — not just deduplication and truncation.
+Unlike simple output filters (dedup + truncation), TokMan applies a **31-layer research-backed compression pipeline** with semantic understanding, AST preservation, goal-driven selection, and inter-layer feedback.
 
 ## Commands
 
@@ -227,7 +235,7 @@ tokman session                     # Show TokMan adoption across recent sessions
 
 **Directory listing:**
 
-```bash
+```
 # ls -la (45 lines, ~800 tokens)         # tokman ls (12 lines, ~150 tokens)
 drwxr-xr-x  15 user staff 480 ...        my-project/
 -rw-r--r--   1 user staff 1234 ...        +-- src/ (8 files)
@@ -237,7 +245,7 @@ drwxr-xr-x  15 user staff 480 ...        my-project/
 
 **Git operations:**
 
-```bash
+```
 # git push (15 lines, ~200 tokens)        # tokman git push (1 line, ~10 tokens)
 Enumerating objects: 5, done.              ok main
 Counting objects: 100% (5/5), done.
@@ -247,7 +255,7 @@ Delta compression using up to 8 threads
 
 **Test output:**
 
-```bash
+```
 # cargo test (200+ lines on failure)      # tokman test cargo test (~20 lines)
 running 15 tests                           FAILED: 2/15 tests
 test utils::test_parse ... ok                test_edge_case: assertion failed
@@ -464,6 +472,20 @@ port = 8080
 | Cache | O(1) LRU with fingerprinting |
 | SIMD | Go 1.26+ vectorized |
 | Pipeline | 31 layers, stage gates, early exit |
+
+## vs Competitors
+
+| Feature | TokMan | rtk | tokf | lean-ctx | kompact | tamp |
+|---------|--------|-----|------|----------|---------|------|
+| Compression layers | **31** | 4 | TOML | 90+ rules | 8 | 10 |
+| Research-backed | **30+ papers** | No | No | No | No | No |
+| HTTP proxy | **Yes** | No | No | No | Yes | Yes |
+| AI gateway | **Yes** | No | No | No | No | No |
+| Security (PII) | **Yes** | No | No | No | No | No |
+| Analytics TUI | **Yes** | `gain` only | No | Dashboard | Grafana | No |
+| SIMD acceleration | **Go 1.26+** | No | No | No | No | No |
+| WASM plugins | **Yes** | No | Lua | No | No | No |
+| Agent support | **10+** | 10 | 8 | 10+ | 6+ | 6+ |
 
 ## Documentation
 
