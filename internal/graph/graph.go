@@ -352,6 +352,9 @@ func extractImports(path string, lang string) []string {
 }
 
 var identRe = regexp.MustCompile(`\b[A-Za-z_][A-Za-z0-9_]*\b`)
+var pyDefRe = regexp.MustCompile(`^\s*(?:async\s+def|def|class)\s+([A-Za-z_][A-Za-z0-9_]*)`)
+var tsDeclRe = regexp.MustCompile(`^\s*(?:export\s+)?(?:async\s+)?(?:function|class|interface|type|const|let|var)\s+([A-Za-z_][A-Za-z0-9_]*)`)
+var tsArrowRe = regexp.MustCompile(`^\s*(?:export\s+)?const\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?:async\s*)?\(`)
 
 func extractSymbols(path, lang string) ([]string, []string) {
 	if lang == "go" {
@@ -371,24 +374,18 @@ func extractSymbols(path, lang string) ([]string, []string) {
 	switch lang {
 	case "python":
 		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "def ") || strings.HasPrefix(trimmed, "class ") {
-				fields := strings.Fields(trimmed)
-				if len(fields) > 1 {
-					symbols[trimPunctuation(fields[1])] = struct{}{}
-				}
+			if match := pyDefRe.FindStringSubmatch(line); len(match) == 2 {
+				symbols[match[1]] = struct{}{}
 			}
 		}
 	case "javascript", "typescript":
 		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			for _, prefix := range []string{"function ", "class ", "const ", "let ", "var "} {
-				if strings.HasPrefix(trimmed, prefix) {
-					name := symbolAfter(trimmed, prefix)
-					if name != "" {
-						symbols[name] = struct{}{}
-					}
-				}
+			if match := tsDeclRe.FindStringSubmatch(line); len(match) == 2 {
+				symbols[match[1]] = struct{}{}
+				continue
+			}
+			if match := tsArrowRe.FindStringSubmatch(line); len(match) == 2 {
+				symbols[match[1]] = struct{}{}
 			}
 		}
 	}
@@ -399,10 +396,6 @@ func extractSymbols(path, lang string) ([]string, []string) {
 		}
 		refs[ident] = struct{}{}
 	}
-	for sym := range symbols {
-		delete(refs, sym)
-	}
-
 	return mapKeys(symbols), mapKeys(refs)
 }
 
@@ -556,7 +549,7 @@ func mapKeys(values map[string]struct{}) []string {
 
 func isKeyword(ident string) bool {
 	switch ident {
-	case "func", "type", "var", "const", "package", "import", "return", "class", "def", "from", "for", "if", "else", "switch", "case", "interface":
+	case "func", "type", "var", "const", "package", "import", "return", "class", "def", "from", "for", "if", "else", "switch", "case", "interface", "async", "export", "pass":
 		return true
 	default:
 		return false

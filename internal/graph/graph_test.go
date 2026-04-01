@@ -101,6 +101,52 @@ func helper() string { return "ok" }
 	}
 }
 
+func TestExtractTypeScriptSymbols(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "main.ts")
+	content := `export class Service {}
+export async function boot() {}
+const helper = () => "ok"
+boot()
+`
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	symbols, refs := extractSymbols(path, "typescript")
+	if !contains(symbols, "Service") || !contains(symbols, "boot") || !contains(symbols, "helper") {
+		t.Fatalf("expected TS symbols, got %v", symbols)
+	}
+	if !contains(refs, "boot") {
+		t.Fatalf("expected TS reference, got %v", refs)
+	}
+}
+
+func TestExtractPythonSymbols(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "main.py")
+	content := `class Service:
+    pass
+
+async def run():
+    return helper()
+
+def helper():
+    return "ok"
+`
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	symbols, refs := extractSymbols(path, "python")
+	if !contains(symbols, "Service") || !contains(symbols, "run") || !contains(symbols, "helper") {
+		t.Fatalf("expected Python symbols, got %v", symbols)
+	}
+	if !contains(refs, "helper") {
+		t.Fatalf("expected Python reference, got %v", refs)
+	}
+}
+
 func contains(values []string, target string) bool {
 	for _, value := range values {
 		if value == target {

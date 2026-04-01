@@ -312,6 +312,37 @@ func TestContextReadTopFilesHandler(t *testing.T) {
 	}
 }
 
+func TestContextReadComparisonHandler(t *testing.T) {
+	tracker := setupTestDB(t)
+	for _, record := range []*tracking.CommandRecord{
+		{Command: "tokman ctx read alpha.go", OriginalTokens: 100, FilteredTokens: 30, SavedTokens: 70},
+		{Command: "tokman mcp bundle /tmp/alpha.go", OriginalTokens: 200, FilteredTokens: 60, SavedTokens: 140},
+	} {
+		if err := tracker.Record(record); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+	}
+
+	req := httptest.NewRequest("GET", "/api/context-read-comparison", nil)
+	w := httptest.NewRecorder()
+	contextReadComparisonHandler(tracker)(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", w.Code)
+	}
+
+	var response map[string]map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+	if response["single"]["tokens_saved"].(float64) != 70 {
+		t.Fatalf("expected 70 single-file tokens saved, got %v", response["single"]["tokens_saved"])
+	}
+	if response["bundle"]["tokens_saved"].(float64) != 140 {
+		t.Fatalf("expected 140 bundle tokens saved, got %v", response["bundle"]["tokens_saved"])
+	}
+}
+
 func TestExportCSVHandler(t *testing.T) {
 	tracker := setupTestDB(t)
 

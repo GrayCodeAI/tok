@@ -102,6 +102,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	mux.Handle("/api/stats", corsMiddleware(statsHandler(tracker)))
 	mux.Handle("/api/context-reads", corsMiddleware(contextReadsHandler(tracker)))
 	mux.Handle("/api/context-read-summary", corsMiddleware(contextReadSummaryHandler(tracker)))
+	mux.Handle("/api/context-read-comparison", corsMiddleware(contextReadComparisonHandler(tracker)))
 	mux.Handle("/api/context-read-trend", corsMiddleware(contextReadTrendHandler(tracker)))
 	mux.Handle("/api/context-read-top-files", corsMiddleware(contextReadTopFilesHandler(tracker)))
 	mux.Handle("/api/context-read-projects", corsMiddleware(contextReadProjectsHandler(tracker)))
