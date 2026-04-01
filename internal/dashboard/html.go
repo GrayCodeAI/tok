@@ -586,6 +586,11 @@ const dashboardHTML = `<!DOCTYPE html>
                 <div class="value" id="context-read-count">--</div>
                 <div class="sub" id="context-read-saved">-- tokens saved</div>
             </div>
+            <div class="stat-card context-reads">
+                <h3>Bundle Vs Single</h3>
+                <div class="value" id="context-bundle-saved">--</div>
+                <div class="sub" id="context-single-saved">--</div>
+            </div>
         </div>
 
         <div class="charts-grid">
@@ -717,7 +722,7 @@ const dashboardHTML = `<!DOCTYPE html>
             const contextReadEndpoint = currentContextReadKind === 'all'
                 ? '/api/context-reads'
                 : '/api/context-reads?kind=' + encodeURIComponent(currentContextReadKind);
-            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics, contextReads, contextReadSummary, contextReadTrend, contextReadTopFiles, contextReadProjects] = await Promise.all([
+            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics, contextReads, contextReadSummary, contextReadTrend, contextReadTopFiles, contextReadProjects, contextReadComparison] = await Promise.all([
                 fetchAPI('/api/stats'),
                 fetchAPI('/api/economics'),
                 fetchAPI('/api/daily?days=' + currentDays),
@@ -737,6 +742,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 fetchAPI('/api/context-read-trend'),
                 fetchAPI('/api/context-read-top-files'),
                 fetchAPI('/api/context-read-projects'),
+                fetchAPI('/api/context-read-comparison'),
             ]);
 
             // Update LLM Banner
@@ -768,6 +774,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 document.getElementById('cmd-rate').textContent = avgPerDay + ' avg/day';
                 document.getElementById('context-read-count').textContent = (stats.context_read_commands || 0).toLocaleString();
                 document.getElementById('context-read-saved').textContent = buildContextReadSummary(contextReadSummary, stats.context_read_saved || 0);
+                renderContextReadComparison(contextReadComparison);
             }
 
             if (economics) {
@@ -1217,6 +1224,14 @@ const dashboardHTML = `<!DOCTYPE html>
                 return '<div class=\"project-item\"><span class=\"name\" title=\"' + (item.project || '') + '\">' + name + '</span>' +
                     '<div class=\"stats\"><span class=\"tokens\">+' + (item.tokens_saved || 0).toLocaleString() + '</span><span>' + (item.commands || 0) + ' reads</span></div></div>';
             }).join('');
+        }
+
+        function renderContextReadComparison(data) {
+            const bundle = data && data.bundle ? data.bundle : { tokens_saved: 0, commands: 0 };
+            const single = data && data.single ? data.single : { tokens_saved: 0, commands: 0 };
+            document.getElementById('context-bundle-saved').textContent = '+' + (bundle.tokens_saved || 0).toLocaleString();
+            document.getElementById('context-single-saved').textContent =
+                'single: +' + (single.tokens_saved || 0).toLocaleString() + ' · bundle cmds: ' + (bundle.commands || 0);
         }
 
         function renderFailures(data) {

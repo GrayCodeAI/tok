@@ -114,6 +114,7 @@ func contextReadTrendHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			   OR command GLOB 'tokman ctx read *'
 			   OR command GLOB 'tokman ctx delta *'
 			   OR command GLOB 'tokman mcp read *'
+			   OR command GLOB 'tokman mcp bundle *'
 			GROUP BY DATE(timestamp)
 			ORDER BY day ASC
 		`
@@ -160,6 +161,7 @@ func contextReadTopFilesHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			   OR command GLOB 'tokman ctx read *'
 			   OR command GLOB 'tokman ctx delta *'
 			   OR command GLOB 'tokman mcp read *'
+			   OR command GLOB 'tokman mcp bundle *'
 			GROUP BY command
 			ORDER BY saved DESC
 			LIMIT 10
@@ -205,7 +207,8 @@ func contextReadProjectsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			WHERE (command GLOB 'tokman read *'
 			    OR command GLOB 'tokman ctx read *'
 			    OR command GLOB 'tokman ctx delta *'
-			    OR command GLOB 'tokman mcp read *')
+			    OR command GLOB 'tokman mcp read *'
+			    OR command GLOB 'tokman mcp bundle *')
 			  AND project_path IS NOT NULL AND project_path != ''
 			GROUP BY project_path
 			ORDER BY saved DESC
@@ -245,6 +248,42 @@ func extractReadTarget(command string) string {
 		return ""
 	}
 	return parts[len(parts)-1]
+}
+
+func contextReadComparisonHandler(tracker *tracking.Tracker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		singlePatterns := []string{
+			"tokman read *",
+			"tokman ctx read *",
+			"tokman ctx delta *",
+			"tokman mcp read *",
+		}
+		bundlePatterns := []string{"tokman mcp bundle *"}
+
+		singleSummary, err := tracker.GetSavingsForCommands("", singlePatterns)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+		bundleSummary, err := tracker.GetSavingsForCommands("", bundlePatterns)
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		httpmw.JSONResponse(w, http.StatusOK, map[string]any{
+			"single": map[string]any{
+				"commands":      singleSummary.TotalCommands,
+				"tokens_saved":  singleSummary.TotalSaved,
+				"reduction_pct": singleSummary.ReductionPct,
+			},
+			"bundle": map[string]any{
+				"commands":      bundleSummary.TotalCommands,
+				"tokens_saved":  bundleSummary.TotalSaved,
+				"reduction_pct": bundleSummary.ReductionPct,
+			},
+		})
+	}
 }
 
 func dailyHandler(tracker *tracking.Tracker) http.HandlerFunc {

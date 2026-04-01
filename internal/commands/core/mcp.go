@@ -123,7 +123,7 @@ func authMiddleware(apiKey string, next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func runMCP(cmd *cobra.Command, args []string) error {
+func newMCPHandler(apiKey string) http.Handler {
 	mux := http.NewServeMux()
 
 	// Health check (no auth required)
@@ -475,14 +475,17 @@ func runMCP(cmd *cobra.Command, args []string) error {
 	}))
 
 	rl := httpmw.NewDefault()
+	return rl.Middleware(mux)
+}
 
+func runMCP(cmd *cobra.Command, args []string) error {
 	addr := fmt.Sprintf(":%d", mcpPort)
 	fmt.Fprintf(os.Stderr, "tokman MCP server listening on %s\n", addr)
 	fmt.Fprintf(os.Stderr, "Endpoints: /compress, /read, /bundle, /explain, /restore, /health\n")
 
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           rl.Middleware(mux),
+		Handler:           newMCPHandler(mcpAPIKey),
 		ReadTimeout:       30 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout:      60 * time.Second,
