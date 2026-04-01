@@ -51,3 +51,27 @@ func TestStorePrunesOldEntries(t *testing.T) {
 		t.Fatalf("expected at most %d snapshots, got %d", maxSnapshots, len(store.Snapshots))
 	}
 }
+
+func TestStoreRenderCacheRoundTrip(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "read-state.json")
+
+	store := &Store{}
+	store.PutRender("cache-key", "rendered output", 100, 40)
+	if err := store.Save(path); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	loaded, err := Load(path)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	entry, ok := loaded.GetRender("cache-key")
+	if !ok {
+		t.Fatal("expected render cache entry")
+	}
+	if entry.Output != "rendered output" {
+		t.Fatalf("unexpected output %q", entry.Output)
+	}
+}

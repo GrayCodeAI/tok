@@ -286,6 +286,10 @@ Dashboard support:
 - `/api/context-read-top-files` and `/api/context-read-projects` show where context delivery is paying off
 - the dashboard UI can filter smart-read activity by type
 
+MCP support:
+- `POST /read` for single-file smart reads
+- `POST /bundle` for graph-aware target + related-file bundles
+
 ### Debugging Failed Tests
 
 ```bash
