@@ -876,6 +876,8 @@ const dashboardHTML = `<!DOCTYPE html>
             var cacheReadCompact = data.cc_cache_read ? formatCompact(data.cc_cache_read) : 'N/A';
             var cacheCreateCompact = data.cc_cache_create ? formatCompact(data.cc_cache_create) : 'N/A';
             var contextHitRate = data.context_cache_hit_rate ? data.context_cache_hit_rate.toFixed(1) + '%' : '0.0%';
+            var byKind = formatContextKindBreakdown(data.context_effectiveness_by_kind || []);
+            var byProject = formatContextProjectBreakdown(data.context_effectiveness_by_project || []);
             
             container.innerHTML = 
                 '<div class="cache-stat highlight">' +
@@ -897,7 +899,30 @@ const dashboardHTML = `<!DOCTYPE html>
                 '<div class="cache-stat highlight">' +
                     '<div class="value">' + contextHitRate + '</div>' +
                     '<div class="label">Context Cache Hit Rate</div>' +
+                '</div>' +
+                '<div class="cache-stat" style="grid-column: span 2">' +
+                    '<div class="value" style="font-size:1rem">' + byKind + '</div>' +
+                    '<div class="label">Context Effectiveness By Kind</div>' +
+                '</div>' +
+                '<div class="cache-stat" style="grid-column: span 2">' +
+                    '<div class="value" style="font-size:1rem">' + byProject + '</div>' +
+                    '<div class="label">Top Context Projects</div>' +
                 '</div>';
+        }
+
+        function formatContextKindBreakdown(items) {
+            if (!items || items.length === 0) return 'No context data';
+            return items.map(function(item) {
+                return item.kind + ': ' + (item.tokens_saved || 0).toLocaleString();
+            }).join(' · ');
+        }
+
+        function formatContextProjectBreakdown(items) {
+            if (!items || items.length === 0) return 'No project data';
+            return items.slice(0, 3).map(function(item) {
+                var name = item.project ? item.project.split('/').pop() : 'unknown';
+                return name + ': ' + (item.tokens_saved || 0).toLocaleString();
+            }).join(' · ');
         }
 
         function renderLLMStatus(data) {

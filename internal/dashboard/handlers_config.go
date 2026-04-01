@@ -362,6 +362,8 @@ func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		response["context_cache_hits"] = contextCache.Hits
 		response["context_cache_misses"] = contextCache.Misses
 		response["context_cache_hit_rate"] = contextCache.HitRate * 100
+		response["context_effectiveness_by_kind"] = buildContextEffectivenessByKind(tracker)
+		response["context_effectiveness_by_project"] = buildContextEffectivenessByProject(tracker)
 
 		// Add ccusage cache stats if available
 		if ccusage.IsAvailable() {
@@ -379,4 +381,75 @@ func cacheMetricsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 
 		httpmw.JSONResponse(w, http.StatusOK, response)
 	}
+}
+
+func buildContextEffectivenessByKind(tracker *tracking.Tracker) []map[string]any {
+	type kindDef struct {
+		name     string
+		patterns []string
+	}
+	defs := []kindDef{
+		{name: "read", patterns: contextread.TrackedCommandPatternsForKind("read")},
+		{name: "delta", patterns: contextread.TrackedCommandPatternsForKind("delta")},
+		{name: "mcp", patterns: contextread.TrackedCommandPatternsForKind("mcp")},
+	}
+
+	result := make([]map[string]any, 0, len(defs))
+	for _, def := range defs {
+		summary, err := tracker.GetSavingsForCommands("", def.patterns)
+		if err != nil {
+			continue
+		}
+		result = append(result, map[string]any{
+			"kind":          def.name,
+			"commands":      summary.TotalCommands,
+			"tokens_saved":  summary.TotalSaved,
+			"reduction_pct": summary.ReductionPct,
+		})
+	}
+	return result
+}
+
+func buildContextEffectivenessByProject(tracker *tracking.Tracker) []map[string]any {
+	rows, err := tracker.Query(`
+		SELECT
+			project_path,
+			COUNT(*) as commands,
+			COALESCE(SUM(saved_tokens), 0) as saved,
+			COALESCE(SUM(original_tokens), 0) as original
+		FROM commands
+		WHERE (command GLOB 'tokman read *'
+		    OR command GLOB 'tokman ctx read *'
+		    OR command GLOB 'tokman ctx delta *'
+		    OR command GLOB 'tokman mcp read *'
+		    OR command GLOB 'tokman mcp bundle *')
+		  AND project_path IS NOT NULL AND project_path != ''
+		GROUP BY project_path
+		ORDER BY saved DESC
+		LIMIT 5
+	`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var result []map[string]any
+	for rows.Next() {
+		var project string
+		var commands, saved, original int
+		if err := rows.Scan(&project, &commands, &saved, &original); err != nil {
+			continue
+		}
+		reduction := 0.0
+		if original > 0 {
+			reduction = float64(saved) / float64(original) * 100
+		}
+		result = append(result, map[string]any{
+			"project":       project,
+			"commands":      commands,
+			"tokens_saved":  saved,
+			"reduction_pct": reduction,
+		})
+	}
+	return result
 }

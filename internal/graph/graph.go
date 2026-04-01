@@ -3,6 +3,9 @@ package graph
 import (
 	"bufio"
 	"fmt"
+	goast "go/ast"
+	goparser "go/parser"
+	gotoken "go/token"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -351,6 +354,10 @@ func extractImports(path string, lang string) []string {
 var identRe = regexp.MustCompile(`\b[A-Za-z_][A-Za-z0-9_]*\b`)
 
 func extractSymbols(path, lang string) ([]string, []string) {
+	if lang == "go" {
+		return extractGoSymbols(path)
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, nil
@@ -362,28 +369,6 @@ func extractSymbols(path, lang string) ([]string, []string) {
 	refs := map[string]struct{}{}
 
 	switch lang {
-	case "go":
-		for _, line := range lines {
-			trimmed := strings.TrimSpace(line)
-			if strings.HasPrefix(trimmed, "func ") {
-				name := symbolAfter(trimmed, "func ")
-				if name != "" {
-					symbols[name] = struct{}{}
-				}
-			}
-			if strings.HasPrefix(trimmed, "type ") {
-				name := symbolAfter(trimmed, "type ")
-				if name != "" {
-					symbols[name] = struct{}{}
-				}
-			}
-			if strings.HasPrefix(trimmed, "var ") || strings.HasPrefix(trimmed, "const ") {
-				parts := strings.Fields(trimmed)
-				if len(parts) > 1 {
-					symbols[trimPunctuation(parts[1])] = struct{}{}
-				}
-			}
-		}
 	case "python":
 		for _, line := range lines {
 			trimmed := strings.TrimSpace(line)
@@ -418,6 +403,102 @@ func extractSymbols(path, lang string) ([]string, []string) {
 		delete(refs, sym)
 	}
 
+	return mapKeys(symbols), mapKeys(refs)
+}
+
+func extractGoSymbols(path string) ([]string, []string) {
+	fset := gotoken.NewFileSet()
+	file, err := goparser.ParseFile(fset, path, nil, goparser.SkipObjectResolution)
+	if err != nil {
+		return extractGenericSymbols(path)
+	}
+
+	symbols := map[string]struct{}{}
+	refs := map[string]struct{}{}
+
+	goast.Inspect(file, func(n goast.Node) bool {
+		switch node := n.(type) {
+		case *goast.FuncDecl:
+			symbols[node.Name.Name] = struct{}{}
+			if node.Recv != nil && len(node.Recv.List) > 0 {
+				if ident, ok := recvTypeName(node.Recv.List[0].Type); ok {
+					symbols[ident] = struct{}{}
+				}
+			}
+		case *goast.TypeSpec:
+			symbols[node.Name.Name] = struct{}{}
+		case *goast.ValueSpec:
+			for _, name := range node.Names {
+				symbols[name.Name] = struct{}{}
+			}
+		case *goast.SelectorExpr:
+			refs[node.Sel.Name] = struct{}{}
+		case *goast.Ident:
+			if node.Name == "" || isKeyword(node.Name) || node.Obj != nil {
+				return true
+			}
+			refs[node.Name] = struct{}{}
+		}
+		return true
+	})
+
+	for sym := range symbols {
+		delete(refs, sym)
+	}
+	return mapKeys(symbols), mapKeys(refs)
+}
+
+func recvTypeName(expr goast.Expr) (string, bool) {
+	switch t := expr.(type) {
+	case *goast.Ident:
+		return t.Name, true
+	case *goast.StarExpr:
+		return recvTypeName(t.X)
+	default:
+		return "", false
+	}
+}
+
+func extractGenericSymbols(path string) ([]string, []string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, nil
+	}
+	content := string(data)
+	lines := strings.Split(content, "\n")
+	symbols := map[string]struct{}{}
+	refs := map[string]struct{}{}
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "func ") {
+			name := symbolAfter(trimmed, "func ")
+			if name != "" {
+				symbols[name] = struct{}{}
+			}
+		}
+		if strings.HasPrefix(trimmed, "type ") {
+			name := symbolAfter(trimmed, "type ")
+			if name != "" {
+				symbols[name] = struct{}{}
+			}
+		}
+		if strings.HasPrefix(trimmed, "var ") || strings.HasPrefix(trimmed, "const ") {
+			parts := strings.Fields(trimmed)
+			if len(parts) > 1 {
+				symbols[trimPunctuation(parts[1])] = struct{}{}
+			}
+		}
+	}
+	for _, ident := range identRe.FindAllString(content, -1) {
+		if len(ident) < 3 || isKeyword(ident) {
+			continue
+		}
+		refs[ident] = struct{}{}
+	}
+	for sym := range symbols {
+		delete(refs, sym)
+	}
 	return mapKeys(symbols), mapKeys(refs)
 }
 

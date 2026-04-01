@@ -248,3 +248,53 @@ export TOKMAN_AUTO_REWRITE=1
 4. **Uninstall command**:
    - `tokman init -g --uninstall`
    - Remove all artifacts cleanly
+
+---
+
+## MCP Context Examples
+
+TokMan can also act as a context service instead of only a shell rewriter.
+
+### Start the MCP server
+
+```bash
+tokman mcp --port 8080
+```
+
+### Read one file under a token budget
+
+```bash
+curl -X POST http://localhost:8080/read \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "internal/server/server.go",
+    "mode": "auto",
+    "max_tokens": 350,
+    "save_snapshot": true
+  }'
+```
+
+### Request a graph-aware bundle
+
+```bash
+curl -X POST http://localhost:8080/bundle \
+  -H "Content-Type: application/json" \
+  -d '{
+    "path": "internal/server/server.go",
+    "mode": "graph",
+    "related_files": 4,
+    "max_tokens": 500
+  }'
+```
+
+### Recommended agent usage
+
+- Claude Code / Cursor:
+  - use shell hooks for normal command rewriting
+  - use `POST /read` or `POST /bundle` when the agent needs curated file context
+- Codex / OpenCode:
+  - keep shell wrapping for command noise reduction
+  - use `POST /bundle` for target-file + related-file context delivery
+- Any MCP-capable tool:
+  - use `POST /read` for single-file refreshes
+  - use `POST /bundle` for multi-file graph context

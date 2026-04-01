@@ -72,3 +72,40 @@ func TestFormatGraphStats(t *testing.T) {
 		t.Error("expected non-empty stats string")
 	}
 }
+
+func TestExtractGoSymbolsUsesAST(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "main.go")
+	content := `package main
+
+import "fmt"
+
+type service struct{}
+
+func (s *service) Run() {
+	fmt.Println(helper())
+}
+
+func helper() string { return "ok" }
+`
+	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {
+		t.Fatalf("WriteFile() error = %v", err)
+	}
+
+	symbols, refs := extractSymbols(path, "go")
+	if !contains(symbols, "Run") || !contains(symbols, "helper") || !contains(symbols, "service") {
+		t.Fatalf("expected AST symbols, got %v", symbols)
+	}
+	if !contains(refs, "Println") {
+		t.Fatalf("expected selector reference, got %v", refs)
+	}
+}
+
+func contains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
+}
