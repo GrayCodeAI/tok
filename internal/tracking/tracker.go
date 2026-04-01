@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -515,31 +516,42 @@ func (t *Tracker) Vacuum() error {
 // Uses GLOB matching for case-sensitive path comparison.
 // When projectPath is empty, returns all records without filtering.
 func (t *Tracker) GetSavings(projectPath string) (*SavingsSummary, error) {
+	return t.GetSavingsForCommands(projectPath, nil)
+}
+
+// GetSavingsForCommands returns token savings for commands matching any of the
+// provided GLOB patterns. When commandPatterns is empty, it returns all records.
+func (t *Tracker) GetSavingsForCommands(projectPath string, commandPatterns []string) (*SavingsSummary, error) {
 	var query string
 	var args []any
+	var filters []string
 
-	if projectPath == "" {
-		query = `
-			SELECT 
-				COUNT(*) as total_commands,
-				COALESCE(SUM(saved_tokens), 0) as total_saved,
-				COALESCE(SUM(original_tokens), 0) as total_original,
-				COALESCE(SUM(filtered_tokens), 0) as total_filtered
-			FROM commands
-		`
-		args = nil
-	} else {
-		query = `
-			SELECT 
-				COUNT(*) as total_commands,
-				COALESCE(SUM(saved_tokens), 0) as total_saved,
-				COALESCE(SUM(original_tokens), 0) as total_original,
-				COALESCE(SUM(filtered_tokens), 0) as total_filtered
-			FROM commands
-			WHERE project_path GLOB ? OR project_path = ?
-		`
+	query = `
+		SELECT 
+			COUNT(*) as total_commands,
+			COALESCE(SUM(saved_tokens), 0) as total_saved,
+			COALESCE(SUM(original_tokens), 0) as total_original,
+			COALESCE(SUM(filtered_tokens), 0) as total_filtered
+		FROM commands
+	`
+
+	if projectPath != "" {
+		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
 		pattern := projectPath + "/%"
-		args = []any{pattern, projectPath}
+		args = append(args, pattern, projectPath)
+	}
+
+	if len(commandPatterns) > 0 {
+		var commandFilters []string
+		for _, pattern := range commandPatterns {
+			commandFilters = append(commandFilters, "command GLOB ?")
+			args = append(args, pattern)
+		}
+		filters = append(filters, "("+strings.Join(commandFilters, " OR ")+")")
+	}
+
+	if len(filters) > 0 {
+		query += " WHERE " + strings.Join(filters, " AND ")
 	}
 
 	summary := &SavingsSummary{}
@@ -716,31 +728,42 @@ func (t *Tracker) GetCommandStats(projectPath string) ([]CommandStats, error) {
 // GetRecentCommands returns the most recent command executions.
 // When projectPath is empty, returns all recent commands without filtering.
 func (t *Tracker) GetRecentCommands(projectPath string, limit int) ([]CommandRecord, error) {
-	var query string
-	var rows *sql.Rows
-	var err error
+	return t.GetRecentCommandsForPatterns(projectPath, limit, nil)
+}
 
-	if projectPath == "" {
-		query = `
-			SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
-			       project_path, session_id, exec_time_ms, timestamp, parse_success
-			FROM commands
-			ORDER BY timestamp DESC
-			LIMIT ?
-		`
-		rows, err = t.db.Query(query, limit)
-	} else {
-		query = `
-			SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
-			       project_path, session_id, exec_time_ms, timestamp, parse_success
-			FROM commands
-			WHERE project_path GLOB ? OR project_path = ?
-			ORDER BY timestamp DESC
-			LIMIT ?
-		`
+// GetRecentCommandsForPatterns returns recent commands optionally filtered by
+// command GLOB patterns. When commandPatterns is empty, it returns all commands.
+func (t *Tracker) GetRecentCommandsForPatterns(projectPath string, limit int, commandPatterns []string) ([]CommandRecord, error) {
+	var query string
+	var args []any
+	var filters []string
+
+	query = `
+		SELECT id, command, original_tokens, filtered_tokens, saved_tokens,
+		       project_path, session_id, exec_time_ms, timestamp, parse_success
+		FROM commands
+	`
+
+	if projectPath != "" {
+		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
 		pattern := projectPath + "/%"
-		rows, err = t.db.Query(query, pattern, projectPath, limit)
+		args = append(args, pattern, projectPath)
 	}
+	if len(commandPatterns) > 0 {
+		var commandFilters []string
+		for _, pattern := range commandPatterns {
+			commandFilters = append(commandFilters, "command GLOB ?")
+			args = append(args, pattern)
+		}
+		filters = append(filters, "("+strings.Join(commandFilters, " OR ")+")")
+	}
+	if len(filters) > 0 {
+		query += " WHERE " + strings.Join(filters, " AND ")
+	}
+	query += " ORDER BY timestamp DESC LIMIT ?"
+	args = append(args, limit)
+
+	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get recent commands: %w", err)
 	}

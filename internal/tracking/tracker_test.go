@@ -129,6 +129,64 @@ func TestGetSavings(t *testing.T) {
 	}
 }
 
+func TestGetSavingsForCommands(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	tracker, err := NewTracker(dbPath)
+	if err != nil {
+		t.Fatalf("NewTracker() error = %v", err)
+	}
+	defer tracker.Close()
+
+	records := []*CommandRecord{
+		{
+			Command:        "tokman ctx read main.go",
+			OriginalTokens: 200,
+			FilteredTokens: 80,
+			SavedTokens:    120,
+			ProjectPath:    "/test/project",
+			ParseSuccess:   true,
+		},
+		{
+			Command:        "tokman read main.go",
+			OriginalTokens: 100,
+			FilteredTokens: 40,
+			SavedTokens:    60,
+			ProjectPath:    "/test/project",
+			ParseSuccess:   true,
+		},
+		{
+			Command:        "git status",
+			OriginalTokens: 80,
+			FilteredTokens: 20,
+			SavedTokens:    60,
+			ProjectPath:    "/test/project",
+			ParseSuccess:   true,
+		},
+	}
+	for _, record := range records {
+		if err := tracker.Record(record); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+	}
+
+	summary, err := tracker.GetSavingsForCommands("/test/project", []string{"tokman ctx read *", "tokman read *"})
+	if err != nil {
+		t.Fatalf("GetSavingsForCommands() error = %v", err)
+	}
+
+	if summary.TotalCommands != 2 {
+		t.Fatalf("TotalCommands = %d, want 2", summary.TotalCommands)
+	}
+	if summary.TotalSaved != 180 {
+		t.Fatalf("TotalSaved = %d, want 180", summary.TotalSaved)
+	}
+	if summary.TotalOriginal != 300 {
+		t.Fatalf("TotalOriginal = %d, want 300", summary.TotalOriginal)
+	}
+}
+
 func TestGetRecentCommands(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test.db")
