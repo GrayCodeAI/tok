@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/GrayCodeAI/tokman/internal/contextread"
 	"github.com/GrayCodeAI/tokman/internal/httpmw"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -19,16 +20,52 @@ func statsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		// Get 24h and total savings (best-effort; partial data is acceptable)
 		saved24h, _ := tracker.TokensSaved24h()
 		savedTotal, _ := tracker.TokensSavedTotal()
+		contextStats, _ := tracker.GetSavingsForCommands("", contextread.TrackedCommandPatterns())
 
 		response := map[string]any{
-			"tokens_saved":       stats.TotalSaved,
-			"commands_count":     stats.TotalCommands,
-			"original":           stats.TotalOriginal,
-			"filtered":           stats.TotalFiltered,
-			"tokens_saved_24h":   saved24h,
-			"tokens_saved_total": savedTotal,
+			"tokens_saved":          stats.TotalSaved,
+			"commands_count":        stats.TotalCommands,
+			"original":              stats.TotalOriginal,
+			"filtered":              stats.TotalFiltered,
+			"tokens_saved_24h":      saved24h,
+			"tokens_saved_total":    savedTotal,
+			"context_read_commands": contextStats.TotalCommands,
+			"context_read_saved":    contextStats.TotalSaved,
+			"context_read_original": contextStats.TotalOriginal,
+			"context_read_filtered": contextStats.TotalFiltered,
 		}
 		httpmw.JSONResponse(w, http.StatusOK, response)
+	}
+}
+
+func contextReadsHandler(tracker *tracking.Tracker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		records, err := tracker.GetRecentCommandsForPatterns("", 20, contextread.TrackedCommandPatterns())
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		result := make([]map[string]any, 0, len(records))
+		for _, rec := range records {
+			reductionPct := 0.0
+			if rec.OriginalTokens > 0 {
+				reductionPct = float64(rec.SavedTokens) / float64(rec.OriginalTokens) * 100
+			}
+			result = append(result, map[string]any{
+				"command":       rec.Command,
+				"tokens_saved":  rec.SavedTokens,
+				"original":      rec.OriginalTokens,
+				"filtered":      rec.FilteredTokens,
+				"reduction_pct": reductionPct,
+				"project_path":  rec.ProjectPath,
+				"timestamp":     rec.Timestamp,
+				"exec_time_ms":  rec.ExecTimeMs,
+				"parse_success": rec.ParseSuccess,
+			})
+		}
+
+		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }
 

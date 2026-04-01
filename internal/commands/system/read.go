@@ -4,21 +4,26 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/GrayCodeAI/tokman/internal/contextread"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
 var (
-	readLevel    string
-	readMaxLines int
-	readLineNums bool
+	readLevel        string
+	readMode         string
+	readMaxLines     int
+	readMaxTokens    int
+	readLineNums     bool
+	readStartLine    int
+	readEndLine      int
+	readSaveSnapshot bool
+	readRelatedFiles int
 )
 
 // readCmd represents the read command
@@ -35,6 +40,8 @@ Supports multiple filter levels:
 Examples:
   tokman read main.go
   tokman read main.go --level aggressive --max-lines 50
+  tokman read main.go --mode map
+  tokman read main.go --mode delta
   tokman read main.go -n  # show line numbers`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRead,
@@ -43,8 +50,14 @@ Examples:
 func init() {
 	registry.Add(func() { registry.Register(readCmd) })
 	readCmd.Flags().StringVarP(&readLevel, "level", "l", "minimal", "Filter level: none, minimal, aggressive")
+	readCmd.Flags().StringVar(&readMode, "mode", "", "Context read mode: auto, full, map, signatures, aggressive, entropy, lines, delta, graph")
 	readCmd.Flags().IntVarP(&readMaxLines, "max-lines", "m", 0, "Maximum lines to output (0 = no limit)")
+	readCmd.Flags().IntVar(&readMaxTokens, "max-tokens", 0, "Approximate token budget for read output (0 = no limit)")
 	readCmd.Flags().BoolVarP(&readLineNums, "line-numbers", "n", false, "Show line numbers")
+	readCmd.Flags().IntVar(&readStartLine, "start-line", 0, "Start line for line-oriented reads")
+	readCmd.Flags().IntVar(&readEndLine, "end-line", 0, "End line for line-oriented reads")
+	readCmd.Flags().BoolVar(&readSaveSnapshot, "save-snapshot", true, "Persist file snapshot for future delta reads")
+	readCmd.Flags().IntVar(&readRelatedFiles, "related-files", 3, "Number of related files to include in graph mode")
 }
 
 func runRead(cmd *cobra.Command, args []string) error {
@@ -78,37 +91,19 @@ func runRead(cmd *cobra.Command, args []string) error {
 		content = string(data)
 	}
 
-	// Detect language from extension and content
-	lang := detectLanguage(filePath, content)
-	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Detected language: %s\n", lang)
-	}
-
-	// Parse filter level
-	mode := filter.Mode(readLevel)
-	if mode != filter.ModeMinimal && mode != filter.ModeAggressive && readLevel != "none" {
-		return fmt.Errorf("invalid filter level: %s (use: none, minimal, aggressive)", readLevel)
-	}
-
-	var filtered string
-	var tokensSaved int
-
-	if readLevel == "none" {
-		filtered = content
-		tokensSaved = 0
-	} else {
-		engine := filter.NewEngine(mode)
-		filtered, tokensSaved = engine.Process(content)
-	}
-
-	// Apply max lines if specified
-	if readMaxLines > 0 {
-		filtered = truncateLines(filtered, readMaxLines)
-	}
-
-	// Add line numbers if requested
-	if readLineNums {
-		filtered = addLineNumbers(filtered)
+	filtered, originalTokens, filteredTokens, err := buildReadOutput(filePath, content, readOptions{
+		level:        readLevel,
+		mode:         readMode,
+		maxLines:     readMaxLines,
+		maxTokens:    readMaxTokens,
+		lineNumbers:  readLineNums,
+		startLine:    readStartLine,
+		endLine:      readEndLine,
+		saveSnapshot: readSaveSnapshot && filePath != "stdin",
+		relatedFiles: readRelatedFiles,
+	})
+	if err != nil {
+		return err
 	}
 
 	// Output
@@ -118,9 +113,7 @@ func runRead(cmd *cobra.Command, args []string) error {
 	}
 
 	// Track savings
-	originalTokens := filter.EstimateTokens(content)
-	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(filePath, "tokman read", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("tokman read %s", filePath), "tokman read", originalTokens, filteredTokens)
 
 	if shared.Verbose > 0 {
 		originalLines := len(strings.Split(content, "\n"))
@@ -130,90 +123,34 @@ func runRead(cmd *cobra.Command, args []string) error {
 			reduction = float64(originalLines-filteredLines) / float64(originalLines) * 100
 		}
 		fmt.Fprintf(os.Stderr, "Lines: %d -> %d (%.1f%% reduction, %d tokens saved)\n",
-			originalLines, filteredLines, reduction, tokensSaved)
+			originalLines, filteredLines, reduction, originalTokens-filteredTokens)
 	}
 
 	return nil
 }
 
-// detectLanguage returns the language from file extension with content fallback
-func detectLanguage(path string, content string) filter.Language {
-	lang := detectLanguageFromExtension(path)
-	if lang != filter.LangUnknown {
-		return lang
-	}
-	return filter.DetectLanguageFromInput(content)
+type readOptions struct {
+	level        string
+	mode         string
+	maxLines     int
+	maxTokens    int
+	lineNumbers  bool
+	startLine    int
+	endLine      int
+	saveSnapshot bool
+	relatedFiles int
 }
 
-// detectLanguageFromExtension returns the language from file extension
-func detectLanguageFromExtension(path string) filter.Language {
-	if path == "stdin" {
-		return filter.LangUnknown
-	}
-	ext := strings.ToLower(filepath.Ext(path))
-	switch ext {
-	case ".go":
-		return filter.LangGo
-	case ".rs":
-		return filter.LangRust
-	case ".py", ".pyw":
-		return filter.LangPython
-	case ".js", ".mjs", ".cjs":
-		return filter.LangJavaScript
-	case ".ts", ".tsx":
-		return filter.LangTypeScript
-	case ".java":
-		return filter.LangJava
-	case ".c", ".h":
-		return filter.LangC
-	case ".cpp", ".cc", ".cxx", ".hpp", ".hh":
-		return filter.LangCpp
-	case ".rb":
-		return filter.LangRuby
-	case ".sh", ".bash", ".zsh":
-		return filter.LangShell
-	case ".sql":
-		return filter.LangSQL
-	case ".yaml", ".yml":
-		return filter.LangUnknown
-	case ".toml":
-		return filter.LangUnknown
-	case ".json":
-		return filter.LangUnknown
-	case ".md":
-		return filter.LangUnknown
-	default:
-		return filter.LangUnknown
-	}
-}
-
-// truncateLines limits output to maxLines
-func truncateLines(content string, maxLines int) string {
-	lines := strings.Split(content, "\n")
-	if len(lines) <= maxLines {
-		return content
-	}
-
-	// Keep first half and last quarter
-	keepStart := maxLines / 2
-	keepEnd := maxLines / 4
-
-	var result []string
-	result = append(result, lines[:keepStart]...)
-	result = append(result, fmt.Sprintf("// ... %d lines omitted ...", len(lines)-keepStart-keepEnd))
-	result = append(result, lines[len(lines)-keepEnd:]...)
-
-	return strings.Join(result, "\n")
-}
-
-// addLineNumbers prefixes each line with its number
-func addLineNumbers(content string) string {
-	lines := strings.Split(content, "\n")
-	width := len(fmt.Sprintf("%d", len(lines)))
-
-	var result strings.Builder
-	for i, line := range lines {
-		result.WriteString(fmt.Sprintf("%*d │ %s\n", width, i+1, line))
-	}
-	return result.String()
+func buildReadOutput(filePath, content string, opts readOptions) (string, int, int, error) {
+	return contextread.Build(filePath, content, contextread.Options{
+		Level:        opts.level,
+		Mode:         opts.mode,
+		MaxLines:     opts.maxLines,
+		MaxTokens:    opts.maxTokens,
+		LineNumbers:  opts.lineNumbers,
+		StartLine:    opts.startLine,
+		EndLine:      opts.endLine,
+		SaveSnapshot: opts.saveSnapshot,
+		RelatedFiles: opts.relatedFiles,
+	})
 }

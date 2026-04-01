@@ -237,6 +237,12 @@ const dashboardHTML = `<!DOCTYPE html>
             background: linear-gradient(145deg, rgba(236, 72, 153, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%);
         }
         .stat-card.exec-time h3 { color: #ec4899; }
+
+        .stat-card.context-reads {
+            border-color: rgba(249, 115, 22, 0.4);
+            background: linear-gradient(145deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
+        }
+        .stat-card.context-reads h3 { color: #fb923c; }
         
         .stat-card.peak-hour {
             border-color: rgba(14, 165, 233, 0.4);
@@ -550,6 +556,11 @@ const dashboardHTML = `<!DOCTYPE html>
                 <div class="value" id="avg-exec">--</div>
                 <div class="sub">ms avg</div>
             </div>
+            <div class="stat-card context-reads">
+                <h3>Smart Context Reads</h3>
+                <div class="value" id="context-read-count">--</div>
+                <div class="sub" id="context-read-saved">-- tokens saved</div>
+            </div>
         </div>
 
         <div class="charts-grid">
@@ -615,6 +626,15 @@ const dashboardHTML = `<!DOCTYPE html>
         </div>
 
         <div class="activity-section">
+            <div class="activity-list daily-section">
+                <h2><i data-lucide="git-branch" style="width:18px;height:18px;vertical-align:middle;margin-right:8px"></i>Smart Read Activity</h2>
+                <div id="context-read-list">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-section">
             <div class="activity-list recent-section">
                 <h2><i data-lucide="list" style="width:18px;height:18px;vertical-align:middle;margin-right:8px"></i>Recent Activity</h2>
                 <div id="recent-list">
@@ -645,7 +665,7 @@ const dashboardHTML = `<!DOCTYPE html>
         }
 
         async function loadDashboard() {
-            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics] = await Promise.all([
+            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics, contextReads] = await Promise.all([
                 fetchAPI('/api/stats'),
                 fetchAPI('/api/economics'),
                 fetchAPI('/api/daily?days=' + currentDays),
@@ -660,6 +680,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 fetchAPI('/api/alerts'),
                 fetchAPI('/api/model-breakdown'),
                 fetchAPI('/api/cache-metrics'),
+                fetchAPI('/api/context-reads'),
             ]);
 
             // Update LLM Banner
@@ -688,6 +709,8 @@ const dashboardHTML = `<!DOCTYPE html>
                 
                 const avgPerDay = currentDays > 0 ? Math.round(stats.commands_count / currentDays) : 0;
                 document.getElementById('cmd-rate').textContent = avgPerDay + ' avg/day';
+                document.getElementById('context-read-count').textContent = (stats.context_read_commands || 0).toLocaleString();
+                document.getElementById('context-read-saved').textContent = ((stats.context_read_saved || 0).toLocaleString()) + ' tokens saved';
             }
 
             if (economics) {
@@ -722,6 +745,7 @@ const dashboardHTML = `<!DOCTYPE html>
 
             // Recent activity
             renderRecentActivity(recent || []);
+            renderContextReads(contextReads || []);
             
             // Failures
             renderFailures(failures);
@@ -1020,6 +1044,19 @@ const dashboardHTML = `<!DOCTYPE html>
                 '<div class=\"activity-item\"><span class=\"cmd\">' + (item.command || 'unknown') + '</span>' +
                 '<div class=\"meta\"><span class=\"tokens\">+' + (item.tokens_saved || 0).toLocaleString() + '</span>' +
                 '<div>' + (item.exec_time_ms || 0) + 'ms</div></div></div>'
+            ).join('');
+        }
+
+        function renderContextReads(data) {
+            const container = document.getElementById('context-read-list');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="loading">No smart reads recorded yet</div>';
+                return;
+            }
+            container.innerHTML = data.slice(0, 8).map(item =>
+                '<div class=\"activity-item\"><span class=\"cmd\">' + (item.command || 'unknown') + '</span>' +
+                '<div class=\"meta\"><span class=\"tokens\">+' + (item.tokens_saved || 0).toLocaleString() + '</span>' +
+                '<div>' + ((item.reduction_pct || 0).toFixed(1)) + '% reduced</div></div></div>'
             ).join('');
         }
 

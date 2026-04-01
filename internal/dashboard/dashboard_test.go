@@ -141,6 +141,51 @@ func TestTopCommandsHandler(t *testing.T) {
 	}
 }
 
+func TestContextReadsHandler(t *testing.T) {
+	tracker := setupTestDB(t)
+
+	if err := tracker.Record(&tracking.CommandRecord{
+		Command:        "tokman ctx read main.go",
+		OriginalTokens: 100,
+		FilteredTokens: 40,
+		SavedTokens:    60,
+		ExecTimeMs:     12,
+	}); err != nil {
+		t.Fatalf("Record() error = %v", err)
+	}
+	if err := tracker.Record(&tracking.CommandRecord{
+		Command:        "git status",
+		OriginalTokens: 50,
+		FilteredTokens: 10,
+		SavedTokens:    40,
+		ExecTimeMs:     7,
+	}); err != nil {
+		t.Fatalf("Record() error = %v", err)
+	}
+
+	req := httptest.NewRequest("GET", "/api/context-reads", nil)
+	w := httptest.NewRecorder()
+
+	handler := contextReadsHandler(tracker)
+	handler(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", w.Code)
+	}
+
+	var response []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+
+	if len(response) != 1 {
+		t.Fatalf("expected 1 context-read record, got %d", len(response))
+	}
+	if response[0]["command"].(string) != "tokman ctx read main.go" {
+		t.Fatalf("unexpected command %v", response[0]["command"])
+	}
+}
+
 func TestExportCSVHandler(t *testing.T) {
 	tracker := setupTestDB(t)
 

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -18,8 +19,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/cache"
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/GrayCodeAI/tokman/internal/contextread"
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/httpmw"
+	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
 const maxRequestBodySize = 10 * 1024 * 1024 // 10 MB
@@ -34,6 +37,7 @@ var mcpCmd = &cobra.Command{
 Compatible with MCP (Model Context Protocol) for tool use.
 
 POST /compress — compress text
+POST /read     — read file context with smart modes
 POST /explain  — explain compression
 GET  /health   — health check
 
@@ -58,6 +62,20 @@ type MCPRequest struct {
 	Query   string `json:"query,omitempty"`
 }
 
+// MCPReadRequest is the request body for /read.
+type MCPReadRequest struct {
+	Path         string `json:"path"`
+	Mode         string `json:"mode,omitempty"`
+	Level        string `json:"level,omitempty"`
+	StartLine    int    `json:"start_line,omitempty"`
+	EndLine      int    `json:"end_line,omitempty"`
+	MaxLines     int    `json:"max_lines,omitempty"`
+	MaxTokens    int    `json:"max_tokens,omitempty"`
+	LineNumbers  bool   `json:"line_numbers,omitempty"`
+	SaveSnapshot bool   `json:"save_snapshot,omitempty"`
+	RelatedFiles int    `json:"related_files,omitempty"`
+}
+
 // MCPResponse is the response body.
 type MCPResponse struct {
 	Compressed       string  `json:"compressed"`
@@ -66,6 +84,17 @@ type MCPResponse struct {
 	SavedTokens      int     `json:"saved_tokens"`
 	ReductionPct     float64 `json:"reduction_percent"`
 	Hash             string  `json:"hash,omitempty"`
+}
+
+// MCPReadResponse is the response body for /read.
+type MCPReadResponse struct {
+	Path           string  `json:"path"`
+	Mode           string  `json:"mode"`
+	Content        string  `json:"content"`
+	OriginalTokens int     `json:"original_tokens"`
+	FinalTokens    int     `json:"final_tokens"`
+	SavedTokens    int     `json:"saved_tokens"`
+	ReductionPct   float64 `json:"reduction_percent"`
 }
 
 func authMiddleware(apiKey string, next http.HandlerFunc) http.HandlerFunc {
@@ -152,6 +181,94 @@ func runMCP(cmd *cobra.Command, args []string) error {
 		}
 	})
 	mux.Handle("/compress", contentTypeJSON(authMiddleware(mcpAPIKey, compressHandler)))
+
+	mux.Handle("/read", contentTypeJSON(authMiddleware(mcpAPIKey, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST only", http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRequestBodySize))
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		var req MCPReadRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if req.Path == "" {
+			http.Error(w, "path required", http.StatusBadRequest)
+			return
+		}
+
+		cleanPath := filepath.Clean(req.Path)
+		data, err := os.ReadFile(cleanPath)
+		if err != nil {
+			http.Error(w, "unable to read file", http.StatusBadRequest)
+			return
+		}
+
+		mode := req.Mode
+		if mode == "" {
+			mode = "auto"
+		}
+		level := req.Level
+		if level == "" {
+			level = "minimal"
+		}
+
+		content, originalTokens, finalTokens, err := contextread.Build(cleanPath, string(data), contextread.Options{
+			Level:        level,
+			Mode:         mode,
+			MaxLines:     req.MaxLines,
+			MaxTokens:    req.MaxTokens,
+			LineNumbers:  req.LineNumbers,
+			StartLine:    req.StartLine,
+			EndLine:      req.EndLine,
+			SaveSnapshot: req.SaveSnapshot,
+			RelatedFiles: req.RelatedFiles,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		saved := originalTokens - finalTokens
+		if saved < 0 {
+			saved = 0
+		}
+		resp := MCPReadResponse{
+			Path:           cleanPath,
+			Mode:           mode,
+			Content:        content,
+			OriginalTokens: originalTokens,
+			FinalTokens:    finalTokens,
+			SavedTokens:    saved,
+			ReductionPct:   percentSaved(originalTokens, finalTokens),
+		}
+
+		if tracker := tracking.GetGlobalTracker(); tracker != nil {
+			cwd, err := os.Getwd()
+			if err == nil {
+				_ = tracker.Record(&tracking.CommandRecord{
+					Command:        fmt.Sprintf("tokman mcp read %s", cleanPath),
+					OriginalTokens: originalTokens,
+					FilteredTokens: finalTokens,
+					SavedTokens:    saved,
+					ProjectPath:    cwd,
+					ParseSuccess:   true,
+				})
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("json encode error: %v", err)
+		}
+	}))))
 
 	// Explain endpoint
 	mux.HandleFunc("/explain", authMiddleware(mcpAPIKey, func(w http.ResponseWriter, r *http.Request) {
@@ -288,4 +405,15 @@ func runMCP(cmd *cobra.Command, args []string) error {
 		log.Printf("server shutdown error: %v", err)
 	}
 	return nil
+}
+
+func percentSaved(original, final int) float64 {
+	if original <= 0 {
+		return 0
+	}
+	saved := original - final
+	if saved < 0 {
+		saved = 0
+	}
+	return float64(saved) / float64(original) * 100
 }
