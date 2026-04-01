@@ -13,6 +13,7 @@ import (
 
 const (
 	maxSnapshots    = 128
+	maxRenderCache  = 256
 	maxContentBytes = 256 * 1024
 )
 
@@ -24,9 +25,20 @@ type Snapshot struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// RenderEntry stores a persisted smart-read render result for reuse across
+// process restarts.
+type RenderEntry struct {
+	Key            string    `json:"key"`
+	Output         string    `json:"output"`
+	OriginalTokens int       `json:"original_tokens"`
+	FinalTokens    int       `json:"final_tokens"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
 // Store is a small persisted state file used by smart read flows.
 type Store struct {
-	Snapshots map[string]Snapshot `json:"snapshots"`
+	Snapshots   map[string]Snapshot    `json:"snapshots"`
+	RenderCache map[string]RenderEntry `json:"render_cache,omitempty"`
 }
 
 // DefaultStorePath returns the persisted smart-read snapshot file path.
@@ -39,7 +51,7 @@ func Load(path string) (*Store, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return &Store{Snapshots: make(map[string]Snapshot)}, nil
+			return &Store{Snapshots: make(map[string]Snapshot), RenderCache: make(map[string]RenderEntry)}, nil
 		}
 		return nil, err
 	}
@@ -51,6 +63,9 @@ func Load(path string) (*Store, error) {
 	if store.Snapshots == nil {
 		store.Snapshots = make(map[string]Snapshot)
 	}
+	if store.RenderCache == nil {
+		store.RenderCache = make(map[string]RenderEntry)
+	}
 	return store, nil
 }
 
@@ -58,6 +73,9 @@ func Load(path string) (*Store, error) {
 func (s *Store) Save(path string) error {
 	if s.Snapshots == nil {
 		s.Snapshots = make(map[string]Snapshot)
+	}
+	if s.RenderCache == nil {
+		s.RenderCache = make(map[string]RenderEntry)
 	}
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return err
@@ -100,6 +118,30 @@ func (s *Store) Put(path, content string) {
 	s.prune()
 }
 
+// GetRender looks up a persisted render cache entry.
+func (s *Store) GetRender(key string) (RenderEntry, bool) {
+	if s == nil || s.RenderCache == nil {
+		return RenderEntry{}, false
+	}
+	entry, ok := s.RenderCache[key]
+	return entry, ok
+}
+
+// PutRender updates the persisted render cache.
+func (s *Store) PutRender(key string, output string, originalTokens, finalTokens int) {
+	if s.RenderCache == nil {
+		s.RenderCache = make(map[string]RenderEntry)
+	}
+	s.RenderCache[key] = RenderEntry{
+		Key:            key,
+		Output:         trimContent(output),
+		OriginalTokens: originalTokens,
+		FinalTokens:    finalTokens,
+		UpdatedAt:      time.Now(),
+	}
+	s.pruneRenderCache()
+}
+
 func (s *Store) prune() {
 	if len(s.Snapshots) <= maxSnapshots {
 		return
@@ -116,6 +158,25 @@ func (s *Store) prune() {
 	toRemove := len(s.Snapshots) - maxSnapshots
 	for i := 0; i < toRemove; i++ {
 		delete(s.Snapshots, snaps[i].Path)
+	}
+}
+
+func (s *Store) pruneRenderCache() {
+	if len(s.RenderCache) <= maxRenderCache {
+		return
+	}
+
+	entries := make([]RenderEntry, 0, len(s.RenderCache))
+	for _, entry := range s.RenderCache {
+		entries = append(entries, entry)
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].UpdatedAt.Before(entries[j].UpdatedAt)
+	})
+
+	toRemove := len(s.RenderCache) - maxRenderCache
+	for i := 0; i < toRemove; i++ {
+		delete(s.RenderCache, entries[i].Key)
 	}
 }
 

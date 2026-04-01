@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/cache"
@@ -18,12 +19,13 @@ var trackedCommandPatterns = []string{
 	"tokman ctx read *",
 	"tokman ctx delta *",
 	"tokman mcp read *",
+	"tokman mcp bundle *",
 }
 
 var trackedCommandPatternsByKind = map[string][]string{
 	"read":  {"tokman read *", "tokman ctx read *"},
 	"delta": {"tokman ctx delta *"},
-	"mcp":   {"tokman mcp read *"},
+	"mcp":   {"tokman mcp read *", "tokman mcp bundle *"},
 }
 
 // TrackedCommandPatterns returns the command patterns used to summarize smart
@@ -65,12 +67,26 @@ type buildResult struct {
 	FinalTokens    int
 }
 
+// Bundle captures a graph-aware context bundle.
+type Bundle struct {
+	TargetFile     string
+	RelatedFiles   []string
+	Content        string
+	OriginalTokens int
+	FinalTokens    int
+}
+
 var renderCache = cache.NewLRUCache(512, 10*time.Minute)
+var persistedStoreMu sync.Mutex
 
 // Build renders content according to the requested read behavior.
 func Build(filePath, content string, opts Options) (string, int, int, error) {
 	if key, ok := cacheKey(filePath, content, opts); ok {
 		if cached, ok := renderCache.Get(key).(buildResult); ok {
+			return cached.Output, cached.OriginalTokens, cached.FinalTokens, nil
+		}
+		if cached, ok := loadPersistedRender(key); ok {
+			renderCache.Set(key, cached)
 			return cached.Output, cached.OriginalTokens, cached.FinalTokens, nil
 		}
 	}
@@ -95,8 +111,24 @@ func Build(filePath, content string, opts Options) (string, int, int, error) {
 	}
 	if key, ok := cacheKey(filePath, content, opts); ok {
 		renderCache.Set(key, result)
+		savePersistedRender(key, result)
 	}
 	return result.Output, result.OriginalTokens, result.FinalTokens, nil
+}
+
+// BuildBundle returns a graph-aware bundle for the target file.
+func BuildBundle(filePath, content string, opts Options) (Bundle, error) {
+	targetFile, relatedFiles, contentOut, err := buildGraphBundle(filePath, content, opts)
+	if err != nil {
+		return Bundle{}, err
+	}
+	return Bundle{
+		TargetFile:     targetFile,
+		RelatedFiles:   relatedFiles,
+		Content:        contentOut,
+		OriginalTokens: filter.EstimateTokens(content),
+		FinalTokens:    filter.EstimateTokens(contentOut),
+	}, nil
 }
 
 // ApplyMode applies the selected read mode before line or token budgeting.
@@ -105,7 +137,8 @@ func ApplyMode(filePath, content string, opts Options) (string, error) {
 		return applyLegacyReadLevel(content, opts.Level)
 	}
 	if opts.Mode == "graph" {
-		return applyGraphRead(filePath, content, opts)
+		_, _, output, err := buildGraphBundle(filePath, content, opts)
+		return output, err
 	}
 
 	mode, err := ResolveMode(opts.Mode, filePath, content, opts.StartLine, opts.EndLine)
@@ -206,9 +239,9 @@ func applyDeltaRead(filePath, content string, saveSnapshot bool) (string, error)
 	return output, nil
 }
 
-func applyGraphRead(filePath, content string, opts Options) (string, error) {
+func buildGraphBundle(filePath, content string, opts Options) (string, []string, string, error) {
 	if filePath == "stdin" {
-		return "", fmt.Errorf("graph mode requires a file path")
+		return "", nil, "", fmt.Errorf("graph mode requires a file path")
 	}
 
 	rootDir := detectProjectRoot(filePath)
@@ -219,7 +252,7 @@ func applyGraphRead(filePath, content string, opts Options) (string, error) {
 
 	g := graph.NewProjectGraph(rootDir)
 	if err := g.Analyze(); err != nil {
-		return "", fmt.Errorf("failed to analyze project graph: %w", err)
+		return "", nil, "", fmt.Errorf("failed to analyze project graph: %w", err)
 	}
 
 	targetMode := DetectAutoMode(filePath, content, opts.StartLine, opts.EndLine)
@@ -242,7 +275,7 @@ func applyGraphRead(filePath, content string, opts Options) (string, error) {
 	}
 	relatedFiles := g.FindRelatedFiles(relPath, relatedLimit)
 	if len(relatedFiles) == 0 {
-		return out.String(), nil
+		return relPath, nil, out.String(), nil
 	}
 
 	out.WriteString("\n\n# Related Files\n")
@@ -270,7 +303,7 @@ func applyGraphRead(filePath, content string, opts Options) (string, error) {
 		out.WriteString("\n")
 	}
 
-	return strings.TrimRight(out.String(), "\n"), nil
+	return relPath, relatedFiles, strings.TrimRight(out.String(), "\n"), nil
 }
 
 func detectProjectRoot(filePath string) string {
@@ -294,6 +327,37 @@ func detectProjectRoot(filePath string) string {
 // CacheStats returns smart-read render cache statistics.
 func CacheStats() cache.LRUStats {
 	return renderCache.Stats()
+}
+
+func loadPersistedRender(key string) (buildResult, bool) {
+	persistedStoreMu.Lock()
+	defer persistedStoreMu.Unlock()
+
+	store, err := Load(DefaultStorePath())
+	if err != nil {
+		return buildResult{}, false
+	}
+	entry, ok := store.GetRender(key)
+	if !ok {
+		return buildResult{}, false
+	}
+	return buildResult{
+		Output:         entry.Output,
+		OriginalTokens: entry.OriginalTokens,
+		FinalTokens:    entry.FinalTokens,
+	}, true
+}
+
+func savePersistedRender(key string, result buildResult) {
+	persistedStoreMu.Lock()
+	defer persistedStoreMu.Unlock()
+
+	store, err := Load(DefaultStorePath())
+	if err != nil {
+		return
+	}
+	store.PutRender(key, result.Output, result.OriginalTokens, result.FinalTokens)
+	_ = store.Save(DefaultStorePath())
 }
 
 func cacheKey(filePath, content string, opts Options) (string, bool) {

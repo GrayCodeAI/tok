@@ -40,6 +40,30 @@ Response fields:
 - `saved_tokens`
 - `reduction_percent`
 
+### MCP `POST /bundle`
+
+Returns a graph-aware context bundle for a target file.
+
+Request body:
+
+```json
+{
+  "path": "internal/server/server.go",
+  "mode": "graph",
+  "related_files": 4,
+  "max_tokens": 500
+}
+```
+
+Response fields:
+- `path`
+- `related_files`
+- `content`
+- `original_tokens`
+- `final_tokens`
+- `saved_tokens`
+- `reduction_percent`
+
 ### Dashboard `GET /api/context-reads`
 
 Returns recent smart-read activity from tracking.

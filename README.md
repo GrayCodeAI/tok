@@ -146,6 +146,7 @@ TokMan now tracks and visualizes smart context delivery separately from normal c
 - delta reads
 - MCP-served reads
 - top files and projects by context savings
+- graph-aware MCP bundles for agent context delivery
 
 ### Git
 

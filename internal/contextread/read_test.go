@@ -119,3 +119,63 @@ func TestBuildCachesRepeatedReads(t *testing.T) {
 		t.Fatalf("expected cache hit count to increase")
 	}
 }
+
+func TestBuildUsesPersistedRenderCache(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir())
+	filePath := filepath.Join(t.TempDir(), "main.go")
+	content := "package main\n\nfunc alpha() {}\n"
+
+	key, ok := cacheKey(filePath, content, Options{Mode: "auto"})
+	if !ok {
+		t.Fatal("expected cache key")
+	}
+	store, err := Load(DefaultStorePath())
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	store.PutRender(key, "persisted", 10, 5)
+	if err := store.Save(DefaultStorePath()); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	out, orig, final, err := Build(filePath, content, Options{Mode: "auto"})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
+	}
+	if out != "persisted" || orig != 10 || final != 5 {
+		t.Fatalf("expected persisted render cache, got output=%q orig=%d final=%d", out, orig, final)
+	}
+}
+
+func TestBuildBundleReturnsRelatedFiles(t *testing.T) {
+	projectDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(projectDir, "go.mod"), []byte("module example.com/test\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile(go.mod) error = %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(projectDir, "pkg", "helper"), 0o755); err != nil {
+		t.Fatalf("MkdirAll() error = %v", err)
+	}
+
+	mainPath := filepath.Join(projectDir, "main.go")
+	mainContent := "package main\n\nimport \"example.com/test/pkg/helper\"\n\nfunc main() { helper.Run() }\n"
+	if err := os.WriteFile(mainPath, []byte(mainContent), 0o644); err != nil {
+		t.Fatalf("WriteFile(main.go) error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(projectDir, "pkg", "helper", "helper.go"), []byte("package helper\n\nfunc Run() {}\n"), 0o644); err != nil {
+		t.Fatalf("WriteFile(helper.go) error = %v", err)
+	}
+
+	bundle, err := BuildBundle(mainPath, mainContent, Options{Mode: "graph", RelatedFiles: 2})
+	if err != nil {
+		t.Fatalf("BuildBundle() error = %v", err)
+	}
+	if bundle.TargetFile != "main.go" {
+		t.Fatalf("expected main.go target, got %q", bundle.TargetFile)
+	}
+	if len(bundle.RelatedFiles) == 0 {
+		t.Fatal("expected related files")
+	}
+	if !strings.Contains(bundle.Content, "# Related Files") {
+		t.Fatalf("expected related files section, got %q", bundle.Content)
+	}
+}

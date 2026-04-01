@@ -38,6 +38,7 @@ Compatible with MCP (Model Context Protocol) for tool use.
 
 POST /compress — compress text
 POST /read     — read file context with smart modes
+POST /bundle   — graph-aware file bundle for agents
 POST /explain  — explain compression
 GET  /health   — health check
 
@@ -95,6 +96,17 @@ type MCPReadResponse struct {
 	FinalTokens    int     `json:"final_tokens"`
 	SavedTokens    int     `json:"saved_tokens"`
 	ReductionPct   float64 `json:"reduction_percent"`
+}
+
+// MCPBundleResponse returns a graph-selected context bundle.
+type MCPBundleResponse struct {
+	Path           string   `json:"path"`
+	RelatedFiles   []string `json:"related_files"`
+	Content        string   `json:"content"`
+	OriginalTokens int      `json:"original_tokens"`
+	FinalTokens    int      `json:"final_tokens"`
+	SavedTokens    int      `json:"saved_tokens"`
+	ReductionPct   float64  `json:"reduction_percent"`
 }
 
 func authMiddleware(apiKey string, next http.HandlerFunc) http.HandlerFunc {
@@ -270,6 +282,94 @@ func runMCP(cmd *cobra.Command, args []string) error {
 		}
 	}))))
 
+	mux.Handle("/bundle", contentTypeJSON(authMiddleware(mcpAPIKey, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST only", http.StatusMethodNotAllowed)
+			return
+		}
+
+		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, maxRequestBodySize))
+		if err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+
+		var req MCPReadRequest
+		if err := json.Unmarshal(body, &req); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		if req.Path == "" {
+			http.Error(w, "path required", http.StatusBadRequest)
+			return
+		}
+
+		cleanPath := filepath.Clean(req.Path)
+		data, err := os.ReadFile(cleanPath)
+		if err != nil {
+			http.Error(w, "unable to read file", http.StatusBadRequest)
+			return
+		}
+
+		mode := req.Mode
+		if mode == "" {
+			mode = "graph"
+		}
+		if mode != "graph" {
+			http.Error(w, "bundle mode requires graph", http.StatusBadRequest)
+			return
+		}
+
+		bundle, err := contextread.BuildBundle(cleanPath, string(data), contextread.Options{
+			Level:        req.Level,
+			Mode:         mode,
+			MaxLines:     req.MaxLines,
+			MaxTokens:    req.MaxTokens,
+			LineNumbers:  req.LineNumbers,
+			StartLine:    req.StartLine,
+			EndLine:      req.EndLine,
+			SaveSnapshot: req.SaveSnapshot,
+			RelatedFiles: req.RelatedFiles,
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		saved := bundle.OriginalTokens - bundle.FinalTokens
+		if saved < 0 {
+			saved = 0
+		}
+		resp := MCPBundleResponse{
+			Path:           bundle.TargetFile,
+			RelatedFiles:   bundle.RelatedFiles,
+			Content:        bundle.Content,
+			OriginalTokens: bundle.OriginalTokens,
+			FinalTokens:    bundle.FinalTokens,
+			SavedTokens:    saved,
+			ReductionPct:   percentSaved(bundle.OriginalTokens, bundle.FinalTokens),
+		}
+
+		if tracker := tracking.GetGlobalTracker(); tracker != nil {
+			cwd, err := os.Getwd()
+			if err == nil {
+				_ = tracker.Record(&tracking.CommandRecord{
+					Command:        fmt.Sprintf("tokman mcp bundle %s", cleanPath),
+					OriginalTokens: bundle.OriginalTokens,
+					FilteredTokens: bundle.FinalTokens,
+					SavedTokens:    saved,
+					ProjectPath:    cwd,
+					ParseSuccess:   true,
+				})
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(resp); err != nil {
+			log.Printf("json encode error: %v", err)
+		}
+	}))))
+
 	// Explain endpoint
 	mux.HandleFunc("/explain", authMiddleware(mcpAPIKey, func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
@@ -378,7 +478,7 @@ func runMCP(cmd *cobra.Command, args []string) error {
 
 	addr := fmt.Sprintf(":%d", mcpPort)
 	fmt.Fprintf(os.Stderr, "tokman MCP server listening on %s\n", addr)
-	fmt.Fprintf(os.Stderr, "Endpoints: /compress, /explain, /restore, /health\n")
+	fmt.Fprintf(os.Stderr, "Endpoints: /compress, /read, /bundle, /explain, /restore, /health\n")
 
 	srv := &http.Server{
 		Addr:              addr,
