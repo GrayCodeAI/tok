@@ -30,7 +30,10 @@ func TestProjectGraph_Analyze(t *testing.T) {
 
 func TestProjectGraph_FindRelatedFiles(t *testing.T) {
 	dir := t.TempDir()
-	os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nimport \"fmt\"\n\nfunc main() { fmt.Println(\"hello\") }"), 0644)
+	os.WriteFile(filepath.Join(dir, "go.mod"), []byte("module example.com/demo\n"), 0644)
+	os.MkdirAll(filepath.Join(dir, "pkg", "helper"), 0755)
+	os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nimport \"example.com/demo/pkg/helper\"\n\nfunc main() { helper.Run() }"), 0644)
+	os.WriteFile(filepath.Join(dir, "pkg", "helper", "helper.go"), []byte("package helper\n\nfunc Run() {}"), 0644)
 	os.WriteFile(filepath.Join(dir, "utils.go"), []byte("package main\n\nfunc helper() {}"), 0644)
 
 	g := NewProjectGraph(dir)
@@ -38,7 +41,10 @@ func TestProjectGraph_FindRelatedFiles(t *testing.T) {
 
 	related := g.FindRelatedFiles("main.go", 5)
 	if len(related) == 0 {
-		t.Log("no related files found (expected for simple project)")
+		t.Fatal("expected related files")
+	}
+	if related[0] != filepath.ToSlash(filepath.Join("pkg", "helper", "helper.go")) {
+		t.Fatalf("expected helper.go to rank first, got %v", related)
 	}
 }
 

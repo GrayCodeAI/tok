@@ -17,10 +17,30 @@ var trackedCommandPatterns = []string{
 	"tokman mcp read *",
 }
 
+var trackedCommandPatternsByKind = map[string][]string{
+	"read":  {"tokman read *", "tokman ctx read *"},
+	"delta": {"tokman ctx delta *"},
+	"mcp":   {"tokman mcp read *"},
+}
+
 // TrackedCommandPatterns returns the command patterns used to summarize smart
 // context-read activity in tracking views.
 func TrackedCommandPatterns() []string {
 	return append([]string(nil), trackedCommandPatterns...)
+}
+
+// TrackedCommandPatternsForKind returns command patterns for one smart-read kind.
+func TrackedCommandPatternsForKind(kind string) []string {
+	patterns, ok := trackedCommandPatternsByKind[strings.ToLower(kind)]
+	if !ok {
+		return nil
+	}
+	return append([]string(nil), patterns...)
+}
+
+// TrackedCommandKinds returns the supported smart-read categories.
+func TrackedCommandKinds() []string {
+	return []string{"read", "delta", "mcp"}
 }
 
 // Options control smart read rendering for files and MCP clients.

@@ -101,6 +101,7 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	// API handlers
 	mux.Handle("/api/stats", corsMiddleware(statsHandler(tracker)))
 	mux.Handle("/api/context-reads", corsMiddleware(contextReadsHandler(tracker)))
+	mux.Handle("/api/context-read-summary", corsMiddleware(contextReadSummaryHandler(tracker)))
 	mux.Handle("/api/daily", corsMiddleware(dailyHandler(tracker)))
 	mux.Handle("/api/weekly", corsMiddleware(weeklyHandler(tracker)))
 	mux.Handle("/api/monthly", corsMiddleware(monthlyHandler(tracker)))

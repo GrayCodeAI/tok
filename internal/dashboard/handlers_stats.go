@@ -40,7 +40,17 @@ func statsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 
 func contextReadsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		records, err := tracker.GetRecentCommandsForPatterns("", 20, contextread.TrackedCommandPatterns())
+		kind := r.URL.Query().Get("kind")
+		patterns := contextread.TrackedCommandPatterns()
+		if kind != "" {
+			patterns = contextread.TrackedCommandPatternsForKind(kind)
+			if len(patterns) == 0 {
+				http.Error(w, "invalid context read kind", http.StatusBadRequest)
+				return
+			}
+		}
+
+		records, err := tracker.GetRecentCommandsForPatterns("", 20, patterns)
 		if err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)
 			return
@@ -65,6 +75,27 @@ func contextReadsHandler(tracker *tracking.Tracker) http.HandlerFunc {
 			})
 		}
 
+		httpmw.JSONResponse(w, http.StatusOK, result)
+	}
+}
+
+func contextReadSummaryHandler(tracker *tracking.Tracker) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		result := make(map[string]any)
+		for _, kind := range contextread.TrackedCommandKinds() {
+			summary, err := tracker.GetSavingsForCommands("", contextread.TrackedCommandPatternsForKind(kind))
+			if err != nil {
+				http.Error(w, "internal server error", http.StatusInternalServerError)
+				return
+			}
+			result[kind] = map[string]any{
+				"commands":  summary.TotalCommands,
+				"saved":     summary.TotalSaved,
+				"original":  summary.TotalOriginal,
+				"filtered":  summary.TotalFiltered,
+				"reduction": summary.ReductionPct,
+			}
+		}
 		httpmw.JSONResponse(w, http.StatusOK, result)
 	}
 }

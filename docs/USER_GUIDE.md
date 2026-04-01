@@ -259,6 +259,31 @@ tokman --llm npm test
 
 ## Common Workflows
 
+### Agent Context Delivery
+
+Use `ctx` when you want TokMan to shape context for an AI tool directly.
+
+```bash
+# Single-file context
+tokman ctx read cmd/tokman/main.go --mode auto --max-tokens 300
+
+# Incremental re-read after editing
+tokman ctx delta cmd/tokman/main.go
+
+# Project-aware context bundle
+tokman ctx read internal/server/server.go --mode graph --related-files 4
+```
+
+Recommended usage:
+- `--mode auto` for a single file with a tight token budget
+- `--mode delta` after iterative edits
+- `--mode graph` when the agent needs surrounding project context
+
+Dashboard support:
+- `/api/context-reads` shows recent smart reads
+- `/api/context-read-summary` breaks them down into `read`, `delta`, and `mcp`
+- the dashboard UI can filter smart-read activity by type
+
 ### Debugging Failed Tests
 
 ```bash

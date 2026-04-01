@@ -186,6 +186,75 @@ func TestContextReadsHandler(t *testing.T) {
 	}
 }
 
+func TestContextReadsHandler_FilterByKind(t *testing.T) {
+	tracker := setupTestDB(t)
+
+	for _, record := range []*tracking.CommandRecord{
+		{Command: "tokman ctx read main.go", OriginalTokens: 100, FilteredTokens: 40, SavedTokens: 60, ExecTimeMs: 12},
+		{Command: "tokman ctx delta main.go", OriginalTokens: 50, FilteredTokens: 10, SavedTokens: 40, ExecTimeMs: 8},
+		{Command: "tokman mcp read /tmp/main.go", OriginalTokens: 70, FilteredTokens: 20, SavedTokens: 50, ExecTimeMs: 5},
+	} {
+		if err := tracker.Record(record); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+	}
+
+	req := httptest.NewRequest("GET", "/api/context-reads?kind=delta", nil)
+	w := httptest.NewRecorder()
+	contextReadsHandler(tracker)(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", w.Code)
+	}
+
+	var response []map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+	if len(response) != 1 {
+		t.Fatalf("expected 1 delta record, got %d", len(response))
+	}
+	if response[0]["command"].(string) != "tokman ctx delta main.go" {
+		t.Fatalf("unexpected command %v", response[0]["command"])
+	}
+}
+
+func TestContextReadSummaryHandler(t *testing.T) {
+	tracker := setupTestDB(t)
+
+	for _, record := range []*tracking.CommandRecord{
+		{Command: "tokman ctx read main.go", OriginalTokens: 100, FilteredTokens: 40, SavedTokens: 60},
+		{Command: "tokman ctx delta main.go", OriginalTokens: 50, FilteredTokens: 10, SavedTokens: 40},
+		{Command: "tokman mcp read /tmp/main.go", OriginalTokens: 70, FilteredTokens: 20, SavedTokens: 50},
+	} {
+		if err := tracker.Record(record); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+	}
+
+	req := httptest.NewRequest("GET", "/api/context-read-summary", nil)
+	w := httptest.NewRecorder()
+	contextReadSummaryHandler(tracker)(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", w.Code)
+	}
+
+	var response map[string]map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &response); err != nil {
+		t.Fatalf("Failed to parse response: %v", err)
+	}
+	if response["read"]["commands"].(float64) != 1 {
+		t.Fatalf("expected 1 read command, got %v", response["read"]["commands"])
+	}
+	if response["delta"]["saved"].(float64) != 40 {
+		t.Fatalf("expected 40 delta tokens saved, got %v", response["delta"]["saved"])
+	}
+	if response["mcp"]["saved"].(float64) != 50 {
+		t.Fatalf("expected 50 mcp tokens saved, got %v", response["mcp"]["saved"])
+	}
+}
+
 func TestExportCSVHandler(t *testing.T) {
 	tracker := setupTestDB(t)
 

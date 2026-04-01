@@ -62,6 +62,12 @@ const dashboardHTML = `<!DOCTYPE html>
             display: flex;
             gap: 0.5rem;
         }
+        .pill-selector {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
         .time-btn {
             background: rgba(34, 211, 238, 0.1);
             border: 1px solid rgba(34, 211, 238, 0.3);
@@ -75,6 +81,20 @@ const dashboardHTML = `<!DOCTYPE html>
         .time-btn:hover, .time-btn.active {
             background: rgba(34, 211, 238, 0.2);
             border-color: #22d3ee;
+        }
+        .pill-btn {
+            background: rgba(249, 115, 22, 0.08);
+            border: 1px solid rgba(249, 115, 22, 0.25);
+            color: #fb923c;
+            padding: 0.4rem 0.85rem;
+            border-radius: 999px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        .pill-btn:hover, .pill-btn.active {
+            background: rgba(249, 115, 22, 0.18);
+            border-color: #fb923c;
         }
         .export-btn {
             background: rgba(16, 185, 129, 0.1);
@@ -628,6 +648,12 @@ const dashboardHTML = `<!DOCTYPE html>
         <div class="activity-section">
             <div class="activity-list daily-section">
                 <h2><i data-lucide="git-branch" style="width:18px;height:18px;vertical-align:middle;margin-right:8px"></i>Smart Read Activity</h2>
+                <div class="pill-selector" id="context-read-filters">
+                    <button class="pill-btn active" data-kind="all">All</button>
+                    <button class="pill-btn" data-kind="read">CLI Read</button>
+                    <button class="pill-btn" data-kind="delta">Delta</button>
+                    <button class="pill-btn" data-kind="mcp">MCP</button>
+                </div>
                 <div id="context-read-list">
                     <div class="loading">Loading...</div>
                 </div>
@@ -652,6 +678,7 @@ const dashboardHTML = `<!DOCTYPE html>
 
     <script>
         let currentDays = 7;
+        let currentContextReadKind = 'all';
         let charts = {};
         
         async function fetchAPI(endpoint) {
@@ -665,7 +692,10 @@ const dashboardHTML = `<!DOCTYPE html>
         }
 
         async function loadDashboard() {
-            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics, contextReads] = await Promise.all([
+            const contextReadEndpoint = currentContextReadKind === 'all'
+                ? '/api/context-reads'
+                : '/api/context-reads?kind=' + encodeURIComponent(currentContextReadKind);
+            const [stats, economics, daily, hourly, recent, topCommands, failures, performance, llmStatus, dailyBreakdown, projectStats, alerts, modelBreakdown, cacheMetrics, contextReads, contextReadSummary] = await Promise.all([
                 fetchAPI('/api/stats'),
                 fetchAPI('/api/economics'),
                 fetchAPI('/api/daily?days=' + currentDays),
@@ -680,7 +710,8 @@ const dashboardHTML = `<!DOCTYPE html>
                 fetchAPI('/api/alerts'),
                 fetchAPI('/api/model-breakdown'),
                 fetchAPI('/api/cache-metrics'),
-                fetchAPI('/api/context-reads'),
+                fetchAPI(contextReadEndpoint),
+                fetchAPI('/api/context-read-summary'),
             ]);
 
             // Update LLM Banner
@@ -710,7 +741,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 const avgPerDay = currentDays > 0 ? Math.round(stats.commands_count / currentDays) : 0;
                 document.getElementById('cmd-rate').textContent = avgPerDay + ' avg/day';
                 document.getElementById('context-read-count').textContent = (stats.context_read_commands || 0).toLocaleString();
-                document.getElementById('context-read-saved').textContent = ((stats.context_read_saved || 0).toLocaleString()) + ' tokens saved';
+                document.getElementById('context-read-saved').textContent = buildContextReadSummary(contextReadSummary, stats.context_read_saved || 0);
             }
 
             if (economics) {
@@ -1060,6 +1091,22 @@ const dashboardHTML = `<!DOCTYPE html>
             ).join('');
         }
 
+        function buildContextReadSummary(summary, fallbackSaved) {
+            if (!summary) {
+                return fallbackSaved.toLocaleString() + ' tokens saved';
+            }
+
+            const parts = [];
+            ['read', 'delta', 'mcp'].forEach(function(kind) {
+                if (!summary[kind] || !summary[kind].saved) return;
+                parts.push(kind + ': ' + summary[kind].saved.toLocaleString());
+            });
+            if (parts.length === 0) {
+                return fallbackSaved.toLocaleString() + ' tokens saved';
+            }
+            return parts.join(' · ');
+        }
+
         function renderFailures(data) {
             const container = document.getElementById('failures-list');
             const rateEl = document.getElementById('failure-rate');
@@ -1085,6 +1132,15 @@ const dashboardHTML = `<!DOCTYPE html>
                 document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentDays = parseInt(btn.dataset.days);
+                loadDashboard();
+            });
+        });
+
+        document.querySelectorAll('.pill-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentContextReadKind = btn.dataset.kind;
                 loadDashboard();
             });
         });

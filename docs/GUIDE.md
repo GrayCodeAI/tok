@@ -290,6 +290,25 @@ API endpoints:
 - `/api/history` — Command history
 - `/api/projects` — List projects
 - `/api/savings` — Savings breakdown
+- `/api/context-reads` — Recent smart context reads
+- `/api/context-read-summary` — Read vs delta vs MCP breakdown
+
+### Smart Context Workflow
+
+Use TokMan as a context delivery layer, not only an output filter:
+
+```bash
+# Read one file under a token budget
+tokman ctx read internal/server/server.go --mode auto --max-tokens 350
+
+# Emit only the delta since the last snapshot
+tokman ctx delta internal/server/server.go
+
+# Pull a graph-aware bundle: target file + related files
+tokman ctx read internal/server/server.go --mode graph --related-files 4
+```
+
+`graph` mode ranks related files using the project dependency graph plus local file proximity. For Go projects, TokMan resolves in-repo imports using `go.mod` so local package files rank ahead of unrelated neighbors.
 
 ### Discovering Savings Opportunities
 

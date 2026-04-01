@@ -2,6 +2,58 @@
 
 Complete REST API documentation for TokMan server.
 
+## Smart Context Endpoints
+
+TokMan exposes smart context delivery over the MCP server and dashboard APIs.
+
+### MCP `POST /read`
+
+Reads a file with TokMan's smart context modes.
+
+Request body:
+
+```json
+{
+  "path": "internal/server/server.go",
+  "mode": "graph",
+  "max_tokens": 400,
+  "related_files": 4,
+  "save_snapshot": true
+}
+```
+
+Supported modes:
+- `auto`
+- `full`
+- `map`
+- `signatures`
+- `aggressive`
+- `entropy`
+- `lines`
+- `delta`
+- `graph`
+
+Response fields:
+- `content`
+- `original_tokens`
+- `final_tokens`
+- `saved_tokens`
+- `reduction_percent`
+
+### Dashboard `GET /api/context-reads`
+
+Returns recent smart-read activity from tracking.
+
+Optional query parameter:
+- `kind=read|delta|mcp`
+
+### Dashboard `GET /api/context-read-summary`
+
+Returns aggregate smart-read savings grouped by:
+- `read`
+- `delta`
+- `mcp`
+
 ## Base URL
 
 ```
