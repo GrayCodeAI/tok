@@ -1,9 +1,11 @@
 package graph
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -15,6 +17,7 @@ type ProjectGraph struct {
 	nodes   map[string]*Node
 	edges   map[string][]string
 	rootDir string
+	module  string
 }
 
 // Node represents a file in the project graph.
@@ -33,12 +36,13 @@ func NewProjectGraph(rootDir string) *ProjectGraph {
 		nodes:   make(map[string]*Node),
 		edges:   make(map[string][]string),
 		rootDir: rootDir,
+		module:  readModuleName(rootDir),
 	}
 }
 
 // Analyze scans the project and builds the dependency graph.
 func (g *ProjectGraph) Analyze() error {
-	return filepath.Walk(g.rootDir, func(path string, info os.FileInfo, err error) error {
+	if err := filepath.Walk(g.rootDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
 		}
@@ -66,13 +70,24 @@ func (g *ProjectGraph) Analyze() error {
 
 		g.mu.Lock()
 		g.nodes[relPath] = node
-		for _, imp := range imports {
-			g.edges[relPath] = append(g.edges[relPath], imp)
-		}
 		g.mu.Unlock()
 
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	g.edges = make(map[string][]string)
+	for relPath, node := range g.nodes {
+		for _, imp := range node.Imports {
+			if resolved, ok := g.resolveImport(relPath, imp); ok {
+				g.edges[relPath] = append(g.edges[relPath], resolved)
+			}
+		}
+	}
+	return nil
 }
 
 // FindRelatedFiles finds files related to the given file through dependencies.
@@ -84,14 +99,34 @@ func (g *ProjectGraph) FindRelatedFiles(path string, maxResults int) []string {
 
 	// Direct imports
 	for _, imp := range g.edges[path] {
-		related[imp] = 10
+		related[imp] += 20
 	}
 
 	// Files that import this file
 	for file, imports := range g.edges {
 		for _, imp := range imports {
 			if imp == path {
-				related[file] = 8
+				related[file] += 16
+			}
+		}
+	}
+
+	// Two-hop neighbors: files imported by my imports and reverse import chains.
+	for _, imp := range g.edges[path] {
+		for _, second := range g.edges[imp] {
+			if second != path {
+				related[second] += 6
+			}
+		}
+	}
+	for file, imports := range g.edges {
+		for _, imp := range imports {
+			if imp == path {
+				for _, second := range g.edges[file] {
+					if second != path {
+						related[second] += 4
+					}
+				}
 			}
 		}
 	}
@@ -100,7 +135,22 @@ func (g *ProjectGraph) FindRelatedFiles(path string, maxResults int) []string {
 	dir := filepath.Dir(path)
 	for file := range g.nodes {
 		if filepath.Dir(file) == dir && file != path {
-			related[file] = max(related[file], 3)
+			related[file] += 5
+		}
+	}
+
+	// Prefer matching filenames and matching extensions.
+	base := strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+	ext := filepath.Ext(path)
+	for file := range g.nodes {
+		if file == path {
+			continue
+		}
+		if filepath.Ext(file) == ext {
+			related[file] += 2
+		}
+		if strings.Contains(filepath.Base(file), base) || strings.Contains(base, strings.TrimSuffix(filepath.Base(file), filepath.Ext(file))) {
+			related[file] += 3
 		}
 	}
 
@@ -111,15 +161,16 @@ func (g *ProjectGraph) FindRelatedFiles(path string, maxResults int) []string {
 	}
 	var pairs []kv
 	for k, v := range related {
-		pairs = append(pairs, kv{k, v})
-	}
-	for i := 0; i < len(pairs); i++ {
-		for j := i + 1; j < len(pairs); j++ {
-			if pairs[i].score < pairs[j].score {
-				pairs[i], pairs[j] = pairs[j], pairs[i]
-			}
+		if _, ok := g.nodes[k]; ok && k != path {
+			pairs = append(pairs, kv{k, v})
 		}
 	}
+	sort.Slice(pairs, func(i, j int) bool {
+		if pairs[i].score == pairs[j].score {
+			return pairs[i].path < pairs[j].path
+		}
+		return pairs[i].score > pairs[j].score
+	})
 
 	var results []string
 	for i := 0; i < len(pairs) && i < maxResults; i++ {
@@ -277,6 +328,64 @@ func extractImports(path string, lang string) []string {
 	}
 
 	return imports
+}
+
+func (g *ProjectGraph) resolveImport(fromFile, imp string) (string, bool) {
+	imp = strings.TrimSpace(imp)
+	if imp == "" {
+		return "", false
+	}
+
+	if strings.HasPrefix(imp, "./") || strings.HasPrefix(imp, "../") {
+		candidate := filepath.Clean(filepath.Join(filepath.Dir(fromFile), imp))
+		if resolved, ok := g.matchCandidate(candidate); ok {
+			return resolved, true
+		}
+	}
+
+	if g.module != "" && strings.HasPrefix(imp, g.module+"/") {
+		candidate := strings.TrimPrefix(imp, g.module+"/")
+		if resolved, ok := g.matchCandidate(candidate); ok {
+			return resolved, true
+		}
+	}
+
+	if resolved, ok := g.matchCandidate(imp); ok {
+		return resolved, true
+	}
+
+	return "", false
+}
+
+func (g *ProjectGraph) matchCandidate(candidate string) (string, bool) {
+	candidate = filepath.Clean(filepath.ToSlash(candidate))
+	if _, ok := g.nodes[candidate]; ok {
+		return candidate, true
+	}
+
+	for node := range g.nodes {
+		if filepath.ToSlash(filepath.Dir(node)) == candidate {
+			return node, true
+		}
+	}
+	return "", false
+}
+
+func readModuleName(rootDir string) string {
+	file, err := os.Open(filepath.Join(rootDir, "go.mod"))
+	if err != nil {
+		return ""
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if strings.HasPrefix(line, "module ") {
+			return strings.TrimSpace(strings.TrimPrefix(line, "module "))
+		}
+	}
+	return ""
 }
 
 func max(a, b int) int {

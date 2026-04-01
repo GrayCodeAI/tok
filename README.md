@@ -118,6 +118,7 @@ Unlike simple output filters (dedup + truncation), TokMan applies a **31-layer r
 tokman ls .                        # Token-optimized directory tree
 tokman read file.go                # Smart file reading
 tokman read file.go -l aggressive  # Signatures only (strips bodies)
+tokman read file.go --mode graph   # Target file + related project files
 tokman ctx read file.go --mode auto --max-tokens 300
 tokman ctx delta file.go           # Show change since last snapshot
 tokman ctx read file.go --mode graph --related-files 4
@@ -125,6 +126,19 @@ tokman smart file.go               # 2-line heuristic code summary
 tokman find "*.go" .               # Compact find results
 tokman grep "pattern" .            # Grouped search results
 tokman diff file1 file2            # Condensed diff
+```
+
+Context workflow:
+
+```bash
+# Budget a single file for an agent
+tokman ctx read internal/server/server.go --mode auto --max-tokens 350
+
+# Show only what changed since the last snapshot
+tokman ctx delta internal/server/server.go
+
+# Pull related files into the same context bundle
+tokman ctx read internal/server/server.go --mode graph --related-files 4
 ```
 
 ### Git
