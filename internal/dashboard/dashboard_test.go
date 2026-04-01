@@ -440,13 +440,28 @@ func TestCacheMetricsHandler(t *testing.T) {
 	tracker := setupTestDB(t)
 
 	// Record test data
-	tracker.Record(&tracking.CommandRecord{
-		Command:        "test",
-		OriginalTokens: 200,
-		FilteredTokens: 50,
-		SavedTokens:    150,
-		ExecTimeMs:     10,
-	})
+	for _, record := range []*tracking.CommandRecord{
+		{
+			Command:        "tokman ctx read alpha.go",
+			OriginalTokens: 200,
+			FilteredTokens: 50,
+			SavedTokens:    150,
+			ExecTimeMs:     10,
+			ProjectPath:    "/test/project-a",
+		},
+		{
+			Command:        "tokman ctx delta beta.go",
+			OriginalTokens: 100,
+			FilteredTokens: 20,
+			SavedTokens:    80,
+			ExecTimeMs:     8,
+			ProjectPath:    "/test/project-b",
+		},
+	} {
+		if err := tracker.Record(record); err != nil {
+			t.Fatalf("Record() error = %v", err)
+		}
+	}
 
 	req := httptest.NewRequest("GET", "/api/cache-metrics", nil)
 	w := httptest.NewRecorder()
@@ -465,5 +480,11 @@ func TestCacheMetricsHandler(t *testing.T) {
 
 	if response["efficiency_pct"] == nil {
 		t.Error("Expected efficiency_pct field")
+	}
+	if response["context_effectiveness_by_kind"] == nil {
+		t.Error("Expected context_effectiveness_by_kind field")
+	}
+	if response["context_effectiveness_by_project"] == nil {
+		t.Error("Expected context_effectiveness_by_project field")
 	}
 }

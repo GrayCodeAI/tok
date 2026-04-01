@@ -64,6 +64,8 @@ Response fields:
 - `saved_tokens`
 - `reduction_percent`
 
+Use `/bundle` when an agent needs target-file context plus project-selected neighbors in one request.
+
 ### Dashboard `GET /api/context-reads`
 
 Returns recent smart-read activity from tracking.
