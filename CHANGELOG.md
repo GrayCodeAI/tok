@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.4.0](https://github.com/GrayCodeAI/tokman/compare/v1.3.0...v1.4.0) (2026-04-02)
+
+### Features
+
+* add 10 new enterprise packages: benchmarking, stress, chaos, canary, abtest, costforecast, budgetalerts, teamcosts, mcphost, iteragent
+* add comprehensive benchmarking framework with multi-type benchmarks
+* add stress testing system with load, spike, soak test types
+* add chaos engineering framework with fault injection capabilities
+* add canary deployment system with multi-phase rollouts
+* add A/B testing framework with statistical analysis
+* add cost forecasting engine with multiple ML models
+* add budget alert system with multi-channel notifications
+* add team cost allocation and chargeback system
+* add MCP host management for Model Context Protocol
+* add iterative agent framework for multi-step reasoning
+
 ## [1.3.0](https://github.com/GrayCodeAI/tokman/compare/v1.2.0...v1.3.0) (2026-03-31)
 
 
