@@ -436,7 +436,8 @@ func (a *Allocator) GenerateReport(period AllocationPeriod) *Report {
 		var periodSpend float64
 		for day, amount := range team.Costs.Breakdown.ByDay {
 			dayTime, _ := time.Parse("2006-01-02", day)
-			if dayTime.After(period.Start) && dayTime.Before(period.End) {
+			if (dayTime.Equal(period.Start) || dayTime.After(period.Start)) &&
+				(dayTime.Equal(period.End) || dayTime.Before(period.End)) {
 				periodSpend += amount
 			}
 		}
@@ -569,7 +570,7 @@ type TeamUpdates struct {
 }
 
 func generateTeamID() string {
-	return fmt.Sprintf("team-%d", time.Now().Unix())
+	return fmt.Sprintf("team-%d", time.Now().UnixNano())
 }
 
 func generateAllocationID() string {
