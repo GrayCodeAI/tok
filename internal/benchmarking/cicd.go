@@ -96,7 +96,8 @@ func (ci *CICDIntegration) RunAndReport(suite *Suite) error {
 	runner := NewRunner()
 	runner.RegisterSuite(suite)
 
-	ctx := createTimeoutContext(suite.duration)
+	ctx, cancel := createTimeoutContext(suite.duration)
+	defer cancel()
 	report, err := runner.RunSuite(ctx, suite.name)
 	if err != nil {
 		return fmt.Errorf("benchmark run failed: %w", err)
@@ -416,10 +417,9 @@ const (
 )
 
 // createTimeoutContext creates a context with timeout
-func createTimeoutContext(duration time.Duration) context.Context {
+func createTimeoutContext(duration time.Duration) (context.Context, context.CancelFunc) {
 	if duration <= 0 {
 		duration = 30 * time.Minute
 	}
-	ctx, _ := context.WithTimeout(context.Background(), duration)
-	return ctx
+	return context.WithTimeout(context.Background(), duration)
 }

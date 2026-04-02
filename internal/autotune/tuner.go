@@ -2,7 +2,6 @@
 package autotune
 
 import (
-	"math"
 	"math/rand"
 	"sync"
 )
