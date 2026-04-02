@@ -514,7 +514,6 @@ func (a *Agent) fail(err error) {
 	})
 }
 
-// Pause pauses agent execution
 func (a *Agent) Pause() error {
 	a.mu.Lock()
 	defer a.mu.Unlock()
