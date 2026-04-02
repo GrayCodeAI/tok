@@ -554,4 +554,3 @@ func getRecentCommandTimestamps(tracker *tracking.Tracker, projectPath string) m
 	}
 	return result
 }
-

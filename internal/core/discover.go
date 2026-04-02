@@ -6,11 +6,11 @@ import (
 )
 
 type MissedSaving struct {
-	Command     string
-	Reason      string
-	Suggestion  string
-	EstTokens   int
-	EstSavings  int
+	Command    string
+	Reason     string
+	Suggestion string
+	EstTokens  int
+	EstSavings int
 }
 
 type DiscoverAnalyzer struct {
@@ -18,10 +18,10 @@ type DiscoverAnalyzer struct {
 }
 
 type missedPattern struct {
-	name     string
-	regex    *regexp.Regexp
-	suggest  string
-	estSave  int
+	name    string
+	regex   *regexp.Regexp
+	suggest string
+	estSave int
 }
 
 func NewDiscoverAnalyzer() *DiscoverAnalyzer {

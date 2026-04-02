@@ -9,14 +9,14 @@ import (
 )
 
 type PromptRecord struct {
-	Timestamp    time.Time
-	Command      string
-	RawPrompt    string
+	Timestamp        time.Time
+	Command          string
+	RawPrompt        string
 	CompressedPrompt string
-	Model        string
-	InputTokens  int
-	OutputTokens int
-	Duration     time.Duration
+	Model            string
+	InputTokens      int
+	OutputTokens     int
+	Duration         time.Duration
 }
 
 type PromptDebugger struct {

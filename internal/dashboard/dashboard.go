@@ -131,6 +131,10 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 	mux.Handle("/api/config", corsMiddleware(configHandler(tracker)))
 	mux.Handle("/api/report", corsMiddleware(reportHandler(tracker)))
 	mux.Handle("/api/cache-metrics", corsMiddleware(cacheMetricsHandler(tracker)))
+	// Chart and projection endpoints
+	mux.Handle("/api/projection", corsMiddleware(costProjectionHandler(tracker)))
+	mux.Handle("/api/contribution", corsMiddleware(contributionGraphHandler(tracker)))
+	mux.Handle("/api/contribution-3d", corsMiddleware(contributionGraph3DHandler(tracker)))
 	mux.HandleFunc("/logo", logoHandler)
 	mux.HandleFunc("/", dashboardIndexHandler)
 

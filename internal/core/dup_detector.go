@@ -7,10 +7,10 @@ import (
 )
 
 type DupEntry struct {
-	Command   string
-	Count     int
-	FirstSeen time.Time
-	LastSeen  time.Time
+	Command     string
+	Count       int
+	FirstSeen   time.Time
+	LastSeen    time.Time
 	TotalTokens int
 }
 
