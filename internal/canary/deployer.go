@@ -199,8 +199,6 @@ func (m *Manager) CreateDeployment(config DeploymentConfig) (*Deployment, error)
 
 	return deploy, nil
 }
-
-// GetDeployment returns a deployment by ID
 func (m *Manager) GetDeployment(id string) (*Deployment, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -364,14 +362,13 @@ func (d *Deployment) handlePhaseFailure(phase *Phase, err error) {
 
 func (d *Deployment) promote() {
 	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	d.Status = StatusPromoted
 	d.TrafficSplit = TrafficSplit{
 		Canary:   100.0,
 		Baseline: 0.0,
 		Stable:   0.0,
 	}
+	d.mu.Unlock()
 
 	d.emit(Event{
 		Type:       EventPromoted,
@@ -384,22 +381,19 @@ func (d *Deployment) promote() {
 // Rollback rolls back the deployment
 func (d *Deployment) Rollback() error {
 	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	if d.Status == StatusRolledBack {
+		d.mu.Unlock()
 		return fmt.Errorf("deployment already rolled back")
 	}
 
 	d.Status = StatusRollingBack
-
-	// Restore traffic to stable version
 	d.TrafficSplit = TrafficSplit{
 		Canary:   0.0,
 		Baseline: 0.0,
 		Stable:   100.0,
 	}
-
 	d.Status = StatusRolledBack
+	d.mu.Unlock()
 
 	d.emit(Event{
 		Type:       EventRollback,
@@ -414,13 +408,13 @@ func (d *Deployment) Rollback() error {
 // Abort stops the deployment
 func (d *Deployment) Abort(reason string) error {
 	d.mu.Lock()
-	defer d.mu.Unlock()
-
 	if d.Status != StatusRunning && d.Status != StatusPending {
+		d.mu.Unlock()
 		return fmt.Errorf("cannot abort deployment in state %s", d.Status)
 	}
 
 	d.Status = StatusAborted
+	d.mu.Unlock()
 
 	d.emit(Event{
 		Type:       EventAborted,
