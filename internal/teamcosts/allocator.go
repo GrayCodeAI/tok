@@ -569,8 +569,11 @@ type TeamUpdates struct {
 	Budget      Budget
 }
 
+var teamCounter int64
+
 func generateTeamID() string {
-	return fmt.Sprintf("team-%d", time.Now().UnixNano())
+	teamCounter++
+	return fmt.Sprintf("team-%d-%d", time.Now().UnixNano(), teamCounter)
 }
 
 func generateAllocationID() string {
