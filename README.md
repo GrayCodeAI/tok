@@ -4,7 +4,8 @@
 
 [![Go](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-42%20packages-green)](#)
+[![Tests](https://img.shields.io/badge/Tests-163%2B%20tests-green)](#)
+[![Packages](https://img.shields.io/badge/Packages-150%2B%20internal-blue)](#)
 [![Discord](https://img.shields.io/discord/1470188214710046894?label=Discord&logo=discord)](https://discord.gg/HrVA7ePyV)
 
 [Website](https://tokman.dev) · [Install](#installation) · [Quick Start](#quick-start) · [Discord](https://discord.gg/HrVA7ePyV) · [Architecture](#architecture) · [Contributing](#contributing)
@@ -361,6 +362,73 @@ tokman analytics --action anomaly   # Anomaly detection
 tokman analytics --action forecast  # Spend forecasting
 tokman analytics --action heatmap   # Token breakdown
 ```
+
+## Enterprise Features
+
+TokMan includes **40+ enterprise-grade packages** for production-ready token management, cost intelligence, testing, and AI agent orchestration.
+
+### Performance Testing
+
+| Package | Purpose | CLI |
+|---------|---------|-----|
+| `benchmarking` | Multi-type benchmarks (compression, pipeline, memory, concurrency) with JSON/CSV/Table export, trend tracking, regression detection, parallel execution, and custom DSL | `tokman benchmark run [suite]` |
+| `stress` | Load, spike, soak, and breakdown stress testing with 15 predefined scenarios (API, DB, cache, mixed workload, etc.), distributed testing, and report generation | `tokman stress run [scenario]` |
+| `chaos` | Chaos engineering with 9 fault types (latency, error, memory, CPU, network, disk, kill, time drift, dependency), safety mechanisms, auto-rollback, and game day support | Programmatic API |
+
+### Cost Intelligence
+
+| Package | Purpose | Description |
+|---------|---------|-------------|
+| `costforecast` | Cost forecasting engine with 4 ML models (linear regression, moving average, exponential smoothing, seasonal decomposition) and ensemble predictions | Predict future spending |
+| `budgetalerts` | Multi-level budget alerts with 5 notification channels (email, Slack, webhook, PagerDuty, console), auto-resolution, and cooldown periods | Stay within budget |
+| `teamcosts` | Team-based cost allocation with chargeback, budget tracking, variance reporting, and trend analysis | Allocate costs by team |
+| `anomaly` | Cost anomaly detection with 4 algorithms (statistical, sudden change, trend change, pattern break) and severity classification | Detect spending anomalies |
+| `costpolicy` | Cost policy enforcement with rules for budget limits, model restrictions, rate limits, approval requirements, and auto-shutdown | Enforce cost policies |
+| `costcenter` | Cost center hierarchy management with parent-child relationships, budget tracking, and utilization reporting | Organize costs hierarchically |
+| `dashboard` | Cost intelligence dashboard with 10 widgets (cost per request, spend forecast, token breakdown, model comparison, budget cap, anomaly detection, cost alerts, pricing editor, allocation tags, cost trend) | Visualize costs |
+| `digest` | Weekly cost digest generation in HTML, Markdown, and JSON formats with budget status, top models, anomalies, and recommendations | Automated reporting |
+
+### AI Agent Framework
+
+| Package | Purpose | Description |
+|---------|---------|-------------|
+| `iteragent` | Iterative agent framework with ReAct-style loop, tool usage, memory management (short-term, long-term, working), reflection, and pause/resume | Multi-step reasoning |
+| `llmproviders` | LLM provider integration supporting OpenAI (GPT-4), Anthropic (Claude 3), and Ollama (local models) with completions, streaming, and embeddings | Multi-provider LLM access |
+| `mcphost` | MCP (Model Context Protocol) host management with multi-server connections, tool discovery, resource access, session management, and event-driven architecture | MCP server management |
+| `intelligent` | Intelligent filter selection with content classification, adaptive compression, usage analytics, and smart defaults | Smart filter choices |
+| `sentiment` | Sentiment analysis for command output classification (positive/negative/neutral) | Content sentiment |
+| `autotune` | Auto-tuning for compression parameters with workload prediction and content-aware optimization | Self-optimizing |
+
+### Deployment & Reliability
+
+| Package | Purpose | Description |
+|---------|---------|-------------|
+| `canary` | Canary deployment system with linear, stepped, analysis, and shadow strategies, automatic traffic splitting, metric-based promotion, and auto-rollback | Safe rollouts |
+| `abtest` | A/B testing framework with A/B, multivariate, bandit, and switchback experiment types, statistical significance calculation, and segment targeting | Experimentation |
+| `audit` | Comprehensive audit logging with JSON/CSV export, filtering, and retention policies | Compliance logging |
+| `rbac` | Role-based access control with 4 roles (admin, manager, developer, viewer) and 6 permission types across 6 resource types | Access control |
+| `encryption` | AES-256-GCM encryption at rest with key management and map encryption | Data protection |
+| `retention` | Data retention policy management with configurable periods, auto-deletion, and archival | Data lifecycle |
+
+### CLI Enhancements
+
+| Package | Purpose | Description |
+|---------|---------|-------------|
+| `cli` | Shell completion (bash/zsh/fish), command aliases, progress indicators, spinners, color themes, dry-run mode, command chaining, and batch operations | Better CLI UX |
+| `undo` | Undo/redo functionality for all CLI operations with configurable history depth | Reversible operations |
+| `commandhistory` | Command history management with search, tagging, and statistics | History tracking |
+| `favorites` | Favorite commands management with usage tracking and tag-based organization | Quick access |
+| `scheduling` | Command scheduling with once, interval, daily, weekly, and cron schedules | Automated execution |
+| `workload` | Workload prediction with trend analysis and intelligent cache optimization | Predictive scaling |
+
+### CI/CD Integration
+
+TokMan includes GitHub Actions workflows for:
+- **Benchmark testing** — automated performance regression detection
+- **Stress testing** — load validation on every PR
+- **Multi-platform builds** — Linux, macOS, Windows (amd64/arm64)
+- **Security scanning** — dependency vulnerability checks
+- **Automated releases** — tag-based release with changelog generation
 
 ## Security
 

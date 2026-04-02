@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.5.0](https://github.com/GrayCodeAI/tokman/compare/v1.4.0...v1.5.0) (2026-04-03)
+
+### Enterprise Features
+
+* **40+ new internal packages** for production-ready token management
+* **Performance Testing**: benchmarking framework (JSON/CSV/Table export, trend tracking, regression detection, parallel execution, custom DSL), stress testing (15 predefined scenarios, distributed testing), chaos engineering (9 fault types, game days, blast radius)
+* **Cost Intelligence**: cost forecasting (4 ML models + ensemble), budget alerts (5 notification channels), team cost allocation/chargeback, anomaly detection (4 algorithms), cost policy enforcement, cost center hierarchy, 10-widget dashboard, weekly digest (HTML/MD/JSON)
+* **AI Agent Framework**: iterative agent (ReAct loop, memory, reflection), LLM providers (OpenAI, Anthropic, Ollama), MCP host management, intelligent filter selection, sentiment analysis, auto-tuning, workload prediction
+* **Deployment & Reliability**: canary deployments (4 strategies), A/B testing (4 experiment types), audit logging, RBAC (4 roles), AES-256-GCM encryption, data retention policies
+* **CLI Enhancements**: shell completion (bash/zsh/fish), command aliases, progress indicators, color themes, dry-run mode, command chaining, batch operations, undo/redo, command history, favorites, scheduling
+
+### CI/CD
+
+* GitHub Actions: benchmark testing, stress testing, multi-platform builds, security scanning, automated releases
+* 163+ tests across 119 packages
+* Average 30% test coverage across 190 packages
+
+### Bug Fixes
+
+* Fix context leak in benchmark CI/CD integration
+* Fix team ID collision in cost allocator
+* Fix unused imports in LLM provider tests
+
 ## [1.4.0](https://github.com/GrayCodeAI/tokman/compare/v1.3.0...v1.4.0) (2026-04-02)
 
 ### Features
