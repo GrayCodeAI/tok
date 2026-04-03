@@ -38,9 +38,9 @@ func DefaultConfig() Config {
 }
 
 type TeeEntry struct {
-	Timestamp      time.Time
-	Command        string
-	Filename       string
+	Timestamp time.Time
+	Command   string
+	Filename  string
 }
 
 func Save(command string, output string, exitCode int, cfg Config) (string, error) {
@@ -167,4 +167,3 @@ func WriteAndHint(output string, command string, exitCode int) string {
 	}
 	return fmt.Sprintf("[full output saved: %s]", path)
 }
-

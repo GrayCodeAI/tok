@@ -2,6 +2,7 @@ package llm
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -277,7 +278,12 @@ func (s *Summarizer) callOllama(prompt string, maxTokens int) (*llmResponse, err
 	}
 
 	client := &http.Client{Timeout: s.timeout}
-	resp, err := client.Post(s.baseURL+"/api/generate", "application/json", strings.NewReader(string(body)))
+	httpReq, err := http.NewRequest(http.MethodPost, s.baseURL+"/api/generate", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +350,12 @@ func (s *Summarizer) callOpenAICompat(prompt string, maxTokens int) (*llmRespons
 	}
 
 	client := &http.Client{Timeout: s.timeout}
-	resp, err := client.Post(s.baseURL+"/v1/chat/completions", "application/json", strings.NewReader(string(body)))
+	httpReq, err := http.NewRequest(http.MethodPost, s.baseURL+"/v1/chat/completions", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -403,7 +414,12 @@ func (s *Summarizer) streamOllama(req SummaryRequest, callback func(string)) (*S
 	}
 
 	client := &http.Client{Timeout: s.timeout}
-	resp, err := client.Post(s.baseURL+"/api/generate", "application/json", strings.NewReader(string(body)))
+	httpReq, err := http.NewRequest(http.MethodPost, s.baseURL+"/api/generate", bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
+	resp, err := client.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}

@@ -22,23 +22,45 @@ services:
       # Dashboard port (optional)
       - "8080:8080"
     command: ["dashboard", "--port", "8080", "--host", "0.0.0.0"]
+    healthcheck:
+      test: ["CMD", "tokman", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   # Optional: TokMan with Redis for distributed tracking
   tokman-redis:
-    extends:
-      service: tokman
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: graycodeai/tokman:latest
+    container_name: tokman-redis
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
     environment:
       - TOKMAN_REDIS_URL=redis://redis:6379
+    healthcheck:
+      test: ["CMD", "tokman", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
-    container_name: tokman-redis
+    container_name: tokman-redis-srv
     restart: unless-stopped
     volumes:
       - redis-data:/data
     command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
 volumes:
   tokman-data:

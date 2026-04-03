@@ -629,4 +629,3 @@ func RegisterAdvancedLayers(registry *LayerRegistry) {
 	registry.Register(NewSemanticAnchorLayer())
 	registry.Register(NewKnowledgeGraphLayer())
 }
-

@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 )
 
@@ -51,12 +48,22 @@ func AuthMiddleware(cfg AuthConfig, next http.Handler) http.Handler {
 	})
 }
 
-// CORS adds CORS headers to HTTP responses.
+// CORS adds CORS headers restricted to localhost origins and security headers.
 func CORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := r.Header.Get("Origin")
+		if origin == "http://localhost:8080" || origin == "http://127.0.0.1:8080" ||
+			origin == "http://localhost:3000" || origin == "http://127.0.0.1:3000" ||
+			origin == "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Security headers
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("X-Frame-Options", "DENY")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)
@@ -67,23 +74,23 @@ func CORS(next http.Handler) http.Handler {
 	})
 }
 
-// GracefulShutdown runs an HTTP server with graceful shutdown on SIGINT/SIGTERM.
-func GracefulShutdown(srv *http.Server) {
+// GracefulShutdown runs an HTTP server until the context is canceled.
+func GracefulShutdown(ctx context.Context, srv *http.Server) error {
+	errCh := make(chan error, 1)
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("server error: %v", err)
+			errCh <- err
 		}
+		close(errCh)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	log.Println("shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+	select {
+	case <-ctx.Done():
+		log.Println("shutting down server...")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return srv.Shutdown(shutdownCtx)
+	case err := <-errCh:
+		return err
 	}
 }

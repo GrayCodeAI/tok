@@ -170,7 +170,14 @@ func (h *FallbackHandler) executeCommand(args []string) (string, int, error) {
 		return "", 1, fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	baseCtx := context.Background()
+	if root := RootCmd(); root != nil {
+		if provider, ok := root.(interface{ Context() context.Context }); ok && provider.Context() != nil {
+			baseCtx = provider.Context()
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(baseCtx, 5*time.Minute)
 	defer cancel()
 
 	output, exitCode, err := h.runner.Run(ctx, args)

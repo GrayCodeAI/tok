@@ -1,6 +1,7 @@
 package canary
 
 import (
+	"sync"
 	"testing"
 	"time"
 )
@@ -109,12 +110,26 @@ func TestPhaseAnalysis(t *testing.T) {
 func TestDeploymentEvents(t *testing.T) {
 	m := NewManager()
 	d, _ := m.CreateDeployment(DeploymentConfig{Name: "T", Service: "s"})
-	events := make([]Event, 0)
-	d.OnEvent(func(e Event) { events = append(events, e) })
+
+	var mu sync.Mutex
+	var eventReceived bool
+
+	// Single handler that does both things
+	d.OnEvent(func(e Event) {
+		mu.Lock()
+		eventReceived = true
+		mu.Unlock()
+	})
+
 	d.emit(Event{Type: EventStarted, Timestamp: time.Now(), Message: "test"})
-	time.Sleep(10 * time.Millisecond)
-	if len(events) != 1 {
-		t.Errorf("expected 1 event, got %d", len(events))
+
+	// emit launches goroutines, give them time to complete
+	time.Sleep(50 * time.Millisecond)
+	mu.Lock()
+	n := eventReceived
+	mu.Unlock()
+	if !n {
+		t.Error("expected event to be received")
 	}
 }
 

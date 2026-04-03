@@ -39,6 +39,8 @@ type Tracker struct {
 	lastCleanupMs int64          // atomic: unix timestamp of last cleanup
 	cleanupCh     chan struct{}  // non-blocking cleanup trigger
 	cleanupWg     sync.WaitGroup // waits for cleanup goroutine to finish
+	closed        atomic.Bool
+	closeOnce     sync.Once
 }
 
 // TimedExecution tracks execution time and token savings.
@@ -189,9 +191,14 @@ func NewTracker(dbPath string) (*Tracker, error) {
 
 // Close closes the database connection.
 func (t *Tracker) Close() error {
-	close(t.cleanupCh)
-	t.cleanupWg.Wait() // Wait for cleanup goroutine to finish before closing DB
-	return t.db.Close()
+	var err error
+	t.closeOnce.Do(func() {
+		t.closed.Store(true)
+		close(t.cleanupCh)
+		t.cleanupWg.Wait() // Wait for cleanup goroutine to finish before closing DB
+		err = t.db.Close()
+	})
+	return err
 }
 
 // cleanupWorker processes cleanup triggers from the channel.
@@ -311,9 +318,11 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 	}
 
 	// Run cleanup after recording (throttled - at most once per minute)
-	select {
-	case t.cleanupCh <- struct{}{}:
-	default:
+	if !t.closed.Load() {
+		select {
+		case t.cleanupCh <- struct{}{}:
+		default:
+		}
 	}
 
 	return nil
@@ -1016,9 +1025,11 @@ func (t *Tracker) RecordParseFailure(rawCommand string, errorMessage string, fal
 	}
 
 	// Cleanup old records (throttled)
-	select {
-	case t.cleanupCh <- struct{}{}:
-	default:
+	if !t.closed.Load() {
+		select {
+		case t.cleanupCh <- struct{}{}:
+		default:
+		}
 	}
 
 	return nil

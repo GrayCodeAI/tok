@@ -1,6 +1,7 @@
 package output
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -37,6 +38,7 @@ func init() {
 }
 
 func runSummary(cmd *cobra.Command, args []string) error {
+	args = stripSummaryGlobalFlags(args)
 	if len(args) == 0 {
 		return fmt.Errorf("summary requires a command to execute")
 	}
@@ -52,7 +54,19 @@ func runSummary(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	execCmd := exec.Command(args[0], args[1:]...)
+	if raw, ok, err := readSummaryFile(args); err != nil {
+		return err
+	} else if ok {
+		summary := summarizeOutput(raw, command, true)
+		fmt.Println(summary)
+
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(summary)
+		timer.Track(command, "tokman summary", originalTokens, filteredTokens)
+		return nil
+	}
+
+	execCmd := exec.CommandContext(contextOrBackground(cmd.Context()), args[0], args[1:]...)
 
 	output, err := execCmd.CombinedOutput()
 	raw := string(output)
@@ -65,7 +79,70 @@ func runSummary(cmd *cobra.Command, args []string) error {
 	filteredTokens := filter.EstimateTokens(summary)
 	timer.Track(command, "tokman summary", originalTokens, filteredTokens)
 
-	return nil
+	return err
+}
+
+func contextOrBackground(ctx context.Context) context.Context {
+	if ctx != nil {
+		return ctx
+	}
+	return context.Background()
+}
+
+func stripSummaryGlobalFlags(args []string) []string {
+	if len(args) == 0 {
+		return args
+	}
+
+	flagsWithValue := map[string]struct{}{
+		"--preset":  {},
+		"--profile": {},
+		"--mode":    {}, // legacy alias used by integration tests
+		"--query":   {},
+		"--budget":  {},
+	}
+
+	var filtered []string
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		if arg == "--" {
+			filtered = append(filtered, args[i+1:]...)
+			break
+		}
+
+		if _, ok := flagsWithValue[arg]; ok {
+			i++
+			continue
+		}
+
+		filtered = append(filtered, arg)
+	}
+
+	return filtered
+}
+
+func readSummaryFile(args []string) (string, bool, error) {
+	if len(args) != 1 {
+		return "", false, nil
+	}
+
+	info, err := os.Stat(args[0])
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", false, nil
+		}
+		return "", false, fmt.Errorf("failed to stat input file: %w", err)
+	}
+	if info.IsDir() {
+		return "", false, nil
+	}
+
+	content, err := os.ReadFile(args[0])
+	if err != nil {
+		return "", false, fmt.Errorf("failed to read input file: %w", err)
+	}
+
+	return string(content), true, nil
 }
 
 func summarizeOutput(output, command string, success bool) string {

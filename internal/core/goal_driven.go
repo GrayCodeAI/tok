@@ -364,4 +364,3 @@ func sortByScore(items []ContextItem) {
 		}
 	}
 }
-

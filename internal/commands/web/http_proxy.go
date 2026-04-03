@@ -1,10 +1,11 @@
 package web
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"syscall"
 	"time"
 
@@ -120,6 +121,18 @@ func runProxyStart(cmd *cobra.Command, args []string) error {
 	if !cfg.Enabled {
 		return fmt.Errorf("proxy is disabled in config")
 	}
+	if cfg.ListenAddr == "" {
+		return fmt.Errorf("listen address is required")
+	}
+	if _, err := net.ResolveTCPAddr("tcp", cfg.ListenAddr); err != nil {
+		return fmt.Errorf("invalid listen address %q: %w", cfg.ListenAddr, err)
+	}
+	if cfg.TargetURL == "" {
+		return fmt.Errorf("target URL is required")
+	}
+	if err := proxy.ValidTargetURL(cfg.TargetURL); err != nil {
+		return err
+	}
 
 	p := proxy.NewProxy(cfg.ListenAddr, cfg.TargetURL)
 
@@ -128,10 +141,6 @@ func runProxyStart(cmd *cobra.Command, args []string) error {
 		p.SetModelAlias(from, to)
 	}
 
-	// Setup signal handling
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-
 	server := &http.Server{
 		Addr:         cfg.ListenAddr,
 		Handler:      p,
@@ -139,30 +148,46 @@ func runProxyStart(cmd *cobra.Command, args []string) error {
 		WriteTimeout: 5 * time.Minute,
 		IdleTimeout:  120 * time.Second,
 	}
+	listener, err := net.Listen("tcp", cfg.ListenAddr)
+	if err != nil {
+		return fmt.Errorf("listen %s: %w", cfg.ListenAddr, err)
+	}
 
+	fmt.Printf("TokMan HTTP Proxy listening on %s\n", cfg.ListenAddr)
+	fmt.Printf("Target: %s\n", cfg.TargetURL)
+	fmt.Printf("Health: http://%s/health\n", cfg.ListenAddr)
+	fmt.Printf("Metrics: http://%s/metrics\n", cfg.ListenAddr)
+	fmt.Println()
+
+	errCh := make(chan error, 1)
 	go func() {
-		fmt.Printf("TokMan HTTP Proxy listening on %s\n", cfg.ListenAddr)
-		fmt.Printf("Target: %s\n", cfg.TargetURL)
-		fmt.Printf("Health: http://%s/health\n", cfg.ListenAddr)
-		fmt.Printf("Metrics: http://%s/metrics\n", cfg.ListenAddr)
-		fmt.Println()
-
-		var err error
+		var serveErr error
 		if cfg.TLSEnabled {
-			err = server.ListenAndServeTLS(cfg.TLSCertFile, cfg.TLSKeyFile)
+			serveErr = server.ServeTLS(listener, cfg.TLSCertFile, cfg.TLSKeyFile)
 		} else {
-			err = server.ListenAndServe()
+			serveErr = server.Serve(listener)
 		}
-		if err != nil && err != http.ErrServerClosed {
-			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
+		if serveErr != nil && serveErr != http.ErrServerClosed {
+			errCh <- serveErr
 		}
+		close(errCh)
 	}()
 
-	// Wait for shutdown signal
-	<-sigChan
-	fmt.Println("\nShutting down proxy...")
-	server.Close()
-	return nil
+	select {
+	case <-cmd.Context().Done():
+		fmt.Println("\nShutting down proxy...")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("proxy shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("proxy server error: %w", err)
+		}
+		return nil
+	}
 }
 
 func runProxyStop(cmd *cobra.Command, args []string) error {

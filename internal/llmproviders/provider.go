@@ -11,6 +11,20 @@ import (
 	"time"
 )
 
+func newJSONRequest(ctx context.Context, method, url string, payload interface{}) (*http.Request, error) {
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	return req, nil
+}
+
 // Provider defines an LLM provider interface
 type Provider interface {
 	Name() string
@@ -107,9 +121,10 @@ func (p *OpenAIProvider) Complete(ctx context.Context, req CompletionRequest) (*
 		payload["tools"] = req.Tools
 	}
 
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/chat/completions", bytes.NewBuffer(body))
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq, err := newJSONRequest(ctx, "POST", p.baseURL+"/chat/completions", payload)
+	if err != nil {
+		return nil, err
+	}
 	httpReq.Header.Set("Authorization", "Bearer "+p.apiKey)
 
 	resp, err := p.client.Do(httpReq)
@@ -141,6 +156,9 @@ func (p *OpenAIProvider) Complete(ctx context.Context, req CompletionRequest) (*
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
+	if len(result.Choices) == 0 {
+		return nil, fmt.Errorf("openai response missing choices")
+	}
 
 	return &CompletionResponse{
 		ID:      result.ID,
@@ -167,9 +185,10 @@ func (p *OpenAIProvider) Embed(ctx context.Context, text string) ([]float64, err
 		"input": text,
 	}
 
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/embeddings", bytes.NewBuffer(body))
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq, err := newJSONRequest(ctx, "POST", p.baseURL+"/embeddings", payload)
+	if err != nil {
+		return nil, err
+	}
 	httpReq.Header.Set("Authorization", "Bearer "+p.apiKey)
 
 	resp, err := p.client.Do(httpReq)
@@ -177,6 +196,11 @@ func (p *OpenAIProvider) Embed(ctx context.Context, text string) ([]float64, err
 		return nil, fmt.Errorf("openai embed failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("openai embed error %d: %s", resp.StatusCode, string(body))
+	}
 
 	var result struct {
 		Data []struct {
@@ -240,9 +264,10 @@ func (p *AnthropicProvider) Complete(ctx context.Context, req CompletionRequest)
 		"system":      systemPrompt,
 	}
 
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(body))
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq, err := newJSONRequest(ctx, "POST", "https://api.anthropic.com/v1/messages", payload)
+	if err != nil {
+		return nil, err
+	}
 	httpReq.Header.Set("x-api-key", p.apiKey)
 	httpReq.Header.Set("anthropic-version", "2023-06-01")
 
@@ -339,15 +364,21 @@ func (p *OllamaProvider) Complete(ctx context.Context, req CompletionRequest) (*
 		"stream":      false,
 	}
 
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/api/generate", bytes.NewBuffer(body))
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq, err := newJSONRequest(ctx, "POST", p.baseURL+"/api/generate", payload)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := p.client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("ollama request failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("ollama error %d: %s", resp.StatusCode, string(body))
+	}
 
 	var result struct {
 		Model    string `json:"model"`
@@ -377,15 +408,21 @@ func (p *OllamaProvider) Embed(ctx context.Context, text string) ([]float64, err
 		"prompt": text,
 	}
 
-	body, _ := json.Marshal(payload)
-	httpReq, _ := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/api/embeddings", bytes.NewBuffer(body))
-	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq, err := newJSONRequest(ctx, "POST", p.baseURL+"/api/embeddings", payload)
+	if err != nil {
+		return nil, err
+	}
 
 	resp, err := p.client.Do(httpReq)
 	if err != nil {
 		return nil, fmt.Errorf("ollama embed failed: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("ollama embed error %d: %s", resp.StatusCode, string(body))
+	}
 
 	var result struct {
 		Embedding []float64 `json:"embedding"`

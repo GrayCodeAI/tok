@@ -12,14 +12,14 @@ import (
 type ContentType string
 
 const (
-	ContentTypeCode      ContentType = "code"
-	ContentTypeLog       ContentType = "log"
-	ContentTypeJSON      ContentType = "json"
-	ContentTypeDiff      ContentType = "diff"
-	ContentTypeHTML      ContentType = "html"
-	ContentTypeText      ContentType = "text"
-	ContentTypeMarkdown  ContentType = "markdown"
-	ContentTypeUnknown   ContentType = "unknown"
+	ContentTypeCode     ContentType = "code"
+	ContentTypeLog      ContentType = "log"
+	ContentTypeJSON     ContentType = "json"
+	ContentTypeDiff     ContentType = "diff"
+	ContentTypeHTML     ContentType = "html"
+	ContentTypeText     ContentType = "text"
+	ContentTypeMarkdown ContentType = "markdown"
+	ContentTypeUnknown  ContentType = "unknown"
 )
 
 // Language represents the detected programming language.
@@ -43,13 +43,13 @@ const (
 type ContextMode string
 
 const (
-	ModeFull     ContextMode = "full"
-	ModeMap      ContextMode = "map"
-	ModeOutline  ContextMode = "outline"
-	ModeSymbols  ContextMode = "symbols"
-	ModeImports  ContextMode = "imports"
-	ModeTypes    ContextMode = "types"
-	ModeExports  ContextMode = "exports"
+	ModeFull    ContextMode = "full"
+	ModeMap     ContextMode = "map"
+	ModeOutline ContextMode = "outline"
+	ModeSymbols ContextMode = "symbols"
+	ModeImports ContextMode = "imports"
+	ModeTypes   ContextMode = "types"
+	ModeExports ContextMode = "exports"
 )
 
 // Request represents an MCP tool call request.
@@ -70,8 +70,8 @@ type Response struct {
 
 // Error represents an MCP error.
 type Error struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
+	Code    int         `json:"code"`
+	Message string      `json:"message"`
 	Data    interface{} `json:"data,omitempty"`
 }
 
@@ -131,13 +131,13 @@ type ServerInfo struct {
 // FusionContext carries context through the MCP pipeline.
 // Immutable - each operation returns a new context.
 type FusionContext struct {
-	Content      string                 `json:"content"`
-	ContentType  ContentType            `json:"content_type"`
-	Language     Language               `json:"language"`
-	FilePath     string                 `json:"file_path"`
-	Hash         string                 `json:"hash"`
-	Metadata     map[string]interface{} `json:"metadata"`
-	Timestamp    time.Time              `json:"timestamp"`
+	Content     string                 `json:"content"`
+	ContentType ContentType            `json:"content_type"`
+	Language    Language               `json:"language"`
+	FilePath    string                 `json:"file_path"`
+	Hash        string                 `json:"hash"`
+	Metadata    map[string]interface{} `json:"metadata"`
+	Timestamp   time.Time              `json:"timestamp"`
 }
 
 // NewFusionContext creates a new fusion context.
@@ -156,7 +156,7 @@ type ToolHandler func(ctx context.Context, params map[string]interface{}) (inter
 
 // ToolRegistry manages available tools.
 type ToolRegistry struct {
-	tools   map[string]Tool
+	tools    map[string]Tool
 	handlers map[string]ToolHandler
 }
 
@@ -238,24 +238,24 @@ type BundleFile struct {
 
 // Stats represents cache statistics.
 type Stats struct {
-	TotalEntries  int64   `json:"total_entries"`
-	TotalSize     int64   `json:"total_size_bytes"`
-	HitRate       float64 `json:"hit_rate"`
-	HitCount      int64   `json:"hit_count"`
-	MissCount     int64   `json:"miss_count"`
-	OldestEntry   time.Time `json:"oldest_entry"`
-	NewestEntry   time.Time `json:"newest_entry"`
+	TotalEntries int64     `json:"total_entries"`
+	TotalSize    int64     `json:"total_size_bytes"`
+	HitRate      float64   `json:"hit_rate"`
+	HitCount     int64     `json:"hit_count"`
+	MissCount    int64     `json:"miss_count"`
+	OldestEntry  time.Time `json:"oldest_entry"`
+	NewestEntry  time.Time `json:"newest_entry"`
 }
 
 // Status represents overall MCP server status.
 type Status struct {
-	Version        string        `json:"version"`
-	Uptime         time.Duration `json:"uptime"`
-	CacheStats     Stats         `json:"cache_stats"`
-	ActiveMode     ContextMode   `json:"active_mode"`
-	SessionStart   time.Time     `json:"session_start"`
-	TotalCommands  int64         `json:"total_commands"`
-	TotalTokensSaved int64       `json:"total_tokens_saved"`
+	Version          string        `json:"version"`
+	Uptime           time.Duration `json:"uptime"`
+	CacheStats       Stats         `json:"cache_stats"`
+	ActiveMode       ContextMode   `json:"active_mode"`
+	SessionStart     time.Time     `json:"session_start"`
+	TotalCommands    int64         `json:"total_commands"`
+	TotalTokensSaved int64         `json:"total_tokens_saved"`
 }
 
 // Common parameter structures.
@@ -268,7 +268,7 @@ type ReadParams struct {
 
 // DeltaParams for ctx_delta tool.
 type DeltaParams struct {
-	Path    string `json:"path"`
+	Path     string `json:"path"`
 	BaseHash string `json:"base_hash,omitempty"`
 }
 
@@ -301,11 +301,11 @@ type ExecParams struct {
 
 // Error messages.
 var (
-	ErrToolNotFound    = fmt.Errorf("tool not found")
-	ErrInvalidParams   = fmt.Errorf("invalid parameters")
-	ErrFileNotFound    = fmt.Errorf("file not found")
-	ErrCacheMiss       = fmt.Errorf("cache miss")
-	ErrMemoryNotFound  = fmt.Errorf("memory entry not found")
-	ErrAlreadyExists   = fmt.Errorf("already exists")
-	ErrInternal        = fmt.Errorf("internal error")
+	ErrToolNotFound   = fmt.Errorf("tool not found")
+	ErrInvalidParams  = fmt.Errorf("invalid parameters")
+	ErrFileNotFound   = fmt.Errorf("file not found")
+	ErrCacheMiss      = fmt.Errorf("cache miss")
+	ErrMemoryNotFound = fmt.Errorf("memory entry not found")
+	ErrAlreadyExists  = fmt.Errorf("already exists")
+	ErrInternal       = fmt.Errorf("internal error")
 )

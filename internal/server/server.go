@@ -8,10 +8,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -135,6 +132,18 @@ func New(config Config) *Server {
 
 // Start begins listening for requests
 func (s *Server) Start() error {
+	return s.StartContext(context.Background())
+}
+
+// StartContext begins listening for requests and stops on context cancellation.
+func (s *Server) StartContext(ctx context.Context) error {
+	if ctx.Err() != nil {
+		return nil
+	}
+	if s.port < 1 || s.port > 65535 {
+		return fmt.Errorf("invalid port %d: must be between 1 and 65535", s.port)
+	}
+
 	mux := http.NewServeMux()
 
 	// Health check (no auth required)
@@ -179,22 +188,33 @@ func (s *Server) Start() error {
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20, // 1MB
 	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen %s: %w", addr, err)
+	}
+
+	errCh := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("server error: %v", err)
+		if serveErr := srv.Serve(listener); serveErr != nil && serveErr != http.ErrServerClosed {
+			errCh <- serveErr
 		}
+		close(errCh)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(shutdownCtx); err != nil {
+			return fmt.Errorf("server shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("server error: %w", err)
+		}
+		return nil
 	}
-	return nil
 }
 
 // rateLimitMiddleware enforces rate limiting per IP

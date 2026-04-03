@@ -22,8 +22,8 @@ const (
 
 // Translator provides translation services.
 type Translator struct {
-	lang       Language
-	messages   map[Language]map[string]string
+	lang        Language
+	messages    map[Language]map[string]string
 	pluralizers map[Language]Pluralizer
 }
 

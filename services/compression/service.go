@@ -118,9 +118,24 @@ func (s *Service) Compress(ctx context.Context, req *CompressRequest) (*Compress
 }
 
 // GetStats implements CompressionService.
+// Note: Returns runtime metrics from Prometheus counters. For persistent
+// historical stats, wire up to the tracking database via the analytics service.
 func (s *Service) GetStats(ctx context.Context) (*StatsResponse, error) {
-	// TODO: Wire up to tracking database
-	return &StatsResponse{}, nil
+	totalCompressions := metrics.GetCompressionRequestCount()
+	tokensSaved := metrics.GetTokensSavedTotal()
+	tokensProcessed := metrics.GetTokensProcessedTotal()
+
+	avgCompression := 0.0
+	if tokensProcessed > 0 && totalCompressions > 0 {
+		avgCompression = float64(tokensSaved) / float64(tokensProcessed) * 100
+	}
+
+	return &StatsResponse{
+		TotalCompressions:  totalCompressions,
+		TotalTokensSaved:   int64(tokensSaved),
+		AverageCompression: avgCompression,
+		P99LatencyMs:       metrics.GetP99LatencyMs(),
+	}, nil
 }
 
 // GetLayers implements CompressionService.

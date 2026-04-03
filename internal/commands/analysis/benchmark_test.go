@@ -280,4 +280,3 @@ func generateLargeOutput(lines int) string {
 	}
 	return sb.String()
 }
-

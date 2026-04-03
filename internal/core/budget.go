@@ -175,7 +175,7 @@ func (be *BudgetEnforcer) enforceAdaptive(content string, status BudgetStatus) (
 	}
 
 	currentContent := content
-	_ = status.CurrentTokens - be.config.MaxTokens // target reduction if needed
+	_ = status.CurrentTokens - be.config.MaxTokens // budget check below
 
 	// Stage 1: Remove comments
 	if status.CurrentTokens > be.config.MaxTokens {

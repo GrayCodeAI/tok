@@ -39,7 +39,7 @@ func runExplain(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("command not found: %s", args[0])
 	}
 
-	execCmd := exec.Command(exePath, args[1:]...)
+	execCmd := exec.CommandContext(contextOrBackground(cmd.Context()), exePath, args[1:]...)
 	execCmd.Env = os.Environ()
 	output, err := execCmd.CombinedOutput()
 	if err != nil && len(output) == 0 {
@@ -109,5 +109,5 @@ func runExplain(cmd *cobra.Command, args []string) error {
 	fmt.Printf("\nTotal saved: %d tokens (%.1f%% reduction)\n",
 		stats.TotalSaved, stats.ReductionPercent)
 
-	return nil
+	return err
 }

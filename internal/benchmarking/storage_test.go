@@ -22,6 +22,12 @@ func TestNewStorage(t *testing.T) {
 	}
 }
 
+func TestNewStorageRequiresPath(t *testing.T) {
+	if _, err := NewStorage(""); err == nil {
+		t.Fatal("expected error for empty db path")
+	}
+}
+
 func TestStorageSaveAndLoadSuite(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test.db")

@@ -106,6 +106,10 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 // This consolidates the common pattern of: exec.Command -> StdoutPipe -> StderrPipe -> Start -> Wait.
 // Returns combined stdout and stderr, exit code, and any execution error.
 func RunAndCapture(cmd string, args []string) (output string, exitCode int, err error) {
+	if cmd == "" {
+		return "", 1, fmt.Errorf("command is required")
+	}
+
 	execCmd := exec.Command(cmd, args...)
 
 	stdoutPipe, pipeErr := execCmd.StdoutPipe()

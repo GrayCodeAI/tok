@@ -4,13 +4,10 @@ import (
 	"context"
 	"crypto/subtle"
 	"fmt"
-	"log"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -89,6 +86,10 @@ The dashboard provides:
 }
 
 func runDashboard(cmd *cobra.Command, args []string) error {
+	if Port < 1 || Port > 65535 {
+		return fmt.Errorf("invalid --port %d: must be between 1 and 65535", Port)
+	}
+
 	dbPath := tracking.DatabasePath()
 	tracker, err := tracking.NewTracker(dbPath)
 	if err != nil {
@@ -165,22 +166,33 @@ func runDashboard(cmd *cobra.Command, args []string) error {
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen %s: %w", addr, err)
+	}
+
+	errCh := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("server error: %v", err)
+		if serveErr := srv.Serve(listener); serveErr != nil && serveErr != http.ErrServerClosed {
+			errCh <- serveErr
 		}
+		close(errCh)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+	select {
+	case <-cmd.Context().Done():
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			return fmt.Errorf("server shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("server error: %w", err)
+		}
+		return nil
 	}
-	return nil
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

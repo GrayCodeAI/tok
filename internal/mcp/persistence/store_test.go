@@ -231,3 +231,22 @@ func TestDeleteOlderThan(t *testing.T) {
 		t.Error("expected new entry to exist")
 	}
 }
+
+func TestNewStoreRequiresPath(t *testing.T) {
+	if _, err := NewStore(""); err == nil {
+		t.Fatal("expected error for empty path")
+	}
+}
+
+func TestBackupRequiresPath(t *testing.T) {
+	dir := t.TempDir()
+	store, err := NewStore(filepath.Join(dir, "test.db"))
+	if err != nil {
+		t.Fatalf("NewStore() error = %v", err)
+	}
+	defer store.Close()
+
+	if err := store.Backup(""); err == nil {
+		t.Fatal("expected backup path error")
+	}
+}

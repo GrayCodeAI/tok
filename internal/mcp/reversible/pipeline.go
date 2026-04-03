@@ -4,6 +4,7 @@ package reversible
 import (
 	"fmt"
 	"io"
+	"log"
 	"os/exec"
 	"strings"
 	"time"
@@ -29,6 +30,9 @@ func NewPipeline(store Store, config Config) *Pipeline {
 // Execute runs a command with reversible compression.
 func (p *Pipeline) Execute(command string, args []string, input io.Reader) (string, *Entry, error) {
 	start := time.Now()
+	if command == "" {
+		return "", nil, fmt.Errorf("command is required")
+	}
 
 	// Run the command
 	cmd := exec.Command(command, args...)
@@ -70,13 +74,15 @@ func (p *Pipeline) Execute(command string, args []string, input io.Reader) (stri
 
 	// Record in command history if SQLiteStore
 	if sqliteStore, ok := p.store.(*SQLiteStore); ok {
-		_ = sqliteStore.RecordCommand(&CommandRecord{
+		if err := sqliteStore.RecordCommand(&CommandRecord{
 			Command:    entry.Command,
 			Hash:       hash,
 			Timestamp:  start,
 			Duration:   duration,
 			Compressed: true,
-		})
+		}); err != nil {
+			log.Printf("failed to record command history: %v", err)
+		}
 	}
 
 	// Return output with marker
@@ -180,11 +186,14 @@ func NewCLI(store Store, config Config) *CLI {
 
 // StoreCommand handles the `rewind store` command.
 func (c *CLI) StoreCommand(content string, command string) (string, error) {
+	if content == "" {
+		return "", fmt.Errorf("content is required")
+	}
 	entry := &Entry{
-		Original:       content,
-		Command:        command,
-		CreatedAt:      time.Now(),
-		SizeOriginal:   int64(len(content)),
+		Original:     content,
+		Command:      command,
+		CreatedAt:    time.Now(),
+		SizeOriginal: int64(len(content)),
 	}
 
 	hash, err := c.pipeline.store.Save(entry)
@@ -354,4 +363,3 @@ func ExtractMarkers(text string) []Marker {
 
 	return markers
 }
-

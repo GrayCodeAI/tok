@@ -1,7 +1,10 @@
 package metrics
 
 import (
+	"fmt"
 	"testing"
+
+	dto "github.com/prometheus/client_model/go"
 )
 
 func TestRecordCompression(t *testing.T) {
@@ -87,4 +90,74 @@ func TestCacheMetrics(t *testing.T) {
 	RecordCacheMiss()
 	RecordCacheHit()
 	UpdateCacheSize(1024)
+}
+
+func TestGetCompressionRequestCountSumsSuccessfulModes(t *testing.T) {
+	before := GetCompressionRequestCount()
+
+	RecordCompression("minimal", 100, 50, 5)
+	RecordCompression("aggressive", 100, 25, 7)
+	RecordCompressionError("minimal")
+
+	got := GetCompressionRequestCount() - before
+	if got != 2 {
+		t.Fatalf("GetCompressionRequestCount delta = %d, want 2", got)
+	}
+}
+
+func TestGetAllMetricsIncludesGaugeAndCounters(t *testing.T) {
+	beforeHits := GetAllMetrics()["cache_hits"]
+
+	RecordCacheHit()
+	UpdateCacheSize(2048)
+
+	got := GetAllMetrics()
+	if got["cache_hits"] != beforeHits+1 {
+		t.Fatalf("cache_hits = %v, want %v", got["cache_hits"], beforeHits+1)
+	}
+	if got["cache_size"] != 2048 {
+		t.Fatalf("cache_size = %v, want 2048", got["cache_size"])
+	}
+}
+
+func TestReadHistogramByNameAggregatesAcrossModes(t *testing.T) {
+	modeA := fmt.Sprintf("hist-a-%s", t.Name())
+	modeB := fmt.Sprintf("hist-b-%s", t.Name())
+	modeC := fmt.Sprintf("hist-c-%s", t.Name())
+
+	_, beforeCount, beforeBuckets := readHistogramByName("tokman_compression_duration_ms", nil)
+
+	for i := 0; i < 50; i++ {
+		RecordCompression(modeA, 100, 50, 4)
+		RecordCompression(modeB, 100, 50, 8)
+	}
+	RecordCompression(modeC, 100, 50, 2048)
+
+	_, afterCount, afterBuckets := readHistogramByName("tokman_compression_duration_ms", nil)
+	if delta := afterCount - beforeCount; delta != 101 {
+		t.Fatalf("sample count delta = %d, want 101", delta)
+	}
+
+	deltaAt8 := bucketDelta(beforeBuckets, afterBuckets, 8)
+	if deltaAt8 != 100 {
+		t.Fatalf("bucket delta at 8ms = %d, want 100", deltaAt8)
+	}
+
+	deltaAt2048 := bucketDelta(beforeBuckets, afterBuckets, 2048)
+	if deltaAt2048 != 101 {
+		t.Fatalf("bucket delta at 2048ms = %d, want 101", deltaAt2048)
+	}
+}
+
+func bucketDelta(before, after []*dto.Bucket, upperBound float64) uint64 {
+	return bucketCount(after, upperBound) - bucketCount(before, upperBound)
+}
+
+func bucketCount(buckets []*dto.Bucket, upperBound float64) uint64 {
+	for _, bucket := range buckets {
+		if bucket.GetUpperBound() == upperBound {
+			return bucket.GetCumulativeCount()
+		}
+	}
+	return 0
 }

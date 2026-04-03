@@ -39,3 +39,14 @@ func TestSavingsTrackerEmpty(t *testing.T) {
 		t.Error("Expected non-empty graph even for empty tracker")
 	}
 }
+
+func TestTeeExecutorEmptyArgs(t *testing.T) {
+	executor := NewTeeExecutor()
+	result := executor.Execute(nil, nil)
+	if result.Error == nil {
+		t.Fatal("expected error for empty args")
+	}
+	if result.ExitCode != 1 {
+		t.Fatalf("expected exit code 1, got %d", result.ExitCode)
+	}
+}

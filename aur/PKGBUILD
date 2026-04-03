@@ -30,7 +30,7 @@ package() {
   
   # Install shell completions
   install -Dm644 completions/tokman.bash "${pkgdir}/usr/share/bash-completion/completions/tokman"
-  install -Dm644 completions/tokman.zsh "${pkgdir}/usr/share/zsh/site-functions/_tokman"
+  install -Dm644 completions/_tokman "${pkgdir}/usr/share/zsh/site-functions/_tokman"
   install -Dm644 completions/tokman.fish "${pkgdir}/usr/share/fish/vendor_completions.d/tokman.fish"
   
   # Install license

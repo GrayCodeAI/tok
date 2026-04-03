@@ -1,6 +1,7 @@
 package httpproxy
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/http/httputil"
@@ -21,6 +22,7 @@ type HTTPProxy struct {
 	config *ProxyConfig
 	proxy  *httputil.ReverseProxy
 	server *http.Server
+	err    error
 }
 
 func NewHTTPProxy(config *ProxyConfig) *HTTPProxy {
@@ -31,7 +33,17 @@ func NewHTTPProxy(config *ProxyConfig) *HTTPProxy {
 		config.MaxBodySize = 10 * 1024 * 1024
 	}
 
-	upstream, _ := url.Parse(config.UpstreamURL)
+	if config.ListenAddr == "" {
+		config.ListenAddr = ":8080"
+	}
+
+	upstream, err := url.Parse(config.UpstreamURL)
+	if err != nil || upstream.Scheme == "" || upstream.Host == "" {
+		return &HTTPProxy{
+			config: config,
+			err:    fmt.Errorf("invalid upstream URL %q", config.UpstreamURL),
+		}
+	}
 	proxy := httputil.NewSingleHostReverseProxy(upstream)
 
 	return &HTTPProxy{
@@ -41,6 +53,9 @@ func NewHTTPProxy(config *ProxyConfig) *HTTPProxy {
 }
 
 func (p *HTTPProxy) Start() error {
+	if p.err != nil {
+		return p.err
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", p.handleRequest)
 
@@ -50,6 +65,39 @@ func (p *HTTPProxy) Start() error {
 	}
 
 	return p.server.ListenAndServe()
+}
+
+func (p *HTTPProxy) StartContext(ctx context.Context) error {
+	if p.err != nil {
+		return p.err
+	}
+	if ctx.Err() != nil {
+		return nil
+	}
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", p.handleRequest)
+
+	p.server = &http.Server{
+		Addr:    p.config.ListenAddr,
+		Handler: mux,
+	}
+
+	errCh := make(chan error, 1)
+	go func() {
+		if err := p.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			errCh <- err
+		}
+		close(errCh)
+	}()
+
+	select {
+	case <-ctx.Done():
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		return p.server.Shutdown(shutdownCtx)
+	case err := <-errCh:
+		return err
+	}
 }
 
 func (p *HTTPProxy) Stop() error {

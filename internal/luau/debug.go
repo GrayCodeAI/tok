@@ -9,14 +9,14 @@ import (
 
 // DebugInfo contains debugging information.
 type DebugInfo struct {
-	Script         string
-	Input          string
-	Output         string
-	ExecutionTime  time.Duration
-	MemoryUsed     int
-	Instructions   int
-	Errors         []DebugError
-	LineNumbers    map[int]int // line -> execution count
+	Script        string
+	Input         string
+	Output        string
+	ExecutionTime time.Duration
+	MemoryUsed    int
+	Instructions  int
+	Errors        []DebugError
+	LineNumbers   map[int]int // line -> execution count
 }
 
 // DebugError represents a debug error.
@@ -28,9 +28,9 @@ type DebugError struct {
 
 // Debugger provides debugging capabilities.
 type Debugger struct {
-	enabled bool
+	enabled     bool
 	breakpoints map[int]bool
-	trace   bool
+	trace       bool
 }
 
 // NewDebugger creates a new debugger.
@@ -42,27 +42,27 @@ func NewDebugger() *Debugger {
 
 // Enable enables debugging.
 func (d *Debugger) Enable() {
-		d.enabled = true
+	d.enabled = true
 }
 
 // Disable disables debugging.
 func (d *Debugger) Disable() {
-		d.enabled = false
+	d.enabled = false
 }
 
 // SetTrace enables/disables tracing.
 func (d *Debugger) SetTrace(enabled bool) {
-		d.trace = enabled
+	d.trace = enabled
 }
 
 // SetBreakpoint sets a breakpoint at a line.
 func (d *Debugger) SetBreakpoint(line int) {
-		d.breakpoints[line] = true
+	d.breakpoints[line] = true
 }
 
 // ClearBreakpoint clears a breakpoint.
 func (d *Debugger) ClearBreakpoint(line int) {
-		delete(d.breakpoints, line)
+	delete(d.breakpoints, line)
 }
 
 // TraceExecution traces script execution.
@@ -115,19 +115,19 @@ func (d *Debugger) instrumentScript(script string) string {
 
 // ProfileResult contains profiling results.
 type ProfileResult struct {
-	TotalTime    time.Duration
-	AvgTime      time.Duration
-	Calls        int
-	MemoryPeak   int
-	Hotspots     []Hotspot
+	TotalTime  time.Duration
+	AvgTime    time.Duration
+	Calls      int
+	MemoryPeak int
+	Hotspots   []Hotspot
 }
 
 // Hotspot represents a performance hotspot.
 type Hotspot struct {
-	Line     int
-	Code     string
-	Time     time.Duration
-	Calls    int
+	Line  int
+	Code  string
+	Time  time.Duration
+	Calls int
 }
 
 // Profile profiles script execution.

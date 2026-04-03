@@ -12,14 +12,14 @@ import (
 
 // Model represents the TUI application state.
 type Model struct {
-	tabs        []string
-	activeTab   int
-	savings     int64
-	commands    int64
-	width       int
-	height      int
-	history     []CommandEntry
-	err         error
+	tabs      []string
+	activeTab int
+	savings   int64
+	commands  int64
+	width     int
+	height    int
+	history   []CommandEntry
+	err       error
 }
 
 // CommandEntry represents a command in history.

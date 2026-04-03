@@ -1,6 +1,9 @@
 package httpproxy
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 func TestAdaptiveScaler(t *testing.T) {
 	s := NewAdaptiveScaler()
@@ -47,5 +50,27 @@ func TestOpenTelemetryCollector(t *testing.T) {
 	output := c.ExportMetrics()
 	if output == "" {
 		t.Error("Expected non-empty export")
+	}
+}
+
+func TestNewHTTPProxyRejectsInvalidUpstream(t *testing.T) {
+	p := NewHTTPProxy(&ProxyConfig{
+		ListenAddr:  ":0",
+		UpstreamURL: "://bad",
+	})
+	if err := p.Start(); err == nil {
+		t.Fatal("expected invalid upstream error")
+	}
+}
+
+func TestHTTPProxyStartContextRespectsCanceledContext(t *testing.T) {
+	p := NewHTTPProxy(&ProxyConfig{
+		ListenAddr:  ":0",
+		UpstreamURL: "http://example.com",
+	})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := p.StartContext(ctx); err != nil {
+		t.Fatalf("StartContext() error = %v", err)
 	}
 }

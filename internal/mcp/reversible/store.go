@@ -4,6 +4,7 @@ package reversible
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,8 +15,8 @@ import (
 
 // SQLiteStore implements Store using SQLite.
 type SQLiteStore struct {
-	db        *sql.DB
-	config    Config
+	db         *sql.DB
+	config     Config
 	compressor Compressor
 	encryptor  Encryptor
 }
@@ -24,6 +25,9 @@ type SQLiteStore struct {
 func NewSQLiteStore(config Config) (*SQLiteStore, error) {
 	// Expand ~ in path
 	storePath := expandPath(config.StorePath)
+	if storePath == "" {
+		return nil, fmt.Errorf("store path is required")
+	}
 
 	if err := os.MkdirAll(filepath.Dir(storePath), 0755); err != nil {
 		return nil, fmt.Errorf("failed to create store directory: %w", err)
@@ -37,6 +41,18 @@ func NewSQLiteStore(config Config) (*SQLiteStore, error) {
 	if err := db.Ping(); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA foreign_keys=ON"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
 	store := &SQLiteStore{
@@ -109,6 +125,9 @@ func (s *SQLiteStore) migrate() error {
 
 // Save stores an entry and returns its hash.
 func (s *SQLiteStore) Save(entry *Entry) (string, error) {
+	if entry == nil {
+		return "", fmt.Errorf("entry is required")
+	}
 	if entry.SizeOriginal > s.config.MaxEntrySize {
 		return "", fmt.Errorf("entry size %d exceeds maximum %d", entry.SizeOriginal, s.config.MaxEntrySize)
 	}
@@ -117,6 +136,15 @@ func (s *SQLiteStore) Save(entry *Entry) (string, error) {
 	if hash == "" {
 		hash = ComputeHash(entry.Original)
 		entry.Hash = hash
+	}
+	if entry.SizeOriginal == 0 {
+		entry.SizeOriginal = int64(len(entry.Original))
+	}
+	if entry.CreatedAt.IsZero() {
+		entry.CreatedAt = time.Now()
+	}
+	if entry.CompressionAlg == "" {
+		entry.CompressionAlg = s.config.DefaultAlgorithm
 	}
 
 	// Compress the original content
@@ -193,10 +221,12 @@ func (s *SQLiteStore) Retrieve(hash string) (*Entry, error) {
 	}
 
 	// Update access stats
-	_, _ = s.db.Exec(`
+	if _, err := s.db.Exec(`
 		UPDATE entries SET accessed_at = CURRENT_TIMESTAMP, access_count = access_count + 1
 		WHERE hash = ?
-	`, entry.Hash)
+	`, entry.Hash); err != nil {
+		log.Printf("failed to update access stats: %v", err)
+	}
 
 	// Decompress
 	if len(entry.CompressedData) > 0 {
@@ -235,7 +265,9 @@ func (s *SQLiteStore) Delete(hash string) error {
 	}
 
 	if s.config.AutoVacuum {
-		_ = s.Vacuum()
+		if err := s.Vacuum(); err != nil {
+			log.Printf("auto-vacuum failed: %v", err)
+		}
 	}
 
 	return nil
@@ -401,7 +433,9 @@ func (s *SQLiteStore) GetCommandHistory(limit int) ([]*CommandRecord, error) {
 }
 
 // scanEntry scans an entry from a row.
-func (s *SQLiteStore) scanEntry(scanner interface{ Scan(dest ...interface{}) error }) (*Entry, error) {
+func (s *SQLiteStore) scanEntry(scanner interface {
+	Scan(dest ...interface{}) error
+}) (*Entry, error) {
 	var entry Entry
 	var encrypted int
 	var compressedData []byte

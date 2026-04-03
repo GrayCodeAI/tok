@@ -24,8 +24,8 @@ func RegisterAllTools(registry *mcp.ToolRegistry, cache *mcp.HashCache) {
 	// Core read tools (7 modes)
 	registerTool(registry, "ctx_read", "Read file content with mode (full, map, outline, symbols, imports, types, exports)",
 		map[string]mcp.Property{
-			"path": {Type: "string", Description: "File path to read"},
-			"mode": {Type: "string", Description: "Read mode", Enum: []string{"full", "map", "outline", "symbols", "imports", "types", "exports"}},
+			"path":       {Type: "string", Description: "File path to read"},
+			"mode":       {Type: "string", Description: "Read mode", Enum: []string{"full", "map", "outline", "symbols", "imports", "types", "exports"}},
 			"max_tokens": {Type: "integer", Description: "Maximum tokens to return"},
 		},
 		[]string{"path"},
@@ -243,11 +243,11 @@ func makeCtxReadHandler(cache *mcp.HashCache) mcp.ToolHandler {
 
 		if entry, ok := cache.Get(cacheKey); ok && entry.FilePath == path {
 			return map[string]interface{}{
-				"path":     path,
-				"mode":     mode,
-				"content":  entry.Content,
-				"cached":   true,
-				"hash":     contentHash,
+				"path":      path,
+				"mode":      mode,
+				"content":   entry.Content,
+				"cached":    true,
+				"hash":      contentHash,
 				"hit_count": entry.HitCount,
 			}, nil
 		}
@@ -334,15 +334,18 @@ func makeCtxDeltaHandler(cache *mcp.HashCache) mcp.ToolHandler {
 
 		// Save current as new snapshot
 		store.Put(path, currentContent)
-		_ = store.Save(contextread.DefaultStorePath())
+		if err := store.Save(contextread.DefaultStorePath()); err != nil {
+			// Continue but warn in result
+			// Snapshot save failure is non-fatal for delta computation
+		}
 
 		if baseContent == "" {
 			return map[string]interface{}{
-				"path":            path,
-				"current_hash":    currentHash,
-				"base_hash":       nil,
-				"delta":           nil,
-				"message":         "No previous snapshot found. Current version saved.",
+				"path":         path,
+				"current_hash": currentHash,
+				"base_hash":    nil,
+				"delta":        nil,
+				"message":      "No previous snapshot found. Current version saved.",
 			}, nil
 		}
 
@@ -404,10 +407,10 @@ func makeCtxGrepHandler() mcp.ToolHandler {
 					}
 
 					results = append(results, map[string]interface{}{
-						"file":        filePath,
-						"line":        i + 1,
-						"content":     line,
-						"context":     strings.Join(lines[start:end], "\n"),
+						"file":    filePath,
+						"line":    i + 1,
+						"content": line,
+						"context": strings.Join(lines[start:end], "\n"),
 					})
 				}
 			}
@@ -555,13 +558,13 @@ func makeCtxSummaryHandler() mcp.ToolHandler {
 		preview := strings.Join(previewLines[:previewCount], "\n")
 
 		return map[string]interface{}{
-			"path":         path,
-			"size":         info.Size(),
-			"lines":        lines,
-			"tokens":       tokens,
-			"modified":     info.ModTime(),
-			"preview":      preview,
-			"language":     detectLanguage(path),
+			"path":     path,
+			"size":     info.Size(),
+			"lines":    lines,
+			"tokens":   tokens,
+			"modified": info.ModTime(),
+			"preview":  preview,
+			"language": detectLanguage(path),
 		}, nil
 	}
 }
@@ -711,7 +714,7 @@ func makeCtxBundleHandler(cache *mcp.HashCache) mcp.ToolHandler {
 			content := string(data)
 			if compress {
 				engine := filter.NewEngine(filter.ModeMinimal)
-				content, _ = engine.Process(content)
+				content, _ = engine.Process(content) // second return is saved tokens (int, not error)
 			}
 
 			contents = append(contents, fmt.Sprintf("// File: %s\n%s", path, content))
@@ -780,7 +783,7 @@ func makeCtxBundleChangedHandler() mcp.ToolHandler {
 			content := string(data)
 			if compress {
 				engine := filter.NewEngine(filter.ModeMinimal)
-				content, _ = engine.Process(content)
+				content, _ = engine.Process(content) // second return is saved tokens (int, not error)
 			}
 
 			contents = append(contents, fmt.Sprintf("// File: %s\n%s", file, content))
@@ -848,12 +851,12 @@ func makeCtxBundleSummaryHandler() mcp.ToolHandler {
 		}
 
 		return map[string]interface{}{
-			"files":         fileInfos,
-			"file_count":    len(fileInfos),
-			"total_size":    totalSize,
-			"total_lines":   totalLines,
-			"total_tokens":  totalTokens,
-			"by_language":   byLanguage,
+			"files":        fileInfos,
+			"file_count":   len(fileInfos),
+			"total_size":   totalSize,
+			"total_lines":  totalLines,
+			"total_tokens": totalTokens,
+			"by_language":  byLanguage,
 		}, nil
 	}
 }
@@ -966,7 +969,7 @@ func makeCtxModesHandler() mcp.ToolHandler {
 		}
 
 		return map[string]interface{}{
-			"modes": modes,
+			"modes":   modes,
 			"default": "auto",
 		}, nil
 	}
@@ -1031,12 +1034,12 @@ func makeCtxConfigHandler() mcp.ToolHandler {
 		// In production, this would read/write to a config file
 		// For now, return mock config
 		config := map[string]interface{}{
-			"default_mode":    "auto",
-			"cache_size":      10000,
-			"max_tokens":      100000,
-			"compression":     "minimal",
-			"line_numbers":    false,
-			"show_progress":   true,
+			"default_mode":  "auto",
+			"cache_size":    10000,
+			"max_tokens":    100000,
+			"compression":   "minimal",
+			"line_numbers":  false,
+			"show_progress": true,
 		}
 
 		if key == "" {

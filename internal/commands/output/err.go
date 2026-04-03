@@ -2,6 +2,7 @@ package output
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -40,11 +41,7 @@ Examples:
 		}
 
 		verbose, _ := cmd.Flags().GetBool("verbose")
-		exitCode := runErr(args, verbose)
-		if exitCode != 0 {
-			return fmt.Errorf("command failed with exit code %d", exitCode)
-		}
-		return nil
+		return runErrContext(cmd.Context(), args, verbose)
 	},
 }
 
@@ -52,7 +49,11 @@ func init() {
 	registry.Add(func() { registry.Register(errCmd) })
 }
 
-func runErr(args []string, verbose bool) int {
+func runErr(args []string, verbose bool) error {
+	return runErrContext(context.Background(), args, verbose)
+}
+
+func runErrContext(ctx context.Context, args []string, verbose bool) error {
 	timer := tracking.Start()
 
 	if verbose {
@@ -60,26 +61,22 @@ func runErr(args []string, verbose bool) int {
 	}
 
 	if err := shared.SanitizeArgs(args); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		return 1
+		return fmt.Errorf("invalid arguments: %w", err)
 	}
 
-	execCmd := exec.Command(args[0], args[1:]...)
+	execCmd := exec.CommandContext(ctx, args[0], args[1:]...)
 
 	stdout, err := execCmd.StdoutPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		return 1
+		return fmt.Errorf("error creating stdout pipe: %w", err)
 	}
 	stderr, err := execCmd.StderrPipe()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		return 1
+		return fmt.Errorf("error creating stderr pipe: %w", err)
 	}
 
 	if err := execCmd.Start(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		return 1
+		return fmt.Errorf("error starting command: %w", err)
 	}
 
 	var stdoutBuf, stderrBuf strings.Builder
@@ -111,7 +108,7 @@ func runErr(args []string, verbose bool) int {
 	<-doneOut
 	<-doneErr
 
-	execCmd.Wait()
+	waitErr := execCmd.Wait()
 
 	exitCode := 0
 	if execCmd.ProcessState != nil {
@@ -151,7 +148,7 @@ func runErr(args []string, verbose bool) int {
 
 	timer.Track(strings.Join(args, " "), "tokman err", tracking.EstimateTokens(raw), tracking.EstimateTokens(filtered))
 
-	return exitCode
+	return waitErr
 }
 
 var errorPatterns = []*regexp.Regexp{

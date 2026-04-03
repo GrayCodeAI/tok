@@ -108,9 +108,9 @@ type JSONRPCRequest struct {
 
 // JSONRPCResponse represents a JSON-RPC 2.0 response.
 type JSONRPCResponse struct {
-	JSONRPC string      `json:"jsonrpc"`
-	ID      interface{} `json:"id,omitempty"`
-	Result  interface{} `json:"result,omitempty"`
+	JSONRPC string        `json:"jsonrpc"`
+	ID      interface{}   `json:"id,omitempty"`
+	Result  interface{}   `json:"result,omitempty"`
 	Error   *JSONRPCError `json:"error,omitempty"`
 }
 
@@ -141,7 +141,7 @@ func (s *HTTPServer) handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 
 	// Check for batch requests
 	if len(body) > 0 && body[0] == '[' {
-		s.handleBatchRequest(w, body)
+		s.handleBatchRequest(r.Context(), w, body)
 		return
 	}
 
@@ -165,7 +165,7 @@ func (s *HTTPServer) handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 	s.writeResponse(w, req.ID, result)
 }
 
-func (s *HTTPServer) handleBatchRequest(w http.ResponseWriter, body []byte) {
+func (s *HTTPServer) handleBatchRequest(ctx context.Context, w http.ResponseWriter, body []byte) {
 	var requests []JSONRPCRequest
 	if err := json.Unmarshal(body, &requests); err != nil {
 		s.writeError(w, nil, -32700, "Parse error", err.Error())
@@ -187,7 +187,7 @@ func (s *HTTPServer) handleBatchRequest(w http.ResponseWriter, body []byte) {
 			continue
 		}
 
-		result, err := s.dispatchMethod(context.Background(), req.Method, req.Params)
+		result, err := s.dispatchMethod(ctx, req.Method, req.Params)
 		if err != nil {
 			responses = append(responses, JSONRPCResponse{
 				JSONRPC: "2.0",
@@ -208,7 +208,9 @@ func (s *HTTPServer) handleBatchRequest(w http.ResponseWriter, body []byte) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(responses)
+	if err := json.NewEncoder(w).Encode(responses); err != nil {
+		log.Printf("HTTP server batch encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) dispatchMethod(ctx context.Context, method string, params json.RawMessage) (interface{}, error) {
@@ -313,16 +315,18 @@ func (s *HTTPServer) handleCacheInvalidate(ctx context.Context, params json.RawM
 
 func (s *HTTPServer) writeResponse(w http.ResponseWriter, id interface{}, result interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(JSONRPCResponse{
+	if err := json.NewEncoder(w).Encode(JSONRPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,
 		Result:  result,
-	})
+	}); err != nil {
+		log.Printf("HTTP server response encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) writeError(w http.ResponseWriter, id interface{}, code int, message string, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(JSONRPCResponse{
+	if err := json.NewEncoder(w).Encode(JSONRPCResponse{
 		JSONRPC: "2.0",
 		ID:      id,
 		Error: &JSONRPCError{
@@ -330,7 +334,9 @@ func (s *HTTPServer) writeError(w http.ResponseWriter, id interface{}, code int,
 			Message: message,
 			Data:    data,
 		},
-	})
+	}); err != nil {
+		log.Printf("HTTP server error encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) handleToolsList(w http.ResponseWriter, r *http.Request) {
@@ -340,9 +346,11 @@ func (s *HTTPServer) handleToolsList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"tools": s.registry.ListTools(),
-	})
+	}); err != nil {
+		log.Printf("HTTP server tools list encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) handleToolCall(w http.ResponseWriter, r *http.Request) {
@@ -373,18 +381,22 @@ func (s *HTTPServer) handleToolCall(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
 		"result": result,
-	})
+	}); err != nil {
+		log.Printf("HTTP server tool call encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":    "ok",
-		"version":   "1.0.0",
-		"uptime":    time.Since(s.startedAt).String(),
-	})
+	if err := json.NewEncoder(w).Encode(map[string]interface{}{
+		"status":  "ok",
+		"version": "1.0.0",
+		"uptime":  time.Since(s.startedAt).String(),
+	}); err != nil {
+		log.Printf("HTTP server health encode error: %v", err)
+	}
 }
 
 func (s *HTTPServer) handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -393,11 +405,13 @@ func (s *HTTPServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 	s.mu.RUnlock()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(mcp.Status{
+	if err := json.NewEncoder(w).Encode(mcp.Status{
 		Version:          "1.0.0",
 		Uptime:           time.Since(s.startedAt),
 		CacheStats:       s.cache.Stats(),
 		SessionStart:     s.startedAt,
 		TotalTokensSaved: tokenSaved,
-	})
+	}); err != nil {
+		log.Printf("HTTP server status encode error: %v", err)
+	}
 }

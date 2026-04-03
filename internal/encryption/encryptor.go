@@ -5,7 +5,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"io"
 )
@@ -19,14 +21,9 @@ type Encryptor struct {
 func NewEncryptor(key string) (*Encryptor, error) {
 	keyBytes := []byte(key)
 
-	// Ensure key is 32 bytes for AES-256
-	if len(keyBytes) < 32 {
-		padded := make([]byte, 32)
-		copy(padded, keyBytes)
-		keyBytes = padded
-	} else if len(keyBytes) > 32 {
-		keyBytes = keyBytes[:32]
-	}
+	// Derive a 32-byte key using SHA-256 for AES-256
+	hash := sha256.Sum256(keyBytes)
+	keyBytes = hash[:]
 
 	return &Encryptor{key: keyBytes}, nil
 }
@@ -117,6 +114,6 @@ func (e *Encryptor) DecryptMap(data map[string]string) (map[string]string, error
 
 // Hash creates a SHA-256 hash of the input
 func Hash(input string) string {
-	// Simplified hash - would use crypto/sha256 in production
-	return fmt.Sprintf("hash-%s", input)
+	sum := sha256.Sum256([]byte(input))
+	return hex.EncodeToString(sum[:])
 }

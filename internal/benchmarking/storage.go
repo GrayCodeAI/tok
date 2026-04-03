@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	_ "modernc.org/sqlite"
@@ -17,13 +19,37 @@ type Storage struct {
 
 // NewStorage creates a new benchmark storage
 func NewStorage(dbPath string) (*Storage, error) {
+	if dbPath == "" {
+		return nil, fmt.Errorf("database path is required")
+	}
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+		return nil, fmt.Errorf("failed to create storage directory: %w", err)
+	}
+
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA foreign_keys=ON"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
+	}
 
 	storage := &Storage{db: db}
 	if err := storage.initSchema(); err != nil {
+		db.Close()
 		return nil, fmt.Errorf("failed to init schema: %w", err)
 	}
 
@@ -109,9 +135,12 @@ func (s *Storage) SaveSuite(report *SuiteReport) error {
 	defer tx.Rollback()
 
 	// Insert suite
-	metadata, _ := json.Marshal(map[string]interface{}{
+	metadata, err := json.Marshal(map[string]interface{}{
 		"duration_ms": report.Duration.Milliseconds(),
 	})
+	if err != nil {
+		return fmt.Errorf("failed to marshal suite metadata: %w", err)
+	}
 
 	res, err := tx.Exec(
 		"INSERT INTO benchmark_suites (name, metadata) VALUES (?, ?)",
@@ -125,9 +154,12 @@ func (s *Storage) SaveSuite(report *SuiteReport) error {
 
 	// Insert results
 	for _, r := range report.Results {
-		metadata, _ := json.Marshal(r.Metadata)
+		metadata, err := json.Marshal(r.Metadata)
+		if err != nil {
+			return fmt.Errorf("failed to marshal result metadata: %w", err)
+		}
 
-		_, err := tx.Exec(`
+		_, err = tx.Exec(`
 			INSERT INTO benchmark_results (
 				suite_id, name, type, duration_ms, tokens_in, tokens_out,
 				throughput, memory_used_mb, allocations, latency_p50_ms,

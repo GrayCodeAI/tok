@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/fatih/color"
 )
 
 // CLI provides the verify command interface.
@@ -277,15 +277,15 @@ func (l *defaultFilterLoader) LoadFromFile(path string) (*filter.Engine, error) 
 
 // Report generates a test report.
 type Report struct {
-	TotalTests   int
-	Passed       int
-	Failed       int
-	Skipped      int
-	TotalCases   int
-	TotalTokens  int
-	TotalSaved   int
-	Duration     time.Duration
-	TestResults  []*TestResult
+	TotalTests  int
+	Passed      int
+	Failed      int
+	Skipped     int
+	TotalCases  int
+	TotalTokens int
+	TotalSaved  int
+	Duration    time.Duration
+	TestResults []*TestResult
 }
 
 // GenerateReport generates a comprehensive report.
