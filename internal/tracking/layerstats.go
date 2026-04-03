@@ -11,15 +11,15 @@ import (
 
 // LayerStat tracks statistics for a single layer.
 type LayerStat struct {
-	Name         string        `json:"name"`
-	Invocations  int64         `json:"invocations"`
-	TokensIn     int64         `json:"tokens_in"`
-	TokensOut    int64         `json:"tokens_out"`
-	TokensSaved  int64         `json:"tokens_saved"`
-	TotalTime    time.Duration `json:"total_time"`
-	AvgTime      time.Duration `json:"avg_time"`
-	LastUsed     time.Time     `json:"last_used"`
-	Errors       int64         `json:"errors"`
+	Name        string        `json:"name"`
+	Invocations int64         `json:"invocations"`
+	TokensIn    int64         `json:"tokens_in"`
+	TokensOut   int64         `json:"tokens_out"`
+	TokensSaved int64         `json:"tokens_saved"`
+	TotalTime   time.Duration `json:"total_time"`
+	AvgTime     time.Duration `json:"avg_time"`
+	LastUsed    time.Time     `json:"last_used"`
+	Errors      int64         `json:"errors"`
 }
 
 // SavingsPercent returns the percentage of tokens saved.
@@ -40,8 +40,8 @@ func (ls *LayerStat) CompressionRatio() float64 {
 
 // LayerTracker tracks statistics for all layers.
 type LayerTracker struct {
-	mu     sync.RWMutex
-	layers map[string]*LayerStat
+	mu       sync.RWMutex
+	layers   map[string]*LayerStat
 	onUpdate func(string, *LayerStat)
 }
 
@@ -298,4 +298,3 @@ func (ip *InstrumentedProcessor) Process(input string) (string, int) {
 
 	return output, saved
 }
-

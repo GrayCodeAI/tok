@@ -1,6 +1,7 @@
 package teecommand
 
 import (
+	"fmt"
 	"os/exec"
 	"strings"
 	"sync"
@@ -37,6 +38,14 @@ func NewTeeExecutor() *TeeExecutor {
 
 func (t *TeeExecutor) Execute(args []string, compressFunc func(string) string) *TeeResult {
 	result := &TeeResult{}
+	if len(args) == 0 {
+		result.Error = fmt.Errorf("command arguments are required")
+		result.ExitCode = 1
+		return result
+	}
+	if compressFunc == nil {
+		compressFunc = func(s string) string { return s }
+	}
 
 	cmd := exec.Command(args[0], args[1:]...)
 	rawOutput, err := cmd.CombinedOutput()
@@ -49,7 +58,11 @@ func (t *TeeExecutor) Execute(args []string, compressFunc func(string) string) *
 	original := string(rawOutput)
 	result.Original = original
 	result.Compressed = compressFunc(original)
-	result.SavedTokens = (len(original) - len(result.Compressed)) / 4
+	savedChars := len(original) - len(result.Compressed)
+	if savedChars < 0 {
+		savedChars = 0
+	}
+	result.SavedTokens = savedChars / 4
 	result.Error = err
 
 	t.mu.Lock()

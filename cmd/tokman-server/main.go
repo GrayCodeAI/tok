@@ -85,23 +85,25 @@ func main() {
 		cancel()
 	}()
 
-	switch *serviceFlag {
+	var srvErr error
+	service := *serviceFlag
+	switch service {
 	case "compression":
-		err = runCompressionService(ctx, cfg, port)
+		srvErr = runCompressionService(ctx, cfg, port)
 	case "analytics":
-		err = runAnalyticsService(ctx, cfg, port)
+		srvErr = runAnalyticsService(ctx, cfg, port)
 	case "agent":
-		err = runAgentService(ctx, cfg, port)
+		srvErr = runAgentService(ctx, cfg, port)
 	case "llm":
-		err = runLLMService(ctx, cfg, port)
+		srvErr = runLLMService(ctx, cfg, port)
 	case "gateway":
-		err = runGatewayService(ctx, cfg, port)
+		srvErr = runGatewayService(ctx, cfg, port)
 	default:
-		log.Fatalf("Unknown service: %s (valid: compression, analytics, agent, llm, gateway)", *serviceFlag)
+		srvErr = fmt.Errorf("unknown service: %s (valid: compression, analytics, agent, llm, gateway)", service)
 	}
 
-	if err != nil {
-		log.Fatalf("Service error: %v", err)
+	if srvErr != nil {
+		log.Fatalf("Service error: %v", srvErr)
 	}
 }
 
@@ -110,12 +112,17 @@ func loadConfig(path string) (*config.Config, error) {
 	if path != "" {
 		return config.Load(path)
 	}
-	// Load from default location or return defaults
 	cfg, err := config.Load("")
 	if err != nil {
 		return config.Defaults(), nil
 	}
 	return cfg, nil
+}
+
+// gracefulStop waits for context cancellation and then stops the gRPC server gracefully.
+func gracefulStop(ctx context.Context, grpcServer *grpc.Server) {
+	<-ctx.Done()
+	grpcServer.GracefulStop()
 }
 
 // runCompressionService runs the compression service.
@@ -155,7 +162,7 @@ func runCompressionService(ctx context.Context, cfg *config.Config, port int) er
 				log.Printf("gRPC server error: %v", err)
 			}
 		}()
-		defer grpcServer.GracefulStop()
+		defer func() { go gracefulStop(ctx, grpcServer) }()
 	}
 
 	// Start HTTP server if enabled
@@ -170,7 +177,7 @@ func runCompressionService(ctx context.Context, cfg *config.Config, port int) er
 			Version:        Version,
 			PipelineConfig: pipelineCfg,
 		})
-		return srv.Start()
+		return srv.StartContext(ctx)
 	}
 
 	// Wait for shutdown if only gRPC
@@ -183,7 +190,7 @@ func runAnalyticsService(ctx context.Context, cfg *config.Config, port int) erro
 	// Initialize tracking database
 	dbPath := cfg.Tracking.DatabasePath
 	if dbPath == "" {
-		dbPath = "~/.local/share/tokman/tokman.db"
+		dbPath = os.ExpandEnv("$HOME/.local/share/tokman/tokman.db")
 	}
 
 	tracker, err := tracking.NewTracker(dbPath)
@@ -222,7 +229,7 @@ func runAnalyticsService(ctx context.Context, cfg *config.Config, port int) erro
 				log.Printf("gRPC server error: %v", err)
 			}
 		}()
-		defer grpcServer.GracefulStop()
+		defer func() { go gracefulStop(ctx, grpcServer) }()
 	}
 
 	// Start HTTP server if enabled
@@ -236,7 +243,7 @@ func runAnalyticsService(ctx context.Context, cfg *config.Config, port int) erro
 			LogLevel: "info",
 			Version:  Version,
 		})
-		return srv.Start()
+		return srv.StartContext(ctx)
 	}
 
 	// Wait for shutdown if only gRPC
@@ -255,7 +262,7 @@ func runAgentService(ctx context.Context, cfg *config.Config, port int) error {
 
 	log.Printf("Agent service ready - integrations: claude, cursor, copilot, windsurf, cline, gemini, codex")
 
-	return srv.Start()
+	return srv.StartContext(ctx)
 }
 
 // runLLMService runs the LLM service.
@@ -269,7 +276,7 @@ func runLLMService(ctx context.Context, cfg *config.Config, port int) error {
 
 	log.Printf("LLM service ready")
 
-	return srv.Start()
+	return srv.StartContext(ctx)
 }
 
 // runGatewayService runs the API gateway.
@@ -283,7 +290,7 @@ func runGatewayService(ctx context.Context, cfg *config.Config, port int) error 
 
 	log.Printf("API Gateway ready - routing to all services")
 
-	return srv.Start()
+	return srv.StartContext(ctx)
 }
 
 // analyticsRepository adapts tracking.Tracker to analytics.AnalyticsRepository.

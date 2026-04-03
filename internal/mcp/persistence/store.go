@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,6 +30,9 @@ type CacheMetadata struct {
 
 // NewStore creates a new SQLite-backed store.
 func NewStore(dbPath string) (*Store, error) {
+	if dbPath == "" {
+		return nil, fmt.Errorf("database path is required")
+	}
 	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
 		return nil, fmt.Errorf("failed to create store directory: %w", err)
 	}
@@ -41,6 +45,14 @@ func NewStore(dbPath string) (*Store, error) {
 	if err := db.Ping(); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
+	}
+	if _, err := db.Exec("PRAGMA busy_timeout=5000"); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 	}
 
 	store := &Store{db: db}
@@ -166,10 +178,18 @@ func (s *Store) GetStats() (totalEntries, totalSize int64, oldest, newest time.T
 		return 0, 0, time.Time{}, time.Time{}, err
 	}
 	if oldestStr.Valid {
-		oldest, _ = time.Parse(time.RFC3339Nano, oldestStr.String)
+		if t, err := time.Parse(time.RFC3339Nano, oldestStr.String); err != nil {
+			log.Printf("failed to parse oldest timestamp: %v", err)
+		} else {
+			oldest = t
+		}
 	}
 	if newestStr.Valid {
-		newest, _ = time.Parse(time.RFC3339Nano, newestStr.String)
+		if t, err := time.Parse(time.RFC3339Nano, newestStr.String); err != nil {
+			log.Printf("failed to parse newest timestamp: %v", err)
+		} else {
+			newest = t
+		}
 	}
 	return totalEntries, totalSize, oldest, newest, nil
 }
@@ -198,6 +218,9 @@ func (s *Store) GetStoreMetadata(key string) (string, error) {
 
 // Backup creates a backup of the store to a JSON file.
 func (s *Store) Backup(backupPath string) error {
+	if backupPath == "" {
+		return fmt.Errorf("backup path is required")
+	}
 	metaList, err := s.LoadAllMetadata()
 	if err != nil {
 		return fmt.Errorf("failed to load metadata: %w", err)
@@ -208,6 +231,9 @@ func (s *Store) Backup(backupPath string) error {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
+	if err := os.MkdirAll(filepath.Dir(backupPath), 0755); err != nil {
+		return fmt.Errorf("failed to create backup directory: %w", err)
+	}
 	if err := os.WriteFile(backupPath, data, 0644); err != nil {
 		return fmt.Errorf("failed to write backup: %w", err)
 	}
@@ -217,6 +243,9 @@ func (s *Store) Backup(backupPath string) error {
 
 // Restore restores the store from a JSON backup.
 func (s *Store) Restore(backupPath string) error {
+	if backupPath == "" {
+		return fmt.Errorf("backup path is required")
+	}
 	data, err := os.ReadFile(backupPath)
 	if err != nil {
 		return fmt.Errorf("failed to read backup: %w", err)

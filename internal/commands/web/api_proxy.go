@@ -6,14 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
+	"net"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -60,10 +58,19 @@ func runAPIProxy(cmd *cobra.Command, args []string) error {
 	if apiProxyUpstream == "" {
 		return fmt.Errorf("--upstream required")
 	}
+	if apiProxyPort < 1 || apiProxyPort > 65535 {
+		return fmt.Errorf("invalid --port %d: must be between 1 and 65535", apiProxyPort)
+	}
 
 	upstream, err := url.Parse(apiProxyUpstream)
 	if err != nil {
 		return fmt.Errorf("invalid upstream URL: %w", err)
+	}
+	if upstream.Scheme != "http" && upstream.Scheme != "https" {
+		return fmt.Errorf("invalid upstream URL: scheme must be http or https")
+	}
+	if upstream.Host == "" {
+		return fmt.Errorf("invalid upstream URL: host required")
 	}
 
 	proxy := &httputil.ReverseProxy{
@@ -121,22 +128,33 @@ func runAPIProxy(cmd *cobra.Command, args []string) error {
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20,
 	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen %s: %w", addr, err)
+	}
+
+	errCh := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("server error: %v", err)
+		if serveErr := srv.Serve(listener); serveErr != nil && serveErr != http.ErrServerClosed {
+			errCh <- serveErr
 		}
+		close(errCh)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+	select {
+	case <-cmd.Context().Done():
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			return fmt.Errorf("server shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("server error: %w", err)
+		}
+		return nil
 	}
-	return nil
 }
 
 func authMiddleware(key string, next http.Handler) http.Handler {

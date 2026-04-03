@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+func marshalPayload(payload interface{}) ([]byte, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("marshal payload: %w", err)
+	}
+	return data, nil
+}
+
 // Provider interface for LLM providers.
 type Provider interface {
 	Name() string
@@ -69,7 +77,10 @@ func (p *AnthropicProvider) Compress(ctx context.Context, req *CompressionReques
 		},
 	}
 
-	data, _ := json.Marshal(payload)
+	data, err := marshalPayload(payload)
+	if err != nil {
+		return nil, err
+	}
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/v1/messages", bytes.NewReader(data))
 	if err != nil {
 		return nil, err
@@ -177,7 +188,10 @@ func (p *OpenAIProvider) Compress(ctx context.Context, req *CompressionRequest) 
 		"max_tokens": 1024,
 	}
 
-	data, _ := json.Marshal(payload)
+	data, err := marshalPayload(payload)
+	if err != nil {
+		return nil, err
+	}
 	httpReq, err := http.NewRequestWithContext(ctx, "POST", p.baseURL+"/v1/chat/completions", bytes.NewReader(data))
 	if err != nil {
 		return nil, err

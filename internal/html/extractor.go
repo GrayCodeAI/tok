@@ -18,26 +18,26 @@ type Extractor struct {
 func NewExtractor() *Extractor {
 	return &Extractor{
 		selectors: map[string]string{
-			"title":       "title",
-			"content":     "article, .content, .main, #content, #main",
-			"author":      ".author, [rel=author], .byline",
-			"date":        ".date, time, [datetime]",
-			"summary":     ".summary, .description, meta[name=description]",
-			"comments":    ".comments, #comments",
+			"title":    "title",
+			"content":  "article, .content, .main, #content, #main",
+			"author":   ".author, [rel=author], .byline",
+			"date":     ".date, time, [datetime]",
+			"summary":  ".summary, .description, meta[name=description]",
+			"comments": ".comments, #comments",
 		},
 	}
 }
 
 // ExtractResult contains extracted content.
 type ExtractResult struct {
-	Title       string
-	Content     string
-	Author      string
-	Date        string
-	Summary     string
-	Links       []string
-	Images      []string
-	SiteName    string
+	Title    string
+	Content  string
+	Author   string
+	Date     string
+	Summary  string
+	Links    []string
+	Images   []string
+	SiteName string
 }
 
 // Extract extracts content from HTML.

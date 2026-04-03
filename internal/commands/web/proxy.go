@@ -1,11 +1,11 @@
 package web
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -28,7 +28,7 @@ Useful for commands where you need full unfiltered output.`,
 			fmt.Fprintf(os.Stderr, "Proxy mode: %s\n", strings.Join(args, " "))
 		}
 
-		return runProxy(args)
+		return runProxyContext(cmd.Context(), args)
 	},
 }
 
@@ -37,6 +37,10 @@ func init() {
 }
 
 func runProxy(args []string) error {
+	return runProxyContext(context.Background(), args)
+}
+
+func runProxyContext(ctx context.Context, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("proxy requires a command to run")
 	}
@@ -47,7 +51,7 @@ func runProxy(args []string) error {
 
 	timer := tracking.Start()
 
-	execCmd := exec.Command(args[0], args[1:]...)
+	execCmd := exec.CommandContext(proxyContext(ctx), args[0], args[1:]...)
 	execCmd.Stdin = os.Stdin
 
 	stdoutPipe, err := execCmd.StdoutPipe()
@@ -109,12 +113,14 @@ func runProxy(args []string) error {
 	timer.Track(cmdStr, fmt.Sprintf("tokman proxy %s", cmdStr), originalTokens, originalTokens)
 
 	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			if status, ok := exitErr.Sys().(syscall.WaitStatus); ok {
-				return fmt.Errorf("command failed with exit code %d: %w", status.ExitStatus(), err)
-			}
-		}
-		return fmt.Errorf("command failed: %w", err)
+		return err
 	}
 	return nil
+}
+
+func proxyContext(ctx context.Context) context.Context {
+	if ctx != nil {
+		return ctx
+	}
+	return context.Background()
 }

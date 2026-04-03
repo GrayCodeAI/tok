@@ -36,7 +36,7 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	execCmd := exec.Command(exePath, args[1:]...)
 	execCmd.Env = os.Environ()
-	output, _ := execCmd.CombinedOutput()
+	output, err := execCmd.CombinedOutput()
 	rawOutput := string(output)
 
 	originalTokens := core.EstimateTokens(rawOutput)
@@ -80,5 +80,5 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("\nFinal: ~%d tokens (%.1f%% reduction)\n", stats.FinalTokens, stats.ReductionPercent)
 
-	return nil
+	return err
 }

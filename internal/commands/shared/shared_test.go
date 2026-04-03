@@ -1,9 +1,13 @@
 package shared
 
 import (
+	"context"
+	"errors"
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
 func TestIsVerbose(t *testing.T) {
@@ -327,6 +331,78 @@ func TestSetFlags(t *testing.T) {
 		t.Errorf("DisableLayers: expected ['h2o'], got %v", DisableLayers)
 	}
 }
+
+type testRootCmd struct {
+	ctx context.Context
+}
+
+func (t testRootCmd) Context() context.Context {
+	return t.ctx
+}
+
+type capturingRunner struct {
+	ctx context.Context
+	err error
+}
+
+func (r *capturingRunner) Run(ctx context.Context, args []string) (string, int, error) {
+	r.ctx = ctx
+	if r.err != nil {
+		return "", 1, r.err
+	}
+	return "ok", 0, nil
+}
+
+func (r *capturingRunner) LookPath(name string) (string, error) {
+	return name, nil
+}
+
+func TestFallbackExecuteCommandUsesRootContext(t *testing.T) {
+	t.Cleanup(func() { SetRootCmd(nil) })
+
+	rootCtx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	SetRootCmd(testRootCmd{ctx: rootCtx})
+
+	runner := &capturingRunner{}
+	handler := &FallbackHandler{runner: runner}
+	if _, _, err := handler.executeCommand([]string{"echo", "test"}); err != nil {
+		t.Fatalf("executeCommand() error = %v", err)
+	}
+
+	if runner.ctx == nil {
+		t.Fatal("runner context was nil")
+	}
+	if runner.ctx == context.Background() {
+		t.Fatal("runner context unexpectedly used Background")
+	}
+	if runner.ctx.Value("x") != rootCtx.Value("x") {
+		// no-op: this keeps the compiler from simplifying comparisons in future edits
+	}
+	done := runner.ctx.Done()
+	cancel()
+	select {
+	case <-done:
+	default:
+		t.Fatal("runner context did not derive from root context")
+	}
+}
+
+func TestFallbackExecuteCommandWithoutRootContext(t *testing.T) {
+	t.Cleanup(func() { SetRootCmd(nil) })
+
+	runner := &capturingRunner{err: errors.New("boom")}
+	handler := &FallbackHandler{runner: runner}
+	_, _, err := handler.executeCommand([]string{"echo"})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if runner.ctx == nil {
+		t.Fatal("runner context was nil")
+	}
+}
+
+var _ core.CommandRunner = (*capturingRunner)(nil)
 
 func TestSetFlags_Concurrent(t *testing.T) {
 	var wg sync.WaitGroup

@@ -2,6 +2,7 @@ package contextread
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -417,7 +418,9 @@ func savePersistedRender(key string, result buildResult) {
 		return
 	}
 	store.PutRender(key, result.Output, result.OriginalTokens, result.FinalTokens)
-	_ = store.Save(DefaultStorePath())
+	if err := store.Save(DefaultStorePath()); err != nil {
+		log.Printf("failed to save persisted render: %v", err)
+	}
 }
 
 func cacheKey(filePath, content string, opts Options) (string, bool) {

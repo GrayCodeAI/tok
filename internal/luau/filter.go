@@ -11,17 +11,17 @@ import (
 
 // FilterDef represents a filter definition from TOML.
 type FilterDef struct {
-	Name        string            `toml:"name"`
-	Description string            `toml:"description"`
-	Version     string            `toml:"version"`
-	Author      string            `toml:"author"`
-	Script      string            `toml:"script"`
-	ScriptFile  string            `toml:"script_file"`
-	EntryPoint  string            `toml:"entry_point"`
+	Name        string                 `toml:"name"`
+	Description string                 `toml:"description"`
+	Version     string                 `toml:"version"`
+	Author      string                 `toml:"author"`
+	Script      string                 `toml:"script"`
+	ScriptFile  string                 `toml:"script_file"`
+	EntryPoint  string                 `toml:"entry_point"`
 	Config      map[string]interface{} `toml:"config"`
-	Enabled     bool              `toml:"enabled"`
-	Priority    int               `toml:"priority"`
-	Tags        []string          `toml:"tags"`
+	Enabled     bool                   `toml:"enabled"`
+	Priority    int                    `toml:"priority"`
+	Tags        []string               `toml:"tags"`
 }
 
 // FilterRegistry manages loaded filters.

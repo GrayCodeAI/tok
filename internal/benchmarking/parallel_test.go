@@ -3,6 +3,7 @@ package benchmarking
 import (
 	"context"
 	"runtime"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -209,17 +210,21 @@ func TestParallelBenchmarkRun(t *testing.T) {
 }
 
 func TestParallelBenchmarkRunWithErrors(t *testing.T) {
-	errorCount := 0
+	var errorCount atomic.Int64
 	pb := &ParallelBenchmark{
 		Name:        "parallel-errors",
 		Iterations:  100,
 		Parallelism: 4,
 		Fn: func(ctx context.Context) error {
-			if errorCount < 10 {
-				errorCount++
-				return context.DeadlineExceeded
+			for {
+				old := errorCount.Load()
+				if old >= 10 {
+					return nil
+				}
+				if errorCount.CompareAndSwap(old, old+1) {
+					return context.DeadlineExceeded
+				}
 			}
-			return nil
 		},
 	}
 

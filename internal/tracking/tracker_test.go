@@ -262,6 +262,23 @@ func TestRecordAndQueryContextMetadata(t *testing.T) {
 	}
 }
 
+func TestCloseIsIdempotent(t *testing.T) {
+	tmpDir := t.TempDir()
+	dbPath := filepath.Join(tmpDir, "test.db")
+
+	tracker, err := NewTracker(dbPath)
+	if err != nil {
+		t.Fatalf("NewTracker() error = %v", err)
+	}
+
+	if err := tracker.Close(); err != nil {
+		t.Fatalf("first Close() error = %v", err)
+	}
+	if err := tracker.Close(); err != nil {
+		t.Fatalf("second Close() error = %v", err)
+	}
+}
+
 func TestGetSavingsForContextReadsFallbackAndMode(t *testing.T) {
 	tmpDir := t.TempDir()
 	dbPath := filepath.Join(tmpDir, "test.db")

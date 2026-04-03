@@ -2,8 +2,13 @@
 package metrics
 
 import (
+	"math"
+	"sort"
+	"strings"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	dto "github.com/prometheus/client_model/go"
 )
 
 // TokMan metrics exposed via Prometheus.
@@ -250,4 +255,164 @@ func RecordCacheMiss() {
 // UpdateCacheSize updates the cache size gauge.
 func UpdateCacheSize(size int) {
 	CacheSize.Set(float64(size))
+}
+
+// readMetricByName reads the sum of matching counters or gauges from the default registry.
+func readMetricByName(name string, labelFilters map[string]string) float64 {
+	mfs, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return 0
+	}
+	var value float64
+	for _, mf := range mfs {
+		if mf.GetName() != name {
+			continue
+		}
+		for _, m := range mf.GetMetric() {
+			if !metricLabelsMatch(m, labelFilters) {
+				continue
+			}
+			if c := m.GetCounter(); c != nil {
+				value += c.GetValue()
+				continue
+			}
+			if g := m.GetGauge(); g != nil {
+				value += g.GetValue()
+			}
+		}
+	}
+	return value
+}
+
+func metricLabelsMatch(metric *dto.Metric, filters map[string]string) bool {
+	if len(filters) == 0 {
+		return true
+	}
+	labels := metric.GetLabel()
+	for name, want := range filters {
+		found := false
+		for _, label := range labels {
+			if label.GetName() == name && label.GetValue() == want {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
+}
+
+// readHistogramByName reads aggregated histogram sum, count, and cumulative buckets.
+func readHistogramByName(name string, labelFilters map[string]string) (sum float64, count uint64, buckets []*dto.Bucket) {
+	mfs, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return 0, 0, nil
+	}
+	for _, mf := range mfs {
+		if mf.GetName() != name {
+			continue
+		}
+		aggregated := make(map[float64]uint64)
+		for _, m := range mf.GetMetric() {
+			if !metricLabelsMatch(m, labelFilters) {
+				continue
+			}
+			if h := m.GetHistogram(); h != nil {
+				sum += h.GetSampleSum()
+				count += h.GetSampleCount()
+				for _, bucket := range h.GetBucket() {
+					aggregated[bucket.GetUpperBound()] += bucket.GetCumulativeCount()
+				}
+			}
+		}
+		if len(aggregated) == 0 {
+			return 0, 0, nil
+		}
+		bounds := make([]float64, 0, len(aggregated))
+		for upperBound := range aggregated {
+			bounds = append(bounds, upperBound)
+		}
+		sort.Float64s(bounds)
+		buckets = make([]*dto.Bucket, 0, len(bounds))
+		for _, upperBound := range bounds {
+			upperBoundCopy := upperBound
+			countCopy := aggregated[upperBound]
+			buckets = append(buckets, &dto.Bucket{
+				CumulativeCount: &countCopy,
+				UpperBound:      &upperBoundCopy,
+			})
+		}
+		return sum, count, buckets
+	}
+	return 0, 0, nil
+}
+
+// GetCompressionRequestCount returns total successful compression requests.
+func GetCompressionRequestCount() int64 {
+	return int64(readMetricByName("tokman_compression_requests_total", map[string]string{"status": "success"}))
+}
+
+// GetTokensSavedTotal returns cumulative tokens saved.
+func GetTokensSavedTotal() float64 {
+	return readMetricByName("tokman_tokens_saved_total", nil)
+}
+
+// GetTokensProcessedTotal returns cumulative tokens processed.
+func GetTokensProcessedTotal() float64 {
+	return readMetricByName("tokman_tokens_processed_total", nil)
+}
+
+// GetP99LatencyMs computes the approximate p99 compression duration by
+// reading histogram buckets from the default registry.
+func GetP99LatencyMs() float64 {
+	const percentile = 0.99
+	_, totalCount, buckets := readHistogramByName("tokman_compression_duration_ms", nil)
+	if totalCount == 0 || len(buckets) == 0 {
+		return 0
+	}
+	target := uint64(math.Ceil(float64(totalCount) * percentile))
+	if target == 0 {
+		target = 1
+	}
+	for _, bucket := range buckets {
+		if bucket.GetCumulativeCount() >= target {
+			return bucket.GetUpperBound()
+		}
+	}
+	return buckets[len(buckets)-1].GetUpperBound()
+}
+
+// GetAllMetrics returns a snapshot of all counter and gauge values for HTTP export.
+func GetAllMetrics() map[string]float64 {
+	return map[string]float64{
+		"tokens_saved_total":     GetTokensSavedTotal(),
+		"tokens_processed_total": GetTokensProcessedTotal(),
+		"compression_requests":   float64(GetCompressionRequestCount()),
+		"cache_hits":             readMetricByName("tokman_cache_hits_total", nil),
+		"cache_misses":           readMetricByName("tokman_cache_misses_total", nil),
+		"cache_size":             readMetricByName("tokman_cache_size", nil),
+		"p99_latency_ms":         GetP99LatencyMs(),
+	}
+}
+
+// HasFilter returns true if any layer matching the prefix has been applied.
+func HasFilter(prefix string) bool {
+	mfs, err := prometheus.DefaultGatherer.Gather()
+	if err != nil {
+		return false
+	}
+	for _, mf := range mfs {
+		if mf.GetName() == "tokman_layers_applied_total" {
+			for _, m := range mf.GetMetric() {
+				for _, label := range m.GetLabel() {
+					if label.GetName() == "layer" && strings.HasPrefix(label.GetValue(), prefix) {
+						return true
+					}
+				}
+			}
+		}
+	}
+	return false
 }

@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -276,7 +275,7 @@ func newMCPHandler(apiKey string) http.Handler {
 					SaveSnapshot: req.SaveSnapshot,
 					RelatedFiles: req.RelatedFiles,
 				})
-				_ = tracker.Record(&tracking.CommandRecord{
+				if err := tracker.Record(&tracking.CommandRecord{
 					Command:             fmt.Sprintf("tokman mcp read %s", cleanPath),
 					OriginalTokens:      originalTokens,
 					FilteredTokens:      finalTokens,
@@ -289,7 +288,9 @@ func newMCPHandler(apiKey string) http.Handler {
 					ContextTarget:       meta.Target,
 					ContextRelatedFiles: meta.RelatedFiles,
 					ContextBundle:       meta.Bundle,
-				})
+				}); err != nil {
+					log.Printf("failed to record mcp read: %v", err)
+				}
 			}
 		}
 
@@ -370,7 +371,7 @@ func newMCPHandler(apiKey string) http.Handler {
 		if tracker := tracking.GetGlobalTracker(); tracker != nil {
 			cwd, err := os.Getwd()
 			if err == nil {
-				_ = tracker.Record(&tracking.CommandRecord{
+				if err := tracker.Record(&tracking.CommandRecord{
 					Command:             fmt.Sprintf("tokman mcp bundle %s", cleanPath),
 					OriginalTokens:      bundle.OriginalTokens,
 					FilteredTokens:      bundle.FinalTokens,
@@ -383,7 +384,9 @@ func newMCPHandler(apiKey string) http.Handler {
 					ContextTarget:       cleanPath,
 					ContextRelatedFiles: len(bundle.RelatedFiles),
 					ContextBundle:       true,
-				})
+				}); err != nil {
+					log.Printf("failed to record mcp bundle: %v", err)
+				}
 			}
 		}
 
@@ -502,6 +505,10 @@ func newMCPHandler(apiKey string) http.Handler {
 }
 
 func runMCP(cmd *cobra.Command, args []string) error {
+	if mcpPort < 1 || mcpPort > 65535 {
+		return fmt.Errorf("invalid --port %d: must be between 1 and 65535", mcpPort)
+	}
+
 	addr := fmt.Sprintf(":%d", mcpPort)
 	fmt.Fprintf(os.Stderr, "tokman MCP server listening on %s\n", addr)
 	fmt.Fprintf(os.Stderr, "Endpoints: /compress, /read, /bundle, /explain, /restore, /health\n")
@@ -515,22 +522,33 @@ func runMCP(cmd *cobra.Command, args []string) error {
 		IdleTimeout:       120 * time.Second,
 		MaxHeaderBytes:    1 << 20, // 1MB
 	}
+	listener, err := net.Listen("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("listen %s: %w", addr, err)
+	}
+
+	errCh := make(chan error, 1)
 	go func() {
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Printf("server error: %v", err)
+		if serveErr := srv.Serve(listener); serveErr != nil && serveErr != http.ErrServerClosed {
+			errCh <- serveErr
 		}
+		close(errCh)
 	}()
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := srv.Shutdown(ctx); err != nil {
-		log.Printf("server shutdown error: %v", err)
+	select {
+	case <-cmd.Context().Done():
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			return fmt.Errorf("server shutdown error: %w", err)
+		}
+		return nil
+	case err := <-errCh:
+		if err != nil {
+			return fmt.Errorf("server error: %w", err)
+		}
+		return nil
 	}
-	return nil
 }
 
 func percentSaved(original, final int) float64 {

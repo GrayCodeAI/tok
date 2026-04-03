@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -128,11 +129,32 @@ func (l *ContrastiveLayer) hashLine(line string) string {
 }
 
 func (l *ContrastiveLayer) similarity(a, b string) float64 {
-	// Simplified similarity based on character overlap
 	if a == b {
 		return 1.0
 	}
-	return 0.0
+	// Character bigram Jaccard similarity
+	if len(a) < 2 || len(b) < 2 {
+		return 0.0
+	}
+	bigramsA := make(map[string]struct{})
+	bigramsB := make(map[string]struct{})
+	for i := 0; i < len(a)-1; i++ {
+		bigramsA[a[i:i+2]] = struct{}{}
+	}
+	for i := 0; i < len(b)-1; i++ {
+		bigramsB[b[i:i+2]] = struct{}{}
+	}
+	intersection := 0
+	for k := range bigramsA {
+		if _, ok := bigramsB[k]; ok {
+			intersection++
+		}
+	}
+	union := len(bigramsA) + len(bigramsB) - intersection
+	if union == 0 {
+		return 0.0
+	}
+	return float64(intersection) / float64(union)
 }
 
 // Layer 6: N-gram Deduplication
@@ -227,11 +249,24 @@ func (l *NgramDeduplicationLayer) jaccardSimilarity(a, b map[string]bool) float6
 // Layer 7: Code Fold Detection
 type CodeFoldLayer struct {
 	minFoldSize int
+	foldRECache []*regexp.Regexp
 }
 
 // NewCodeFoldLayer creates a new code folding layer.
 func NewCodeFoldLayer() *CodeFoldLayer {
-	return &CodeFoldLayer{minFoldSize: 10}
+	patterns := []string{
+		"^\\s*func\\s+",
+		"^\\s*class\\s+",
+		"^\\s*if\\s+.*{$",
+		"^\\s*for\\s+.*{$",
+		"^\\s*while\\s+.*{$",
+		"^\\s*switch\\s+.*{$",
+	}
+	cache := make([]*regexp.Regexp, 0, len(patterns))
+	for _, p := range patterns {
+		cache = append(cache, regexp.MustCompile(p))
+	}
+	return &CodeFoldLayer{minFoldSize: 10, foldRECache: cache}
 }
 
 func (l *CodeFoldLayer) Name() string { return "code_fold" }
@@ -288,19 +323,8 @@ func (l *CodeFoldLayer) countIndent(line string) int {
 }
 
 func (l *CodeFoldLayer) isFoldStart(line string) bool {
-	// Detect function definitions, class definitions, etc.
-	patterns := []string{
-		"^\\s*func\\s+",
-		"^\\s*class\\s+",
-		"^\\s*if\\s+.*{$",
-		"^\\s*for\\s+.*{$",
-		"^\\s*while\\s+.*{$",
-		"^\\s*switch\\s+.*{$",
-	}
-
-	for _, pattern := range patterns {
-		matched, _ := regexp.MatchString(pattern, line)
-		if matched {
+	for _, re := range l.foldRECache {
+		if re.MatchString(line) {
 			return strings.HasSuffix(line, "{")
 		}
 	}
@@ -426,7 +450,7 @@ func (l *ImportCollapseLayer) collapseGoImports(imports []string) string {
 	for _, prefix := range keys {
 		if len(groups[prefix]) > 2 {
 			result = append(result, "\t// "+prefix+"/... ("+
-				string(rune(len(groups[prefix])+'0'))+" imports)")
+				strconv.Itoa(len(groups[prefix]))+" imports)")
 		} else {
 			for _, path := range groups[prefix] {
 				result = append(result, "\t\""+path+"\"")

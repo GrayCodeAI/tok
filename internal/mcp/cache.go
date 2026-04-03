@@ -28,13 +28,13 @@ type HashCache struct {
 	currentMem int64
 
 	// Statistics
-	hits       int64
-	misses     int64
-	evictions  int64
+	hits      int64
+	misses    int64
+	evictions int64
 
 	// Callbacks
-	onEvict    func(entry *CacheEntry)
-	onHit      func(entry *CacheEntry)
+	onEvict func(entry *CacheEntry)
+	onHit   func(entry *CacheEntry)
 }
 
 // cacheItem is the internal storage for cache entries.
@@ -286,8 +286,8 @@ func matchGlob(pattern, s string) bool {
 	// For now, just check if pattern is contained
 	return len(pattern) > 0 && len(s) > 0 &&
 		(pattern == "*" || s == pattern ||
-		 (len(pattern) > 1 && pattern[0] == '*' && len(s) >= len(pattern)-1 &&
-		  s[len(s)-len(pattern)+1:] == pattern[1:]))
+			(len(pattern) > 1 && pattern[0] == '*' && len(s) >= len(pattern)-1 &&
+				s[len(s)-len(pattern)+1:] == pattern[1:]))
 }
 
 // BatchGet retrieves multiple entries efficiently.

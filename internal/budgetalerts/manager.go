@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Manager manages budget alerts
@@ -539,5 +541,5 @@ type RuleConfig struct {
 }
 
 func generateID() string {
-	return fmt.Sprintf("alert-%d", time.Now().UnixNano())
+	return "alert-" + uuid.NewString()
 }

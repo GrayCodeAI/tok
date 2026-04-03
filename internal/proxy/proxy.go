@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -91,6 +92,23 @@ func NewProxyWithPipeline(listenAddr, targetURL string, cfg filter.PipelineConfi
 	}
 }
 
+func ValidTargetURL(raw string) error {
+	if raw == "" {
+		return fmt.Errorf("target URL is required")
+	}
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return fmt.Errorf("invalid target URL: %w", err)
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("invalid target URL: scheme must be http or https")
+	}
+	if parsed.Host == "" {
+		return fmt.Errorf("invalid target URL: host required")
+	}
+	return nil
+}
+
 // SetModelAlias adds a model alias mapping.
 func (p *Proxy) SetModelAlias(from, to string) {
 	p.mu.Lock()
@@ -123,13 +141,17 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
+	cacheable := (apiFormat == APIFormatOpenAI || apiFormat == APIFormatAnthropic) &&
+		r.Method == http.MethodPost &&
+		r.Header.Get("Authorization") == ""
+
 	// Check request cache
-	if apiFormat == APIFormatOpenAI || apiFormat == APIFormatAnthropic {
+	if cacheable {
 		cacheKey := requestCacheKey(bodyBytes, r.URL.Path)
 		if cached := p.requestCache.get(cacheKey); cached != nil {
 			p.stats.record(apiFormat, 0, 0, 0, "")
 			for k, v := range cached.headers {
-				w.Header()[k] = v
+				w.Header()[k] = append([]string(nil), v...)
 			}
 			w.WriteHeader(cached.status)
 			_, _ = w.Write(cached.body)
@@ -142,7 +164,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Create new request to target
 	targetURL := p.targetURL + r.URL.Path
-	targetReq, err := http.NewRequest(r.Method, targetURL, bytes.NewReader(compressedBody))
+	targetReq, err := http.NewRequestWithContext(r.Context(), r.Method, targetURL, bytes.NewReader(compressedBody))
 	if err != nil {
 		http.Error(w, "Failed to create target request", http.StatusInternalServerError)
 		return
@@ -185,7 +207,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write(respBody)
 
 	// Cache response
-	if resp.StatusCode == http.StatusOK {
+	if cacheable && resp.StatusCode == http.StatusOK {
 		cacheKey := requestCacheKey(bodyBytes, r.URL.Path)
 		p.requestCache.set(cacheKey, respBody, resp.Header, resp.StatusCode)
 	}
@@ -363,7 +385,7 @@ func (p *Proxy) applyModelAlias(req *http.Request) *http.Request {
 
 func (p *Proxy) handleHealth(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"status":   "ok",
 		"uptime":   time.Since(p.stats.StartTime).String(),
 		"requests": p.stats.TotalRequests,
@@ -374,13 +396,18 @@ func (p *Proxy) handleMetrics(w http.ResponseWriter) {
 	p.stats.mu.Lock()
 	defer p.stats.mu.Unlock()
 
+	savingsPercent := 0.0
+	if p.stats.TotalInputTokens > 0 {
+		savingsPercent = float64(p.stats.TotalSavedTokens) / float64(p.stats.TotalInputTokens) * 100
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	_ = json.NewEncoder(w).Encode(map[string]any{
 		"total_requests":      p.stats.TotalRequests,
 		"total_input_tokens":  p.stats.TotalInputTokens,
 		"total_output_tokens": p.stats.TotalOutputTokens,
 		"total_saved_tokens":  p.stats.TotalSavedTokens,
-		"savings_percent":     float64(p.stats.TotalSavedTokens) / float64(p.stats.TotalInputTokens) * 100,
+		"savings_percent":     savingsPercent,
 		"by_model":            p.stats.ByModel,
 		"uptime":              time.Since(p.stats.StartTime).String(),
 	})
@@ -409,8 +436,8 @@ func (rc *requestCache) set(key string, body []byte, headers http.Header, status
 	rc.mu.Lock()
 	defer rc.mu.Unlock()
 	rc.items[key] = &cachedResponse{
-		body:      body,
-		headers:   headers,
+		body:      append([]byte(nil), body...),
+		headers:   headers.Clone(),
 		status:    status,
 		expiresAt: time.Now().Add(rc.ttl),
 	}

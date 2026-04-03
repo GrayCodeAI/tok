@@ -164,8 +164,8 @@ func (d *InjectionDetector) IsSafe(content string) bool {
 // ScanResult contains detailed scan results.
 type ScanResult struct {
 	Safe       bool               `json:"safe"`
-	Score      float64            `json:"score"`      // 0.0 = safe, 1.0 = definitely injection
-	Severity   string             `json:"severity"`   // none, low, medium, high, critical
+	Score      float64            `json:"score"`    // 0.0 = safe, 1.0 = definitely injection
+	Severity   string             `json:"severity"` // none, low, medium, high, critical
 	Detections []InjectionPattern `json:"detections"`
 }
 

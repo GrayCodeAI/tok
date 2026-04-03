@@ -24,18 +24,18 @@ const (
 
 // Entry represents a stored compressed entry.
 type Entry struct {
-	Hash          string    `json:"hash"`
-	Original      string    `json:"original"`
-	Compressed    string    `json:"compressed,omitempty"` // Not stored if encrypted
-	Command       string    `json:"command,omitempty"`
-	ContentType   ContentType `json:"content_type"`
-	CompressionAlg string   `json:"compression_alg"` // "zstd", "lz4", "none"
-	Encrypted     bool      `json:"encrypted"`
-	CreatedAt     time.Time `json:"created_at"`
-	AccessedAt    time.Time `json:"accessed_at"`
-	AccessCount   int       `json:"access_count"`
-	SizeOriginal  int64     `json:"size_original"`
-	SizeCompressed int64    `json:"size_compressed"`
+	Hash           string      `json:"hash"`
+	Original       string      `json:"original"`
+	Compressed     string      `json:"compressed,omitempty"` // Not stored if encrypted
+	Command        string      `json:"command,omitempty"`
+	ContentType    ContentType `json:"content_type"`
+	CompressionAlg string      `json:"compression_alg"` // "zstd", "lz4", "none"
+	Encrypted      bool        `json:"encrypted"`
+	CreatedAt      time.Time   `json:"created_at"`
+	AccessedAt     time.Time   `json:"accessed_at"`
+	AccessCount    int         `json:"access_count"`
+	SizeOriginal   int64       `json:"size_original"`
+	SizeCompressed int64       `json:"size_compressed"`
 	// These fields are only populated when retrieving, not stored in DB
 	CompressedData []byte `json:"-"` // Raw compressed bytes (encrypted if Encrypted=true)
 }
@@ -147,13 +147,13 @@ type ListFilter struct {
 
 // StoreStats provides statistics about the store.
 type StoreStats struct {
-	TotalEntries   int64
-	TotalSizeOrig  int64
-	TotalSizeComp  int64
-	OldestEntry    time.Time
-	NewestEntry    time.Time
-	ByContentType  map[ContentType]int64
-	ByCommand      map[string]int64
+	TotalEntries  int64
+	TotalSizeOrig int64
+	TotalSizeComp int64
+	OldestEntry   time.Time
+	NewestEntry   time.Time
+	ByContentType map[ContentType]int64
+	ByCommand     map[string]int64
 }
 
 // Config provides configuration for the reversible compression system.
@@ -254,9 +254,9 @@ func (e *AESEncryptor) Decrypt(ciphertext []byte) ([]byte, error) {
 
 // ClassificationResult contains content classification info.
 type ClassificationResult struct {
-	Type      ContentType
+	Type       ContentType
 	Confidence float64
-	Language  string
+	Language   string
 }
 
 // Classifier provides content classification.
@@ -303,8 +303,8 @@ func looksLikeLogs(content string) bool {
 func contains(s, substr string) bool {
 	return len(s) > 0 && len(substr) > 0 &&
 		(s == substr || len(s) > len(substr) &&
-		 (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
-		  findSubstring(s, substr)))
+			(s[:len(substr)] == substr || s[len(s)-len(substr):] == substr ||
+				findSubstring(s, substr)))
 }
 
 func findSubstring(s, substr string) bool {
@@ -326,9 +326,9 @@ type StreamingReader interface {
 
 // CommandRecord stores command execution history.
 type CommandRecord struct {
-	Command    string    `json:"command"`
-	Hash       string    `json:"hash"`
-	Timestamp  time.Time `json:"timestamp"`
+	Command    string        `json:"command"`
+	Hash       string        `json:"hash"`
+	Timestamp  time.Time     `json:"timestamp"`
 	Duration   time.Duration `json:"duration"`
-	Compressed bool      `json:"compressed"`
+	Compressed bool          `json:"compressed"`
 }

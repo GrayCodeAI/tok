@@ -4,6 +4,7 @@ package canary
 import (
 	"context"
 	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -348,7 +349,16 @@ func (d *Deployment) handlePhaseFailure(phase *Phase, err error) {
 	phase.Status = PhaseStatusFailed
 
 	if d.RollbackConfig.AutoRollback {
-		_ = d.Rollback()
+		if rbErr := d.Rollback(); rbErr != nil {
+			d.Status = StatusFailed
+			d.emit(Event{
+				Type:       EventRollback,
+				Timestamp:  time.Now(),
+				Deployment: d.ID,
+				Message:    fmt.Sprintf("rollback failed after phase %q: %v", phase.Name, rbErr),
+			})
+			log.Printf("CRITICAL: rollback failed for deployment %s after phase %q: %v", d.ID, phase.Name, rbErr)
+		}
 	} else {
 		d.Status = StatusFailed
 		d.emit(Event{

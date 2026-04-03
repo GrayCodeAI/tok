@@ -24,6 +24,29 @@ func TestNewProxy(t *testing.T) {
 	}
 }
 
+func TestValidTargetURL(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		wantErr bool
+	}{
+		{name: "valid https", raw: "https://api.openai.com"},
+		{name: "valid http", raw: "http://localhost:8080"},
+		{name: "empty", raw: "", wantErr: true},
+		{name: "missing scheme", raw: "api.openai.com", wantErr: true},
+		{name: "bad scheme", raw: "ftp://example.com", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidTargetURL(tt.raw)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ValidTargetURL(%q) error = %v, wantErr=%v", tt.raw, err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestDetectAPIFormat(t *testing.T) {
 	tests := []struct {
 		path     string
@@ -265,6 +288,51 @@ func TestMetricsEndpoint(t *testing.T) {
 	json.Unmarshal(rec.Body.Bytes(), &resp)
 	if int(resp["total_requests"].(float64)) != 1 {
 		t.Errorf("expected 1 request, got %v", resp["total_requests"])
+	}
+}
+
+func TestMetricsEndpointZeroInputDoesNotNaN(t *testing.T) {
+	p := NewProxy(":8080", "https://api.openai.com")
+
+	req := httptest.NewRequest(http.MethodGet, "/metrics", nil)
+	rec := httptest.NewRecorder()
+	p.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
+	}
+	if resp["savings_percent"] != float64(0) {
+		t.Fatalf("expected savings_percent 0, got %v", resp["savings_percent"])
+	}
+}
+
+func TestRequestCacheClonesHeadersAndBody(t *testing.T) {
+	rc := &requestCache{
+		items: make(map[string]*cachedResponse),
+		ttl:   5 * time.Minute,
+	}
+
+	headers := http.Header{"X-Test": []string{"a"}}
+	body := []byte("body")
+	rc.set("k", body, headers, http.StatusOK)
+
+	headers.Set("X-Test", "b")
+	body[0] = 'B'
+
+	cached := rc.get("k")
+	if cached == nil {
+		t.Fatal("expected cached response")
+	}
+	if got := cached.headers.Get("X-Test"); got != "a" {
+		t.Fatalf("cached header = %q, want %q", got, "a")
+	}
+	if string(cached.body) != "body" {
+		t.Fatalf("cached body = %q, want %q", string(cached.body), "body")
 	}
 }
 

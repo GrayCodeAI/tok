@@ -3,6 +3,7 @@ package system
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -183,7 +184,7 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		RelatedFiles: opts.relatedFiles,
 	})
 
-	_ = tracker.Record(&tracking.CommandRecord{
+	if err := tracker.Record(&tracking.CommandRecord{
 		Command:             fmt.Sprintf("%s %s", commandName, filePath),
 		OriginalTokens:      originalTokens,
 		FilteredTokens:      filteredTokens,
@@ -197,5 +198,7 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		ContextTarget:       meta.Target,
 		ContextRelatedFiles: meta.RelatedFiles,
 		ContextBundle:       meta.Bundle,
-	})
+	}); err != nil {
+		log.Printf("failed to record smart read: %v", err)
+	}
 }

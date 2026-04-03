@@ -37,7 +37,7 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 	}
 
 	execCmd := exec.Command(exePath, args[1:]...)
-	output, _ := execCmd.CombinedOutput()
+	output, err := execCmd.CombinedOutput()
 	rawOutput := string(output)
 
 	originalTokens := core.EstimateTokens(rawOutput)
@@ -76,5 +76,5 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 	if failed > 0 {
 		return fmt.Errorf("compression quality test failed")
 	}
-	return nil
+	return err
 }

@@ -39,18 +39,18 @@ import (
 
 // TestSpec represents a declarative filter test specification.
 type TestSpec struct {
-	Name        string            `toml:"name"`
-	Description string            `toml:"description"`
-	Filter      string            `toml:"filter,omitempty"`
-	FilterFile  string            `toml:"filter_file,omitempty"`
-	Mode        string            `toml:"mode,omitempty"`
+	Name        string                 `toml:"name"`
+	Description string                 `toml:"description"`
+	Filter      string                 `toml:"filter,omitempty"`
+	FilterFile  string                 `toml:"filter_file,omitempty"`
+	Mode        string                 `toml:"mode,omitempty"`
 	Config      map[string]interface{} `toml:"config,omitempty"`
-	Inputs      []InputCase       `toml:"input"`
-	Expects     []ExpectCase      `toml:"expect"`
-	Fixtures    []Fixture         `toml:"fixture,omitempty"`
-	Skip        bool              `toml:"skip,omitempty"`
-	Only        bool              `toml:"only,omitempty"`
-	Tags        []string          `toml:"tags,omitempty"`
+	Inputs      []InputCase            `toml:"input"`
+	Expects     []ExpectCase           `toml:"expect"`
+	Fixtures    []Fixture              `toml:"fixture,omitempty"`
+	Skip        bool                   `toml:"skip,omitempty"`
+	Only        bool                   `toml:"only,omitempty"`
+	Tags        []string               `toml:"tags,omitempty"`
 }
 
 // InputCase represents a test input case.
@@ -69,15 +69,15 @@ type TestFile struct {
 
 // ExpectCase represents expected output for a test case.
 type ExpectCase struct {
-	Name     string          `toml:"name"`
-	Output   string          `toml:"output,omitempty"`
-	Contains []string        `toml:"contains,omitempty"`
-	Excludes []string        `toml:"excludes,omitempty"`
-	Tokens   *TokenExpect    `toml:"tokens,omitempty"`
-	Saved    *SavedExpect    `toml:"saved,omitempty"`
-	Matches  []MatchExpect   `toml:"match,omitempty"`
-	Error    *ErrorExpect    `toml:"error,omitempty"`
-	Quality  *QualityExpect  `toml:"quality,omitempty"`
+	Name     string         `toml:"name"`
+	Output   string         `toml:"output,omitempty"`
+	Contains []string       `toml:"contains,omitempty"`
+	Excludes []string       `toml:"excludes,omitempty"`
+	Tokens   *TokenExpect   `toml:"tokens,omitempty"`
+	Saved    *SavedExpect   `toml:"saved,omitempty"`
+	Matches  []MatchExpect  `toml:"match,omitempty"`
+	Error    *ErrorExpect   `toml:"error,omitempty"`
+	Quality  *QualityExpect `toml:"quality,omitempty"`
 }
 
 // TokenExpect represents token count expectations.
@@ -112,9 +112,9 @@ type ErrorExpect struct {
 
 // QualityExpect represents quality expectations.
 type QualityExpect struct {
-	MinScore      *float64 `toml:"min_score,omitempty"`
-	PreserveErrors bool    `toml:"preserve_errors,omitempty"`
-	PreserveURLs   bool    `toml:"preserve_urls,omitempty"`
+	MinScore       *float64 `toml:"min_score,omitempty"`
+	PreserveErrors bool     `toml:"preserve_errors,omitempty"`
+	PreserveURLs   bool     `toml:"preserve_urls,omitempty"`
 }
 
 // Fixture represents a reusable test fixture.
@@ -126,12 +126,12 @@ type Fixture struct {
 
 // TestResult represents the result of running a test.
 type TestResult struct {
-	Spec      *TestSpec
-	Passed    bool
-	Duration  int64 // milliseconds
-	Cases     []CaseResult
-	Errors    []string
-	Skipped   bool
+	Spec     *TestSpec
+	Passed   bool
+	Duration int64 // milliseconds
+	Cases    []CaseResult
+	Errors   []string
+	Skipped  bool
 }
 
 // CaseResult represents the result of a single test case.

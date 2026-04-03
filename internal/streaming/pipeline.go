@@ -42,9 +42,9 @@ func EstimateTokens(content string) int {
 
 // Chunk represents a chunk of content for processing.
 type Chunk struct {
-	Data      []byte
-	Offset    int64
-	IsLast    bool
+	Data       []byte
+	Offset     int64
+	IsLast     bool
 	TokenCount int
 }
 
@@ -59,10 +59,10 @@ type Result struct {
 
 // Pipeline processes content in streaming fashion.
 type Pipeline struct {
-	chunkSize    int
-	maxMemory    int64
-	workerCount  int
-	processor    ChunkProcessor
+	chunkSize   int
+	maxMemory   int64
+	workerCount int
+	processor   ChunkProcessor
 }
 
 // ChunkProcessor processes individual chunks.
@@ -133,7 +133,11 @@ func (p *Pipeline) ProcessReader(reader io.Reader, writer io.Writer) (Stats, err
 	}
 
 	// Start result collector
-	go p.collectResults(resultChan, bufWriter, &stats)
+	collectDone := make(chan struct{})
+	go func() {
+		p.collectResults(resultChan, bufWriter, &stats)
+		close(collectDone)
+	}()
 
 	// Read and dispatch chunks
 	offset := int64(0)
@@ -171,6 +175,7 @@ func (p *Pipeline) ProcessReader(reader io.Reader, writer io.Writer) (Stats, err
 	close(chunkChan)
 	wg.Wait()
 	close(resultChan)
+	<-collectDone
 
 	return stats, nil
 }

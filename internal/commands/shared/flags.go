@@ -278,6 +278,8 @@ func (s *AppState) IsStreamMode() bool {
 // These delegate to the global AppState instance and also sync package-level globals.
 
 var (
+	globalsMu sync.RWMutex
+
 	CfgFile              string
 	Verbose              int
 	DryRun               bool
@@ -309,66 +311,106 @@ var (
 
 // syncGlobals copies AppState fields to package-level globals.
 func (s *AppState) syncGlobals() {
+	// Read AppState under s.mu, then write globals under globalsMu.
+	// Never hold both locks to avoid deadlock.
 	s.mu.RLock()
-	defer s.mu.RUnlock()
-	Verbose = s.Verbose
-	DryRun = s.DryRun
-	UltraCompact = s.UltraCompact
-	SkipEnv = s.SkipEnv
-	QueryIntent = s.QueryIntent
-	LLMEnabled = s.LLMEnabled
-	TokenBudget = s.TokenBudget
-	FallbackArgs = s.FallbackArgs
-	LayerPreset = s.LayerPreset
-	OutputFile = s.OutputFile
-	QuietMode = s.QuietMode
-	JSONOutput = s.JSONOutput
-	RemoteMode = s.RemoteMode
-	CompressionAddr = s.CompressionAddr
-	AnalyticsAddr = s.AnalyticsAddr
-	RemoteTimeout = s.RemoteTimeout
-	CompactionEnabled = s.CompactionEnabled
-	CompactionThreshold = s.CompactionThreshold
-	CompactionPreserve = s.CompactionPreserve
-	CompactionMaxTokens = s.CompactionMaxTokens
-	CompactionSnapshot = s.CompactionSnapshot
-	CompactionAutoDetect = s.CompactionAutoDetect
-	ReversibleEnabled = s.ReversibleEnabled
-	EnableLayers = s.EnableLayers
-	DisableLayers = s.DisableLayers
-	StreamMode = s.StreamMode
+	state := FlagConfig{
+		Verbose:              s.Verbose,
+		DryRun:               s.DryRun,
+		UltraCompact:         s.UltraCompact,
+		SkipEnv:              s.SkipEnv,
+		QueryIntent:          s.QueryIntent,
+		LLMEnabled:           s.LLMEnabled,
+		TokenBudget:          s.TokenBudget,
+		FallbackArgs:         s.FallbackArgs,
+		LayerPreset:          s.LayerPreset,
+		LayerProfile:         s.LayerProfile,
+		OutputFile:           s.OutputFile,
+		QuietMode:            s.QuietMode,
+		JSONOutput:           s.JSONOutput,
+		RemoteMode:           s.RemoteMode,
+		CompressionAddr:      s.CompressionAddr,
+		AnalyticsAddr:        s.AnalyticsAddr,
+		RemoteTimeout:        s.RemoteTimeout,
+		CompactionEnabled:    s.CompactionEnabled,
+		CompactionThreshold:  s.CompactionThreshold,
+		CompactionPreserve:   s.CompactionPreserve,
+		CompactionMaxTokens:  s.CompactionMaxTokens,
+		CompactionSnapshot:   s.CompactionSnapshot,
+		CompactionAutoDetect: s.CompactionAutoDetect,
+		ReversibleEnabled:    s.ReversibleEnabled,
+		EnableLayers:         s.EnableLayers,
+		DisableLayers:        s.DisableLayers,
+		StreamMode:           s.StreamMode,
+	}
+	s.mu.RUnlock()
+
+	globalsMu.Lock()
+	Verbose = state.Verbose
+	DryRun = state.DryRun
+	UltraCompact = state.UltraCompact
+	SkipEnv = state.SkipEnv
+	QueryIntent = state.QueryIntent
+	LLMEnabled = state.LLMEnabled
+	TokenBudget = state.TokenBudget
+	FallbackArgs = state.FallbackArgs
+	LayerPreset = state.LayerPreset
+	OutputFile = state.OutputFile
+	QuietMode = state.QuietMode
+	JSONOutput = state.JSONOutput
+	RemoteMode = state.RemoteMode
+	CompressionAddr = state.CompressionAddr
+	AnalyticsAddr = state.AnalyticsAddr
+	RemoteTimeout = state.RemoteTimeout
+	CompactionEnabled = state.CompactionEnabled
+	CompactionThreshold = state.CompactionThreshold
+	CompactionPreserve = state.CompactionPreserve
+	CompactionMaxTokens = state.CompactionMaxTokens
+	CompactionSnapshot = state.CompactionSnapshot
+	CompactionAutoDetect = state.CompactionAutoDetect
+	ReversibleEnabled = state.ReversibleEnabled
+	EnableLayers = state.EnableLayers
+	DisableLayers = state.DisableLayers
+	StreamMode = state.StreamMode
+	globalsMu.Unlock()
 }
 
 // syncFromGlobals copies package-level globals into AppState.
 func (s *AppState) syncFromGlobals() {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.Verbose = Verbose
-	s.DryRun = DryRun
-	s.UltraCompact = UltraCompact
-	s.SkipEnv = SkipEnv
-	s.QueryIntent = QueryIntent
-	s.LLMEnabled = LLMEnabled
-	s.TokenBudget = TokenBudget
-	s.FallbackArgs = FallbackArgs
-	s.LayerPreset = LayerPreset
-	s.OutputFile = OutputFile
-	s.QuietMode = QuietMode
-	s.JSONOutput = JSONOutput
-	s.RemoteMode = RemoteMode
-	s.CompressionAddr = CompressionAddr
-	s.AnalyticsAddr = AnalyticsAddr
-	s.RemoteTimeout = RemoteTimeout
-	s.CompactionEnabled = CompactionEnabled
-	s.CompactionThreshold = CompactionThreshold
-	s.CompactionPreserve = CompactionPreserve
-	s.CompactionMaxTokens = CompactionMaxTokens
-	s.CompactionSnapshot = CompactionSnapshot
-	s.CompactionAutoDetect = CompactionAutoDetect
-	s.ReversibleEnabled = ReversibleEnabled
-	s.EnableLayers = EnableLayers
-	s.DisableLayers = DisableLayers
-	s.StreamMode = StreamMode
+	// Read globals under globalsMu, then write AppState under s.mu.
+	// Never hold both locks to avoid deadlock.
+	globalsMu.RLock()
+	globals := FlagConfig{
+		Verbose:              Verbose,
+		DryRun:               DryRun,
+		UltraCompact:         UltraCompact,
+		SkipEnv:              SkipEnv,
+		QueryIntent:          QueryIntent,
+		LLMEnabled:           LLMEnabled,
+		TokenBudget:          TokenBudget,
+		FallbackArgs:         FallbackArgs,
+		LayerPreset:          LayerPreset,
+		OutputFile:           OutputFile,
+		QuietMode:            QuietMode,
+		JSONOutput:           JSONOutput,
+		RemoteMode:           RemoteMode,
+		CompressionAddr:      CompressionAddr,
+		AnalyticsAddr:        AnalyticsAddr,
+		RemoteTimeout:        RemoteTimeout,
+		CompactionEnabled:    CompactionEnabled,
+		CompactionThreshold:  CompactionThreshold,
+		CompactionPreserve:   CompactionPreserve,
+		CompactionMaxTokens:  CompactionMaxTokens,
+		CompactionSnapshot:   CompactionSnapshot,
+		CompactionAutoDetect: CompactionAutoDetect,
+		ReversibleEnabled:    ReversibleEnabled,
+		EnableLayers:         EnableLayers,
+		DisableLayers:        DisableLayers,
+		StreamMode:           StreamMode,
+	}
+	globalsMu.RUnlock()
+
+	s.Set(globals)
 }
 
 // IsVerbose returns true if verbose mode is enabled.

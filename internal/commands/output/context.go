@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -242,7 +243,7 @@ func recordContextRead(commandName, path, rawContent string, opts contextread.Op
 		meta.Kind = "delta"
 	}
 
-	_ = tracker.Record(&tracking.CommandRecord{
+	if err := tracker.Record(&tracking.CommandRecord{
 		Command:             fmt.Sprintf("%s %s", commandName, filepath.Clean(path)),
 		OriginalTokens:      originalTokens,
 		FilteredTokens:      filteredTokens,
@@ -256,5 +257,7 @@ func recordContextRead(commandName, path, rawContent string, opts contextread.Op
 		ContextTarget:       meta.Target,
 		ContextRelatedFiles: meta.RelatedFiles,
 		ContextBundle:       meta.Bundle,
-	})
+	}); err != nil {
+		log.Printf("failed to record context read: %v", err)
+	}
 }

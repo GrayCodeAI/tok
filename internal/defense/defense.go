@@ -2,6 +2,7 @@ package defense
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 )
 
@@ -283,9 +284,6 @@ func containsIgnoreCaseHelper(s, substr string) bool {
 }
 
 func containsPattern(s, pattern string) bool {
-	return stringsContains(s, pattern[:1])
-}
-
-func stringsContains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && len(s) >= len(substr)
+	matched, _ := regexp.MatchString(pattern, s)
+	return matched
 }

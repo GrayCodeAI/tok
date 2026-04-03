@@ -362,3 +362,48 @@ func TestOpenAIProviderErrorHandling(t *testing.T) {
 		t.Error("expected error for unauthorized request")
 	}
 }
+
+func TestOpenAIProviderEmptyChoices(t *testing.T) {
+	client := &http.Client{
+		Transport: &mockTransport{
+			Response: &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"id":"x","model":"gpt-4","choices":[],"usage":{"total_tokens":0}}`)),
+			},
+		},
+	}
+
+	p := &OpenAIProvider{
+		apiKey:  "test",
+		baseURL: "https://api.test.com",
+		model:   "gpt-4",
+		client:  client,
+	}
+
+	_, err := p.Complete(context.Background(), CompletionRequest{Messages: []Message{{Role: "user", Content: "Hello"}}})
+	if err == nil {
+		t.Fatal("expected error for empty choices")
+	}
+}
+
+func TestOpenAIEmbedStatusError(t *testing.T) {
+	client := &http.Client{
+		Transport: &mockTransport{
+			Response: &http.Response{
+				StatusCode: http.StatusUnauthorized,
+				Body:       io.NopCloser(bytes.NewBufferString(`{"error":"bad key"}`)),
+			},
+		},
+	}
+
+	p := &OpenAIProvider{
+		apiKey:  "test",
+		baseURL: "https://api.test.com",
+		model:   "gpt-4",
+		client:  client,
+	}
+
+	if _, err := p.Embed(context.Background(), "hello"); err == nil {
+		t.Fatal("expected embed status error")
+	}
+}

@@ -83,7 +83,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		pipeline := filter.NewPipelineCoordinator(cfg)
 
 		start := time.Now()
-		result, stats := pipeline.Process(rawOutput)
+		result, _ := pipeline.Process(rawOutput)
 		duration := time.Since(start)
 
 		finalTokens := core.EstimateTokens(result)
@@ -93,7 +93,6 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 			pct = float64(saved) / float64(originalTokens) * 100
 		}
 
-		_ = stats // use stats for layer breakdown in verbose mode
 		fmt.Printf("%-12s %8d %8d %7.1f%% %10s\n",
 			preset, finalTokens, saved, pct, duration.Round(time.Microsecond))
 	}
@@ -180,7 +179,7 @@ func runFilterBenchmark() error {
 		pipeline.SetTOMLFilter(wrapper, "bench")
 
 		start := time.Now()
-		result, stats := pipeline.Process(input)
+		result, _ := pipeline.Process(input)
 		duration := time.Since(start)
 
 		finalTokens := core.EstimateTokens(result)
@@ -193,7 +192,6 @@ func runFilterBenchmark() error {
 		fmt.Printf("%-20s %8d %8d %7.1f%% %10s\n",
 			fmt.Sprintf("TOML+%s", preset), finalTokens, saved, pct,
 			duration.Round(time.Microsecond))
-		_ = stats
 	}
 
 	return nil

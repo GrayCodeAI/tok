@@ -1,6 +1,7 @@
 package system
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -37,7 +38,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("command not found: %s", args[0])
 	}
 
-	execCmd := exec.Command(exePath, args[1:]...)
+	execCmd := exec.CommandContext(commandContext(cmd), exePath, args[1:]...)
 	execCmd.Env = os.Environ()
 	output, err := execCmd.CombinedOutput()
 	if err != nil && len(output) == 0 {
@@ -88,7 +89,14 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\nFinal: ~%d tokens (%.1f%% reduction)\n", stats.FinalTokens, stats.ReductionPercent)
-	return nil
+	return err
+}
+
+func commandContext(cmd *cobra.Command) context.Context {
+	if cmd != nil && cmd.Context() != nil {
+		return cmd.Context()
+	}
+	return context.Background()
 }
 
 func progressBarVis(current, total float64) string {

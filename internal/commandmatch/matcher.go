@@ -1,6 +1,7 @@
 package commandmatch
 
 import (
+	"log"
 	"regexp"
 	"strings"
 )
@@ -42,7 +43,11 @@ func (m *CommandMatcher) Match(command string) *CommandRule {
 		rule := &m.rules[i]
 		if rule.Basename != "" && basename[0] == rule.Basename {
 			if rule.compiled == nil {
-				rule.compiled, _ = regexp.Compile(rule.Pattern)
+				if compiled, err := regexp.Compile(rule.Pattern); err != nil {
+					log.Printf("failed to compile regex %q for %s: %v", rule.Pattern, rule.Basename, err)
+				} else {
+					rule.compiled = compiled
+				}
 			}
 			if rule.compiled != nil && rule.compiled.MatchString(trimmed) {
 				return rule

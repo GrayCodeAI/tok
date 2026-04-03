@@ -223,4 +223,3 @@ func computeCacheKey(content string) string {
 	h.Write([]byte(content))
 	return string(h.Sum(nil))
 }
-

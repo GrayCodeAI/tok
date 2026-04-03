@@ -362,7 +362,6 @@ func (f *SemanticAnchorFilter) reconstructWithAnchors(tokens []string, aggregate
 	return strings.TrimSpace(result.String()), saved
 }
 
-
 // GetAnchors returns all detected anchor tokens
 func (f *SemanticAnchorFilter) GetAnchors() []AnchorToken {
 	return f.anchorTokens

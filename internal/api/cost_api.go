@@ -3,9 +3,16 @@ package api
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
+
+func writeJSON(w http.ResponseWriter, resp interface{}) {
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		log.Printf("cost api encode error: %v", err)
+	}
+}
 
 // CostIntelligenceAPI provides REST API for cost intelligence
 type CostIntelligenceAPI struct {
@@ -66,7 +73,7 @@ func (api *CostIntelligenceAPI) handleCostSummary(w http.ResponseWriter, r *http
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // CostBreakdownResponse represents cost breakdown response
@@ -108,7 +115,7 @@ func (api *CostIntelligenceAPI) handleCostBreakdown(w http.ResponseWriter, r *ht
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // CostForecastResponse represents cost forecast response
@@ -143,7 +150,7 @@ func (api *CostIntelligenceAPI) handleCostForecast(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // ModelComparisonResponse represents model comparison response
@@ -187,7 +194,7 @@ func (api *CostIntelligenceAPI) handleModelComparison(w http.ResponseWriter, r *
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // BudgetStatusResponse represents budget status response
@@ -215,7 +222,7 @@ func (api *CostIntelligenceAPI) handleBudgetStatus(w http.ResponseWriter, r *htt
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // AnomaliesResponse represents anomalies response
@@ -252,7 +259,7 @@ func (api *CostIntelligenceAPI) handleAnomalies(w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // AlertsResponse represents alerts response
@@ -292,7 +299,7 @@ func (api *CostIntelligenceAPI) handleAlerts(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // TeamCostsResponse represents team costs response
@@ -321,7 +328,7 @@ func (api *CostIntelligenceAPI) handleTeamCosts(w http.ResponseWriter, r *http.R
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // CostTrendsResponse represents cost trends response
@@ -349,7 +356,7 @@ func (api *CostIntelligenceAPI) handleCostTrends(w http.ResponseWriter, r *http.
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }
 
 // ExportResponse represents export response
@@ -369,5 +376,5 @@ func (api *CostIntelligenceAPI) handleExport(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(resp)
+	writeJSON(w, resp)
 }

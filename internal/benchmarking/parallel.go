@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -416,7 +417,7 @@ func (pb *ParallelBenchmark) Run(ctx context.Context) (*BenchmarkResult, error) 
 	}
 
 	start := time.Now()
-	var totalErrors int64
+	var totalErrors atomic.Int64
 	var wg sync.WaitGroup
 
 	// Distribute iterations across workers
@@ -441,7 +442,7 @@ func (pb *ParallelBenchmark) Run(ctx context.Context) (*BenchmarkResult, error) 
 				}
 
 				if err := pb.Fn(ctx); err != nil {
-					totalErrors++
+					totalErrors.Add(1)
 				}
 			}
 		}(i, count)
@@ -450,11 +451,12 @@ func (pb *ParallelBenchmark) Run(ctx context.Context) (*BenchmarkResult, error) 
 	wg.Wait()
 	duration := time.Since(start)
 
+	errors := int(totalErrors.Load())
 	return &BenchmarkResult{
 		Name:        pb.Name,
 		Duration:    duration,
-		Errors:      int(totalErrors),
-		SuccessRate: float64(pb.Iterations-int(totalErrors)) / float64(pb.Iterations) * 100,
+		Errors:      errors,
+		SuccessRate: float64(pb.Iterations-errors) / float64(pb.Iterations) * 100,
 		Timestamp:   time.Now(),
 		Metadata: map[string]string{
 			"parallelism": fmt.Sprintf("%d", pb.Parallelism),

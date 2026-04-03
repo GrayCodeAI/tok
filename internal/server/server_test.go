@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -228,4 +229,20 @@ func TestHandleStats(t *testing.T) {
 	}
 
 	t.Logf("Stats: %+v", resp)
+}
+
+func TestStartContextReturnsBindError(t *testing.T) {
+	s := New(Config{Port: 70000})
+	if err := s.StartContext(context.Background()); err == nil {
+		t.Fatal("expected invalid port error")
+	}
+}
+
+func TestStartContextShutsDownOnCancel(t *testing.T) {
+	s := New(Config{Port: 0})
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if err := s.StartContext(ctx); err != nil {
+		t.Fatalf("StartContext() error = %v", err)
+	}
 }

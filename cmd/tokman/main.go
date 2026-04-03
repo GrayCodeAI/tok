@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"github.com/GrayCodeAI/tokman/internal/commands"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
@@ -15,19 +18,33 @@ var version = "dev"
 func main() {
 	shared.Version = version
 
+	// Preload BPE tokenizer asynchronously to avoid blocking first token count
+	core.WarmupBPETokenizer()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	var closeTrackerOnce sync.Once
+	closeTracker := func() {
+		closeTrackerOnce.Do(func() {
+			if tracker := tracking.GetGlobalTracker(); tracker != nil {
+				_ = tracker.Close()
+			}
+		})
+	}
+
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	defer signal.Stop(sigCh)
 	go func() {
 		<-sigCh
-		if tracker := tracking.GetGlobalTracker(); tracker != nil {
-			tracker.Close()
-		}
-		os.Exit(0)
+		cancel()
+		closeTracker()
 	}()
 
-	commands.Execute()
+	// Run commands in a context-aware way
+	exitCode := commands.ExecuteContext(ctx)
 
-	if tracker := tracking.GetGlobalTracker(); tracker != nil {
-		tracker.Close()
-	}
+	closeTracker()
+	os.Exit(exitCode)
 }
