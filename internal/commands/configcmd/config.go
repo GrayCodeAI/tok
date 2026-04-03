@@ -19,6 +19,9 @@ The configuration file is stored at ~/.config/tokman/config.toml and controls:
 - Token tracking behavior
 - Output filtering settings
 - Shell hook exclusions`,
+	Annotations: map[string]string{
+		"tokman:skip_integrity": "true",
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		create, _ := cmd.Flags().GetBool("create")
 

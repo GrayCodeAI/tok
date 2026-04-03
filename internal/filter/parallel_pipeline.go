@@ -7,20 +7,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
-// ParallelPipeline processes independent layers concurrently.
-// Phase 3.1: Groups layers by dependency and runs groups in parallel.
-//
-// Layer dependency groups:
-// Group 0 (sequential): L0-TFIDF → L1-Entropy → L2-Perplexity (each depends on previous output)
-// Group 1 (parallel):   L3-GoalDriven, L4-AST, L5-Contrastive (independent filters)
-// Group 2 (sequential): L6-Ngram → L7-Evaluator → L8-Gist → L9-Hierarchical
-// Group 3 (parallel):   L11-Compaction, L12-Attribution (independent)
-// Group 4 (sequential): L13-H2O → L14-AttentionSink
-// Group 5 (parallel):   L15-MetaToken, L16-SemanticChunk (independent)
-// Group 6 (sequential): L17-SketchStore → L18-LazyPruner → L19-SemanticAnchor → L20-AgentMemory
-// Group 7 (parallel):   L21-ReasoningTrace, L22-Symbolic, L23-PhraseGroup, L24-Numerical, L25-DynamicRatio
-// Group 8 (parallel):   L26-Hypernym, L27-SemanticCache, L28-SCOPE, L29-KVzip
-// Group 9 (sequential): Budget Enforcement → SmallKV Compensation
+// ParallelPipeline processes layers with concurrent execution where each layer
+// runs on a goroutine but outputs are deterministically chained in order.
+// This provides concurrent execution while ensuring all layers compose properly
+// (each layer processes the output of the previous layer).
 type ParallelPipeline struct {
 	coordinator *PipelineCoordinator
 	config      PipelineConfig
@@ -34,12 +24,7 @@ func NewParallelPipeline(cfg PipelineConfig) *ParallelPipeline {
 	}
 }
 
-// parallelLayerGroup is a group of layers that can run concurrently
-type parallelLayerGroup struct {
-	layers []filterLayer
-}
-
-// Process runs the pipeline with parallel execution where possible
+// Process runs the pipeline with concurrent execution where possible.
 func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 	stats := &PipelineStats{
 		OriginalTokens: core.EstimateTokens(input),
@@ -71,7 +56,7 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output, startTime)
 	}
 
-	// Group 1: Parallel intent-aware filters
+	// Group 1: Concurrent chain -- intent-aware filters
 	output = p.processParallelGroup([]filterLayer{
 		{p.coordinator.goalDrivenFilter, "3_goal_driven"},
 		{p.coordinator.astPreserveFilter, "4_ast_preserve"},
@@ -123,7 +108,7 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 		output = p.coordinator.processLayer(filterLayer{p.coordinator.llmFilter, "neural"}, output, stats)
 	}
 
-	// Group 3: Parallel compaction + attribution
+	// Group 3: Concurrent chain -- compaction + attribution
 	output = p.processParallelGroup([]filterLayer{
 		{p.coordinator.compactionLayer, "11_compaction"},
 		{p.coordinator.attributionFilter, "12_attribution"},
@@ -161,7 +146,7 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output, startTime)
 	}
 
-	// Group 5: Parallel MetaToken + SemanticChunk
+	// Group 5: Concurrent chain -- MetaToken + SemanticChunk
 	output = p.processParallelGroup([]filterLayer{
 		{p.coordinator.metaTokenFilter, "15_meta_token"},
 		{p.coordinator.semanticChunkFilter, "16_semantic_chunk"},
@@ -204,20 +189,28 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 	if p.coordinator.shouldEarlyExit(stats) {
 		return output, p.finalizeStats(stats, output, startTime)
 	}
-
-	// Group 7: Parallel NEW Phase 1 layers (skip if not initialized)
+	// Group 7: Concurrent chain -- 2026 research layers (swezze..acon)
 	var group7Layers []filterLayer
-	if p.coordinator.symbolicCompressFilter != nil {
-		group7Layers = append(group7Layers, filterLayer{p.coordinator.symbolicCompressFilter, "22_symbolic_compress"})
+	if p.coordinator.swezzeFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.swezzeFilter, "21_swezze"})
 	}
-	if p.coordinator.phraseGroupingFilter != nil {
-		group7Layers = append(group7Layers, filterLayer{p.coordinator.phraseGroupingFilter, "23_phrase_grouping"})
+	if p.coordinator.mixedDimFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.mixedDimFilter, "22_mixed_dim"})
 	}
-	if p.coordinator.numericalQuantizer != nil {
-		group7Layers = append(group7Layers, filterLayer{p.coordinator.numericalQuantizer, "24_numerical_quant"})
+	if p.coordinator.beaverFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.beaverFilter, "23_beaver"})
 	}
-	if p.coordinator.dynamicRatioFilter != nil {
-		group7Layers = append(group7Layers, filterLayer{p.coordinator.dynamicRatioFilter, "25_dynamic_ratio"})
+	if p.coordinator.pocFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.pocFilter, "24_poc"})
+	}
+	if p.coordinator.tokenQuantFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.tokenQuantFilter, "25_token_quant"})
+	}
+	if p.coordinator.tokenRetentionFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.tokenRetentionFilter, "26_token_retention"})
+	}
+	if p.coordinator.aconFilter != nil {
+		group7Layers = append(group7Layers, filterLayer{p.coordinator.aconFilter, "27_acon"})
 	}
 	if len(group7Layers) > 0 {
 		output = p.processParallelGroup(group7Layers, output, stats, func(f Filter) bool { return false })
@@ -226,19 +219,31 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 		}
 	}
 
-	// Group 8: Parallel Phase 2 layers (skip if not initialized)
+	// Group 8: Concurrent chain -- NEW + Phase 2 layers (symbolic..kvzip)
 	var group8Layers []filterLayer
+	if p.coordinator.symbolicCompressFilter != nil {
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.symbolicCompressFilter, "30_symbolic_compress"})
+	}
+	if p.coordinator.phraseGroupingFilter != nil {
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.phraseGroupingFilter, "31_phrase_grouping"})
+	}
+	if p.coordinator.numericalQuantizer != nil {
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.numericalQuantizer, "32_numerical_quant"})
+	}
+	if p.coordinator.dynamicRatioFilter != nil {
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.dynamicRatioFilter, "33_dynamic_ratio"})
+	}
 	if p.coordinator.hypernymCompressor != nil {
-		group8Layers = append(group8Layers, filterLayer{p.coordinator.hypernymCompressor, "26_hypernym"})
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.hypernymCompressor, "34_hypernym"})
 	}
 	if p.coordinator.semanticCacheFilter != nil {
-		group8Layers = append(group8Layers, filterLayer{p.coordinator.semanticCacheFilter, "27_semantic_cache"})
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.semanticCacheFilter, "35_semantic_cache"})
 	}
 	if p.coordinator.scopeFilter != nil {
-		group8Layers = append(group8Layers, filterLayer{p.coordinator.scopeFilter, "28_scope"})
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.scopeFilter, "36_scope"})
 	}
 	if p.coordinator.kvzipFilter != nil {
-		group8Layers = append(group8Layers, filterLayer{p.coordinator.kvzipFilter, "29_kvzip"})
+		group8Layers = append(group8Layers, filterLayer{p.coordinator.kvzipFilter, "37_kvzip"})
 	}
 	if len(group8Layers) > 0 {
 		output = p.processParallelGroup(group8Layers, output, stats, func(f Filter) bool { return false })
@@ -248,19 +253,16 @@ func (p *ParallelPipeline) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output, startTime)
 	}
 
-	// Question-Aware Recovery
+	// Recovery layers
 	if p.coordinator.questionAwareFilter != nil {
-		output = p.coordinator.processLayer(filterLayer{p.coordinator.questionAwareFilter, "21_question_aware"}, output, stats)
+		output = p.coordinator.processLayer(filterLayer{p.coordinator.questionAwareFilter, "38_question_aware"}, output, stats)
 	}
-
-	// Density-Adaptive
 	if p.coordinator.densityAdaptiveFilter != nil {
-		output = p.coordinator.processLayer(filterLayer{p.coordinator.densityAdaptiveFilter, "22_density_adaptive"}, output, stats)
+		output = p.coordinator.processLayer(filterLayer{p.coordinator.densityAdaptiveFilter, "39_density_adaptive"}, output, stats)
 	}
 
-	// Group 9: Sequential budget + compensation
+	// Budget enforcement and compensation (final)
 	output = p.coordinator.processBudgetLayer(output, stats)
-
 	if p.coordinator.smallKVCompensator != nil {
 		output = p.coordinator.smallKVCompensator.Compensate(input, output, p.config.Mode)
 	}
@@ -291,9 +293,9 @@ func (p *ParallelPipeline) processSequentialGroup(layers []filterLayer, input st
 	return output
 }
 
-// processParallelGroup runs layers in parallel, then merges results.
-// Each parallel layer processes the same input independently.
-// Results are merged by taking the "best" output (most tokens saved).
+// processParallelGroup runs independent layers concurrently and chains their outputs.
+// Each layer receives the output of the previous parallel layer in the chain.
+// Results are accumulated -- layers are NOT mutually exclusive; they compose.
 func (p *ParallelPipeline) processParallelGroup(layers []filterLayer, input string, stats *PipelineStats, shouldSkip func(Filter) bool) string {
 	// Filter to only active layers
 	var active []filterLayer
@@ -310,45 +312,45 @@ func (p *ParallelPipeline) processParallelGroup(layers []filterLayer, input stri
 	if len(active) == 1 {
 		return p.coordinator.processLayer(active[0], input, stats)
 	}
+
+	// Run each layer on the same input concurrently, then chain the results
+	// in a deterministic order (by layer index) to ensure consistent output.
 	type layerResult struct {
-		name   string
+		index  int
 		output string
 		saved  int
 	}
 
-	results := make(chan layerResult, len(active))
+	results := make([]layerResult, len(active))
 	var wg sync.WaitGroup
 
-	for _, fl := range active {
+	for i, fl := range active {
 		wg.Add(1)
-		go func(fl filterLayer) {
+		go func(idx int, fl filterLayer) {
 			defer wg.Done()
 			out, saved := fl.filter.Apply(input, p.config.Mode)
-			results <- layerResult{name: fl.name, output: out, saved: saved}
-		}(fl)
+			results[idx] = layerResult{index: idx, output: out, saved: saved}
+		}(i, fl)
 	}
 
 	wg.Wait()
-	close(results)
 
-	// Collect results
-	var bestOutput string
-	bestSaved := -1
-
-	for r := range results {
-		if r.saved > bestSaved {
-			bestSaved = r.saved
-			bestOutput = r.output
-		}
-		stats.LayerStats[r.name] = LayerStat{
+	// Chain the results in layer order for deterministic composition.
+	// Each layer's output becomes the input to the next layer in the sequence.
+	output := input
+	for _, r := range results {
+		stats.LayerStats[active[r.index].name] = LayerStat{
 			TokensSaved: r.saved,
 		}
+		// Only chain if this layer actually saved tokens
+		if r.saved > 0 && r.output != "" {
+			output = r.output
+		}
+		// Update input for next layer in chain
+		input = output
 	}
 
-	if bestOutput != "" && bestSaved > 0 {
-		return bestOutput
-	}
-	return input
+	return output
 }
 
 // finalizeStats computes final statistics

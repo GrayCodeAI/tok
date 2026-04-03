@@ -5,7 +5,7 @@
 TokMan is a token-aware CLI proxy written in Go. It intercepts CLI commands and applies a 31-layer compression pipeline to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves 60-90% token reduction on common development operations.
 
 **Module:** `github.com/GrayCodeAI/tokman`
-**Go Version:** 1.26+ (SIMD support)
+**Go Version:** 1.25+ (SIMD support)
 **CLI Framework:** Cobra (`github.com/spf13/cobra`)
 **Config:** Viper + TOML (`~/.config/tokman/config.toml`)
 **Database:** SQLite (`modernc.org/sqlite`)
@@ -332,6 +332,27 @@ make check          # fmt + vet + typecheck + lint + test
 | `internal/core/estimator.go` | Token estimation |
 | `internal/tracking/tracker.go` | SQLite command tracking |
 | `internal/toml/loader.go` | TOML filter discovery |
+
+## Environment Variables
+
+All environment variables use the `TOKMAN_` prefix:
+
+| Variable | Purpose | Equivalent Flag |
+|----------|---------|----------------|
+| `TOKMAN_BUDGET` | Maximum tokens allowed in output | `--budget` |
+| `TOKMAN_MODE` | Filter mode: `minimal`, `aggressive` | `--mode` |
+| `TOKMAN_PRESET` | Pipeline preset: `fast`, `balanced`, `full` | `--preset` |
+| `TOKMAN_QUERY` | Query intent for goal-driven filtering | `--query` |
+| `TOKMAN_LLM` | Enable LLM compression (0/1) | `--llm` |
+| `TOKMAN_COMPACTION` | Enable semantic compaction (0/1) | `--compaction` |
+| `TOKMAN_H2O` | Enable H2O heavy-hitter filter (0/1) | `--h2o` |
+| `TOKMAN_ATTENTION_SINK` | Enable attention sink stability (0/1) | `--attention-sink` |
+| `TOKMAN_VERBOSE` | Enable verbose output | `-v, --verbose` |
+| `TOKMAN_DRY_RUN` | Show what would happen without executing | `--dry-run` |
+| `TOKMAN_JSON` | Output in JSON format | `--json` |
+| `TOKMAN_SILENT` | Suppress all non-essential output | `--silent` |
+| `TOKMAN_OUTPUT` | Show full unfiltered output | `--output` |
+| `TOKMAN_ULTRA_COMPACT` | Aggressively minimize output | `--ultra-compact` |
 
 ## Adding AI Agent Integration
 

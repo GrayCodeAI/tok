@@ -4,23 +4,22 @@ BINARY_NAME := tokman
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_DIR := bin
 
-# Go with SIMD support (Go 1.24+ recommended)
+# Go 1.25+ includes SIMD by default; GOEXPERIMENT is no longer needed.
 GO ?= go
-GOEXPERIMENT ?= simd
 
-# T30: Aggressive optimization flags for smaller binary
+# Aggressive optimization flags for smaller binary
 LDFLAGS := -s -w -X github.com/GrayCodeAI/tokman/internal/commands.Version=$(VERSION)
 
 # Standard build (stripped symbols)
 build:
 	$(GO) build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/tokman
 
-# T106: Optimized small binary (strip + compress)
+# Optimized small binary (strip + compress)
 build-small:
 	$(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/tokman
 	@echo "Binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME) | cut -f1)"
 
-# T30: Tiny binary with maximum optimization
+# Tiny binary with maximum optimization
 build-tiny:
 	CGO_ENABLED=0 $(GO) build -ldflags="$(LDFLAGS) -extldflags '-static'" -trimpath -tags netgo,osusergo -o $(BUILD_DIR)/$(BINARY_NAME)-tiny ./cmd/tokman
 	@echo "Tiny binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-tiny | cut -f1)"
@@ -29,40 +28,40 @@ build-tiny:
 		echo "UPX compressed size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-upx 2>/dev/null | cut -f1 || echo 'N/A')"; \
 	fi
 
-# SIMD-optimized build (requires GOEXPERIMENT=simd support)
+# SIMD-optimized build (SIMD is default in Go 1.25+, target kept for compatibility)
 build-simd:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman
+	$(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman
 	@echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"
 
-# Multi-platform build with SIMD
+# Multi-platform build
 build-all:
-	GOEXPERIMENT=$(GOEXPERIMENT) GOOS=linux GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/tokman
-	GOEXPERIMENT=$(GOEXPERIMENT) GOOS=linux GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/tokman
-	GOEXPERIMENT=$(GOEXPERIMENT) GOOS=darwin GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/tokman
-	GOEXPERIMENT=$(GOEXPERIMENT) GOOS=darwin GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/tokman
-	GOEXPERIMENT=$(GOEXPERIMENT) GOOS=windows GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/tokman
+	GOOS=linux GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/tokman
+	GOOS=linux GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/tokman
+	GOOS=darwin GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/tokman
+	GOOS=darwin GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/tokman
+	GOOS=windows GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/tokman
 
 test:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -race -count=1 ./...
+	$(GO) test -race -count=1 ./...
 
 test-short:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -short -count=1 ./...
+	$(GO) test -short -count=1 ./...
 
 test-cover:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -race -coverprofile=coverage.out ./...
+	$(GO) test -race -coverprofile=coverage.out ./...
 	$(GO) tool cover -html=coverage.out -o coverage.html
 
 # race: run tests with the race detector
 race:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -race ./...
+	$(GO) test -race ./...
 
 # bench: run benchmarks with memory profiling
 bench:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -bench=. -benchmem ./...
+	$(GO) test -bench=. -benchmem ./...
 
 # coverage: generate HTML coverage report
 coverage:
-	GOEXPERIMENT=$(GOEXPERIMENT) $(GO) test -race -coverprofile=coverage.out ./...
+	$(GO) test -race -coverprofile=coverage.out ./...
 	$(GO) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report written to coverage.html"
 
@@ -91,9 +90,6 @@ fmt:
 clean:
 	rm -rf $(BUILD_DIR)/ coverage.out coverage.html
 
-# bench: run benchmarks (alias for benchmark)
-bench: benchmark
-
 # Run all checks
 check: vet typecheck lint test fmt
 
@@ -101,4 +97,4 @@ check: vet typecheck lint test fmt
 check-quick: fmt vet typecheck lint test-short
 
 # CI check (what CI runs)
-ci: test lint benchmark
+ci: test lint bench

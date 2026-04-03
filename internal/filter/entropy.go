@@ -24,8 +24,6 @@ type frequencyCacheEntry struct {
 
 // Paper: "Selective Context" — Li et al., Mila, 2023
 // https://arxiv.org/abs/2310.06201
-// Paper: "Selective Context" — Li et al., Mila, 2023
-// https://arxiv.org/abs/2310.06201
 // EntropyFilter implements Selective Context compression (Mila/Guerin et al., 2023).
 // Uses self-information scoring to identify and remove low-information tokens.
 //
@@ -65,7 +63,7 @@ func NewEntropyFilter() *EntropyFilter {
 
 // NewEntropyFilterWithThreshold creates an entropy filter with custom threshold.
 // Configurable entropy threshold.
-// Phase 2: Added LRU cache for frequency tables.
+// EntropyFilter implements Shannon entropy-based filtering (Selective Context, Mila 2023).
 func NewEntropyFilterWithThreshold(threshold float64) *EntropyFilter {
 	return &EntropyFilter{
 		frequencies:      initTokenFrequencies(),
@@ -74,7 +72,7 @@ func NewEntropyFilterWithThreshold(threshold float64) *EntropyFilter {
 		dynamicFreq:      make(map[string]int),
 		zipfExponent:     1.07,                   // Standard Zipf exponent for English
 		useDynamicEst:    true,                   // Enable by default
-		freqCache:        cache.GetGlobalCache(), // Phase 2: Use global cache
+	// LRU cache for frequency tables
 		cacheEnabled:     true,                   // Phase 2: Enable caching
 	}
 }
@@ -359,8 +357,12 @@ func (f *EntropyFilter) Apply(input string, mode Mode) (string, int) {
 // Uses SIMD-optimized word boundary detection for speed
 // Optimized: Early exit for large inputs to avoid O(n) frequency counting
 func (f *EntropyFilter) buildDynamicFrequencies(input string) {
-	// Reset dynamic counts
-	f.dynamicFreq = make(map[string]int)
+	// Reuse existing map to reduce allocations and GC pressure
+	if f.dynamicFreq != nil {
+		clear(f.dynamicFreq)
+	} else {
+		f.dynamicFreq = make(map[string]int)
+	}
 	f.dynamicTotal = 0
 
 	inputLen := len(input)

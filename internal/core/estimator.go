@@ -104,10 +104,12 @@ func (c *tokenCache) evictLRU() {
 var (
 	bpeInstance *BPETokenizer
 	bpeOnce     sync.Once
+	bpeReady    atomic.Bool
 	bpeErr      error
 )
 
-// getBPETokenizer returns a singleton BPE tokenizer.
+// getBPETokenizer returns the singleton BPE tokenizer, loading it if needed.
+// The codec is loaded lazily but subsequent calls block only on initialization.
 func getBPETokenizer() (*BPETokenizer, error) {
 	bpeOnce.Do(func() {
 		codec, err := tiktoken.Get(tiktoken.Cl100kBase)
@@ -119,8 +121,16 @@ func getBPETokenizer() (*BPETokenizer, error) {
 			codec: codec,
 			cache: newTokenCache(1024),
 		}
+		bpeReady.Store(true)
 	})
 	return bpeInstance, bpeErr
+}
+
+// WarmupBPETokenizer preloads the codec in a background goroutine.
+// Call this during application startup to avoid latency on the first
+// token estimation. Safe to call multiple times.
+func WarmupBPETokenizer() {
+	go func() { _, _ = getBPETokenizer() }()
 }
 
 // Count returns the accurate BPE token count with caching.
@@ -153,10 +163,10 @@ func init() {
 }
 
 // EstimateTokens is the single source of truth for token estimation.
-// P1.1: Uses BPE tokenization when available, falls back to heuristic.
-// Phase 2.8: Results are cached to avoid repeated encoding.
+// Uses BPE tokenization when available and loaded, falls back to heuristic.
+// Returns immediately with heuristic if BPE codec is still loading.
 func EstimateTokens(text string) int {
-	if useBPE.Load() {
+	if useBPE.Load() && bpeReady.Load() {
 		if tok, err := getBPETokenizer(); err == nil {
 			return tok.Count(text)
 		}

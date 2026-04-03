@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Task #143: Docker multi-stage build optimization.
 # Stage 1: builder — compiles the binary with full Go toolchain.
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 RUN apk add --no-cache ca-certificates git
 

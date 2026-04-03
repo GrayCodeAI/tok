@@ -434,66 +434,14 @@ func Load(cfgFile string) (*Config, error) {
 		viper.SetConfigName("config")
 	}
 
-	// Environment variable overrides
+	// Environment variables: Viper handles automatic TOKMAN_* → config key mapping
+	// (e.g., TOKMAN_BUDGET → pipeline.budget). Manual aliases below exist for
+	// legacy/non-standard env var names that don't map to config keys directly.
 	viper.AutomaticEnv()
 	viper.SetEnvPrefix("TOKMAN")
 
-	// Environment variable aliases (for compatibility)
-	if val := os.Getenv("TOKMAN_DB_PATH"); val != "" {
-		viper.Set("tracking.database_path", val)
-	}
-	if val := os.Getenv("TOKMAN_TELEMETRY_DISABLED"); val != "" {
-		viper.Set("tracking.telemetry", val == "false")
-	}
-	if val := os.Getenv("TOKMAN_AUDIT_DIR"); val != "" {
-		viper.Set("hooks.audit_dir", val)
-	}
-	if val := os.Getenv("TOKMAN_TEE_DIR"); val != "" {
-		viper.Set("hooks.tee_dir", val)
-	}
-	if val := os.Getenv("TOKMAN_TEE"); val != "" {
-		viper.Set("hooks.tee_enabled", val == "true" || val == "1")
-	}
-	if val := os.Getenv("TOKMAN_HOOK_AUDIT"); val != "" {
-		viper.Set("hooks.audit_enabled", val == "true" || val == "1")
-	}
-
-	// T163: Pipeline environment variable overrides
-	if val := os.Getenv("TOKMAN_BUDGET"); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
-			viper.Set("pipeline.default_budget", n)
-		}
-	}
-	if val := os.Getenv("TOKMAN_MODE"); val != "" {
-		viper.Set("filter.mode", val)
-	}
-	if val := os.Getenv("TOKMAN_PRESET"); val != "" {
-		viper.Set("pipeline.preset", val)
-	}
-	if val := os.Getenv("TOKMAN_MAX_CONTEXT"); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
-			viper.Set("pipeline.max_context_tokens", n)
-		}
-	}
-	if val := os.Getenv("TOKMAN_CACHE_SIZE"); val != "" {
-		if n, err := strconv.Atoi(val); err == nil {
-			viper.Set("pipeline.cache_max_size", n)
-		}
-	}
-	if val := os.Getenv("TOKMAN_ENTROPY_THRESHOLD"); val != "" {
-		if f, err := strconv.ParseFloat(val, 64); err == nil {
-			viper.Set("pipeline.entropy_threshold", f)
-		}
-	}
-	if val := os.Getenv("TOKMAN_COMPACTION"); val != "" {
-		viper.Set("pipeline.enable_compaction", val == "true" || val == "1")
-	}
-	if val := os.Getenv("TOKMAN_H2O"); val != "" {
-		viper.Set("pipeline.enable_h2o", val == "true" || val == "1")
-	}
-	if val := os.Getenv("TOKMAN_ATTENTION_SINK"); val != "" {
-		viper.Set("pipeline.enable_attention_sink", val == "true" || val == "1")
-	}
+	// Bind non-standard env var aliases (names that don't follow the config key pattern)
+	bindEnvAliases()
 
 	// Read config file if it exists
 	if err := viper.ReadInConfig(); err != nil {
@@ -515,6 +463,38 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	return cfg, nil
+}
+
+// bindEnvAliases maps non-standard env var names to their config keys.
+// Viper's AutomaticEnv handles standard TOKMAN_<CONFIG_KEY> mappings.
+// This function covers legacy/short env var names and values requiring transformation.
+func bindEnvAliases() {
+	aliasMap := map[string]func(string){
+		"TOKMAN_DB_PATH": func(v string) { viper.Set("tracking.database_path", v) },
+		"TOKMAN_TELEMETRY_DISABLED": func(v string) {
+			if parsed, err := strconv.ParseBool(v); err == nil {
+				viper.Set("tracking.telemetry", !parsed)
+			}
+		},
+		"TOKMAN_AUDIT_DIR":    func(v string) { viper.Set("hooks.audit_dir", v) },
+		"TOKMAN_TEE_DIR":      func(v string) { viper.Set("hooks.tee_dir", v) },
+		"TOKMAN_TEE":          func(v string) { viper.Set("hooks.tee_enabled", v == "true" || v == "1") },
+		"TOKMAN_HOOK_AUDIT":   func(v string) { viper.Set("hooks.audit_enabled", v == "true" || v == "1") },
+		"TOKMAN_BUDGET":       func(v string) { if n, err := strconv.Atoi(v); err == nil { viper.Set("pipeline.default_budget", n) } },
+		"TOKMAN_MODE":         func(v string) { viper.Set("filter.mode", v) },
+		"TOKMAN_PRESET":       func(v string) { viper.Set("pipeline.preset", v) },
+		"TOKMAN_MAX_CONTEXT":  func(v string) { if n, err := strconv.Atoi(v); err == nil { viper.Set("pipeline.max_context_tokens", n) } },
+		"TOKMAN_CACHE_SIZE":   func(v string) { if n, err := strconv.Atoi(v); err == nil { viper.Set("pipeline.cache_max_size", n) } },
+		"TOKMAN_ENTROPY_THRESHOLD": func(v string) { if f, err := strconv.ParseFloat(v, 64); err == nil { viper.Set("pipeline.entropy_threshold", f) } },
+		"TOKMAN_COMPACTION":   func(v string) { viper.Set("pipeline.enable_compaction", v == "true" || v == "1") },
+		"TOKMAN_H2O":          func(v string) { viper.Set("pipeline.enable_h2o", v == "true" || v == "1") },
+		"TOKMAN_ATTENTION_SINK": func(v string) { viper.Set("pipeline.enable_attention_sink", v == "true" || v == "1") },
+	}
+	for env, setter := range aliasMap {
+		if val := os.Getenv(env); val != "" {
+			setter(val)
+		}
+	}
 }
 
 // LoadFromFile reads a TOML configuration file directly.
@@ -626,6 +606,51 @@ func (c *Config) Validate() error {
 	}
 	if c.Alerts.UsageSpikeThreshold < 0 {
 		errs = append(errs, "alerts.usage_spike_threshold must be non-negative")
+	}
+
+	// Cross-field validation: H2O requires sane sizes
+	if c.Pipeline.EnableH2O {
+		if c.Pipeline.H2OSinkSize <= 0 {
+			errs = append(errs, "h2o_sink_size must be positive when H2O is enabled")
+		}
+		if c.Pipeline.H2OHeavyHitterSize <= 0 {
+			errs = append(errs, "h2o_heavy_hitter_size must be positive when H2O is enabled")
+		}
+	}
+
+	// Cross-field validation: Compaction requires meaningful thresholds
+	if c.Pipeline.EnableCompaction {
+		if c.Pipeline.CompactionThreshold <= 0 {
+			errs = append(errs, "compaction_threshold must be positive when compaction is enabled")
+		}
+		if c.Pipeline.CompactionMaxTokens <= 0 {
+			errs = append(errs, "compaction_max_tokens must be positive when compaction is enabled")
+		}
+	}
+
+	// Cross-field validation: Sketch store memory ratio
+	if c.Pipeline.EnableSketchStore {
+		if c.Pipeline.SketchMemoryRatio < 0 || c.Pipeline.SketchMemoryRatio > 99 {
+			errs = append(errs, "sketch_memory_ratio must be between 0 and 99")
+		}
+	}
+
+	// Cross-field validation: Semantic chunk min < max
+	if c.Pipeline.EnableSemanticChunk && c.Pipeline.ChunkMinSize > c.Pipeline.ChunkMaxSize && c.Pipeline.ChunkMaxSize > 0 {
+		errs = append(errs, "chunk_min_size must not exceed chunk_max_size")
+	}
+
+	// Cross-field validation: H2O+AttentionSink combined size
+	if c.Pipeline.EnableH2O && c.Pipeline.EnableAttentionSink {
+		totalSinkSize := c.Pipeline.H2OSinkSize + c.Pipeline.H2OHeavyHitterSize + c.Pipeline.AttentionSinkCount
+		if totalSinkSize > 50 {
+			errs = append(errs, "combined sink sizes (h2o_sink + h2o_heavy + attention_sink) should not exceed 50")
+		}
+	}
+
+	// Cross-field validation: Semantic chunk min < max
+	if c.Pipeline.ChunkMinSize > c.Pipeline.ChunkMaxSize && c.Pipeline.ChunkMaxSize > 0 {
+		errs = append(errs, "chunk_min_size must not exceed chunk_max_size")
 	}
 
 	if len(errs) > 0 {

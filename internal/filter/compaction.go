@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -34,8 +35,6 @@ var (
 	reProceedTo  = regexp.MustCompile(`proceed\s+to\s+(.+)`)
 )
 
-// Paper: "MemGPT" — Packer et al., UC Berkeley, 2023
-// https://arxiv.org/abs/2310.08560
 // Paper: "MemGPT" — Packer et al., UC Berkeley, 2023
 // https://arxiv.org/abs/2310.08560
 // CompactionLayer provides semantic compression for chat/conversation content.
@@ -628,15 +627,23 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 	sb.WriteString("    <session_history>\n")
 	sb.WriteString("        <user_queries>\n")
 	for i, q := range snapshot.SessionHistory.UserQueries {
-		if i < 10 { // Limit output
-			sb.WriteString(fmt.Sprintf("            %d. %s\n", i+1, q))
+		if i < 10 {
+			sb.WriteString("            ")
+			sb.WriteString(strconv.Itoa(i + 1))
+			sb.WriteString(". ")
+			sb.WriteString(q)
+			sb.WriteString("\n")
 		}
 	}
 	sb.WriteString("        </user_queries>\n")
 	sb.WriteString("        <activity_log>\n")
 	for i, a := range snapshot.SessionHistory.ActivityLog {
-		if i < 10 { // Limit output
-			sb.WriteString(fmt.Sprintf("            %d. %s\n", i+1, a))
+		if i < 10 {
+			sb.WriteString("            ")
+			sb.WriteString(strconv.Itoa(i + 1))
+			sb.WriteString(". ")
+			sb.WriteString(a)
+			sb.WriteString("\n")
 		}
 	}
 	sb.WriteString("        </activity_log>\n")
@@ -644,8 +651,12 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 
 	// Current State
 	sb.WriteString("    <current_state>\n")
-	sb.WriteString(fmt.Sprintf("        <focus>%s</focus>\n", snapshot.CurrentState.Focus))
-	sb.WriteString(fmt.Sprintf("        <next_action>%s</next_action>\n", snapshot.CurrentState.NextAction))
+	sb.WriteString("        <focus>")
+	sb.WriteString(snapshot.CurrentState.Focus)
+	sb.WriteString("</focus>\n")
+	sb.WriteString("        <next_action>")
+	sb.WriteString(snapshot.CurrentState.NextAction)
+	sb.WriteString("</next_action>\n")
 	sb.WriteString("    </current_state>\n")
 
 	// Context
@@ -653,7 +664,9 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 	sb.WriteString("        <critical>\n")
 	for i, c := range snapshot.Context.Critical {
 		if i < 10 {
-			sb.WriteString(fmt.Sprintf("            - %s\n", c))
+			sb.WriteString("            - ")
+			sb.WriteString(c)
+			sb.WriteString("\n")
 		}
 	}
 	sb.WriteString("        </critical>\n")
@@ -661,7 +674,9 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 		sb.WriteString("        <working>\n")
 		for i, w := range snapshot.Context.Working {
 			if i < 5 {
-				sb.WriteString(fmt.Sprintf("            - %s\n", w))
+				sb.WriteString("            - ")
+				sb.WriteString(w)
+				sb.WriteString("\n")
 			}
 		}
 		sb.WriteString("        </working>\n")
@@ -669,7 +684,11 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 	if len(snapshot.Context.KeyValue) > 0 {
 		sb.WriteString("        <key_value>\n")
 		for k, v := range snapshot.Context.KeyValue {
-			sb.WriteString(fmt.Sprintf("            - %s: %s\n", k, v))
+			sb.WriteString("            - ")
+			sb.WriteString(k)
+			sb.WriteString(": ")
+			sb.WriteString(v)
+			sb.WriteString("\n")
 		}
 		sb.WriteString("        </key_value>\n")
 	}
@@ -679,7 +698,13 @@ func (c *CompactionLayer) snapshotToString(snapshot *StateSnapshot) string {
 	if len(snapshot.PendingPlan) > 0 {
 		sb.WriteString("    <pending_plan>\n")
 		for _, m := range snapshot.PendingPlan {
-			sb.WriteString(fmt.Sprintf("        - %s (priority: %d, status: %s)\n", m.Description, m.Priority, m.Status))
+			sb.WriteString("        - ")
+			sb.WriteString(m.Description)
+			sb.WriteString(" (priority: ")
+			sb.WriteString(strconv.Itoa(m.Priority))
+			sb.WriteString(", status: ")
+			sb.WriteString(m.Status)
+			sb.WriteString(")\n")
 		}
 		sb.WriteString("    </pending_plan>\n")
 	}

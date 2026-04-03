@@ -9,6 +9,7 @@ import (
 // ConfigPath returns the path to the configuration file.
 // Follows XDG Base Directory Specification on Unix.
 // Uses %APPDATA% on Windows.
+// Falls back to temp directory if no home directory is available.
 func ConfigPath() string {
 	// Check for explicit override first
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
@@ -24,15 +25,18 @@ func ConfigPath() string {
 
 	// Unix: default to ~/.config
 	home, err := os.UserHomeDir()
-	if err != nil {
-		return filepath.Join(".config", "tokman", "config.toml")
+	if err == nil {
+		return filepath.Join(home, ".config", "tokman", "config.toml")
 	}
-	return filepath.Join(home, ".config", "tokman", "config.toml")
+
+	// Last resort: use temp directory
+	return filepath.Join(os.TempDir(), "tokman-config", "config.toml")
 }
 
 // DataPath returns the path to the data directory.
 // Follows XDG Base Directory Specification on Unix.
 // Uses %LOCALAPPDATA% on Windows.
+// Falls back to temp directory if no home directory is available.
 func DataPath() string {
 	// Check for explicit override first
 	if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
@@ -52,10 +56,12 @@ func DataPath() string {
 
 	// Unix: default to ~/.local/share
 	home, err := os.UserHomeDir()
-	if err != nil {
-		return filepath.Join(".local", "share", "tokman")
+	if err == nil {
+		return filepath.Join(home, ".local", "share", "tokman")
 	}
-	return filepath.Join(home, ".local", "share", "tokman")
+
+	// Last resort: use temp directory with tokman subdirectory
+	return filepath.Join(os.TempDir(), "tokman-data")
 }
 
 // DatabasePath returns the path to the SQLite database.
