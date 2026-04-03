@@ -117,7 +117,7 @@ type PipelineCoordinator struct {
 	tomlFilterWrapper Filter
 	tomlFilterName    string
 
-	// Phase 2: Hypernym Concept Compression (Mercury-style)
+	// 2026 Research layers
 	hypernymCompressor *HypernymCompressor
 
 	// Phase 2: SemantiCache Clustered Merging (Mar 2026)
@@ -148,91 +148,294 @@ type PipelineCoordinator struct {
 	cacheMissCount int64
 }
 
-// PipelineConfig holds configuration for the compression pipeline
-type PipelineConfig struct {
-	Mode                    Mode
-	QueryIntent             string
-	Budget                  int
-	LLMEnabled              bool
-	SessionTracking         bool
-	NgramEnabled            bool
-	MultiFileEnabled        bool
-	PromptTemplate          string
-	EnableEntropy           bool
-	EnablePerplexity        bool
-	EnableGoalDriven        bool
-	EnableAST               bool
-	EnableContrastive       bool
-	EnableEvaluator         bool
-	EnableGist              bool
-	EnableHierarchical      bool
+// CoreLayersConfig groups Layer 1-9 shared settings.
+type CoreLayersConfig struct {
+	LLMEnabled      bool
+	SessionTracking bool
+	NgramEnabled    bool
+	MultiFileEnabled bool
+}
+
+// CompactionLayerConfig groups Layer 11 settings.
+type CompactionLayerConfig struct {
+	Enabled            bool
+	Threshold          int
+	PreserveTurns      int
+	MaxTokens          int
+	StateSnapshot      bool
+	AutoDetect         bool
+}
+
+// AttributionLayerConfig groups Layer 12 settings.
+type AttributionLayerConfig struct {
+	Enabled    bool
+	Threshold  float64
+}
+
+// H2OLayerConfig groups Layer 13 settings.
+type H2OLayerConfig struct {
+	Enabled        bool
+	SinkSize       int
+	RecentSize     int
+	HeavyHitterSize int
+}
+
+// AttentionSinkLayerConfig groups Layer 14 settings.
+type AttentionSinkLayerConfig struct {
+	Enabled      bool
+	SinkCount    int
+	RecentCount  int
+}
+
+// MetaTokenLayerConfig groups Layer 15 settings.
+type MetaTokenLayerConfig struct {
+	Enabled  bool
+	Window   int
+	MinSize  int
+}
+
+// SemanticChunkLayerConfig groups Layer 16 settings.
+type SemanticChunkLayerConfig struct {
+	Enabled   bool
+	Method    string
+	MinSize   int
+	Threshold float64
+}
+
+// SketchStoreLayerConfig groups Layer 17 settings.
+type SketchStoreLayerConfig struct {
+	Enabled       bool
+	BudgetRatio   float64
+	MaxSize       int
+	HeavyHitter   float64
+}
+
+// LazyPrunerLayerConfig groups Layer 18 settings.
+type LazyPrunerLayerConfig struct {
+	Enabled       bool
+	BaseBudget    int
+	DecayRate     float64
+	RevivalBudget int
+}
+
+// SemanticAnchorLayerConfig groups Layer 19 settings.
+type SemanticAnchorLayerConfig struct {
+	Enabled bool
+	Ratio   float64
+	Spacing int
+}
+
+// AgentMemoryLayerConfig groups Layer 20 settings.
+type AgentMemoryLayerConfig struct {
+	Enabled             bool
+	KnowledgeRetention  float64
+	HistoryPrune        float64
+	ConsolidationMax    int
+}
+
+// QuestionAwareLayerConfig groups T12 settings.
+type QuestionAwareLayerConfig struct {
+	Enabled   bool
+	Threshold float64
+}
+
+// DensityAdaptiveLayerConfig groups T17 settings.
+type DensityAdaptiveLayerConfig struct {
+	Enabled      bool
+	TargetRatio  float64
+	Threshold    float64
+}
+
+// TFIDFLayerConfig groups TF-IDF filter settings.
+type TFIDFLayerConfig struct {
+	Enabled   bool
+	Threshold float64
+}
+
+// NumericalQuantLayerConfig groups numerical quantization settings.
+type NumericalQuantLayerConfig struct {
+	Enabled     bool
+	DecimalPlaces int
+}
+
+// DynamicRatioLayerConfig groups dynamic compression ratio settings.
+type DynamicRatioLayerConfig struct {
+	Enabled bool
+	Base    float64
+}
+
+// LayerConfig groups per-layer config structs.
+type LayerConfig struct {
+	Core            CoreLayersConfig
+	Compaction      CompactionLayerConfig
+	Attribution     AttributionLayerConfig
+	H2O             H2OLayerConfig
+	AttentionSink   AttentionSinkLayerConfig
+	MetaToken       MetaTokenLayerConfig
+	SemanticChunk   SemanticChunkLayerConfig
+	SketchStore     SketchStoreLayerConfig
+	LazyPruner      LazyPrunerLayerConfig
+	SemanticAnchor  SemanticAnchorLayerConfig
+	AgentMemory     AgentMemoryLayerConfig
+	QuestionAware   QuestionAwareLayerConfig
+	DensityAdaptive DensityAdaptiveLayerConfig
+	TFIDF           TFIDFLayerConfig
+	NumericalQuant  NumericalQuantLayerConfig
+	DynamicRatio    DynamicRatioLayerConfig
+	SymbolicCompress bool
+	PhraseGrouping   bool
+	Hypernym         bool
+	SemanticCache    bool
+	Scope            bool
+	SmallKV          bool
+	KVzip            bool
+	SWEzze           bool
+	MixedDim         bool
+	BEAVER           bool
+	PoC              bool
+	TokenQuant       bool
+	TokenRetention   bool
+	ACON             bool
+	TOMLFilter       bool
+	TOMLFilterCommand string
+	CacheEnabled     bool
+}
+
+// PipelineConfigWithNestedLayers is a helper type for the new nested config structure.
+// Use this gradually: migrate from flat fields to nested Layers config over time.
+type PipelineConfigWithNestedLayers struct {
+	// Core fields
+	Mode             Mode
+	QueryIntent      string
+	Budget           int
+	LLMEnabled       bool
+	SessionTracking  bool
+	NgramEnabled     bool
+	MultiFileEnabled bool
+	PromptTemplate   string
+	EnableTOMLFilter bool
+	TOMLFilterCommand string
+
+	// Layer sub-configs (preferred)
+	Layers LayerConfig
+
+	// Legacy flat fields for backward compatibility with existing callers.
+	// Gradually migrate code to use cfg.Layers.* and remove these fields.
+
+	// Core layer enable flags (Layers 1-9)
+	EnableEntropy      bool
+	EnablePerplexity   bool
+	EnableGoalDriven   bool
+	EnableAST          bool
+	EnableContrastive  bool
+	EnableEvaluator    bool
+	EnableGist         bool
+	EnableHierarchical bool
+
+	// Layer 11: Compaction
 	EnableCompaction        bool
 	CompactionThreshold     int
 	CompactionPreserveTurns int
 	CompactionMaxTokens     int
 	CompactionStateSnapshot bool
 	CompactionAutoDetect    bool
-	EnableAttribution       bool
-	AttributionThreshold    float64
-	EnableH2O               bool
-	H2OSinkSize             int
-	H2ORecentSize           int
-	H2OHeavyHitterSize      int
-	EnableAttentionSink     bool
-	AttentionSinkCount      int
-	AttentionRecentCount    int
-	EnableMetaToken         bool
-	MetaTokenWindow         int
-	MetaTokenMinSize        int
-	EnableSemanticChunk     bool
-	SemanticChunkMethod     string
-	SemanticChunkMinSize    int
-	SemanticChunkThreshold  float64
-	EnableSketchStore       bool
-	SketchBudgetRatio       float64
-	SketchMaxSize           int
-	SketchHeavyHitter       float64
-	EnableLazyPruner        bool
-	LazyBaseBudget          int
-	LazyDecayRate           float64
-	LazyRevivalBudget       int
-	EnableSemanticAnchor    bool
-	SemanticAnchorRatio     float64
-	SemanticAnchorSpacing   int
-	EnableAgentMemory       bool
+
+	// Layer 12: Attribution
+	EnableAttribution  bool
+	AttributionThreshold float64
+
+	// Layer 13: H2O
+	EnableH2O          bool
+	H2OSinkSize        int
+	H2ORecentSize      int
+	H2OHeavyHitterSize int
+
+	// Layer 14: Attention Sink
+	EnableAttentionSink  bool
+	AttentionSinkCount   int
+	AttentionRecentCount int
+
+	// Layer 15: Meta-Token
+	EnableMetaToken  bool
+	MetaTokenWindow  int
+	MetaTokenMinSize int
+
+	// Layer 16: Semantic Chunk
+	EnableSemanticChunk    bool
+	SemanticChunkMethod    string
+	SemanticChunkMinSize   int
+	SemanticChunkThreshold float64
+
+	// Layer 17: Sketch Store
+	EnableSketchStore  bool
+	SketchBudgetRatio  float64
+	SketchMaxSize      int
+	SketchHeavyHitter  float64
+
+	// Layer 18: Lazy Pruner
+	EnableLazyPruner  bool
+	LazyBaseBudget    int
+	LazyDecayRate     float64
+	LazyRevivalBudget int
+
+	// Layer 19: Semantic Anchor
+	EnableSemanticAnchor bool
+	SemanticAnchorRatio  float64
+	SemanticAnchorSpacing int
+
+	// Layer 20: Agent Memory
+	EnableAgentMemory    bool
 	AgentKnowledgeRetention float64
-	AgentHistoryPrune       float64
-	AgentConsolidationMax   int
-	EnableQuestionAware     bool
-	QuestionAwareThreshold  float64
-	EnableDensityAdaptive   bool
-	DensityTargetRatio      float64
-	DensityThreshold        float64
-	EnableTFIDF             bool
-	TFIDFThreshold          float64
-	EnableReasoningTrace    bool
-	MaxReflectionLoops      int
-	EnableSymbolicCompress  bool
-	EnablePhraseGrouping    bool
-	EnableNumericalQuant    bool
-	DecimalPlaces           int
-	EnableDynamicRatio      bool
-	DynamicRatioBase        float64
-	EnableHypernym          bool
-	EnableSemanticCache     bool
-	EnableScope             bool
-	EnableSmallKV           bool
-	EnableKVzip             bool
-	EnableSWEzze            bool
-	EnableMixedDim          bool
-	EnableBEAVER            bool
-	EnablePoC               bool
-	EnableTokenQuant        bool
-	EnableTokenRetention    bool
-	EnableACON              bool
-	EnableTOMLFilter        bool
-	TOMLFilterCommand       string
+	AgentHistoryPrune    float64
+	AgentConsolidationMax int
+
+	// Adaptive layers
+	EnableQuestionAware   bool
+	QuestionAwareThreshold float64
+	EnableDensityAdaptive bool
+	DensityTargetRatio    float64
+	DensityThreshold      float64
+
+	// TF-IDF
+	EnableTFIDF    bool
+	TFIDFThreshold float64
+
+	// Reasoning trace
+	EnableReasoningTrace bool
+	MaxReflectionLoops   int
+
+	// Phase 1: NEW filters
+	EnableSymbolicCompress bool
+	EnablePhraseGrouping   bool
+	EnableNumericalQuant   bool
+	DecimalPlaces          int
+	EnableDynamicRatio     bool
+	DynamicRatioBase       float64
+
+	// Phase 2: Advanced filters
+	EnableHypernym    bool
+	EnableSemanticCache bool
+	EnableScope       bool
+	EnableSmallKV     bool
+	EnableKVzip       bool
+
+	// 2026 Research layers
+	EnableSWEzze         bool
+	EnableMixedDim       bool
+	EnableBEAVER         bool
+	EnablePoC            bool
+	EnableTokenQuant     bool
+	EnableTokenRetention bool
+	EnableACON           bool
+
+	// Cache
+	CacheEnabled   bool
+	CacheMaxSize   int
 }
+
+// PipelineConfig is an alias for the full config type with backward-compatible flat fields.
+// New code should use PipelineConfigWithNestedLayers to take advantage of nested structure.
+type PipelineConfig = PipelineConfigWithNestedLayers
 
 // PipelineStats holds statistics from the compression pipeline
 type PipelineStats struct {

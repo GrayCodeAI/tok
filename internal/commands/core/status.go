@@ -18,6 +18,9 @@ var statusCmd = &cobra.Command{
 	Short: "Quick token savings summary",
 	Long: `Display a quick one-line summary of token savings.
 For a comprehensive report with graphs and history, use 'tokman gain'.`,
+	Annotations: map[string]string{
+		"tokman:skip_integrity": "true",
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cfg, err := shared.GetConfig()
 		if err != nil {

@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -183,7 +186,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // Unknown commands are handled by the TOML filter fallback system.
-func Execute() {
+func Execute() int {
 	// Enable unknown command handling
 	rootCmd.FParseErrWhitelist = cobra.FParseErrWhitelist{UnknownFlags: true}
 	rootCmd.TraverseChildren = true
@@ -200,15 +203,36 @@ func Execute() {
 				if handled {
 					fmt.Print(output)
 					if ferr != nil {
-						return
+						return exitCodeForError(ferr)
 					}
-					return
+					return 0
 				}
 			}
 		}
 		fmt.Fprintln(os.Stderr, err)
-		return
+		return exitCodeForError(err)
 	}
+
+	return 0
+}
+
+// ExecuteContext runs the CLI with a context for graceful cancellation
+func ExecuteContext(ctx context.Context) int {
+	rootCmd.SetContext(ctx)
+	return Execute()
+}
+
+func exitCodeForError(err error) int {
+	if err == nil {
+		return 0
+	}
+
+	var exitErr *exec.ExitError
+	if errors.As(err, &exitErr) {
+		return exitErr.ExitCode()
+	}
+
+	return 1
 }
 
 // isUnknownCommandError checks if the error is an unknown command error
@@ -328,40 +352,45 @@ func initConfig() {
 	}
 }
 
-// isOperationalCommand returns true for commands that process CLI output
-// and need runtime integrity verification. Meta commands (init, verify,
-// config, economics, status, report, summary) are excluded.
-func isOperationalCommand(cmd *cobra.Command) bool {
-	// Meta commands that don't need integrity checks
-	metaCommands := map[string]bool{
-		"init":       true,
-		"verify":     true,
-		"config":     true,
-		"economics":  true,
-		"status":     true,
-		"report":     true,
-		"summary":    true,
-		"ccusage":    true,
-		"help":       true,
-		"version":    true,
-		"rewrite":    true,
-		"deps":       true,
-		"gain":       true,
-		"hook-audit": true,
-		"discover":   true,
-		"learn":      true,
-		"err":        true,
-	}
+// integrityExemptAnnotation is the key used in cobra.Command.Annotations to
+// mark commands that should skip hook integrity verification. New commands
+// should set Annotations[integrityExemptAnnotation] = "true" rather than
+// relying on the name-based fallback.
+const integrityExemptAnnotation = "tokman:skip_integrity"
 
-	// Get the called command name
-	name := cmd.Name()
-	if metaCommands[name] {
+// metaCommandNames is a backward-compatibility fallback for commands that
+// predate the annotation-based approach. New commands should use annotations.
+var metaCommandNames = map[string]bool{
+	"init": true, "verify": true, "config": true, "economics": true,
+	"status": true, "report": true, "summary": true, "ccusage": true,
+	"help": true, "version": true, "rewrite": true, "deps": true,
+	"gain": true, "hook-audit": true, "discover": true, "learn": true, "err": true,
+}
+
+// isOperationalCommand returns true for commands that process CLI output
+// and need runtime integrity verification. Meta commands are excluded
+// via cobra.Annotations["tokman:skip_integrity"] = "true" (preferred)
+// or by name in the metaCommandNames fallback list.
+func isOperationalCommand(cmd *cobra.Command) bool {
+	// Check annotation-based exemption (preferred for new commands)
+	if cmd.Annotations[integrityExemptAnnotation] == "true" {
 		return false
 	}
 
-	// Check parent command for subcommands
+	// Walk up parent chain -- if any parent is exempt, child is too
 	for p := cmd.Parent(); p != nil; p = p.Parent() {
-		if metaCommands[p.Name()] {
+		if p.Annotations[integrityExemptAnnotation] == "true" {
+			return false
+		}
+	}
+
+	// Name-based fallback for commands registered before annotations
+	name := cmd.Name()
+	if metaCommandNames[name] {
+		return false
+	}
+	for p := cmd.Parent(); p != nil; p = p.Parent() {
+		if metaCommandNames[p.Name()] {
 			return false
 		}
 	}

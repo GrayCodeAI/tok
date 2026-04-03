@@ -220,67 +220,67 @@ func (p *PipelineCoordinator) processSemanticLayers(output string, stats *Pipeli
 
 func (p *PipelineCoordinator) processNewLayers(output string, stats *PipelineStats) string {
 	if p.symbolicCompressFilter != nil {
-		output = p.processLayer(filterLayer{p.symbolicCompressFilter, "22_symbolic_compress"}, output, stats)
+		output = p.processLayer(filterLayer{p.symbolicCompressFilter, "30_symbolic_compress"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.phraseGroupingFilter != nil {
-		output = p.processLayer(filterLayer{p.phraseGroupingFilter, "23_phrase_grouping"}, output, stats)
+		output = p.processLayer(filterLayer{p.phraseGroupingFilter, "31_phrase_grouping"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.numericalQuantizer != nil {
-		output = p.processLayer(filterLayer{p.numericalQuantizer, "24_numerical_quant"}, output, stats)
+		output = p.processLayer(filterLayer{p.numericalQuantizer, "32_numerical_quant"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.dynamicRatioFilter != nil {
-		output = p.processLayer(filterLayer{p.dynamicRatioFilter, "25_dynamic_ratio"}, output, stats)
+		output = p.processLayer(filterLayer{p.dynamicRatioFilter, "33_dynamic_ratio"}, output, stats)
 	}
 	return output
 }
 
 func (p *PipelineCoordinator) processPhase2Layers(output string, stats *PipelineStats) string {
 	if p.hypernymCompressor != nil {
-		output = p.processLayer(filterLayer{p.hypernymCompressor, "26_hypernym"}, output, stats)
+		output = p.processLayer(filterLayer{p.hypernymCompressor, "34_hypernym"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.semanticCacheFilter != nil {
-		output = p.processLayer(filterLayer{p.semanticCacheFilter, "27_semantic_cache"}, output, stats)
+		output = p.processLayer(filterLayer{p.semanticCacheFilter, "35_semantic_cache"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.scopeFilter != nil {
-		output = p.processLayer(filterLayer{p.scopeFilter, "28_scope"}, output, stats)
+		output = p.processLayer(filterLayer{p.scopeFilter, "36_scope"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.kvzipFilter != nil {
-		output = p.processLayer(filterLayer{p.kvzipFilter, "29_kvzip"}, output, stats)
+		output = p.processLayer(filterLayer{p.kvzipFilter, "37_kvzip"}, output, stats)
 	}
 	return output
 }
 
 func (p *PipelineCoordinator) processRecoveryLayers(output string, stats *PipelineStats) string {
 	if p.questionAwareFilter != nil && !p.shouldSkipQueryDependent() {
-		output = p.processLayer(p.layers[20], output, stats)
+		output = p.processLayer(filterLayer{p.questionAwareFilter, "38_question_aware"}, output, stats)
 	}
 
 	if p.densityAdaptiveFilter != nil && !p.shouldSkipSemanticChunk(output) {
-		output = p.processLayer(p.layers[21], output, stats)
+		output = p.processLayer(filterLayer{p.densityAdaptiveFilter, "39_density_adaptive"}, output, stats)
 	}
 	return output
 }

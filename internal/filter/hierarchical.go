@@ -145,7 +145,7 @@ func (f *HierarchicalFilter) Name() string {
 
 // Apply applies hierarchical summarization to large outputs.
 // Optimized: Early exit for small/medium inputs, streaming for very large inputs
-// Phase 6: Selective caching for repeated content
+
 func (f *HierarchicalFilter) Apply(input string, mode Mode) (string, int) {
 	// Quick size check before splitting
 	inputLen := len(input)
@@ -155,7 +155,7 @@ func (f *HierarchicalFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-	// Phase 6: Check selective cache for repeated content
+
 	if cached, saved, found := globalSelectiveCache.checkCache(input); found {
 		return cached, saved
 	}
@@ -200,7 +200,7 @@ func (f *HierarchicalFilter) Apply(input string, mode Mode) (string, int) {
 		}
 	}
 
-	// Phase 6: Store in selective cache if frequent
+
 	globalSelectiveCache.storeCache(input, output, tokensSaved)
 
 	return output, tokensSaved

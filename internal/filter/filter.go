@@ -43,7 +43,23 @@ type Filter interface {
 	Apply(input string, mode Mode) (output string, tokensSaved int)
 }
 
-// Engine combines multiple filters.
+// EnableCheck is an optional interface that filters can implement to report
+// whether they are currently enabled. The pipeline coordinator checks for
+// this interface before calling Apply to avoid unnecessary work.
+type EnableCheck interface {
+	IsEnabled() bool
+}
+
+// ApplicabilityCheck is an optional interface that filters can implement to
+// report whether they should run for a given input. The coordinator calls
+// this before Apply to implement stage gates (skip cheap before expensive).
+type ApplicabilityCheck interface {
+	IsApplicable(input string) bool
+}
+
+// Engine is a lightweight filter chain used for quick output post-processing.
+// Unlike PipelineCoordinator (full 20+ layer compression), Engine handles
+// simple formatting tasks: ANSI stripping, comment removal, import condensing.
 type Engine struct {
 	filters        []Filter
 	mode           Mode
@@ -172,35 +188,131 @@ func IsCode(output string) bool {
 	return false
 }
 
-// DetectLanguage attempts to detect the programming language from output.
+// DetectLanguage attempts to detect the programming language from output
+// using weighted scoring across multiple indicators.
 func DetectLanguage(output string) string {
-	if strings.Contains(output, "package ") || strings.Contains(output, "func ") {
-		return "go"
+	scores := map[string]int{
+		"go": 0, "python": 0, "rust": 0, "javascript": 0,
+		"typescript": 0, "java": 0, "c": 0, "cpp": 0,
+		"ruby": 0, "sql": 0, "shell": 0,
 	}
+
+	// Go indicators (high weight since "func" is distinctive)
+	if strings.Contains(output, "func ") {
+		scores["go"] = 10
+	}
+	if strings.Contains(output, "package ") {
+		scores["go"] += 5
+	}
+	if strings.Contains(output, "import (") || strings.Contains(output, "fmt.") || strings.Contains(output, " := ") {
+		scores["go"] += 5
+	}
+
+	// Rust indicators
 	if strings.Contains(output, "fn ") || strings.Contains(output, "pub fn") {
-		return "rust"
+		scores["rust"] += 10
 	}
-	if strings.Contains(output, "def ") || strings.Contains(output, "class ") {
-		if strings.Contains(output, ":") && !strings.Contains(output, "{") {
-			return "python"
+	if strings.Contains(output, "impl ") || strings.Contains(output, "trait ") || strings.Contains(output, "let mut") {
+		scores["rust"] += 5
+	}
+	if strings.Contains(output, "&str") || strings.Contains(output, "Vec<") || strings.Contains(output, "Option<") {
+		scores["rust"] += 10
+	}
+
+	// Python indicators
+	if strings.Contains(output, "def ") {
+		if strings.Contains(output, "self,") || strings.Contains(output, "self):") {
+			scores["python"] += 10
+		} else {
+			scores["python"] += 5
 		}
-		if strings.Contains(output, "import ") {
-			return "python"
+	}
+	if strings.Contains(output, "import ") {
+		if strings.Contains(output, "from ") {
+			scores["python"] += 3
 		}
 	}
-	if strings.Contains(output, "SELECT") || strings.Contains(output, "FROM") || strings.Contains(output, "WHERE") || strings.Contains(output, "INSERT") || strings.Contains(output, "UPDATE") {
-		return "sql"
+	// Penalize Python if there are curly braces (not Python style)
+	if strings.Contains(output, "{") && strings.Contains(output, "}") {
+		scores["python"] -= 5
 	}
-	if strings.Contains(output, "function ") || strings.Contains(output, "const ") {
-		if strings.Contains(output, ":") {
-			return "typescript"
+
+	// SQL indicators - even a single SQL keyword in a command-like context counts
+	// Requires uppercase keywords to avoid false positives with English text
+	sqlKeywords := 0
+	for _, kw := range []string{"SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "JOIN", "GROUP BY", "ORDER BY"} {
+		if strings.Contains(output, kw) {
+			sqlKeywords++
 		}
-		return "javascript"
 	}
-	return "unknown"
+	if sqlKeywords >= 1 {
+		scores["sql"] = sqlKeywords * 15
+	}
+
+	// JavaScript/TypeScript
+	if strings.Contains(output, "function ") || strings.Contains(output, "const ") || strings.Contains(output, "let ") {
+		scores["javascript"] += 5
+		if strings.Contains(output, "=>") {
+			scores["javascript"] += 3
+		}
+	}
+	// TypeScript type annotations (includes function return types like ": void", ": string", ": number")
+	if strings.Contains(output, ": string") || strings.Contains(output, ": number") ||
+		strings.Contains(output, ": boolean") || strings.Contains(output, ": void") ||
+		strings.Contains(output, ": any") || strings.Contains(output, ": unknown") ||
+		strings.Contains(output, "interface ") || strings.Contains(output, "type ") ||
+		strings.Contains(output, "enum ") || strings.Contains(output, "namespace ") {
+		scores["typescript"] += 15
+	}
+
+	// Java indicators
+	if strings.Contains(output, "public class ") || strings.Contains(output, "private ") || strings.Contains(output, "protected ") {
+		scores["java"] += 5
+	}
+	if strings.Contains(output, "System.out.") || strings.Contains(output, "public static void main") {
+		scores["java"] += 10
+	}
+
+	// C/C++ indicators
+	if strings.Contains(output, "#include") {
+		scores["c"] += 5
+		scores["cpp"] += 5
+	}
+	if strings.Contains(output, "std::") || strings.Contains(output, "cout") || strings.Contains(output, "cin") {
+		scores["cpp"] += 15
+	}
+	if strings.Contains(output, "printf(") || strings.Contains(output, "malloc(") {
+		scores["c"] += 10
+	}
+
+	// Ruby indicators
+	if strings.Contains(output, "puts ") || strings.Contains(output, "require '") || strings.Contains(output, "end\n") {
+		scores["ruby"] += 5
+	}
+	if strings.Contains(output, "def ") && !strings.Contains(output, "self:") {
+		// Ruby uses "def" but without "self:" which Python uses
+		scores["ruby"] += 3
+	}
+
+	// Shell indicators
+	if strings.Contains(output, "chmod") || strings.Contains(output, "chown") || strings.Contains(output, "sudo ") {
+		scores["shell"] += 3
+	}
+
+	// Find highest score
+	bestLang := "unknown"
+	bestScore := 0
+	for lang, score := range scores {
+		if score > bestScore {
+			bestScore = score
+			bestLang = lang
+		}
+	}
+
+	return bestLang
 }
 
-// estimateTokens is a local token estimator for filter internal use.
+// estimateTokens is an alias for EstimateTokens (backward compatibility for internal use).
 func estimateTokens(text string) int {
-	return len(text) / 4
+	return EstimateTokens(text)
 }
