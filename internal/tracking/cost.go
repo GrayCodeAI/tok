@@ -43,10 +43,10 @@ func NewCostEstimator(model string) *CostEstimator {
 func (ce *CostEstimator) EstimateSavings(tokensSaved int) CostEstimate {
 	savings := float64(tokensSaved) * ce.inputCostPer1M / 1_000_000
 	return CostEstimate{
-		TokensSaved:    tokensSaved,
+		TokensSaved:      tokensSaved,
 		EstimatedSavings: savings,
-		Currency:       ce.currency,
-		CostPer1MTokens: ce.inputCostPer1M,
+		Currency:         ce.currency,
+		CostPer1MTokens:  ce.inputCostPer1M,
 	}
 }
 
@@ -57,10 +57,10 @@ func (ce *CostEstimator) EstimateCost(tokens int) float64 {
 
 // CostEstimate contains cost estimation results.
 type CostEstimate struct {
-	TokensSaved     int
+	TokensSaved      int
 	EstimatedSavings float64
-	Currency        string
-	CostPer1MTokens float64
+	Currency         string
+	CostPer1MTokens  float64
 }
 
 // Format returns a formatted string representation.
@@ -84,9 +84,9 @@ type CostReport struct {
 
 // DailyCost represents cost data for a single day.
 type DailyCost struct {
-	Date        string
-	TokensSaved int
-	CostSaved   float64
+	Date         string
+	TokensSaved  int
+	CostSaved    float64
 	CommandCount int
 }
 
@@ -192,7 +192,7 @@ func (cr *CostReport) ExportToJSON(path string) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 // Format returns a formatted report string.
@@ -288,7 +288,7 @@ func (t *Tracker) ExportReport(format, outputPath string, days int) error {
 	case "json":
 		return report.ExportToJSON(outputPath)
 	case "text":
-		return os.WriteFile(outputPath, []byte(report.Format()), 0644)
+		return os.WriteFile(outputPath, []byte(report.Format()), 0600)
 	default:
 		return fmt.Errorf("unsupported format: %s", format)
 	}

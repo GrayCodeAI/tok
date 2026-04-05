@@ -362,21 +362,21 @@ func runLocalInit() error {
 
 	// Create config directory
 	configDir := filepath.Dir(config.ConfigPath())
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return fmt.Errorf("creating config directory: %w", err)
 	}
 	fmt.Printf("  %s Config directory: %s\n", green("✓"), cyan(configDir))
 
 	// Create data directory
 	dataDir := config.DataPath()
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	if err := os.MkdirAll(dataDir, 0700); err != nil {
 		return fmt.Errorf("creating data directory: %w", err)
 	}
 	fmt.Printf("  %s Data directory: %s\n", green("✓"), cyan(dataDir))
 
 	// Create hooks directory
 	hooksDir := config.HooksPath()
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+	if err := os.MkdirAll(hooksDir, 0700); err != nil {
 		return fmt.Errorf("creating hooks directory: %w", err)
 	}
 	fmt.Printf("  %s Hooks directory: %s\n", green("✓"), cyan(hooksDir))
@@ -456,7 +456,7 @@ func runGlobalInit(patchMode PatchMode) error {
 
 	// Create Claude hooks directory
 	claudeHooksDir := filepath.Join(claudeDir, "hooks")
-	if err := os.MkdirAll(claudeHooksDir, 0755); err != nil {
+	if err := os.MkdirAll(claudeHooksDir, 0700); err != nil {
 		return fmt.Errorf("creating Claude hooks directory: %w", err)
 	}
 
@@ -562,7 +562,7 @@ func runUninstall() error {
 	if content, err := os.ReadFile(claudeMdPath); err == nil {
 		if strings.Contains(string(content), "@TOKMAN.md") {
 			newContent := removeTokmanMdReference(string(content))
-			if err := os.WriteFile(claudeMdPath, []byte(newContent), 0644); err != nil {
+			if err := os.WriteFile(claudeMdPath, []byte(newContent), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "Error updating CLAUDE.md: %v\n", err)
 			} else {
 				removed = append(removed, "CLAUDE.md: removed @TOKMAN.md reference")

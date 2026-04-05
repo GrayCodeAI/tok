@@ -31,7 +31,7 @@ Examples:
 		markerDir := filepath.Dir(markerPath)
 
 		// Ensure directory exists
-		if err := os.MkdirAll(markerDir, 0755); err != nil {
+		if err := os.MkdirAll(markerDir, 0700); err != nil {
 			return fmt.Errorf("error: %w", err)
 		}
 
@@ -42,7 +42,7 @@ Examples:
 		}
 
 		// Create marker file
-		if err := os.WriteFile(markerPath, []byte("enabled\n"), 0644); err != nil {
+		if err := os.WriteFile(markerPath, []byte("enabled\n"), 0600); err != nil {
 			return fmt.Errorf("error enabling TokMan: %w", err)
 		}
 

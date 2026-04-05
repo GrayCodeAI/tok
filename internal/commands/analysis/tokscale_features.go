@@ -182,7 +182,7 @@ func SavePlayground(path string, history []PlaygroundEntry) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 // LoadPlayground loads playground data from file.

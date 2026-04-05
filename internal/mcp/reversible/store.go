@@ -29,7 +29,7 @@ func NewSQLiteStore(config Config) (*SQLiteStore, error) {
 		return nil, fmt.Errorf("store path is required")
 	}
 
-	if err := os.MkdirAll(filepath.Dir(storePath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(storePath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create store directory: %w", err)
 	}
 

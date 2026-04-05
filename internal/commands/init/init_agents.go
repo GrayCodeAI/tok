@@ -128,7 +128,7 @@ optimization:
 	}
 
 	tokmanMdPath := filepath.Join(homeDir, ".kiro", "TOKMAN.md")
-	if err := os.MkdirAll(filepath.Dir(tokmanMdPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(tokmanMdPath), 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 	writeIfChanged(tokmanMdPath, tokmanSlimKiro, "TOKMAN.md")
@@ -150,7 +150,7 @@ func uninstallKiro() []string {
 	if data, err := os.ReadFile(kiroRcPath); err == nil {
 		if strings.Contains(string(data), "tokman") {
 			newContent := removeKiroTokmanSection(string(data))
-			if err := os.WriteFile(kiroRcPath, []byte(newContent), 0644); err != nil {
+			if err := os.WriteFile(kiroRcPath, []byte(newContent), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", kiroRcPath, err)
 			}
 			removed = append(removed, "Kiro config: removed TokMan hooks")
@@ -278,7 +278,7 @@ func uninstallReplit() []string {
 	if data, err := os.ReadFile(".replit"); err == nil {
 		if strings.Contains(string(data), "TOKMAN_ENABLED") {
 			newContent := removeReplitTokmanSection(string(data))
-			if err := os.WriteFile(".replit", []byte(newContent), 0644); err != nil {
+			if err := os.WriteFile(".replit", []byte(newContent), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "warning: failed to write .replit: %v\n", err)
 			}
 			removed = append(removed, ".replit: removed TokMan configuration")
@@ -366,10 +366,10 @@ alias grep='tokman grep'
 alias find='tokman find'
 alias tree='tokman tree'
 `
-	if err := os.MkdirAll(filepath.Dir(aliasesPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(aliasesPath), 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
-	if err := os.WriteFile(aliasesPath, []byte(aliases), 0644); err != nil {
+	if err := os.WriteFile(aliasesPath, []byte(aliases), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", aliasesPath, err)
 	}
 
@@ -445,7 +445,7 @@ func runContinueInit(global bool) {
 		homeDir = "."
 	}
 	configDir := filepath.Join(homeDir, ".continue")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 

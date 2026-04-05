@@ -112,9 +112,11 @@ func (r *CommunityFilterRegistry) Install(name string) error {
 		return fmt.Errorf("filter %q not found", name)
 	}
 	dir := filepath.Dir(r.localPath)
-	os.MkdirAll(dir, 0755)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create filter directory: %w", err)
+	}
 	destPath := filepath.Join(dir, name+".toml")
-	return os.WriteFile(destPath, []byte(entry.Content), 0644)
+	return os.WriteFile(destPath, []byte(entry.Content), 0600)
 }
 
 // Eject copies a built-in filter to local config for customization.
@@ -131,8 +133,10 @@ func (r *CommunityFilterRegistry) Eject(name string, destDir string) error {
 	if content == "" {
 		return fmt.Errorf("filter %q not found", name)
 	}
-	os.MkdirAll(destDir, 0755)
-	return os.WriteFile(filepath.Join(destDir, name+".toml"), []byte(content), 0644)
+	if err := os.MkdirAll(destDir, 0700); err != nil {
+		return fmt.Errorf("failed to create eject directory: %w", err)
+	}
+	return os.WriteFile(filepath.Join(destDir, name+".toml"), []byte(content), 0600)
 }
 
 // Stats returns registry statistics.
@@ -157,7 +161,10 @@ func (r *CommunityFilterRegistry) loadLocal() {
 	if err != nil {
 		return
 	}
-	json.Unmarshal(data, &r.filters)
+	if err := json.Unmarshal(data, &r.filters); err != nil {
+		// Corrupted registry file — start fresh
+		r.filters = []RegistryEntry{}
+	}
 }
 
 func (r *CommunityFilterRegistry) saveLocal() error {
@@ -165,9 +172,14 @@ func (r *CommunityFilterRegistry) saveLocal() error {
 		return nil
 	}
 	dir := filepath.Dir(r.localPath)
-	os.MkdirAll(dir, 0755)
-	data, _ := json.MarshalIndent(r.filters, "", "  ")
-	return os.WriteFile(r.localPath, data, 0644)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create registry directory: %w", err)
+	}
+	data, err := json.MarshalIndent(r.filters, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal registry data: %w", err)
+	}
+	return os.WriteFile(r.localPath, data, 0600)
 }
 
 // FormatRegistryStats returns a human-readable stats string.

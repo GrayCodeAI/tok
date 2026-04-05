@@ -27,9 +27,13 @@ func NewPATHShimInjector(shimDir string) *PATHShimInjector {
 
 // Install installs PATH shims for specified commands.
 func (psi *PATHShimInjector) Install(commands []string) error {
-	os.MkdirAll(psi.shimDir, 0755)
+	// Secure shim directory
+	if err := os.MkdirAll(psi.shimDir, 0700); err != nil {
+		return fmt.Errorf("failed to create shim directory: %w", err)
+	}
 
 	for _, cmd := range commands {
+		// Look up real binary
 		realPath, err := exec.LookPath(cmd)
 		if err != nil {
 			continue
@@ -40,8 +44,8 @@ func (psi *PATHShimInjector) Install(commands []string) error {
 		shimContent := fmt.Sprintf(`#!/bin/sh
 exec tokman %s "$@"
 `, cmd)
-		if err := os.WriteFile(shimPath, []byte(shimContent), 0755); err != nil {
-			return err
+		if err := os.WriteFile(shimPath, []byte(shimContent), 0700); err != nil {
+			return fmt.Errorf("failed to write shim for %q: %w", cmd, err)
 		}
 	}
 	return nil

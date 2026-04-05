@@ -29,7 +29,7 @@ var proxyStartCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the HTTP proxy server",
 	Long:  "",
-	RunE: runProxyStart,
+	RunE:  runProxyStart,
 }
 
 var proxyStopCmd = &cobra.Command{
@@ -163,10 +163,10 @@ func runProxyStart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	pidFile := getProxyPIDFile()
-	if err := os.MkdirAll(filepath.Dir(pidFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(pidFile), 0700); err != nil {
 		return fmt.Errorf("create proxy runtime dir: %w", err)
 	}
-	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d\n", os.Getpid())), 0644); err != nil {
+	if err := os.WriteFile(pidFile, []byte(fmt.Sprintf("%d\n", os.Getpid())), 0600); err != nil {
 		return fmt.Errorf("write proxy pid file: %w", err)
 	}
 	defer os.Remove(pidFile)

@@ -372,10 +372,10 @@ func (t testRootCmd) Context() context.Context {
 }
 
 type capturingRunner struct {
-	ctx context.Context
+	ctx    context.Context
 	output string
-	code int
-	err error
+	code   int
+	err    error
 }
 
 func (r *capturingRunner) Run(ctx context.Context, args []string) (string, int, error) {

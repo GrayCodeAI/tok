@@ -155,7 +155,6 @@ func (f *HierarchicalFilter) Apply(input string, mode Mode) (string, int) {
 		return input, 0
 	}
 
-
 	if cached, saved, found := globalSelectiveCache.checkCache(input); found {
 		return cached, saved
 	}
@@ -199,7 +198,6 @@ func (f *HierarchicalFilter) Apply(input string, mode Mode) (string, int) {
 			tokensSaved = 0
 		}
 	}
-
 
 	globalSelectiveCache.storeCache(input, output, tokensSaved)
 

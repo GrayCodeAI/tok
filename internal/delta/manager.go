@@ -211,8 +211,8 @@ func (m *Manager) Save() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if err := os.MkdirAll(m.baseDir, 0755); err != nil {
-		return err
+	if err := os.MkdirAll(m.baseDir, 0700); err != nil {
+		return fmt.Errorf("failed to create delta directory: %w", err)
 	}
 
 	// Save each file's versions
@@ -220,8 +220,8 @@ func (m *Manager) Save() error {
 		safePath := sanitizePath(path)
 		filePath := filepath.Join(m.baseDir, safePath+".versions")
 
-		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
-			return err
+		if err := os.MkdirAll(filepath.Dir(filePath), 0700); err != nil {
+			return fmt.Errorf("failed to create delta subdirectory: %w", err)
 		}
 
 		// Simple text format for now
@@ -230,7 +230,7 @@ func (m *Manager) Save() error {
 			fmt.Fprintf(&data, "%s|%d|%s|%s\n", v.Hash, v.Timestamp.Unix(), v.DiffFrom, v.Content)
 		}
 
-		if err := os.WriteFile(filePath, []byte(data.String()), 0644); err != nil {
+		if err := os.WriteFile(filePath, []byte(data.String()), 0600); err != nil {
 			return err
 		}
 	}

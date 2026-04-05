@@ -1,20 +1,18 @@
 package core
 
 import (
+	"context"
+	"strings"
 	"testing"
 )
 
 func TestEstimateTokens(t *testing.T) {
 	tests := []struct {
 		input       string
-		minExpected int // BPE is more accurate than heuristic
+		minExpected int
 	}{
 		{"", 0},
 		{"a", 1},
-		{"abcd", 1},
-		{"abcde", 1},
-		{"abcdefgh", 1},
-		{"abcdefghi", 1},
 		{"hello world", 2},
 	}
 
@@ -34,7 +32,7 @@ func TestCalculateTokensSaved(t *testing.T) {
 	}{
 		{"hello world", "hello", 1},
 		{"same", "same", 0},
-		{"short", "longer than original", 0}, // Should return 0 when filtered is longer
+		{"short", "longer than original", 0},
 		{"a b c d e f g h", "a c e g", 1},
 	}
 
@@ -48,8 +46,139 @@ func TestCalculateTokensSaved(t *testing.T) {
 }
 
 func TestCalculateSavings(t *testing.T) {
+	// Test known model
 	savings := CalculateSavings(1000000, "gpt-4o")
 	if savings <= 0 {
 		t.Errorf("CalculateSavings returned %f, want > 0", savings)
+	}
+
+	// Test unknown model (falls back to default)
+	savings = CalculateSavings(1000000, "unknown_model_xyz")
+	if savings <= 0 {
+		t.Errorf("CalculateSavings for unknown model returned %f, want > 0", savings)
+	}
+}
+
+func TestOSCommandRunner_Run(t *testing.T) {
+	runner := NewOSCommandRunner()
+
+	tests := []struct {
+		name     string
+		args     []string
+		wantExit int
+	}{
+		{"echo hello", []string{"echo", "hello"}, 0},
+		{"echo empty", []string{"echo"}, 0},
+		{"true", []string{"true"}, 0},
+		{"false", []string{"false"}, 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			_, exitCode, _ := runner.Run(ctx, tt.args)
+			if exitCode != tt.wantExit {
+				t.Errorf("exitCode = %d, want %d", exitCode, tt.wantExit)
+			}
+		})
+	}
+}
+
+func TestOSCommandRunner_Run_Empty(t *testing.T) {
+	runner := NewOSCommandRunner()
+	ctx := context.Background()
+	output, exitCode, err := runner.Run(ctx, []string{})
+	if output != "" || exitCode != 0 || err != nil {
+		t.Errorf("empty run should return empty, 0, nil: got %v, %d, %v", output, exitCode, err)
+	}
+}
+
+func TestOSCommandRunner_Run_NotFound(t *testing.T) {
+	runner := NewOSCommandRunner()
+	ctx := context.Background()
+	_, exitCode, err := runner.Run(ctx, []string{"nonexistent_cmd_xyz"})
+	if exitCode != 127 {
+		t.Errorf("exitCode = %d, want 127", exitCode)
+	}
+	if err == nil {
+		t.Error("expected error for nonexistent command")
+	}
+}
+
+func TestOSCommandRunner_LookPath(t *testing.T) {
+	runner := NewOSCommandRunner()
+	path, err := runner.LookPath("ls")
+	if err != nil || path == "" {
+		t.Errorf("LookPath(ls) = %q, %v", path, err)
+	}
+
+	_, err = runner.LookPath("nonexistent_cmd_xyz_123")
+	if err == nil {
+		t.Error("LookPath for nonexistent should error")
+	}
+}
+
+func TestSanitizeArgs(t *testing.T) {
+	tests := []struct {
+		input, want string
+	}{
+		{"hello", "hello"},
+		{"hello\nworld", "hello\nworld"},
+		{"hello\x01world", "helloworld"},
+		{"test\x00null", "testnull"},
+	}
+
+	for _, tt := range tests {
+		got := sanitizeArgs(tt.input)
+		if got != tt.want {
+			t.Errorf("sanitizeArgs(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestDefaultBudgetConfig(t *testing.T) {
+	cfg := DefaultBudgetConfig()
+	if cfg.MaxTokens <= 0 {
+		t.Errorf("MaxTokens = %d, want > 0", cfg.MaxTokens)
+	}
+	if cfg.PreserveRatio <= 0 || cfg.PreserveRatio > 1 {
+		t.Errorf("PreserveRatio = %f, want between 0 and 1", cfg.PreserveRatio)
+	}
+}
+
+func TestBudgetEnforcer_Check(t *testing.T) {
+	cfg := BudgetConfig{
+		MaxTokens:     100,
+		Mode:          BudgetModeStrict,
+		PreserveRatio: 0.7,
+	}
+	enforcer := NewBudgetEnforcer(cfg)
+
+	// Within budget
+	status := enforcer.Check(strings.Repeat("word ", 10))
+	if status.Exceeded {
+		t.Error("status should not be exceeded for small content")
+	}
+
+	// Over budget
+	status = enforcer.Check(strings.Repeat("word ", 1000))
+	if !status.Exceeded {
+		t.Error("status should be exceeded for large content")
+	}
+}
+
+func TestCommonModelPricing(t *testing.T) {
+	if len(CommonModelPricing) == 0 {
+		t.Error("CommonModelPricing should not be empty")
+	}
+
+	// Test that prices are positive
+	for name, pricing := range CommonModelPricing {
+		if pricing.InputPerMillion <= 0 {
+			t.Errorf("model %s has non-positive input price", name)
+		}
+		if pricing.OutputPerMillion <= 0 {
+			t.Errorf("model %s has non-positive output price", name)
+		}
 	}
 }

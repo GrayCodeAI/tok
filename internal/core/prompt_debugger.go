@@ -32,7 +32,7 @@ func NewPromptDebugger(dir string) *PromptDebugger {
 }
 
 func (d *PromptDebugger) Save(record PromptRecord) error {
-	if err := os.MkdirAll(d.dir, 0755); err != nil {
+	if err := os.MkdirAll(d.dir, 0700); err != nil {
 		return err
 	}
 
@@ -45,7 +45,7 @@ func (d *PromptDebugger) Save(record PromptRecord) error {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0644)
+	return os.WriteFile(path, data, 0600)
 }
 
 func (d *PromptDebugger) List(limit int) ([]PromptRecord, error) {

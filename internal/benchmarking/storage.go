@@ -22,7 +22,7 @@ func NewStorage(dbPath string) (*Storage, error) {
 	if dbPath == "" {
 		return nil, fmt.Errorf("database path is required")
 	}
-	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create storage directory: %w", err)
 	}
 

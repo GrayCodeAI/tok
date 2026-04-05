@@ -198,7 +198,7 @@ func categorizeCommand(cmd string) string {
 
 func writeCLICorrectionsRules(corrections []Correction, project string) error {
 	rulesDir := ".claude/rules"
-	if err := os.MkdirAll(rulesDir, 0755); err != nil {
+	if err := os.MkdirAll(rulesDir, 0700); err != nil {
 		return err
 	}
 
@@ -217,7 +217,7 @@ func writeCLICorrectionsRules(corrections []Correction, project string) error {
 			corr.FailedCommand, corr.CorrectedCommand, corr.Confidence*100))
 	}
 
-	return os.WriteFile(rulesFile, []byte(sb.String()), 0644)
+	return os.WriteFile(rulesFile, []byte(sb.String()), 0600)
 }
 
 func red(s string) string {

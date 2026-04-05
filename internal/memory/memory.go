@@ -1,7 +1,10 @@
 package memory
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -54,7 +57,7 @@ func (ms *MemoryStore) AddTask(content string, tags ...string) string {
 	ms.mu.Lock()
 	ms.tasks = append(ms.tasks, item)
 	ms.mu.Unlock()
-	ms.save()
+	_ = ms.save() // best-effort persistence
 	return item.ID
 }
 
@@ -72,7 +75,7 @@ func (ms *MemoryStore) AddFinding(content string, tags ...string) string {
 	ms.mu.Lock()
 	ms.findings = append(ms.findings, item)
 	ms.mu.Unlock()
-	ms.save()
+	_ = ms.save() // best-effort persistence
 	return item.ID
 }
 
@@ -90,7 +93,7 @@ func (ms *MemoryStore) AddDecision(content string, tags ...string) string {
 	ms.mu.Lock()
 	ms.decisions = append(ms.decisions, item)
 	ms.mu.Unlock()
-	ms.save()
+	_ = ms.save() // best-effort persistence
 	return item.ID
 }
 
@@ -108,7 +111,7 @@ func (ms *MemoryStore) AddFact(content string, tags ...string) string {
 	ms.mu.Lock()
 	ms.facts = append(ms.facts, item)
 	ms.mu.Unlock()
-	ms.save()
+	_ = ms.save() // best-effort persistence
 	return item.ID
 }
 
@@ -159,7 +162,7 @@ func (ms *MemoryStore) Clear() {
 	ms.decisions = nil
 	ms.facts = nil
 	ms.mu.Unlock()
-	ms.save()
+	_ = ms.save() // best-effort persistence
 }
 
 // Stats returns memory statistics.
@@ -190,20 +193,28 @@ func (ms *MemoryStore) load() {
 		Facts     []MemoryItem `json:"facts"`
 	}
 	if err := json.Unmarshal(data, &store); err != nil {
+		// Corrupted store file — start fresh
 		return
 	}
+	ms.mu.Lock()
 	ms.tasks = store.Tasks
 	ms.findings = store.Findings
 	ms.decisions = store.Decisions
 	ms.facts = store.Facts
+	ms.mu.Unlock()
 }
 
-func (ms *MemoryStore) save() {
+func (ms *MemoryStore) save() error {
 	if ms.storePath == "" {
-		return
+		return nil
 	}
+	ms.mu.RLock()
+	defer ms.mu.RUnlock()
+
 	dir := filepath.Dir(ms.storePath)
-	os.MkdirAll(dir, 0755)
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		return fmt.Errorf("failed to create memory directory: %w", err)
+	}
 
 	store := struct {
 		Tasks     []MemoryItem `json:"tasks"`
@@ -216,17 +227,22 @@ func (ms *MemoryStore) save() {
 		Decisions: ms.decisions,
 		Facts:     ms.facts,
 	}
-	data, _ := json.MarshalIndent(store, "", "  ")
-	os.WriteFile(ms.storePath, data, 0600)
+	data, err := json.MarshalIndent(store, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal memory store: %w", err)
+	}
+	if err := os.WriteFile(ms.storePath, data, 0600); err != nil {
+		return fmt.Errorf("failed to write memory store: %w", err)
+	}
+	return nil
 }
 
-var idCounter int
-
+// generateID creates a cryptographically random ID for memory items.
 func generateID() string {
-	idCounter++
-	return "mem_" + itoa(idCounter)
-}
-
-func itoa(n int) string {
-	return string(rune('0' + n%10))
+	b := make([]byte, 8)
+	if _, err := rand.Read(b); err != nil {
+		// Fallback to timestamp-based ID if crypto/rand is unavailable
+		return fmt.Sprintf("mem_%d", time.Now().UnixNano())
+	}
+	return "mem_" + hex.EncodeToString(b)
 }

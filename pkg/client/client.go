@@ -3,6 +3,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -136,7 +137,7 @@ func (c *Client) Close() error {
 		}
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("errors closing connections: %v", errs)
+		return errors.Join(errs...)
 	}
 	return nil
 }

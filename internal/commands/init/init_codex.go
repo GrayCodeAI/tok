@@ -47,7 +47,7 @@ func runCodexInit(global bool) {
 			return
 		}
 		codexDir := filepath.Join(homeDir, ".codex")
-		if err := os.MkdirAll(codexDir, 0755); err != nil {
+		if err := os.MkdirAll(codexDir, 0700); err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating Codex config directory: %v\n", err)
 			return
 		}
@@ -99,7 +99,7 @@ func patchAgentsMd(path string) bool {
 		newContent = fmt.Sprintf("%s\n\n@TOKMAN.md\n", strings.TrimSpace(content))
 	}
 
-	if err := os.WriteFile(path, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(newContent), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", path, err)
 	}
 	return true
@@ -128,7 +128,7 @@ func uninstallCodex() []string {
 		content := string(data)
 		if strings.Contains(content, "@TOKMAN.md") {
 			newContent := removeTokmanMdReference(content)
-			if err := os.WriteFile(agentsMdPath, []byte(newContent), 0644); err != nil {
+			if err := os.WriteFile(agentsMdPath, []byte(newContent), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", agentsMdPath, err)
 			}
 			removed = append(removed, "Codex AGENTS.md: removed @TOKMAN.md reference")
