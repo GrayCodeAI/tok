@@ -58,16 +58,16 @@ func NewLayerRegistry() *LayerRegistry {
 func (r *LayerRegistry) registerDefaults() {
 	// Core layers (Groups 1-2)
 	r.register(RegisteredLayer{
-		Metadata: LayerMetadata{ID: "entropy", Name: "Entropy Filter", Group: 1, Cost: 1, MinTokens: 10, DisabledByDefault: false},
-		Filter:   NewEntropyFilter(),
-		SkipFn:   func(input string) bool { return len(input) < 50 },
+		Metadata:  LayerMetadata{ID: "entropy", Name: "Entropy Filter", Group: 1, Cost: 1, MinTokens: 10, DisabledByDefault: false},
+		Filter:    NewEntropyFilter(),
+		SkipFn:    func(input string) bool { return len(input) < 50 },
 		EnabledFn: func(cfg PipelineConfig) bool { return cfg.EnableEntropy },
 	})
 
 	r.register(RegisteredLayer{
 		Metadata: LayerMetadata{ID: "perplexity", Name: "Perplexity Pruning", Group: 1, Cost: 2, MinTokens: 20, MinLines: 5, DisabledByDefault: false},
 		Filter:   NewPerplexityFilter(),
-		SkipFn:   func(input string) bool {
+		SkipFn: func(input string) bool {
 			lines := 0
 			for i := 0; i < len(input); i++ {
 				if input[i] == '\n' {
@@ -88,8 +88,8 @@ func (r *LayerRegistry) registerDefaults() {
 	})
 
 	r.register(RegisteredLayer{
-		Metadata: LayerMetadata{ID: "ast_preserve", Name: "AST Preservation", Group: 2, Cost: 2, MinTokens: 100},
-		Filter:   NewASTPreserveFilter(),
+		Metadata:  LayerMetadata{ID: "ast_preserve", Name: "AST Preservation", Group: 2, Cost: 2, MinTokens: 100},
+		Filter:    NewASTPreserveFilter(),
 		EnabledFn: func(cfg PipelineConfig) bool { return cfg.EnableAST },
 	})
 
@@ -102,26 +102,26 @@ func (r *LayerRegistry) registerDefaults() {
 	})
 
 	r.register(RegisteredLayer{
-		Metadata: LayerMetadata{ID: "ngram", Name: "N-gram Abbreviation", Group: 3, Cost: 1, MinTokens: 50},
-		SkipFn:   func(input string) bool { return len(input) < 100 },
+		Metadata:  LayerMetadata{ID: "ngram", Name: "N-gram Abbreviation", Group: 3, Cost: 1, MinTokens: 50},
+		SkipFn:    func(input string) bool { return len(input) < 100 },
 		EnabledFn: func(cfg PipelineConfig) bool { return cfg.NgramEnabled },
 	})
 
 	r.register(RegisteredLayer{
-		Metadata: LayerMetadata{ID: "evaluator", Name: "Evaluator Heads", Group: 3, Cost: 1, MinTokens: 100},
-		Filter:   NewEvaluatorHeadsFilter(),
+		Metadata:  LayerMetadata{ID: "evaluator", Name: "Evaluator Heads", Group: 3, Cost: 1, MinTokens: 100},
+		Filter:    NewEvaluatorHeadsFilter(),
 		EnabledFn: func(cfg PipelineConfig) bool { return cfg.EnableEvaluator },
 	})
 
 	r.register(RegisteredLayer{
-		Metadata: LayerMetadata{ID: "gist", Name: "Gist Compression", Group: 3, Cost: 2, MinTokens: 100},
-		SkipFn:   func(input string) bool { return len(input) < 100 },
+		Metadata:  LayerMetadata{ID: "gist", Name: "Gist Compression", Group: 3, Cost: 2, MinTokens: 100},
+		SkipFn:    func(input string) bool { return len(input) < 100 },
 		EnabledFn: func(cfg PipelineConfig) bool { return cfg.EnableGist },
 	})
 
 	r.register(RegisteredLayer{
 		Metadata: LayerMetadata{ID: "hierarchical", Name: "Hierarchical Summary", Group: 3, Cost: 2, MinTokens: 200, MinLines: 10},
-		SkipFn:   func(input string) bool {
+		SkipFn: func(input string) bool {
 			lines := 0
 			for i := 0; i < len(input); i++ {
 				if input[i] == '\n' {

@@ -141,7 +141,7 @@ func (ci *CICDIntegration) RunAndReport(suite *Suite) error {
 
 func (ci *CICDIntegration) saveResults(report *SuiteReport) error {
 	// Ensure directory exists
-	if err := os.MkdirAll(ci.config.ResultsPath, 0755); err != nil {
+	if err := os.MkdirAll(ci.config.ResultsPath, 0700); err != nil {
 		return err
 	}
 
@@ -159,7 +159,7 @@ func (ci *CICDIntegration) saveResults(report *SuiteReport) error {
 		return err
 	}
 
-	return os.WriteFile(filepath, data, 0644)
+	return os.WriteFile(filepath, data, 0600)
 }
 
 func (ci *CICDIntegration) loadBaseline() (*SuiteReport, error) {

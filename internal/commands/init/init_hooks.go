@@ -37,5 +37,5 @@ func writeIfChanged(path, content, name string) error {
 			return nil
 		}
 	}
-	return os.WriteFile(path, []byte(content), 0644)
+	return os.WriteFile(path, []byte(content), 0600)
 }

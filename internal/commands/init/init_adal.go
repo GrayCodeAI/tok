@@ -61,7 +61,7 @@ func runAdaLInit(global bool, patchMode PatchMode) {
 			return
 		}
 		adalDir = filepath.Join(homeDir, ".adal")
-		if err := os.MkdirAll(adalDir, 0755); err != nil {
+		if err := os.MkdirAll(adalDir, 0700); err != nil {
 			fmt.Fprintf(os.Stderr, "Error creating AdaL config directory: %v\n", err)
 			return
 		}
@@ -142,7 +142,7 @@ optimization:
 
 	newContent := content + tokmanConfig
 
-	if err := os.WriteFile(configPath, []byte(newContent), 0644); err != nil {
+	if err := os.WriteFile(configPath, []byte(newContent), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing AdaL config: %v\n", err)
 		return
 	}
@@ -181,7 +181,7 @@ func uninstallAdaL() []string {
 		content := string(data)
 		if strings.Contains(content, "tokman") {
 			newContent := removeTokmanSection(content)
-			if err := os.WriteFile(configPath, []byte(newContent), 0644); err != nil {
+			if err := os.WriteFile(configPath, []byte(newContent), 0600); err != nil {
 				fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", configPath, err)
 			}
 			removed = append(removed, "AdaL config: removed TokMan section")

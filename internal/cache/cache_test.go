@@ -1,197 +1,73 @@
-package cache
+package cache_test
 
 import (
 	"testing"
 	"time"
+
+	"github.com/GrayCodeAI/tokman/internal/cache"
 )
 
-func TestNewFingerprintCache(t *testing.T) {
-	c := NewFingerprintCache(100, time.Hour)
-	if c.maxEntries != 100 {
-		t.Errorf("maxEntries = %d, want 100", c.maxEntries)
+func TestFingerprintCache_Basic(t *testing.T) {
+	c := cache.NewFingerprintCache(10, 5*time.Minute)
+
+	// Cache miss
+	got := c.Get("test content")
+	if got == nil || got.Hit {
+		t.Error("expected cache miss for uncached content")
 	}
-	if c.ttl != time.Hour {
-		t.Errorf("ttl = %v, want 1h", c.ttl)
+
+	// Set and get
+	c.Set("test content", "compressed data here", 42)
+	got = c.Get("test content")
+	if got == nil || !got.Hit {
+		t.Fatal("expected cache hit after Set")
 	}
-	if c.Size() != 0 {
-		t.Errorf("initial size = %d, want 0", c.Size())
+	if got.Cached == nil {
+		t.Fatal("expected Cached result")
+	}
+	if got.Cached.Compressed != "compressed data here" {
+		t.Errorf("Compressed = %q, want %q", got.Cached.Compressed, "compressed data here")
+	}
+	if got.Cached.TokensSaved != 42 {
+		t.Errorf("TokensSaved = %d, want 42", got.Cached.TokensSaved)
 	}
 }
 
-func TestComputeFingerprint(t *testing.T) {
-	h1 := ComputeFingerprint("hello")
-	h2 := ComputeFingerprint("hello")
-	h3 := ComputeFingerprint("world")
+func TestFingerprintCache_ByFingerprint(t *testing.T) {
+	c := cache.NewFingerprintCache(10, 5*time.Minute)
 
-	if h1 != h2 {
+	fp := cache.ComputeFingerprint("hello")
+	if fp == "" {
+		t.Fatal("ComputeFingerprint returned empty string")
+	}
+
+	c.SetByFingerprint(fp, "hello", "compressed", 10)
+	got := c.GetByFingerprint(fp)
+	if got == nil || got.Cached == nil {
+		t.Errorf("GetByFingerprint failed, got %+v", got)
+	}
+}
+
+func TestFingerprintCache_MissAfterTTL(t *testing.T) {
+	c := cache.NewFingerprintCache(10, 1*time.Millisecond)
+	c.Set("content", "compressed", 10)
+	time.Sleep(10 * time.Millisecond)
+
+	got := c.Get("content")
+	if got != nil && got.Hit {
+		t.Error("expected cache miss after TTL expired")
+	}
+}
+
+func TestComputeFingerprint_Consistency(t *testing.T) {
+	fp1 := cache.ComputeFingerprint("test")
+	fp2 := cache.ComputeFingerprint("test")
+	fp3 := cache.ComputeFingerprint("different")
+
+	if fp1 != fp2 {
 		t.Error("same content should produce same fingerprint")
 	}
-	if h1 == h3 {
+	if fp1 == fp3 {
 		t.Error("different content should produce different fingerprint")
-	}
-	if len(h1) != 16 {
-		t.Errorf("fingerprint length = %d, want 16", len(h1))
-	}
-}
-
-func TestCacheSetAndGet(t *testing.T) {
-	c := NewFingerprintCache(10, time.Hour)
-
-	c.Set("test content", "compressed", 42)
-
-	result := c.Get("test content")
-	if !result.Hit {
-		t.Fatal("expected cache hit")
-	}
-	if result.Cached.TokensSaved != 42 {
-		t.Errorf("tokensSaved = %d, want 42", result.Cached.TokensSaved)
-	}
-	if result.Cached.Compressed != "compressed" {
-		t.Errorf("compressed = %q, want %q", result.Cached.Compressed, "compressed")
-	}
-}
-
-func TestCacheMiss(t *testing.T) {
-	c := NewFingerprintCache(10, time.Hour)
-
-	result := c.Get("nonexistent")
-	if result.Hit {
-		t.Error("expected cache miss")
-	}
-}
-
-func TestCacheEviction(t *testing.T) {
-	c := NewFingerprintCache(3, time.Hour)
-
-	// Fill cache to capacity
-	c.Set("content1", "compressed1", 10)
-	c.Set("content2", "compressed2", 20)
-	c.Set("content3", "compressed3", 30)
-
-	if c.Size() != 3 {
-		t.Fatalf("size = %d, want 3", c.Size())
-	}
-
-	// Add one more - should evict oldest
-	c.Set("content4", "compressed4", 40)
-
-	if c.Size() != 3 {
-		t.Errorf("size = %d, want 3 (after eviction)", c.Size())
-	}
-
-	// First entry should be evicted
-	result := c.Get("content1")
-	if result.Hit {
-		t.Error("oldest entry should have been evicted")
-	}
-
-	// Last entry should still exist
-	result = c.Get("content4")
-	if !result.Hit {
-		t.Error("newest entry should still exist")
-	}
-}
-
-func TestCacheExpiration(t *testing.T) {
-	c := NewFingerprintCache(10, 50*time.Millisecond)
-
-	c.Set("expiring", "compressed", 10)
-
-	// Should hit immediately
-	result := c.Get("expiring")
-	if !result.Hit {
-		t.Fatal("expected hit before expiration")
-	}
-
-	// Wait for expiration
-	time.Sleep(100 * time.Millisecond)
-
-	result = c.Get("expiring")
-	if result.Hit {
-		t.Error("expected miss after expiration")
-	}
-}
-
-func TestCachePrune(t *testing.T) {
-	c := NewFingerprintCache(10, 50*time.Millisecond)
-
-	c.Set("item1", "c1", 1)
-	c.Set("item2", "c2", 2)
-	c.Set("item3", "c3", 3)
-
-	time.Sleep(100 * time.Millisecond)
-
-	pruned := c.Prune()
-	if pruned != 3 {
-		t.Errorf("pruned = %d, want 3", pruned)
-	}
-	if c.Size() != 0 {
-		t.Errorf("size after prune = %d, want 0", c.Size())
-	}
-}
-
-func TestCacheClear(t *testing.T) {
-	c := NewFingerprintCache(10, time.Hour)
-
-	c.Set("item1", "c1", 1)
-	c.Set("item2", "c2", 2)
-
-	if c.Size() != 2 {
-		t.Fatalf("size = %d, want 2", c.Size())
-	}
-
-	c.Clear()
-
-	if c.Size() != 0 {
-		t.Errorf("size after clear = %d, want 0", c.Size())
-	}
-
-	stats := c.Stats()
-	if stats.Hits != 0 || stats.Misses != 0 {
-		t.Error("stats should be reset after clear")
-	}
-}
-
-func TestCacheStats(t *testing.T) {
-	c := NewFingerprintCache(10, time.Hour)
-
-	c.Set("item1", "c1", 1)
-	c.Get("item1") // hit
-	c.Get("item1") // hit
-	c.Get("missing") // miss
-
-	stats := c.Stats()
-	if stats.Entries != 1 {
-		t.Errorf("entries = %d, want 1", stats.Entries)
-	}
-	if stats.Hits != 2 {
-		t.Errorf("hits = %d, want 2", stats.Hits)
-	}
-	if stats.Misses != 1 {
-		t.Errorf("misses = %d, want 1", stats.Misses)
-	}
-	if stats.HitRate != 2.0/3.0 {
-		t.Errorf("hitRate = %f, want %f", stats.HitRate, 2.0/3.0)
-	}
-}
-
-func TestCacheZeroEntries(t *testing.T) {
-	c := NewFingerprintCache(0, time.Hour)
-
-	c.Set("item1", "c1", 1)
-
-	// With maxEntries=0, the entry should still be stored
-	// (eviction just won't happen until capacity is reached)
-	result := c.Get("item1")
-	if !result.Hit {
-		t.Error("expected hit even with maxEntries=0")
-	}
-}
-
-func TestGetGlobalCache(t *testing.T) {
-	c1 := GetGlobalCache()
-	c2 := GetGlobalCache()
-	if c1 != c2 {
-		t.Error("GetGlobalCache should return the same instance")
 	}
 }

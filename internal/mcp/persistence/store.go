@@ -33,7 +33,7 @@ func NewStore(dbPath string) (*Store, error) {
 	if dbPath == "" {
 		return nil, fmt.Errorf("database path is required")
 	}
-	if err := os.MkdirAll(filepath.Dir(dbPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(dbPath), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create store directory: %w", err)
 	}
 
@@ -231,10 +231,10 @@ func (s *Store) Backup(backupPath string) error {
 		return fmt.Errorf("failed to marshal metadata: %w", err)
 	}
 
-	if err := os.MkdirAll(filepath.Dir(backupPath), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(backupPath), 0700); err != nil {
 		return fmt.Errorf("failed to create backup directory: %w", err)
 	}
-	if err := os.WriteFile(backupPath, data, 0644); err != nil {
+	if err := os.WriteFile(backupPath, data, 0600); err != nil {
 		return fmt.Errorf("failed to write backup: %w", err)
 	}
 

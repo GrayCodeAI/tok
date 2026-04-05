@@ -19,7 +19,7 @@ func installCursorHook() {
 	cursorDir = filepath.Join(cursorDir, ".cursor")
 	hooksDir := filepath.Join(cursorDir, "hooks")
 
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+	if err := os.MkdirAll(hooksDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating Cursor hooks directory: %v\n", err)
 		return
 	}
@@ -54,7 +54,7 @@ func installCopilotHook() {
 		home = "."
 	}
 	hooksDir := filepath.Join(home, ".tokman", "hooks")
-	if err := os.MkdirAll(hooksDir, 0755); err != nil {
+	if err := os.MkdirAll(hooksDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 
@@ -86,7 +86,7 @@ func installCopilotHook() {
 
 	// Create .github/hooks/tokman-rewrite.json template (Task 67)
 	githubHooksDir := filepath.Join(home, ".github", "hooks")
-	if err := os.MkdirAll(githubHooksDir, 0755); err != nil {
+	if err := os.MkdirAll(githubHooksDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create .github/hooks: %v\n", err)
 	}
 	jsonConfigPath := filepath.Join(githubHooksDir, "tokman-rewrite.json")
@@ -106,12 +106,12 @@ func installCopilotHook() {
 		"    \"excludedCommands\": [\"cd\", \"export\", \"source\", \"alias\"]\n" +
 		"  }\n" +
 		"}\n"
-	if err := os.WriteFile(jsonConfigPath, []byte(jsonConfig), 0644); err != nil {
+	if err := os.WriteFile(jsonConfigPath, []byte(jsonConfig), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", jsonConfigPath, err)
 	}
 
 	instructionsDir := filepath.Join(home, ".github")
-	if err := os.MkdirAll(instructionsDir, 0755); err != nil {
+	if err := os.MkdirAll(instructionsDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 	instructionsPath := filepath.Join(instructionsDir, "copilot-instructions.md")
@@ -128,7 +128,7 @@ func installCopilotHook() {
 		"- `tokman discover` - Analyze sessions for missed usage\n" +
 		"- `tokman proxy <cmd>` - Run command without filtering\n\n" +
 		"**Average savings: 60-90% token reduction** on common development operations.\n"
-	if err := os.WriteFile(instructionsPath, []byte(instructions), 0644); err != nil {
+	if err := os.WriteFile(instructionsPath, []byte(instructions), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", instructionsPath, err)
 	}
 
@@ -147,7 +147,7 @@ func installWindsurfRules() {
 		"Examples: tokman git status, tokman cargo test, tokman ls, tokman grep \"pattern\" .\n" +
 		"Meta: tokman gain (savings), tokman discover (missed opportunities), tokman proxy <cmd> (raw)\n"
 
-	if err := os.WriteFile(rulesPath, []byte(rules), 0644); err != nil {
+	if err := os.WriteFile(rulesPath, []byte(rules), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing Windsurf rules: %v\n", err)
 		return
 	}
@@ -165,7 +165,7 @@ func installClineRules() {
 		"Examples: tokman git status, tokman cargo test, tokman ls, tokman grep \"pattern\" .\n" +
 		"Meta: tokman gain (savings), tokman discover (missed opportunities), tokman proxy <cmd> (raw)\n"
 
-	if err := os.WriteFile(rulesPath, []byte(rules), 0644); err != nil {
+	if err := os.WriteFile(rulesPath, []byte(rules), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing Cline rules: %v\n", err)
 		return
 	}
@@ -182,7 +182,7 @@ func installOpencodePlugin() {
 		home = "."
 	}
 	pluginDir := filepath.Join(home, ".config", "opencode", "plugins")
-	if err := os.MkdirAll(pluginDir, 0755); err != nil {
+	if err := os.MkdirAll(pluginDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 
@@ -209,7 +209,7 @@ func installOpencodePlugin() {
 		"  }\n" +
 		"}\n"
 
-	if err := os.WriteFile(pluginPath, []byte(plugin), 0644); err != nil {
+	if err := os.WriteFile(pluginPath, []byte(plugin), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing OpenCode plugin: %v\n", err)
 		return
 	}
@@ -229,7 +229,7 @@ func installMistralVibePlaceholder() {
 		home = "."
 	}
 	configDir := filepath.Join(home, ".config", "mistral-vibe")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
 	}
 
@@ -250,7 +250,7 @@ func installMistralVibePlaceholder() {
 		"  }\n" +
 		"}\n"
 
-	if err := os.WriteFile(placeholderPath, []byte(placeholder), 0644); err != nil {
+	if err := os.WriteFile(placeholderPath, []byte(placeholder), 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing Mistral Vibe placeholder: %v\n", err)
 		return
 	}

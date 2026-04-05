@@ -32,13 +32,13 @@ func runGeminiInit(global bool, patchMode PatchMode) {
 	}
 	geminiDir := filepath.Join(homeDir, ".gemini")
 
-	if err := os.MkdirAll(geminiDir, 0755); err != nil {
+	if err := os.MkdirAll(geminiDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating Gemini config dir: %v\n", err)
 		return
 	}
 
 	hookDir := filepath.Join(geminiDir, "hooks")
-	if err := os.MkdirAll(hookDir, 0755); err != nil {
+	if err := os.MkdirAll(hookDir, 0700); err != nil {
 		fmt.Fprintf(os.Stderr, "Error creating Gemini hooks dir: %v\n", err)
 		return
 	}
@@ -134,7 +134,7 @@ func patchGeminiSettings(geminiDir string, hookPath string, patchMode PatchMode)
 		return
 	}
 
-	if err := os.WriteFile(settingsPath, data, 0644); err != nil {
+	if err := os.WriteFile(settingsPath, data, 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing settings.json: %v\n", err)
 		return
 	}
@@ -243,7 +243,7 @@ func uninstallGemini() []string {
 							hooks["BeforeTool"] = newBeforeTool
 						}
 						newData, _ := json.MarshalIndent(settings, "", "  ")
-						if err := os.WriteFile(settingsPath, newData, 0644); err != nil {
+						if err := os.WriteFile(settingsPath, newData, 0600); err != nil {
 							fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", settingsPath, err)
 						}
 						removed = append(removed, "Gemini settings.json: removed hook entry")

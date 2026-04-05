@@ -127,26 +127,31 @@ func RunAndCapture(cmd string, args []string) (output string, exitCode int, err 
 	}
 
 	var stdoutBuf, stderrBuf strings.Builder
-	doneOut := make(chan struct{})
-	doneErr := make(chan struct{})
+	errCh := make(chan error, 2)
 
 	go func() {
-		io.Copy(&stdoutBuf, stdoutPipe)
-		close(doneOut)
+		_, e := io.Copy(&stdoutBuf, stdoutPipe)
+		errCh <- e
 	}()
 
 	go func() {
-		io.Copy(&stderrBuf, stderrPipe)
-		close(doneErr)
+		_, e := io.Copy(&stderrBuf, stderrPipe)
+		errCh <- e
 	}()
-
-	<-doneOut
-	<-doneErr
 
 	waitErr := execCmd.Wait()
 	exitCode = 0
 	if execCmd.ProcessState != nil {
 		exitCode = execCmd.ProcessState.ExitCode()
+	}
+
+	// Check pipe errors (io.EOF is expected and not an error)
+	for i := 0; i < 2; i++ {
+		if pErr := <-errCh; pErr != nil && pErr != io.EOF {
+			if waitErr == nil {
+				waitErr = fmt.Errorf("pipe error: %w", pErr)
+			}
+		}
 	}
 
 	output = stdoutBuf.String() + stderrBuf.String()

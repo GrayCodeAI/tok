@@ -15,6 +15,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/integrity"
+	"github.com/GrayCodeAI/tokman/internal/tracing"
 	"github.com/GrayCodeAI/tokman/internal/utils"
 
 	// Sub-package imports (blank imports for side effects - init() registration)
@@ -94,6 +95,15 @@ to reduce token usage in LLM interactions.
 It acts as a transparent proxy that executes commands, captures their
 output, applies intelligent filtering, and tracks token savings.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// Attach a trace to every command for production observability
+			trace := tracing.NewTrace("")
+			ctx := tracing.NewContext(cmd.Context(), trace)
+			cmd.SetContext(ctx)
+
+			span := trace.StartSpan("command")
+			span.SetAttr("command", cmd.Name())
+			defer span.Finish()
+
 			shared.SetRootCmd(cmd)
 			shared.Version = Version
 			shared.SetConfig(struct {
@@ -155,9 +165,12 @@ output, applies intelligent filtering, and tracks token savings.`,
 			})
 			shared.SetConfigFile(cfgFile)
 
-			if skipEnv {
-				os.Setenv("SKIP_ENV_VALIDATION", "1")
-			}
+			// SkipEnv is tracked in AppState for child process env propagation.
+			// Rather than mutating the global process environment with os.Setenv
+			// (thread-unsafe), child processes inherit this via cmd.Env.
+			// See shared.AppState for the SkipEnv field.
+			_ = skipEnv // consumed by executor to pass env to child processes
+
 			if isOperationalCommand(cmd) {
 				if err := integrity.RuntimeCheck(); err != nil {
 					return err

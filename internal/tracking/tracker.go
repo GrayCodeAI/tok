@@ -584,7 +584,7 @@ func (t *Tracker) GetSavingsForContextReads(projectPath, kind, mode string) (*Sa
 
 	if projectPath != "" {
 		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
-		pattern := projectPath + "/%"
+		pattern := escapeGLOB(projectPath) + "/%"
 		args = append(args, pattern, projectPath)
 	}
 
@@ -633,7 +633,7 @@ func (t *Tracker) GetSavingsForCommands(projectPath string, commandPatterns []st
 
 	if projectPath != "" {
 		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
-		pattern := projectPath + "/%"
+		pattern := escapeGLOB(projectPath) + "/%"
 		args = append(args, pattern, projectPath)
 	}
 
@@ -797,7 +797,7 @@ func (t *Tracker) GetCommandStats(projectPath string) ([]CommandStats, error) {
 			GROUP BY command
 			ORDER BY total_saved DESC
 		`
-		pattern := projectPath + "/%"
+		pattern := escapeGLOB(projectPath) + "/%"
 		rows, err = t.db.Query(query, pattern, projectPath)
 	}
 	if err != nil {
@@ -847,7 +847,7 @@ func (t *Tracker) GetRecentContextReads(projectPath, kind, mode string, limit in
 
 	if projectPath != "" {
 		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
-		pattern := projectPath + "/%"
+		pattern := escapeGLOB(projectPath) + "/%"
 		args = append(args, pattern, projectPath)
 	}
 
@@ -909,7 +909,7 @@ func (t *Tracker) GetRecentCommandsForPatterns(projectPath string, limit int, co
 
 	if projectPath != "" {
 		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
-		pattern := projectPath + "/%"
+		pattern := escapeGLOB(projectPath) + "/%"
 		args = append(args, pattern, projectPath)
 	}
 	if len(commandPatterns) > 0 {
@@ -1012,7 +1012,7 @@ func (t *Tracker) GetDailySavings(projectPath string, days int) ([]struct {
 		ORDER BY date DESC
 	`
 
-	pattern := projectPath + "/%"
+	pattern := escapeGLOB(projectPath) + "/%"
 	daysStr := fmt.Sprintf("-%d days", days)
 	rows, err := t.db.Query(query, pattern, projectPath, daysStr)
 	if err != nil {
@@ -1062,6 +1062,16 @@ func normalizeProjectPath(projectPath string) string {
 	}
 
 	return filepath.Clean(projectPath)
+}
+
+// escapeGLOB escapes SQLite GLOB metacharacters (*, ?, [, ])
+// so user-controlled strings are treated as literals, not wildcards.
+func escapeGLOB(pattern string) string {
+	pattern = strings.ReplaceAll(pattern, "[", "[[]")
+	pattern = strings.ReplaceAll(pattern, "*", "[*]")
+	pattern = strings.ReplaceAll(pattern, "?", "[?]")
+	pattern = strings.ReplaceAll(pattern, "]", "[]]")
+	return pattern
 }
 
 // RecordParseFailure records a parse failure event.

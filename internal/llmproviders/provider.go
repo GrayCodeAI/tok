@@ -7,9 +7,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"time"
+
+	"github.com/GrayCodeAI/tokman/internal/circuitbreaker"
 )
+
+// MaxRetries is the default maximum number of retries for LLM requests.
+const MaxRetries = 3
+
+// DefaultRetryBackoff is the base delay between retries.
+const DefaultRetryBackoff = 1 * time.Second
 
 func newJSONRequest(ctx context.Context, method, url string, payload interface{}) (*http.Request, error) {
 	body, err := json.Marshal(payload)
@@ -31,6 +40,120 @@ type Provider interface {
 	Complete(ctx context.Context, req CompletionRequest) (*CompletionResponse, error)
 	StreamComplete(ctx context.Context, req CompletionRequest) (<-chan StreamChunk, error)
 	Embed(ctx context.Context, text string) ([]float64, error)
+}
+
+// ProviderWithBreaker wraps a Provider with circuit breaker protection and retry logic.
+type ProviderWithBreaker struct {
+	provider Provider
+	breaker  *circuitbreaker.Breaker
+	maxRetry int
+	backoff  time.Duration
+}
+
+// WrapProvider creates a ProviderWithBreaker that adds circuit breaker
+// protection and exponential backoff retry to any Provider.
+func WrapProvider(p Provider, breaker *circuitbreaker.Breaker) *ProviderWithBreaker {
+	return &ProviderWithBreaker{
+		provider: p,
+		breaker:  breaker,
+		maxRetry: MaxRetries,
+		backoff:  DefaultRetryBackoff,
+	}
+}
+
+// Name returns the wrapped provider name.
+func (pw *ProviderWithBreaker) Name() string {
+	return pw.provider.Name()
+}
+
+// Complete executes a completion request with circuit breaker protection and retry.
+func (pw *ProviderWithBreaker) Complete(ctx context.Context, req CompletionRequest) (*CompletionResponse, error) {
+	var lastErr error
+
+	for attempt := 0; attempt <= pw.maxRetry; attempt++ {
+		if err := pw.breaker.Allow(); err != nil {
+			return nil, fmt.Errorf("circuit breaker open for %s: %w", pw.provider.Name(), err)
+		}
+
+		resp, err := pw.provider.Complete(ctx, req)
+		if err == nil {
+			pw.breaker.RecordSuccess()
+			return resp, nil
+		}
+
+		// Don't retry on client errors (4xx) - these are not transient
+		if isClientError(err) {
+			pw.breaker.RecordFailure()
+			return nil, err
+		}
+
+		lastErr = err
+		pw.breaker.RecordFailure()
+
+		if attempt < pw.maxRetry {
+			delay := pw.backoff * time.Duration(math.Pow(2, float64(attempt)))
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-time.After(delay):
+				// Retry after backoff
+			}
+		}
+	}
+
+	return nil, fmt.Errorf("all %d retries exhausted for %s: %w", pw.maxRetry, pw.provider.Name(), lastErr)
+}
+
+// StreamComplete proxies to the wrapped provider (no retry for streaming).
+func (pw *ProviderWithBreaker) StreamComplete(ctx context.Context, req CompletionRequest) (<-chan StreamChunk, error) {
+	if err := pw.breaker.Allow(); err != nil {
+		return nil, fmt.Errorf("circuit breaker open for %s: %w", pw.provider.Name(), err)
+	}
+	return pw.provider.StreamComplete(ctx, req)
+}
+
+// Embed proxies to the wrapped provider with circuit breaker protection.
+func (pw *ProviderWithBreaker) Embed(ctx context.Context, text string) ([]float64, error) {
+	if err := pw.breaker.Allow(); err != nil {
+		return nil, fmt.Errorf("circuit breaker open for %s: %w", pw.provider.Name(), err)
+	}
+
+	result, err := pw.provider.Embed(ctx, text)
+	if err != nil {
+		pw.breaker.RecordFailure()
+		return nil, err
+	}
+
+	pw.breaker.RecordSuccess()
+	return result, nil
+}
+
+// isClientError checks if an error is a 4xx HTTP error (not retryable).
+func isClientError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	// Check for common 4xx status codes in error messages
+	for _, code := range []string{"400", "401", "403", "404", "422"} {
+		if containsStr(msg, fmt.Sprintf("error %s", code)) {
+			return true
+		}
+	}
+	return false
+}
+
+func containsStr(s, substr string) bool {
+	return len(s) >= len(substr) && searchStr(s, substr)
+}
+
+func searchStr(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 // CompletionRequest holds a completion request
@@ -459,21 +582,26 @@ func (pf *ProviderFactory) Register(name string, config ProviderConfig) {
 	pf.config[name] = config
 }
 
-// Create creates a provider by name
+// Create creates a provider by name wrapped with circuit breaker protection.
 func (pf *ProviderFactory) Create(name string) (Provider, error) {
-	config, ok := pf.config[name]
+	cfg, ok := pf.config[name]
 	if !ok {
 		return nil, fmt.Errorf("unknown provider: %s", name)
 	}
 
+	var base Provider
 	switch name {
 	case "openai":
-		return NewOpenAIProvider(config.APIKey, config.Model), nil
+		base = NewOpenAIProvider(cfg.APIKey, cfg.Model)
 	case "anthropic":
-		return NewAnthropicProvider(config.APIKey, config.Model), nil
+		base = NewAnthropicProvider(cfg.APIKey, cfg.Model)
 	case "ollama":
-		return NewOllamaProvider(config.Model), nil
+		base = NewOllamaProvider(cfg.Model)
 	default:
 		return nil, fmt.Errorf("unsupported provider: %s", name)
 	}
+
+	// Wrap with circuit breaker for production resilience
+	breaker := circuitbreaker.New(circuitbreaker.DefaultConfig())
+	return WrapProvider(base, breaker), nil
 }

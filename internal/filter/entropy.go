@@ -70,10 +70,10 @@ func NewEntropyFilterWithThreshold(threshold float64) *EntropyFilter {
 		totalTokens:      1000000, // Normalized corpus size
 		entropyThreshold: threshold,
 		dynamicFreq:      make(map[string]int),
-		zipfExponent:     1.07,                   // Standard Zipf exponent for English
-		useDynamicEst:    true,                   // Enable by default
-	// LRU cache for frequency tables
-		cacheEnabled:     true,                   // Phase 2: Enable caching
+		zipfExponent:     1.07, // Standard Zipf exponent for English
+		useDynamicEst:    true, // Enable by default
+		// LRU cache for frequency tables
+		cacheEnabled: true, // Phase 2: Enable caching
 	}
 }
 

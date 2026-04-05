@@ -53,7 +53,7 @@ func Save(command string, output string, exitCode int, cfg Config) (string, erro
 	}
 
 	dir := expandTilde(cfg.Dir)
-	if err := os.MkdirAll(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0700); err != nil {
 		return "", err
 	}
 
@@ -66,7 +66,7 @@ func Save(command string, output string, exitCode int, cfg Config) (string, erro
 	}
 	path := filepath.Join(dir, filename)
 
-	if err := os.WriteFile(path, []byte(output), 0644); err != nil {
+	if err := os.WriteFile(path, []byte(output), 0600); err != nil {
 		return "", err
 	}
 

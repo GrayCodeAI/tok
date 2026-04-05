@@ -32,7 +32,7 @@ func patchClaudeMd(path string) (bool, error) {
 	// Check if @TOKMAN.md already present
 	if strings.Contains(content, "@TOKMAN.md") {
 		if migrated {
-			if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+			if err := os.WriteFile(path, []byte(content), 0600); err != nil {
 				return false, fmt.Errorf("failed to write %s: %w", path, err)
 			}
 		}
@@ -47,7 +47,7 @@ func patchClaudeMd(path string) (bool, error) {
 		newContent = fmt.Sprintf("%s\n\n@TOKMAN.md\n", strings.TrimSpace(content))
 	}
 
-	return migrated, os.WriteFile(path, []byte(newContent), 0644)
+	return migrated, os.WriteFile(path, []byte(newContent), 0600)
 }
 
 // removeTokmanBlock removes old TokMan block from content
@@ -159,7 +159,7 @@ func patchSettingsJson(hookPath string, mode PatchMode) PatchResult {
 	// Backup original
 	if data, err := os.ReadFile(settingsPath); err == nil {
 		backupPath := settingsPath + ".bak"
-		if err := os.WriteFile(backupPath, data, 0644); err != nil {
+		if err := os.WriteFile(backupPath, data, 0600); err != nil {
 			fmt.Fprintf(os.Stderr, "warning: failed to write %s: %v\n", backupPath, err)
 		}
 	}
@@ -171,7 +171,7 @@ func patchSettingsJson(hookPath string, mode PatchMode) PatchResult {
 		return PatchResultSkipped
 	}
 
-	if err := os.WriteFile(settingsPath, data, 0644); err != nil {
+	if err := os.WriteFile(settingsPath, data, 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing settings.json: %v\n", err)
 		return PatchResultSkipped
 	}
@@ -313,7 +313,7 @@ func removeHookFromSettings(claudeDir string) bool {
 		return false
 	}
 
-	if err := os.WriteFile(settingsPath+".bak", data, 0644); err != nil {
+	if err := os.WriteFile(settingsPath+".bak", data, 0600); err != nil {
 		fmt.Fprintf(os.Stderr, "warning: failed to write backup: %v\n", err)
 	}
 
@@ -331,7 +331,7 @@ func removeHookFromSettings(claudeDir string) bool {
 		return false
 	}
 
-	return os.WriteFile(settingsPath, newData, 0644) == nil
+	return os.WriteFile(settingsPath, newData, 0600) == nil
 }
 
 // promptUserConsent asks user for permission to patch settings.json

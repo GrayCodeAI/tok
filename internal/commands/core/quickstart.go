@@ -181,7 +181,7 @@ func detectAgents() []agentInfo {
 func installHookForAgent(agent agentInfo) error {
 	// Create hooks directory if needed
 	hookDir := filepath.Dir(agent.HookPath)
-	if err := os.MkdirAll(hookDir, 0755); err != nil {
+	if err := os.MkdirAll(hookDir, 0700); err != nil {
 		return fmt.Errorf("cannot create hooks directory: %w", err)
 	}
 
@@ -209,7 +209,7 @@ func createDefaultConfig() error {
 	configDir := filepath.Dir(configPath)
 
 	// Create directory if needed
-	if err := os.MkdirAll(configDir, 0755); err != nil {
+	if err := os.MkdirAll(configDir, 0700); err != nil {
 		return err
 	}
 
@@ -232,7 +232,7 @@ mode = "minimal"
 # Maximum context tokens
 max_context_tokens = 2000000
 `
-	return os.WriteFile(configPath, []byte(defaultConfig), 0644)
+	return os.WriteFile(configPath, []byte(defaultConfig), 0600)
 }
 
 func tokmanExecutablePath() string {

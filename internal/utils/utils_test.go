@@ -1,84 +1,176 @@
 package utils
 
-import (
-	"testing"
-)
+import "testing"
 
-func TestShortenPath(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		maxLen   int
-		expected string
-	}{
-		{"short path", "/home/user/project", 50, "/home/user/project"},
-		{"long path", "/home/user/projects/very/deeply/nested/directory/structure", 30, ".../nested/directory/structure"},
-		{"exact length", "/home/user/project", 18, "/home/user/project"},
+func TestMin(t *testing.T) {
+	if Min(1, 2) != 1 {
+		t.Error("Min(1,2) should be 1")
 	}
+	if Min(5, 3) != 3 {
+		t.Error("Min(5,3) should be 3")
+	}
+	if Min(0, 0) != 0 {
+		t.Error("Min(0,0) should be 0")
+	}
+}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := ShortenPath(tt.input, tt.maxLen)
-			if len(result) > tt.maxLen && tt.maxLen > 0 {
-				t.Errorf("ShortenPath(%q, %d) = %q (len=%d), expected len <= %d",
-					tt.input, tt.maxLen, result, len(result), tt.maxLen)
-			}
-		})
+func TestMax(t *testing.T) {
+	if Max(1, 2) != 2 {
+		t.Error("Max(1,2) should be 2")
+	}
+	if Max(5, 3) != 5 {
+		t.Error("Max(5,3) should be 5")
+	}
+	if Max(0, 0) != 0 {
+		t.Error("Max(0,0) should be 0")
+	}
+}
+
+func TestAbs(t *testing.T) {
+	if Abs(-5) != 5 {
+		t.Error("Abs(-5) should be 5")
+	}
+	if Abs(5) != 5 {
+		t.Error("Abs(5) should be 5")
+	}
+	if Abs(0) != 0 {
+		t.Error("Abs(0) should be 0")
+	}
+}
+
+func TestClamp(t *testing.T) {
+	if Clamp(5, 0, 10) != 5 {
+		t.Error("Clamp(5, 0, 10) should be 5")
+	}
+	if Clamp(-1, 0, 10) != 0 {
+		t.Error("Clamp(-1, 0, 10) should be 0")
+	}
+	if Clamp(20, 0, 10) != 10 {
+		t.Error("Clamp(20, 0, 10) should be 10")
 	}
 }
 
 func TestFormatBytes(t *testing.T) {
 	tests := []struct {
-		name     string
-		bytes    int64
-		expected string
+		input int64
+		want  string
 	}{
-		{"bytes", 500, "500B"},
-		{"kilobytes", 2048, "2.0K"},
-		{"megabytes", 1048576, "1.0M"},
-		{"gigabytes", 1073741824, "1.0G"},
+		{0, "0B"},
+		{512, "512B"},
+		{1024, "1.0K"},
+		{1536, "1.5K"},
+		{1048576, "1.0M"},
+		{1073741824, "1.0G"},
+		{1099511627776, "1.0T"},
 	}
-
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := FormatBytes(tt.bytes)
-			if result != tt.expected {
-				t.Errorf("FormatBytes(%d) = %q, want %q", tt.bytes, result, tt.expected)
-			}
-		})
+		got := FormatBytes(tt.input)
+		if got != tt.want {
+			t.Errorf("FormatBytes(%d) = %q, want %q", tt.input, got, tt.want)
+		}
 	}
 }
 
 func TestFormatDuration(t *testing.T) {
 	tests := []struct {
-		name     string
-		ms       int64
-		contains string
+		input int64
+		want  string
 	}{
-		{"milliseconds", 100, "ms"},
-		{"seconds", 2500, "s"},
-		{"minutes", 125000, "m"},
+		{500, "500ms"},
+		{1000, "1.0s"},
+		{1500, "1.5s"},
+		{60000, "1m"},
+		{90000, "1m 30s"},
+		{3600000, "1h"},
+		{5400000, "1h 30m"},
 	}
-
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := FormatDuration(tt.ms)
-			if !contains(result, tt.contains) {
-				t.Errorf("FormatDuration(%d) = %q, expected to contain %q", tt.ms, result, tt.contains)
-			}
-		})
-	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
+		got := FormatDuration(tt.input)
+		if got != tt.want {
+			t.Errorf("FormatDuration(%d) = %q, want %q", tt.input, got, tt.want)
 		}
 	}
-	return false
+}
+
+func TestFormatTokens(t *testing.T) {
+	tests := []struct {
+		input int
+		want  string
+	}{
+		{0, "0"},
+		{500, "500"},
+		{1000, "1.0K"},
+		{1500, "1.5K"},
+		{1000000, "1.0M"},
+		{1500000, "1.5M"},
+		{1000000000, "1.0B"},
+	}
+	for _, tt := range tests {
+		got := FormatTokens(tt.input)
+		if got != tt.want {
+			t.Errorf("FormatTokens(%d) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestFormatTokens64(t *testing.T) {
+	tests := []struct {
+		input uint64
+		want  string
+	}{
+		{0, "0"},
+		{1000, "1.0K"},
+		{1000000, "1.0M"},
+		{1000000000, "1.0B"},
+	}
+	for _, tt := range tests {
+		got := FormatTokens64(tt.input)
+		if got != tt.want {
+			t.Errorf("FormatTokens64(%d) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
+}
+
+func TestShortenPath(t *testing.T) {
+	tests := []struct {
+		input   string
+		maxLen  int
+		wantLen int
+	}{
+		{"/usr/local/bin", 20, 14},                             // fits
+		{"/usr/local/bin/some/very/long/path/file.go", 20, 20}, // truncates
+	}
+	for _, tt := range tests {
+		got := ShortenPath(tt.input, tt.maxLen)
+		if len(got) != tt.wantLen {
+			t.Errorf("ShortenPath(%q, %d) len = %d, want %d (got %q)",
+				tt.input, tt.maxLen, len(got), tt.wantLen, got)
+		}
+	}
+}
+
+func TestGetModelFamily(t *testing.T) {
+	tests := []struct {
+		input string
+		want  string
+	}{
+		{"claude-3-opus", "claude"},
+		{"claude-3.5-sonnet", "claude"},
+		{"gpt-4-turbo", "gpt"},
+		{"gpt-3.5-turbo", "gpt"},
+		{"o1-preview", "gpt"},
+		{"gemini-pro", "gemini"},
+		{"llama-3-70b", "llama"},
+		{"qwen-2-72b", "qwen"},
+		{"deepseek-coder", "deepseek"},
+		{"mistral-large", "mistral"},
+		{"unknown-model", "other"},
+		{"", ""},
+	}
+	for _, tt := range tests {
+		got := GetModelFamily(tt.input)
+		if got != tt.want {
+			t.Errorf("GetModelFamily(%q) = %q, want %q", tt.input, got, tt.want)
+		}
+	}
 }
