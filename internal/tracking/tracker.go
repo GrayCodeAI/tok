@@ -47,8 +47,6 @@ type Tracker struct {
 // TimedExecution tracks execution time and token savings.
 type TimedExecution struct {
 	startTime time.Time
-	command   string
-	tokmanCmd string
 	once      sync.Once
 }
 
@@ -1006,7 +1004,7 @@ func (t *Tracker) GetDailySavings(projectPath string, days int) ([]struct {
 			COALESCE(SUM(original_tokens), 0) as original,
 			COUNT(*) as commands
 		FROM commands
-		WHERE (project_path LIKE ? OR project_path = ?)
+		WHERE (project_path GLOB ? OR project_path = ?)
 		  AND timestamp >= DATE('now', ?)
 		GROUP BY DATE(timestamp)
 		ORDER BY date DESC
@@ -1066,12 +1064,25 @@ func normalizeProjectPath(projectPath string) string {
 
 // escapeGLOB escapes SQLite GLOB metacharacters (*, ?, [, ])
 // so user-controlled strings are treated as literals, not wildcards.
+// Uses a single-pass approach to avoid corrupting already-escaped sequences.
 func escapeGLOB(pattern string) string {
-	pattern = strings.ReplaceAll(pattern, "[", "[[]")
-	pattern = strings.ReplaceAll(pattern, "*", "[*]")
-	pattern = strings.ReplaceAll(pattern, "?", "[?]")
-	pattern = strings.ReplaceAll(pattern, "]", "[]]")
-	return pattern
+	var b strings.Builder
+	b.Grow(len(pattern))
+	for _, r := range pattern {
+		switch r {
+		case '[':
+			b.WriteString("[[]")
+		case ']':
+			b.WriteString("[]]")
+		case '*':
+			b.WriteString("[*]")
+		case '?':
+			b.WriteString("[?]")
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 // RecordParseFailure records a parse failure event.

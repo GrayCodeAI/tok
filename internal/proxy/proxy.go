@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -141,6 +143,9 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
+	// Only cache unauthenticated requests (e.g. local proxied calls) to avoid
+	// serving one user's response to another. Authenticated requests to upstream
+	// LLM APIs are never cached since each caller may have different permissions.
 	cacheable := (apiFormat == APIFormatOpenAI || apiFormat == APIFormatAnthropic) &&
 		r.Method == http.MethodPost &&
 		r.Header.Get("Authorization") == ""
@@ -473,7 +478,11 @@ func detectAPIFormat(r *http.Request) APIFormat {
 }
 
 func requestCacheKey(body []byte, path string) string {
-	return fmt.Sprintf("%x", []byte(fmt.Sprintf("%s:%s", path, string(body))))
+	h := sha256.New()
+	h.Write([]byte(path))
+	h.Write([]byte{0}) // separator to avoid path:body collisions
+	h.Write(body)
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 func extractModelName(body []byte, format APIFormat) string {

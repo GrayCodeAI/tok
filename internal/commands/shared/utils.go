@@ -37,12 +37,15 @@ func TruncateLine(line string, maxLen int) string {
 	return line[:maxLen-3] + "..."
 }
 
-// Truncate truncates a string to maxLen characters.
+// Truncate truncates a string to maxLen characters including the "..." suffix.
 func Truncate(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	if maxLen <= 3 {
+		return "..."
+	}
+	return s[:maxLen-3] + "..."
 }
 
 // TryJSONSchema generates a JSON schema from a JSON string.
@@ -92,7 +95,7 @@ func generateSchemaFromJSON(v any, depth, maxDepth int) string {
 
 // PrintTokenSavings prints token savings info to stderr when in verbose mode.
 func PrintTokenSavings(originalTokens, filteredTokens int) {
-	if !QuietMode && Verbose > 0 {
+	if !IsQuietMode() && IsVerbose() {
 		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
 	}
 }

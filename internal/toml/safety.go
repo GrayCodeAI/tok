@@ -132,13 +132,14 @@ func ValidateFilterConfig(content string) []string {
 		errors = append(errors, "Unclosed brackets detected")
 	}
 
-	// Check for unclosed quotes
-	singleQuotes := strings.Count(content, "'")
-	doubleQuotes := strings.Count(content, "\"")
-	if singleQuotes%2 != 0 {
+	// Count unescaped quotes by subtracting escaped occurrences.
+	// TOML uses \' and \" as escape sequences inside strings.
+	unescapedSingle := strings.Count(content, "'") - strings.Count(content, "\\'")
+	unescapedDouble := strings.Count(content, "\"") - strings.Count(content, "\\\"")
+	if unescapedSingle%2 != 0 {
 		errors = append(errors, "Unclosed single quote detected")
 	}
-	if doubleQuotes%2 != 0 {
+	if unescapedDouble%2 != 0 {
 		errors = append(errors, "Unclosed double quote detected")
 	}
 
@@ -188,10 +189,13 @@ func containsShellInjection(line string) bool {
 func containsHiddenUnicode(line string) bool {
 	for _, r := range line {
 		// Zero-width characters, invisible format controls
-		if (r >= 0x200B && r <= 0x200F) ||
-			(r >= 0x202A && r <= 0x202E) ||
-			(r >= 0xFEFF && r <= 0xFEFF) ||
-			(r >= 0xFFF0 && r <= 0xFFF8) {
+		if (r >= 0x200B && r <= 0x200F) || // zero-width space, joiners, LTR/RTL marks
+			(r >= 0x202A && r <= 0x202E) || // LRE, RLE, PDF, LRO, RLO
+			(r >= 0x2060 && r <= 0x2064) || // word joiner, invisible separators
+			(r >= 0x2066 && r <= 0x2069) || // LRI, RLI, FSI, PDI
+			r == 0x00AD || // soft hyphen
+			r == 0xFEFF || // BOM / zero-width no-break space
+			(r >= 0xFFF0 && r <= 0xFFF8) { // specials
 			return true
 		}
 	}
