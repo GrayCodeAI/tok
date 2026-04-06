@@ -114,7 +114,7 @@ func runQuality(cmd *cobra.Command, args []string) error {
 }
 
 func compareAllModes(original string, originalTokens int) error {
-	fmt.Println("🔍 Comparing All Compression Modes...\n")
+	fmt.Println("🔍 Comparing All Compression Modes...")
 	
 	modes := map[string]filter.Mode{
 		"Minimal":    filter.ModeMinimal,
