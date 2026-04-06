@@ -1,0 +1,25 @@
+
+# Inline tests
+[tests]
+
+[[tests.grep]]
+name = "groups results by file"
+input = """
+./src/main.go:10:func main() {
+./src/main.go:15:	fmt.Println("Hello")
+./src/utils.go:5:func helper() {
+./README.md:100:Some text mentioning keyword
+"""
+expected = """
+./src/main.go: 2 matches
+./src/utils.go: 1 match
+./README.md: 1 match
+
+Total: 4 matches across 3 files
+"""
+
+[[tests.grep]]
+name = "no results"
+input = """
+"""
+expected = "No matches found"

@@ -14,3 +14,18 @@ expected = "Filesystem     1K-blocks   Used Available Use% Mounted on\n/dev/sda1
 name = "empty input passes through"
 input = ""
 expected = ""
+
+# Inline tests
+[tests]
+
+[[tests.df]]
+name = "compact disk usage"
+input = """
+Filesystem     1K-blocks      Used Available Use% Mounted on
+/dev/sda1      1000204800  500102400  500102400  50% /
+tmpfs            8170048         0    8170048   0% /dev
+/dev/sda2       524288000  262144000  262144000  50% /home
+"""
+expected = """/: 500G / 1000G (50% used)
+/dev: 0 / 8G (0% used)
+/home: 262G / 524G (50% used)"""
