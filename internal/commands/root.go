@@ -79,16 +79,14 @@ var (
 	streamMode    bool     // Enable streaming for large inputs
 )
 
-// Version is set via ldflags during build (also set in main.go for consistency)
-var Version = "dev"
-
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = newRootCmd()
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tokman",
-		Short: "Token-aware CLI proxy",
+		Use:     "tokman",
+		Version: shared.Version, // Set from shared.Version (injected via ldflags)
+		Short:   "Token-aware CLI proxy",
 		Long: `TokMan intercepts CLI commands and filters verbose output
 to reduce token usage in LLM interactions.
 
@@ -105,7 +103,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 			defer span.Finish()
 
 			shared.SetRootCmd(cmd)
-			shared.Version = Version
+			// Version is already set in shared.Version via ldflags
 			shared.SetConfig(struct {
 				Verbose              int
 				DryRun               bool
@@ -267,7 +265,7 @@ func init() {
 
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.Version = Version
+	// Version is already set in newRootCmd() from shared.Version
 	rootCmd.SetVersionTemplate("TokMan {{.Version}}\n")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
