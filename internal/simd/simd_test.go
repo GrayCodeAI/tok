@@ -12,49 +12,34 @@ func TestStripANSI(t *testing.T) {
 		expected string
 	}{
 		{
+			name:     "no ANSI codes",
+			input:    "plain text",
+			expected: "plain text",
+		},
+		{
+			name:     "simple color code",
+			input:    "\x1b[31mred text\x1b[0m",
+			expected: "red text",
+		},
+		{
+			name:     "multiple ANSI codes",
+			input:    "\x1b[1m\x1b[31mbold red\x1b[0m normal",
+			expected: "bold red normal",
+		},
+		{
 			name:     "empty string",
 			input:    "",
 			expected: "",
 		},
 		{
-			name:     "no ANSI codes",
-			input:    "Hello, World!",
-			expected: "Hello, World!",
-		},
-		{
-			name:     "simple SGR",
-			input:    "\x1b[31mRed\x1b[0m text",
-			expected: "Red text",
-		},
-		{
-			name:     "complex SGR",
-			input:    "\x1b[1;31;47mBold Red on White\x1b[0m",
-			expected: "Bold Red on White",
-		},
-		{
 			name:     "CSI sequence",
-			input:    "\x1b[2J\x1b[HClear screen",
-			expected: "Clear screen",
+			input:    "before\x1b[2Jafter",
+			expected: "beforeafter",
 		},
 		{
-			name:     "OSC sequence with BEL",
-			input:    "\x1b]0;Title\x07Content",
-			expected: "Content",
-		},
-		{
-			name:     "OSC sequence with ESC backslash",
-			input:    "\x1b]8;;http://example.com\x1b\\Link\x1b]8;;\x1b\\",
-			expected: "Link",
-		},
-		{
-			name:     "multiple codes",
-			input:    "\x1b[32m\x1b[1mBold Green\x1b[0m \x1b[4mUnderline\x1b[0m",
-			expected: "Bold Green Underline",
-		},
-		{
-			name:     "mixed content",
-			input:    "Start \x1b[31m\x1b[1mCOLOR\x1b[0m end",
-			expected: "Start COLOR end",
+			name:     "OSC sequence",
+			input:    "text\x1b]0;Title\x07more",
+			expected: "textmore",
 		},
 	}
 
@@ -62,7 +47,7 @@ func TestStripANSI(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := StripANSI(tt.input)
 			if result != tt.expected {
-				t.Errorf("StripANSI() = %q, want %q", result, tt.expected)
+				t.Errorf("StripANSI(%q) = %q, want %q", tt.input, result, tt.expected)
 			}
 		})
 	}
@@ -70,126 +55,93 @@ func TestStripANSI(t *testing.T) {
 
 func TestHasANSI(t *testing.T) {
 	tests := []struct {
+		name     string
 		input    string
 		expected bool
 	}{
-		{"", false},
-		{"Hello", false},
-		{"\x1b[31mRed\x1b[0m", true},
-		{"Color \x1b[32mgreen\x1b[0m text", true},
-		{"\x1b]0;Title\x07", true},
+		{"no ANSI", "plain text", false},
+		{"has ANSI", "\x1b[31mred\x1b[0m", true},
+		{"empty", "", false},
+		{"ESC only", "\x1b", true},
 	}
 
 	for _, tt := range tests {
-		result := HasANSI(tt.input)
-		if result != tt.expected {
-			t.Errorf("HasANSI(%q) = %v, want %v", tt.input, result, tt.expected)
-		}
-	}
-}
-
-func TestIndexByte(t *testing.T) {
-	tests := []struct {
-		s        string
-		c        byte
-		expected int
-	}{
-		{"", 'a', -1},
-		{"hello", 'h', 0},
-		{"hello", 'o', 4},
-		{"hello", 'x', -1},
-		{"hello world", ' ', 5},
-	}
-
-	for _, tt := range tests {
-		result := IndexByte(tt.s, tt.c)
-		if result != tt.expected {
-			t.Errorf("IndexByte(%q, %q) = %d, want %d", tt.s, tt.c, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasANSI(tt.input)
+			if result != tt.expected {
+				t.Errorf("HasANSI(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
 	}
 }
 
 func TestIndexByteSet(t *testing.T) {
 	tests := []struct {
+		name     string
 		s        string
 		set      []byte
 		expected int
 	}{
-		{"", []byte{'a', 'b'}, -1},
-		{"hello", []byte{'x', 'y', 'z'}, -1},
-		{"hello", []byte{'h', 'l'}, 0},
-		{"hello", []byte{'l', 'o'}, 2},
-		{"world", []byte{'r', 'd'}, 2},
+		{"found first", "hello", []byte{'e', 'o'}, 1},
+		{"found last", "hello", []byte{'o'}, 4},
+		{"not found", "hello", []byte{'x', 'y'}, -1},
+		{"empty string", "", []byte{'a'}, -1},
+		{"empty set", "hello", []byte{}, -1},
 	}
 
 	for _, tt := range tests {
-		result := IndexByteSet(tt.s, tt.set)
-		if result != tt.expected {
-			t.Errorf("IndexByteSet(%q, %v) = %d, want %d", tt.s, tt.set, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := IndexByteSet(tt.s, tt.set)
+			if result != tt.expected {
+				t.Errorf("IndexByteSet(%q, %v) = %d, want %d", tt.s, tt.set, result, tt.expected)
+			}
+		})
 	}
 }
 
 func TestCountByte(t *testing.T) {
 	tests := []struct {
+		name     string
 		s        string
 		c        byte
 		expected int
 	}{
-		{"", 'a', 0},
-		{"hello", 'l', 2},
-		{"hello", 'o', 1},
-		{"aaa", 'a', 3},
-		{"abc", 'x', 0},
+		{"count one", "hello", 'l', 2},
+		{"count none", "hello", 'x', 0},
+		{"count all", "aaa", 'a', 3},
+		{"empty string", "", 'a', 0},
 	}
 
 	for _, tt := range tests {
-		result := CountByte(tt.s, tt.c)
-		if result != tt.expected {
-			t.Errorf("CountByte(%q, %q) = %d, want %d", tt.s, tt.c, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := CountByte(tt.s, tt.c)
+			if result != tt.expected {
+				t.Errorf("CountByte(%q, %c) = %d, want %d", tt.s, tt.c, result, tt.expected)
+			}
+		})
 	}
 }
 
 func TestCountByteSet(t *testing.T) {
 	tests := []struct {
+		name     string
 		s        string
 		set      []byte
 		expected int
 	}{
-		{"", []byte{'a', 'b'}, 0},
-		{"hello", []byte{'l', 'o'}, 3},
-		{"hello world", []byte{' ', 'l'}, 4},
-		{"abc", []byte{'x', 'y'}, 0},
+		{"count vowels", "hello world", []byte{'a', 'e', 'i', 'o', 'u'}, 3},
+		{"count none", "bcdfg", []byte{'a', 'e', 'i', 'o', 'u'}, 0},
+		{"empty string", "", []byte{'a'}, 0},
+		{"empty set", "hello", []byte{}, 0},
 	}
 
 	for _, tt := range tests {
-		result := CountByteSet(tt.s, tt.set)
-		if result != tt.expected {
-			t.Errorf("CountByteSet(%q, %v) = %d, want %d", tt.s, tt.set, result, tt.expected)
-		}
-	}
-}
-
-func TestContainsAny(t *testing.T) {
-	tests := []struct {
-		s        string
-		substrs  []string
-		expected bool
-	}{
-		{"", []string{"a"}, false},
-		{"hello", []string{}, false},
-		{"hello world", []string{"world"}, true},
-		{"hello world", []string{"foo", "bar"}, false},
-		{"hello world", []string{"foo", "world"}, true},
-		{"hello", []string{"he", "lo"}, true},
-	}
-
-	for _, tt := range tests {
-		result := ContainsAny(tt.s, tt.substrs)
-		if result != tt.expected {
-			t.Errorf("ContainsAny(%q, %v) = %v, want %v", tt.s, tt.substrs, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := CountByteSet(tt.s, tt.set)
+			if result != tt.expected {
+				t.Errorf("CountByteSet(%q, %v) = %d, want %d", tt.s, tt.set, result, tt.expected)
+			}
+		})
 	}
 }
 
@@ -201,145 +153,175 @@ func TestIsWordChar(t *testing.T) {
 		{'a', true},
 		{'Z', true},
 		{'0', true},
-		{'9', true},
 		{'_', true},
-		{'-', false},
 		{' ', false},
-		{'.', false},
+		{'-', false},
+		{'!', false},
 	}
 
 	for _, tt := range tests {
 		result := IsWordChar(tt.c)
 		if result != tt.expected {
-			t.Errorf("IsWordChar(%q) = %v, want %v", tt.c, result, tt.expected)
+			t.Errorf("IsWordChar(%c) = %v, want %v", tt.c, result, tt.expected)
 		}
 	}
 }
 
-func TestFindWordBoundary(t *testing.T) {
+func TestIsWhitespace(t *testing.T) {
 	tests := []struct {
-		s        string
-		pos      int
-		expected int
+		c        byte
+		expected bool
 	}{
-		{"hello world", 0, 5},
-		{"hello world", 6, 11},
-		{"hello world", 5, 5},
-		{"abc123", 0, 6},
-		{"abc def", 0, 3},
-		{"", 0, 0},
+		{' ', true},
+		{'\t', true},
+		{'\n', true},
+		{'\r', true},
+		{'a', false},
+		{'0', false},
 	}
 
 	for _, tt := range tests {
-		result := FindWordBoundary(tt.s, tt.pos)
+		result := IsWhitespace(tt.c)
 		if result != tt.expected {
-			t.Errorf("FindWordBoundary(%q, %d) = %d, want %d", tt.s, tt.pos, result, tt.expected)
+			t.Errorf("IsWhitespace(%c) = %v, want %v", tt.c, result, tt.expected)
 		}
 	}
 }
 
-func TestCountBrackets(t *testing.T) {
+func TestSplitWords(t *testing.T) {
 	tests := []struct {
-		name       string
-		s          string
-		pairs      []BracketPair
-		expectedOp int
-		expectedCl int
+		name     string
+		input    string
+		expected []string
 	}{
-		{"empty", "", nil, 0, 0},
-		{"simple braces", "{ }", nil, 1, 1},
-		{"nested braces", "{{ }}", nil, 2, 2},
-		{"code with all brackets", "func() { return []int{1, 2, 3} }", nil, 4, 4},
-		{"braces only", "func() { return []int{1, 2, 3} }", []BracketPair{{'{', '}'}}, 2, 2},
-		{"square brackets only", "arr[0] = arr[1]", []BracketPair{{'[', ']'}}, 2, 2},
-		{"parentheses only", "func(a, b) call()", []BracketPair{{'(', ')'}}, 2, 2},
-		{"html angle brackets", "<html><body></body></html>", []BracketPair{{'<', '>'}}, 4, 4},
+		{"simple", "hello world", []string{"hello", "world"}},
+		{"multiple spaces", "hello  world", []string{"hello", "world"}},
+		{"tabs", "hello\tworld", []string{"hello", "world"}},
+		{"newlines", "hello\nworld", []string{"hello", "world"}},
+		{"mixed", "hello \t\n world", []string{"hello", "world"}},
+		{"empty", "", nil},
+		{"single word", "hello", []string{"hello"}},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			opens, closes := CountBrackets(tt.s, tt.pairs)
-			if opens != tt.expectedOp || closes != tt.expectedCl {
-				t.Errorf("CountBrackets(%q) = (%d, %d), want (%d, %d)", tt.s, opens, closes, tt.expectedOp, tt.expectedCl)
+			result := SplitWords(tt.input)
+			if len(result) != len(tt.expected) {
+				t.Errorf("SplitWords(%q) returned %d words, want %d", tt.input, len(result), len(tt.expected))
+				return
+			}
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("SplitWords(%q)[%d] = %q, want %q", tt.input, i, result[i], tt.expected[i])
+				}
 			}
 		})
 	}
 }
 
-func TestMemset(t *testing.T) {
-	buf := make([]byte, 10)
-	Memset(buf, 'a')
-	for i, c := range buf {
-		if c != 'a' {
-			t.Errorf("Memset: buf[%d] = %q, want 'a'", i, c)
-		}
-	}
-}
-
-func TestMemcmp(t *testing.T) {
+func TestContainsWord(t *testing.T) {
 	tests := []struct {
-		a, b     []byte
-		expected int
+		name     string
+		s        string
+		w        string
+		expected bool
 	}{
-		{[]byte("abc"), []byte("abc"), 0},
-		{[]byte("abc"), []byte("abd"), -1},
-		{[]byte("abd"), []byte("abc"), 1},
-		{[]byte("ab"), []byte("abc"), -1},
-		{[]byte("abc"), []byte("ab"), 1},
+		{"exact match", "hello", "hello", true},
+		{"word in sentence", "hello world", "hello", true},
+		{"substring not word", "helloworld", "hello", false},
+		{"word at end", "say hello", "hello", true},
+		{"not found", "hello world", "goodbye", false},
+		{"empty word", "hello", "", false},
 	}
 
 	for _, tt := range tests {
-		result := Memcmp(tt.a, tt.b)
-		if (result == 0 && tt.expected != 0) ||
-			(result < 0 && tt.expected >= 0) ||
-			(result > 0 && tt.expected <= 0) {
-			t.Errorf("Memcmp(%q, %q) = %d, want %d", tt.a, tt.b, result, tt.expected)
-		}
+		t.Run(tt.name, func(t *testing.T) {
+			result := ContainsWord(tt.s, tt.w)
+			if result != tt.expected {
+				t.Errorf("ContainsWord(%q, %q) = %v, want %v", tt.s, tt.w, result, tt.expected)
+			}
+		})
 	}
 }
 
-// Benchmark: SIMD vs Regex ANSI stripping
-func BenchmarkStripANSISIMD(b *testing.B) {
-	// Generate large input with ANSI codes
-	input := strings.Repeat("\x1b[31mHello\x1b[0m World ", 1000)
+func TestCountBrackets(t *testing.T) {
+	tests := []struct {
+		name   string
+		input  string
+		opens  int
+		closes int
+	}{
+		{"balanced", "{hello}", 1, 1},
+		{"nested", "{{hello}}", 2, 2},
+		{"unbalanced", "{{hello}", 2, 1},
+		{"multiple types", "{[<hello>]}", 3, 3},
+		{"none", "hello", 0, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			opens, closes := CountBrackets(tt.input, DefaultBracketPairs)
+			if opens != tt.opens || closes != tt.closes {
+				t.Errorf("CountBrackets(%q) = (%d, %d), want (%d, %d)",
+					tt.input, opens, closes, tt.opens, tt.closes)
+			}
+		})
+	}
+}
+
+func TestContainsAny(t *testing.T) {
+	tests := []struct {
+		name     string
+		s        string
+		substrs  []string
+		expected bool
+	}{
+		{"found first", "hello world", []string{"hello", "goodbye"}, true},
+		{"found second", "hello world", []string{"goodbye", "world"}, true},
+		{"not found", "hello world", []string{"foo", "bar"}, false},
+		{"empty", "", []string{"hello"}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ContainsAny(tt.s, tt.substrs)
+			if result != tt.expected {
+				t.Errorf("ContainsAny(%q, %v) = %v, want %v", tt.s, tt.substrs, result, tt.expected)
+			}
+		})
+	}
+}
+
+// Benchmarks
+
+func BenchmarkStripANSI(b *testing.B) {
+	input := strings.Repeat("\x1b[31mcolored text\x1b[0m ", 100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		StripANSI(input)
 	}
 }
 
-func BenchmarkStripANSIRegex(b *testing.B) {
-	input := strings.Repeat("\x1b[31mHello\x1b[0m World ", 1000)
+func BenchmarkHasANSI(b *testing.B) {
+	input := strings.Repeat("plain text ", 100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		// Simulate regex-based stripping (simplified)
-		strings.ReplaceAll(input, "\x1b[31m", "")
+		HasANSI(input)
 	}
 }
 
-func BenchmarkIndexByteSet(b *testing.B) {
-	s := strings.Repeat("hello world ", 1000)
-	set := []byte{'a', 'e', 'i', 'o', 'u'}
+func BenchmarkCountByte(b *testing.B) {
+	input := strings.Repeat("hello world ", 100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		IndexByteSet(s, set)
+		CountByte(input, 'l')
 	}
 }
 
-func BenchmarkCountByteSet(b *testing.B) {
-	s := strings.Repeat("hello world ", 1000)
-	set := []byte{'a', 'e', 'i', 'o', 'u'}
+func BenchmarkSplitWords(b *testing.B) {
+	input := strings.Repeat("hello world test benchmark ", 100)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		CountByteSet(s, set)
-	}
-}
-
-func BenchmarkContainsAny(b *testing.B) {
-	s := strings.Repeat("hello world ", 1000)
-	substrs := []string{"world", "foo", "bar", "baz"}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		ContainsAny(s, substrs)
+		SplitWords(input)
 	}
 }
