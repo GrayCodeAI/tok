@@ -23,3 +23,39 @@ max_lines = 100
 
 [rules.filter.on_empty]
 return = "All Playwright tests passed."
+
+# Inline tests
+[tests]
+
+[[tests.playwright]]
+name = "hides passing tests"  
+input = """
+Running 4 tests using 2 workers
+
+  ✓  tests/login.spec.ts:5:1 › should login (1.2s)
+  ✓  tests/login.spec.ts:10:1 › should logout (0.8s)
+  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)
+  ✓  tests/home.spec.ts:8:1 › should navigate (0.6s)
+
+  4 passed (5.1s)
+"""
+expected = "4 passed (5.1s)"
+
+[[tests.playwright]]  
+name = "shows failures"
+input = """
+Running 4 tests using 2 workers
+
+  ✓  tests/login.spec.ts:5:1 › should login (1.2s)
+  ✘  tests/login.spec.ts:15:1 › should handle error (2.1s)
+  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)
+
+  1 failed
+    tests/login.spec.ts:15:1 › should handle error
+  3 passed (4.8s)
+"""
+expected = """
+1 failed
+  tests/login.spec.ts:15:1 › should handle error
+3 passed (4.8s)
+"""
