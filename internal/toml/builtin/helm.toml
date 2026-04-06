@@ -27,3 +27,30 @@ expected = "NAME: my-release\nLAST DEPLOYED: Mon Jan 15 10:30:00 2024\nNAMESPACE
 name = "strips glog W-prefix warnings"
 input = "W0115 10:30:00 warning message from internal\nNAME: my-chart\nSTATUS: deployed"
 expected = "NAME: my-chart\nSTATUS: deployed"
+
+[tests]
+[[tests.helm]]
+name = "summarizes install"
+input = """
+NAME: my-release
+LAST DEPLOYED: Mon Apr  7 10:00:00 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+NOTES:
+1. Get the application URL by running these commands:
+  export POD_NAME=$(kubectl get pods ...)
+"""
+expected = """
+NAME: my-release
+STATUS: deployed
+REVISION: 1
+"""
+
+[[tests.helm]]
+name = "shows errors"
+input = """
+Error: INSTALLATION FAILED: unable to build kubernetes objects
+from release manifest: unable to recognize "": no matches for kind "Deployment"
+"""
+expected = "Error: INSTALLATION FAILED"

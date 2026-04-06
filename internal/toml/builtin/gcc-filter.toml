@@ -15,3 +15,22 @@ max_lines = 50
 
 [rules.filter.on_empty]
 return = "gcc: compilation successful (no errors or warnings)"
+
+[tests]
+[[tests.gcc]]
+name = "filters warnings"
+input = """
+main.c: In function 'main':
+main.c:10:5: warning: unused variable 'x' [-Wunused-variable]
+   10 |     int x;
+      |         ^
+main.c:15:5: warning: 'gets' is deprecated
+   15 |     gets(buf);
+      |     ^~~~
+/usr/bin/ld: warning: cannot find entry symbol _start
+"""
+expected = """
+main.c:10:5: warning: unused variable 'x'
+main.c:15:5: warning: 'gets' is deprecated
+/usr/bin/ld: warning: cannot find entry symbol _start
+"""
