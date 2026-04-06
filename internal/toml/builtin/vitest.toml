@@ -22,3 +22,50 @@ max_lines = 100
 
 [rules.filter.on_empty]
 return = "All tests passed."
+
+# Inline tests
+[tests]
+
+[[tests.vitest]]
+name = "hides passing tests"
+input = """
+ RUN  v1.0.0 /project
+
+ ✓ tests/basic.test.ts (2)
+   ✓ basic feature
+   ✓ edge case
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  10:00:00
+   Duration  500ms
+"""
+expected = "Test Files  1 passed (1)"
+
+[[tests.vitest]]
+name = "shows failures"
+input = """
+ RUN  v1.0.0 /project
+
+ ❯ tests/login.test.ts (2)
+   ❯ login (2)
+     × should authenticate
+     ✓ should handle error
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/login.test.ts > login > should authenticate
+AssertionError: expected true to be false
+ ❯ tests/login.test.ts:12:15
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  10:00:00
+   Duration  500ms
+"""
+expected = """
+FAIL: tests/login.test.ts > login > should authenticate
+
+Test Files  1 failed (1)
+Tests  1 failed | 1 passed (2)
+"""
