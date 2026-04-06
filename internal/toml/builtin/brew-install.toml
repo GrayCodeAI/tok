@@ -35,3 +35,28 @@ input = """
 /opt/homebrew/Cellar/jq/1.7.1: 18 files, 1.2MB
 """
 expected = "==> Summary\n/opt/homebrew/Cellar/jq/1.7.1: 18 files, 1.2MB"
+
+# Inline tests
+[tests]
+
+[[tests.brew-install]]
+name = "strips download output"
+input = """
+==> Downloading https://example.com/tool-1.0.tar.gz
+==> Pouring tool-1.0.monterey.bottle.tar.gz
+==> Summary
+/opt/homebrew/Cellar/tool/1.0: 18 files, 1.2MB
+"""
+expected = """
+==> Summary
+/opt/homebrew/Cellar/tool/1.0: 18 files, 1.2MB
+"""
+
+[[tests.brew-install]]
+name = "already installed"
+input = """
+Warning: tool 0.28.1 is already installed and up-to-date.
+To reinstall 0.28.1, run:
+  brew reinstall tool
+"""
+expected = "ok (already installed)"

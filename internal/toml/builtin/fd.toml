@@ -20,3 +20,30 @@ max_lines = 200
 
 [rules.filter.on_empty]
 return = "No files found"
+
+# Inline tests
+[tests]
+
+[[tests.fd]]
+name = "lists files"
+input = """
+src/main.go
+src/utils/helper.go
+src/utils/config.go
+test/main_test.go
+go.mod
+go.sum
+README.md
+"""
+expected = """
+src/
+├── main.go
+└── utils/
+    ├── helper.go
+    └── config.go
+test/
+└── main_test.go
+go.mod
+go.sum
+README.md
+"""

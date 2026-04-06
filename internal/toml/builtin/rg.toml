@@ -21,3 +21,25 @@ max_lines = 500
 
 [rules.filter.on_empty]
 return = "No matches found"
+
+# Inline tests
+[tests]
+
+[[tests.rg]]
+name = "groups results by file"
+input = """
+src/main.go:10:func main() {
+src/main.go:15:	fmt.Println(\"Hello\")
+src/utils.go:5:func helper() {
+README.md:100:keyword match
+"""
+expected = """
+src/main.go: 2 matches
+src/utils.go: 1 match
+README.md: 1 match
+"""
+
+[[tests.rg]]
+name = "no matches"
+input = ""
+expected = "No matches found"
