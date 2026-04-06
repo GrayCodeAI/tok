@@ -125,6 +125,21 @@ func (p *Parser) ParseContent(content []byte, source string) (*TOMLFilter, error
 	return filter, nil
 }
 
+// parseIntField extracts a numeric value from a map, handling int64, int, and float64
+// (TOML stores integer literals as int64 but `1.0` as float64).
+func parseIntField(m map[string]any, key string) int {
+	if v, ok := m[key].(int64); ok {
+		return int(v)
+	}
+	if v, ok := m[key].(int); ok {
+		return v
+	}
+	if v, ok := m[key].(float64); ok {
+		return int(v)
+	}
+	return 0
+}
+
 // parseFilterRule parses a single filter rule configuration from raw map
 func parseFilterRule(m map[string]any) (TOMLFilterRule, error) {
 	cfg := TOMLFilterRule{
@@ -140,40 +155,20 @@ func parseFilterRule(m map[string]any) (TOMLFilterRule, error) {
 	if v, ok := m["strip_ansi"].(bool); ok {
 		cfg.StripANSI = v
 	}
-	if v, ok := m["truncate_lines_at"].(int64); ok {
-		cfg.TruncateLinesAt = int(v)
-	} else if v, ok := m["truncate_lines_at"].(int); ok {
-		cfg.TruncateLinesAt = v
+	cfg.TruncateLinesAt = parseIntField(m, "truncate_lines_at")
+
+	cfg.Head = parseIntField(m, "head")
+	if cfg.Head == 0 {
+		cfg.Head = parseIntField(m, "head_lines")
 	}
-	// Support both naming conventions: head/tail (TokMan) and head_lines/tail_lines
-	if v, ok := m["head"].(int64); ok {
-		cfg.Head = int(v)
-	} else if v, ok := m["head"].(int); ok {
-		cfg.Head = v
-	} else if v, ok := m["head_lines"].(int64); ok {
-		cfg.Head = int(v)
-	} else if v, ok := m["head_lines"].(int); ok {
-		cfg.Head = v
+	cfg.Tail = parseIntField(m, "tail")
+	if cfg.Tail == 0 {
+		cfg.Tail = parseIntField(m, "tail_lines")
 	}
-	if v, ok := m["tail"].(int64); ok {
-		cfg.Tail = int(v)
-	} else if v, ok := m["tail"].(int); ok {
-		cfg.Tail = v
-	} else if v, ok := m["tail_lines"].(int64); ok {
-		cfg.Tail = int(v)
-	} else if v, ok := m["tail_lines"].(int); ok {
-		cfg.Tail = v
-	}
-	if v, ok := m["max_lines"].(int64); ok {
-		cfg.MaxLines = int(v)
-	} else if v, ok := m["max_lines"].(int); ok {
-		cfg.MaxLines = v
-	} else if v, ok := m["max_lines"].(map[string]any); ok {
-		// Handle nested format: [filters.x.max_lines] value = 30
-		if val, ok := v["value"].(int64); ok {
-			cfg.MaxLines = int(val)
-		} else if val, ok := v["value"].(int); ok {
-			cfg.MaxLines = val
+	cfg.MaxLines = parseIntField(m, "max_lines")
+	if cfg.MaxLines == 0 {
+		if v, ok := m["max_lines"].(map[string]any); ok {
+			cfg.MaxLines = parseIntField(v, "value")
 		}
 	}
 	if v, ok := m["on_empty"].(string); ok {

@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"sync"
 )
@@ -183,6 +184,7 @@ func (s *AppState) GetTokenBudget() int {
 		if _, err := fmt.Sscanf(envBudget, "%d", &b); err == nil {
 			return b
 		}
+		log.Printf("warning: invalid TOKMAN_BUDGET value %q, defaulting to unlimited", envBudget)
 	}
 	return 0
 }

@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/discover"
 )
@@ -390,11 +391,17 @@ func TestBaseCommand(t *testing.T) {
 }
 
 func TestFilterEntriesByDays(t *testing.T) {
+	now := time.Now()
+	recent := now.Add(-2 * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
+	weekAgo := now.Add(-5 * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
+	oldEntry := now.Add(-30 * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
+	veryOld := now.Add(-365 * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
+
 	entries := []AuditEntry{
-		{Timestamp: "2026-03-30T10:00:00Z"}, // recent
-		{Timestamp: "2026-03-25T10:00:00Z"}, // 6 days ago
-		{Timestamp: "2026-03-20T10:00:00Z"}, // 11 days ago
-		{Timestamp: "2026-01-01T10:00:00Z"}, // old
+		{Timestamp: recent},     // 2 days ago
+		{Timestamp: weekAgo},    // 5 days ago
+		{Timestamp: oldEntry},   // 30 days ago
+		{Timestamp: veryOld},    // 1 year ago
 	}
 
 	// 0 days = all entries
@@ -405,8 +412,8 @@ func TestFilterEntriesByDays(t *testing.T) {
 
 	// 7 days = recent entries only
 	week := filterEntriesByDays(entries, 7)
-	if len(week) < 1 {
-		t.Errorf("filterEntriesByDays(entries, 7) = %d entries, want >= 1", len(week))
+	if len(week) < 2 {
+		t.Errorf("filterEntriesByDays(entries, 7) = %d entries, want >= 2", len(week))
 	}
 
 	// 30 days = should include most entries

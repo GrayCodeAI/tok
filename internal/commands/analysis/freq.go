@@ -53,7 +53,7 @@ func runFreq(cmd *cobra.Command, args []string) error {
 	for i := 0; i < limit; i++ {
 		s := stats[i]
 		fmt.Printf("%-30s %8d %10d %7.1f%%\n",
-			truncateStr(s.Command, 30),
+			shared.Truncate(s.Command, 30),
 			s.ExecutionCount,
 			s.TotalSaved,
 			s.ReductionPct,
@@ -61,11 +61,4 @@ func runFreq(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func truncateStr(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
 }

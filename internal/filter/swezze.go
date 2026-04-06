@@ -102,7 +102,7 @@ func (f *SWEzzeFilter) scoreLine(line string, inCodeBlock bool) float64 {
 }
 
 // Name returns the layer name.
-func (f *SWEzzeFilter) Name() string { return "23_swezze" }
+func (f *SWEzzeFilter) Name() string { return "21_swezze" }
 
 var (
 	pathRe = regexp.MustCompile(`[\w./\\-]+\.(go|rs|py|ts|js|java|cpp|c|rb|toml|yaml|yml|json|xml|html|css|sql|sh|md|txt)`)

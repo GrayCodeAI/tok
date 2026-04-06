@@ -2,6 +2,7 @@ package filter
 
 import (
 	"encoding/json"
+	"strconv"
 	"strings"
 )
 
@@ -225,9 +226,9 @@ func pruneObject(obj map[string]any, keys []string) {
 }
 
 func itoa(n int) string {
-	return string(rune('0' + n%10))
+	return strconv.Itoa(n)
 }
 
-func ftoa(f float64, _ int) string {
-	return ""
+func ftoa(f float64, prec int) string {
+	return strconv.FormatFloat(f, 'f', prec, 64)
 }

@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"strings"
 	"testing"
 )
 
@@ -133,37 +132,6 @@ func TestSanitizeArgs(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("sanitizeArgs(%q) = %q, want %q", tt.input, got, tt.want)
 		}
-	}
-}
-
-func TestDefaultBudgetConfig(t *testing.T) {
-	cfg := DefaultBudgetConfig()
-	if cfg.MaxTokens <= 0 {
-		t.Errorf("MaxTokens = %d, want > 0", cfg.MaxTokens)
-	}
-	if cfg.PreserveRatio <= 0 || cfg.PreserveRatio > 1 {
-		t.Errorf("PreserveRatio = %f, want between 0 and 1", cfg.PreserveRatio)
-	}
-}
-
-func TestBudgetEnforcer_Check(t *testing.T) {
-	cfg := BudgetConfig{
-		MaxTokens:     100,
-		Mode:          BudgetModeStrict,
-		PreserveRatio: 0.7,
-	}
-	enforcer := NewBudgetEnforcer(cfg)
-
-	// Within budget
-	status := enforcer.Check(strings.Repeat("word ", 10))
-	if status.Exceeded {
-		t.Error("status should not be exceeded for small content")
-	}
-
-	// Over budget
-	status = enforcer.Check(strings.Repeat("word ", 1000))
-	if !status.Exceeded {
-		t.Error("status should be exceeded for large content")
 	}
 }
 

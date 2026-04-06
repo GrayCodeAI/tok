@@ -79,4 +79,4 @@ func (f *TokenRetentionFilter) Apply(input string, mode Mode) (string, int) {
 }
 
 // Name returns the layer name.
-func (f *TokenRetentionFilter) Name() string { return "28_token_retention" }
+func (f *TokenRetentionFilter) Name() string { return "26_token_retention" }

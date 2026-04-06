@@ -221,12 +221,12 @@ func filterMypyOutput(output string) string {
 
 			for _, err := range fe.errors {
 				if err.Code == "" {
-					result.WriteString(fmt.Sprintf("  L%d: %s\n", err.Line, truncate(err.Message, 120)))
+					result.WriteString(fmt.Sprintf("  L%d: %s\n", err.Line, shared.Truncate(err.Message, 120)))
 				} else {
-					result.WriteString(fmt.Sprintf("  L%d: [%s] %s\n", err.Line, err.Code, truncate(err.Message, 120)))
+					result.WriteString(fmt.Sprintf("  L%d: [%s] %s\n", err.Line, err.Code, shared.Truncate(err.Message, 120)))
 				}
 				for _, ctx := range err.ContextLines {
-					result.WriteString(fmt.Sprintf("    %s\n", truncate(ctx, 120)))
+					result.WriteString(fmt.Sprintf("    %s\n", shared.Truncate(ctx, 120)))
 				}
 			}
 			result.WriteString("\n")

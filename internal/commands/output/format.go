@@ -101,7 +101,8 @@ func runFormat(cmd *cobra.Command, args []string) error {
 		}
 	}
 	if !hasPath && (formatter == "prettier" || formatter == "biome") {
-		execCmd.Args = append(execCmd.Args, ".")
+		// Reconstruct args safely — mutating cmd.Args can corrupt the underlying slice
+		execCmd.Args = append(append([]string(nil), execCmd.Args...), ".")
 	}
 
 	if shared.Verbose > 0 {
@@ -141,6 +142,17 @@ func packageManagerExec(cmd string, args ...string) *exec.Cmd {
 }
 
 func detectFormatter() string {
+	// Go projects first
+	if _, err := os.Stat("go.mod"); err == nil {
+		return "gofmt"
+	}
+
+	if _, err := os.Stat("go.sum"); err == nil {
+		return "gofmt"
+	}
+
+	// JS/Node config files (check before go.mod override)
+	// biome.json has highest priority if present
 	if _, err := os.Stat("biome.json"); err == nil {
 		return "biome"
 	}
@@ -154,7 +166,11 @@ func detectFormatter() string {
 	if _, err := os.Stat(".prettierrc.js"); err == nil {
 		return "prettier"
 	}
+	if _, err := os.Stat("package.json"); err == nil {
+		return "prettier"
+	}
 
+	// Python projects
 	if _, err := os.Stat("pyproject.toml"); err == nil {
 		content, readErr := os.ReadFile("pyproject.toml")
 		if readErr != nil {
@@ -174,14 +190,6 @@ func detectFormatter() string {
 	}
 	if _, err := os.Stat(".python-version"); err == nil {
 		return "ruff"
-	}
-
-	if _, err := os.Stat("go.mod"); err == nil {
-		return "gofmt"
-	}
-
-	if _, err := os.Stat("package.json"); err == nil {
-		return "prettier"
 	}
 
 	return "prettier"

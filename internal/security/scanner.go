@@ -2,6 +2,7 @@ package security
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/GrayCodeAI/tokman/internal/utils"
@@ -167,5 +168,5 @@ func buildDefaultRules() []Rule {
 }
 
 func itoa(n int) string {
-	return string(rune('0' + n))
+	return strconv.Itoa(n)
 }

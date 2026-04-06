@@ -160,28 +160,49 @@ func (cr *CostReport) ExportToCSV(path string) error {
 	defer file.Close()
 
 	writer := csv.NewWriter(file)
-	defer writer.Flush()
+
+	writeRow := func(row []string) error {
+		if err := writer.Write(row); err != nil {
+			return fmt.Errorf("failed to write CSV row: %w", err)
+		}
+		return nil
+	}
 
 	// Write header
-	writer.Write([]string{"Date", "Tokens Saved", "Cost Saved (" + cr.Currency + ")", "Commands"})
+	if err := writeRow([]string{"Date", "Tokens Saved", "Cost Saved (" + cr.Currency + ")", "Commands"}); err != nil {
+		return err
+	}
 
 	// Write data
 	for _, day := range cr.DailyBreakdown {
-		writer.Write([]string{
+		if err := writeRow([]string{
 			day.Date,
 			fmt.Sprintf("%d", day.TokensSaved),
 			fmt.Sprintf("%.4f", day.CostSaved),
 			fmt.Sprintf("%d", day.CommandCount),
-		})
+		}); err != nil {
+			return err
+		}
 	}
 
 	// Write summary
-	writer.Write([]string{"", "", "", ""})
-	writer.Write([]string{"SUMMARY", "", "", ""})
-	writer.Write([]string{"Total Tokens Saved", fmt.Sprintf("%d", cr.TotalTokensSaved), "", ""})
-	writer.Write([]string{"Total Cost Saved", fmt.Sprintf("%.4f", cr.EstimatedSavings), cr.Currency, ""})
-	writer.Write([]string{"Monthly Projection", fmt.Sprintf("%.4f", cr.Projections.MonthlyEstimate), cr.Currency, ""})
-	writer.Write([]string{"Yearly Projection", fmt.Sprintf("%.4f", cr.Projections.YearlyEstimate), cr.Currency, ""})
+	for _, row := range [][]string{
+		{"", "", "", ""},
+		{"SUMMARY", "", "", ""},
+		{"Total Tokens Saved", fmt.Sprintf("%d", cr.TotalTokensSaved), "", ""},
+		{"Total Cost Saved", fmt.Sprintf("%.4f", cr.EstimatedSavings), cr.Currency, ""},
+		{"Monthly Projection", fmt.Sprintf("%.4f", cr.Projections.MonthlyEstimate), cr.Currency, ""},
+		{"Yearly Projection", fmt.Sprintf("%.4f", cr.Projections.YearlyEstimate), cr.Currency, ""},
+	} {
+		if err := writeRow(row); err != nil {
+			return err
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return fmt.Errorf("CSV flush error: %w", err)
+	}
 
 	return nil
 }

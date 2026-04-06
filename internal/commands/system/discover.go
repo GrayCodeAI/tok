@@ -210,7 +210,7 @@ func runDiscover() error {
 			if opp.SavingsPct > 0 {
 				pct = fmt.Sprintf("  %4.1f%% saved", opp.SavingsPct)
 			}
-			fmt.Printf("    %-30s  %3dx  [%s]%s\n", truncate(opp.Command, 30), opp.Count, opp.Category, pct)
+			fmt.Printf("    %-30s  %3dx  [%s]%s\n", shared.Truncate(opp.Command, 30), opp.Count, opp.Category, pct)
 		}
 		fmt.Println()
 	}
@@ -219,7 +219,7 @@ func runDiscover() error {
 		fmt.Printf("  %s\n", cyan("Unsupported Commands (frequent but no TokMan wrapper):"))
 		fmt.Println("  ─────────────────────────────────────────")
 		for _, cmd := range result.UnsupportedCmds {
-			fmt.Printf("    %-30s  %3dx\n", truncate(cmd.Command, 30), cmd.Count)
+			fmt.Printf("    %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)
 		}
 		fmt.Println()
 	}
@@ -230,11 +230,4 @@ func runDiscover() error {
 	}
 
 	return nil
-}
-
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
 }

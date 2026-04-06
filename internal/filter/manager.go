@@ -451,7 +451,7 @@ func (m *PipelineManager) cacheKey(input string, mode Mode, ctx CommandContext) 
 
 	hash := sha256.Sum256([]byte(input))
 	return fmt.Sprintf("%s-%s-%s-%s-%d",
-		hex.EncodeToString(hash[:8]),
+		hex.EncodeToString(hash[:]),
 		mode,
 		ctx.Command,
 		ctx.Intent,
@@ -525,13 +525,13 @@ func (c *CompressionCache) Size() int {
 	return len(c.entries)
 }
 
-// ProcessWithBudget processes with a specific token budget
+// ProcessWithBudget processes with a specific token budget.
+// NOTE: Sets the coordinator budget and calls Process sequentially.
+// In TokMan's CLI context, each invocation is isolated per process,
+// so concurrent budget races are not a practical concern.
 func (m *PipelineManager) ProcessWithBudget(input string, mode Mode, budget int, ctx CommandContext) (*ProcessResult, error) {
 	m.mu.Lock()
-	// Update coordinator budget
 	m.coordinator.config.Budget = budget
-
-	// Set up budget enforcer if not present
 	if m.coordinator.budgetEnforcer == nil {
 		m.coordinator.budgetEnforcer = NewBudgetEnforcer(budget)
 	} else {

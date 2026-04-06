@@ -138,15 +138,16 @@ func runHeatmap(records []tracking.CommandRecord) error {
 	for _, r := range records {
 		total += r.OriginalTokens
 	}
-	parts := map[string]int{
-		"System":  total / 5,
-		"Tools":   total / 4,
-		"Context": total / 3,
-		"History": total / 6,
-		"Query":   total / 12,
+	// Group by command category for breakdown
+	categoryTokens := make(map[string]int)
+	for _, r := range records {
+		fields := strings.Fields(r.Command)
+		if len(fields) > 0 {
+			categoryTokens[fields[0]] += r.OriginalTokens
+		}
 	}
 	fmt.Println("Token Heatmap:")
-	for name, val := range parts {
+	for name, val := range categoryTokens {
 		fmt.Printf("  %-10s: %8d tokens (%5.1f%%)\n", name, val, float64(val)/float64(total)*100)
 	}
 	return nil

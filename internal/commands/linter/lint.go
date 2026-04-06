@@ -220,7 +220,7 @@ func detectLinter(args []string) (string, bool) {
 func filterEslintJSON(output string) string {
 	var results []EslintResult
 	if err := json.Unmarshal([]byte(output), &results); err != nil {
-		return fmt.Sprintf("ESLint output (JSON parse failed: %s)\n%s", err, truncate(output, 500))
+		return fmt.Sprintf("ESLint output (JSON parse failed: %s)\n%s", err, shared.Truncate(output, 500))
 	}
 
 	totalErrors := 0
@@ -321,7 +321,7 @@ func filterEslintJSON(output string) string {
 func filterPylintJSON(output string) string {
 	var diagnostics []PylintDiagnostic
 	if err := json.Unmarshal([]byte(output), &diagnostics); err != nil {
-		return fmt.Sprintf("Pylint output (JSON parse failed: %s)\n%s", err, truncate(output, 500))
+		return fmt.Sprintf("Pylint output (JSON parse failed: %s)\n%s", err, shared.Truncate(output, 500))
 	}
 
 	if len(diagnostics) == 0 {
@@ -462,7 +462,7 @@ func filterGenericLint(output string) string {
 	result.WriteString("═══════════════════════════════════════\n")
 
 	for i := 0; i < 20 && i < len(issues); i++ {
-		result.WriteString(fmt.Sprintf("%s\n", truncate(issues[i], 100)))
+		result.WriteString(fmt.Sprintf("%s\n", shared.Truncate(issues[i], 100)))
 	}
 
 	if len(issues) > 20 {

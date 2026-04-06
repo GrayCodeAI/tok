@@ -126,7 +126,7 @@ func outputTable(daily []struct {
 		fmt.Println(strings.Repeat("─", 60))
 		for _, s := range stats {
 			fmt.Printf("%-20s  %-8d  %-10s  %s\n",
-				truncate(s.Command, 20),
+				shared.Truncate(s.Command, 20),
 				s.ExecutionCount,
 				green(fmt.Sprintf("%d", s.TotalSaved)),
 				green(fmt.Sprintf("%.1f%%", s.ReductionPct)),
@@ -145,7 +145,7 @@ func outputTable(daily []struct {
 			}
 			fmt.Printf("  %s %-20s saved: %s\n",
 				status,
-				truncate(r.Command, 20),
+				shared.Truncate(r.Command, 20),
 				green(fmt.Sprintf("%d", r.SavedTokens)),
 			)
 		}
@@ -163,11 +163,4 @@ func init() {
 	reportCmd.Flags().IntVarP(&reportLimit, "limit", "n", 10, "Number of recent commands to show")
 
 	reportCmd.MarkFlagsMutuallyExclusive("today", "week")
-}
-
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
 }

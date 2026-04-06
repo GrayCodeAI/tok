@@ -325,16 +325,17 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&remoteTimeout, "remote-timeout", 30,
 		"remote operation timeout in seconds (default: 30)")
 
-	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
-	viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))
-	viper.BindPFlag("llm", rootCmd.PersistentFlags().Lookup("llm"))
-	viper.BindPFlag("budget", rootCmd.PersistentFlags().Lookup("budget"))
-	viper.BindPFlag("pipeline.enable_compaction", rootCmd.PersistentFlags().Lookup("compaction"))
-	viper.BindPFlag("pipeline.compaction_threshold", rootCmd.PersistentFlags().Lookup("compaction-threshold"))
-	viper.BindPFlag("pipeline.compaction_preserve_turns", rootCmd.PersistentFlags().Lookup("compaction-preserve"))
-	viper.BindPFlag("pipeline.compaction_max_tokens", rootCmd.PersistentFlags().Lookup("compaction-max-tokens"))
-	viper.BindPFlag("pipeline.compaction_state_snapshot", rootCmd.PersistentFlags().Lookup("compaction-snapshot"))
-	viper.BindPFlag("pipeline.compaction_auto_detect", rootCmd.PersistentFlags().Lookup("compaction-auto-detect"))
+		// Bind viper to flags — errors are non-fatal (flags are defined above).
+	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
+	_ = viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))
+	_ = viper.BindPFlag("llm", rootCmd.PersistentFlags().Lookup("llm"))
+	_ = viper.BindPFlag("budget", rootCmd.PersistentFlags().Lookup("budget"))
+	_ = viper.BindPFlag("pipeline.enable_compaction", rootCmd.PersistentFlags().Lookup("compaction"))
+	_ = viper.BindPFlag("pipeline.compaction_threshold", rootCmd.PersistentFlags().Lookup("compaction-threshold"))
+	_ = viper.BindPFlag("pipeline.compaction_preserve_turns", rootCmd.PersistentFlags().Lookup("compaction-preserve"))
+	_ = viper.BindPFlag("pipeline.compaction_max_tokens", rootCmd.PersistentFlags().Lookup("compaction-max-tokens"))
+	_ = viper.BindPFlag("pipeline.compaction_state_snapshot", rootCmd.PersistentFlags().Lookup("compaction-snapshot"))
+	_ = viper.BindPFlag("pipeline.compaction_auto_detect", rootCmd.PersistentFlags().Lookup("compaction-auto-detect"))
 
 	// Custom layer configuration flags (Task 5)
 	rootCmd.PersistentFlags().StringSliceVar(&enableLayers, "enable-layer", []string{},
@@ -344,9 +345,9 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&streamMode, "stream", false,
 		"enable streaming mode for large inputs (>500K tokens)")
 
-	viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
-	viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
-	viper.BindPFlag("pipeline.streaming", rootCmd.PersistentFlags().Lookup("stream"))
+	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
+	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
+	_ = viper.BindPFlag("pipeline.streaming", rootCmd.PersistentFlags().Lookup("stream"))
 
 	registry.RegisterAll()
 }

@@ -45,7 +45,7 @@ func runClean(cmd *cobra.Command, args []string) error {
 	totalRemoved := 0
 
 	// Clean tracking data
-	if !cleanTee && !cleanReversible || cleanAll {
+	if (!cleanTee && !cleanReversible) || cleanAll {
 		tracker, err := shared.OpenTracker()
 		if err == nil {
 			defer tracker.Close()

@@ -113,4 +113,4 @@ func (f *BEAVERFilter) sectionScore(section string) float64 {
 }
 
 // Name returns the layer name.
-func (f *BEAVERFilter) Name() string { return "25_beaver" }
+func (f *BEAVERFilter) Name() string { return "23_beaver" }

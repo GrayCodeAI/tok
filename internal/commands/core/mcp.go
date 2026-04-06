@@ -76,6 +76,47 @@ type MCPReadRequest struct {
 	RelatedFiles int    `json:"related_files,omitempty"`
 }
 
+// allowedReadRoot restricts MCP file reads to a safe directory.
+var allowedReadRoot string
+
+func setAllowedReadRoot(root string) {
+	allowedReadRoot = root
+}
+
+func validateReadPath(reqPath string) (string, error) {
+	cleanPath := filepath.Clean(reqPath)
+
+	// Resolve to absolute path for comparison
+	absPath, err := filepath.Abs(cleanPath)
+	if err != nil {
+		return "", fmt.Errorf("invalid path: %w", err)
+	}
+
+	// If a read root is configured, enforce it
+	if allowedReadRoot != "" {
+		absRoot, err := filepath.Abs(allowedReadRoot)
+		if err != nil {
+			return "", fmt.Errorf("invalid read root: %w", err)
+		}
+		if !strings.HasPrefix(absPath, absRoot+string(filepath.Separator)) && absPath != absRoot {
+			return "", fmt.Errorf("path %q is outside allowed root %q", reqPath, allowedReadRoot)
+		}
+	}
+
+	// Block known sensitive paths regardless of root
+	blockedPrefixes := []string{
+		"/etc/shadow", "/etc/passwd", "/etc/sudoers",
+		"/proc/", "/sys/", "/dev/",
+	}
+	for _, prefix := range blockedPrefixes {
+		if strings.HasPrefix(absPath, prefix) || absPath == prefix[:len(prefix)-1] {
+			return "", fmt.Errorf("access to %q is not allowed", reqPath)
+		}
+	}
+
+	return cleanPath, nil
+}
+
 // MCPResponse is the response body.
 type MCPResponse struct {
 	Compressed       string  `json:"compressed"`
@@ -215,8 +256,13 @@ func newMCPHandler(apiKey string) http.Handler {
 			return
 		}
 
-		cleanPath := filepath.Clean(req.Path)
-		data, err := os.ReadFile(cleanPath)
+		validatedPath, err := validateReadPath(req.Path)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("access denied: %v", err), http.StatusForbidden)
+			return
+		}
+
+		data, err := os.ReadFile(validatedPath)
 		if err != nil {
 			http.Error(w, "unable to read file", http.StatusBadRequest)
 			return
@@ -231,7 +277,7 @@ func newMCPHandler(apiKey string) http.Handler {
 			level = "minimal"
 		}
 
-		content, originalTokens, finalTokens, err := contextread.Build(cleanPath, string(data), contextread.Options{
+		content, originalTokens, finalTokens, err := contextread.Build(validatedPath, string(data), contextread.Options{
 			Level:        level,
 			Mode:         mode,
 			MaxLines:     req.MaxLines,
@@ -252,7 +298,7 @@ func newMCPHandler(apiKey string) http.Handler {
 			saved = 0
 		}
 		resp := MCPReadResponse{
-			Path:           cleanPath,
+			Path:           validatedPath,
 			Mode:           mode,
 			Content:        content,
 			OriginalTokens: originalTokens,
@@ -262,7 +308,7 @@ func newMCPHandler(apiKey string) http.Handler {
 		}
 
 		if tracker, err := shared.OpenTracker(); err == nil {
-			meta := contextread.Describe("mcp", cleanPath, string(data), contextread.Options{
+			meta := contextread.Describe("mcp", validatedPath, string(data), contextread.Options{
 				Level:        level,
 				Mode:         mode,
 				MaxLines:     req.MaxLines,
@@ -274,7 +320,7 @@ func newMCPHandler(apiKey string) http.Handler {
 				RelatedFiles: req.RelatedFiles,
 			})
 			if err := tracker.Record(&tracking.CommandRecord{
-				Command:             fmt.Sprintf("tokman mcp read %s", cleanPath),
+				Command:             fmt.Sprintf("tokman mcp read %s", validatedPath),
 				OriginalTokens:      originalTokens,
 				FilteredTokens:      finalTokens,
 				SavedTokens:         saved,
@@ -320,8 +366,13 @@ func newMCPHandler(apiKey string) http.Handler {
 			return
 		}
 
-		cleanPath := filepath.Clean(req.Path)
-		data, err := os.ReadFile(cleanPath)
+		validatedPath, err := validateReadPath(req.Path)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("access denied: %v", err), http.StatusForbidden)
+			return
+		}
+
+		data, err := os.ReadFile(validatedPath)
 		if err != nil {
 			http.Error(w, "unable to read file", http.StatusBadRequest)
 			return
@@ -336,7 +387,7 @@ func newMCPHandler(apiKey string) http.Handler {
 			return
 		}
 
-		bundle, err := contextread.BuildBundle(cleanPath, string(data), contextread.Options{
+		bundle, err := contextread.BuildBundle(validatedPath, string(data), contextread.Options{
 			Level:        req.Level,
 			Mode:         mode,
 			MaxLines:     req.MaxLines,
@@ -368,7 +419,7 @@ func newMCPHandler(apiKey string) http.Handler {
 
 		if tracker, err := shared.OpenTracker(); err == nil {
 			if err := tracker.Record(&tracking.CommandRecord{
-				Command:             fmt.Sprintf("tokman mcp bundle %s", cleanPath),
+				Command:             fmt.Sprintf("tokman mcp bundle %s", validatedPath),
 				OriginalTokens:      bundle.OriginalTokens,
 				FilteredTokens:      bundle.FinalTokens,
 				SavedTokens:         saved,
@@ -377,7 +428,7 @@ func newMCPHandler(apiKey string) http.Handler {
 				ContextKind:         "mcp",
 				ContextMode:         "graph",
 				ContextResolvedMode: "graph",
-				ContextTarget:       cleanPath,
+				ContextTarget:       validatedPath,
 				ContextRelatedFiles: len(bundle.RelatedFiles),
 				ContextBundle:       true,
 			}); err != nil {
