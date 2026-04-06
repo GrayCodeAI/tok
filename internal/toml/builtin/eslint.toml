@@ -1,5 +1,5 @@
 [[rules]]
-match = "eslint *"
+match_command = "eslint *"
 description = "eslint - JavaScript linter"
 
 [rules.filter]

@@ -2,7 +2,7 @@
 # https://turbo.build
 
 [turbo-run]
-match = "^turbo run "
+match_command = "^turbo run "
 mode = "minimal"
 description = "Turbo monorepo build output with compact logs"
 
@@ -30,7 +30,7 @@ compact_repeated_lines = true
 max_repeated_context = 5
 
 [turbo-build]
-match = "^turbo build"
+match_command = "^turbo build"
 strip_lines_matching = [
   "^  └─",
   "^  ├─",
@@ -45,7 +45,7 @@ output_patterns = [
 ]
 
 [turbo-prune]
-match = "^turbo prune"
+match_command = "^turbo prune"
 output_patterns = [
   "^Generating pruned monorepo",
   "^  - Added",
@@ -54,7 +54,7 @@ output_patterns = [
 ]
 
 [turbo-daemon]
-match = "^turbo daemon"
+match_command = "^turbo daemon"
 output_patterns = [
   "^Daemon",
   "^Running on port",

@@ -1,5 +1,5 @@
 [[rules]]
-match = "vitest *"
+match_command = "vitest *"
 description = "vitest - fast Vite-native test runner"
 
 [rules.filter]

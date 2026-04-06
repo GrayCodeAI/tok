@@ -1,5 +1,5 @@
 [[rules]]
-match = "terraform apply *"
+match_command = "terraform apply *"
 description = "terraform apply - apply infrastructure changes"
 
 [rules.filter]

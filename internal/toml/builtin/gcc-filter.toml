@@ -1,5 +1,5 @@
 [[rules]]
-match = "gcc *"
+match_command = "gcc *"
 description = "gcc - GNU C compiler"
 
 [rules.filter]

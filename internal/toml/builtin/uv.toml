@@ -2,7 +2,7 @@
 # https://github.com/astral-sh/uv
 
 [uv]
-match = "^uv (install|add|remove|sync|lock|pip|venv|run)"
+match_command = "^uv (install|add|remove|sync|lock|pip|venv|run)"
 mode = "aggressive"
 description = "UV Python package manager with compact output"
 
@@ -34,11 +34,11 @@ collapse_stack_traces = true
 keep_first_last_trace_lines = 2
 
 [uv-lock]
-match = "^uv lock"
+match_command = "^uv lock"
 strip_lines_matching = ["^Resolved \\d+ package"]
 output_patterns = ["^Locked \\d+ package", "^Updated", "^error:"]
 
 [uv-sync]
-match = "^uv sync"
+match_command = "^uv sync"
 strip_lines_matching = ["^  ├─", "^  └─"]
 output_patterns = ["^Installed \\d+", "^Removed \\d+", "^error:"]

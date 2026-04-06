@@ -2,7 +2,7 @@
 # https://bun.sh
 
 [bun-install]
-match = "^bun (install|add|remove|update)"
+match_command = "^bun (install|add|remove|update)"
 mode = "aggressive"
 description = "Bun package manager with compact output"
 
@@ -28,12 +28,12 @@ compact_repeated_lines = true
 max_repeated_context = 2
 
 [bun-run]
-match = "^bun run "
+match_command = "^bun run "
 strip_lines_matching = ["^\\$ "]
 output_patterns = ["^error:", "^✓", "^✗", "BUILD"]
 
 [bun-test]
-match = "^bun test"
+match_command = "^bun test"
 mode = "minimal"
 output_patterns = [
   "^(✓|✗|⚠)",
@@ -46,7 +46,7 @@ strip_lines_matching = ["^  at "]
 collapse_stack_traces = true
 
 [bun-build]
-match = "^bun build"
+match_command = "^bun build"
 output_patterns = [
   "^\\[\\d+ms\\]",
   "^Build successful",

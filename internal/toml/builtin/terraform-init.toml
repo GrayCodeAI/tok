@@ -1,5 +1,5 @@
 [[rules]]
-match = "terraform init *"
+match_command = "terraform init *"
 description = "terraform init - initialize working directory"
 
 [rules.filter]

@@ -1,5 +1,5 @@
 [[rules]]
-match = "rustc *"
+match_command = "rustc *"
 description = "rustc - Rust compiler"
 
 [rules.filter]

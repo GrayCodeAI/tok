@@ -1,5 +1,5 @@
 [[rules]]
-match = "trivy *"
+match_command = "trivy *"
 description = "trivy - security vulnerability scanner"
 
 [rules.filter]

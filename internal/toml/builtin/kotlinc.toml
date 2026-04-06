@@ -1,5 +1,5 @@
 [[rules]]
-match = "kotlinc *"
+match_command = "kotlinc *"
 description = "kotlinc - Kotlin compiler"
 
 [rules.filter]

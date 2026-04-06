@@ -1,5 +1,5 @@
 [[rules]]
-match = "kubectl describe *"
+match_command = "kubectl describe *"
 description = "kubectl describe - describe Kubernetes resources"
 
 [rules.filter]

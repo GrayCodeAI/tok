@@ -1,5 +1,5 @@
 [[rules]]
-match = "rg"
+match_command = "rg"
 description = "ripgrep - fast regex search"
 
 [rules.filter]
