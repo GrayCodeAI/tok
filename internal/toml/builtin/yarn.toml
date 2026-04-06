@@ -23,3 +23,28 @@ max_lines = 50
 
 [rules.filter.on_empty]
 return = "yarn: completed"
+
+# Inline tests
+[tests]
+
+[[tests.yarn]]
+name = "summarizes install"
+input = """
+yarn install v1.22.10
+[1/4] Resolving packages...
+[2/4] Fetching packages...
+[3/4] Linking dependencies...
+warning " > react-router@5.2.0" has unmet peer dependency "react@>=15"
+[4/4] Building fresh packages...
+Done in 15.23s.
+"""
+expected = "Done in 15.23s."
+
+[[tests.yarn]]
+name = "shows errors"
+input = """
+yarn install v1.22.10
+error package.json: Name contains illegal characters
+info Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command.
+"""
+expected = "error package.json: Name contains illegal characters"

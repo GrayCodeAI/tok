@@ -47,3 +47,26 @@ max_lines = 30
 
 [rules.filter.on_empty]
 return = "ok bundle: updated"
+
+# Inline tests
+[tests]
+
+[[tests.bundle_inst]]
+name = "summarizes bundle install"
+input = """
+Fetching gem metadata from https://rubygems.org/.........
+Resolving dependencies...
+Using rake 13.0.6
+Using concurrent-ruby 1.1.10
+Installing rails 7.0.4
+Bundle complete! 20 Gemfile dependencies, 85 gems now installed.
+"""
+expected = "Bundle complete! 20 Gemfile dependencies, 85 gems now installed."
+
+[[tests.bundle_inst]]
+name = "shows errors"
+input = """
+Fetching gem metadata from https://rubygems.org/
+Could not find gem 'rails (~> 7.0.4)' in locally installed gems.
+"""
+expected = "Could not find gem 'rails (~> 7.0.4)' in locally installed gems."
