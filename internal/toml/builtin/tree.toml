@@ -1,0 +1,40 @@
+
+# Inline tests
+[tests]
+
+[[tests.tree]]
+name = "compact directory tree"
+input = """
+.
+├── src
+│   ├── main.go
+│   └── utils
+│       └── helper.go
+├── test
+│   └── main_test.go
+├── go.mod
+└── README.md
+
+3 directories, 5 files
+"""
+expected = """
+src/
+├── main.go
+└── utils/
+    └── helper.go
+test/
+└── main_test.go
+go.mod
+README.md
+
+3 directories, 5 files
+"""
+
+[[tests.tree]]
+name = "empty directory"
+input = """
+.
+
+0 directories, 0 files
+"""
+expected = "Empty directory"
