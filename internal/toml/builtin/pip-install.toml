@@ -1,5 +1,5 @@
 [[rules]]
-match = "pip install *"
+match_command = "pip install *"
 description = "pip - Python package manager"
 
 [rules.filter]

@@ -1,5 +1,5 @@
 [[rules]]
-match = "fd"
+match_command = "fd"
 description = "fd - fast file finder"
 
 [rules.filter]

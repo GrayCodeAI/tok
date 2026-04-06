@@ -1,5 +1,5 @@
 [[rules]]
-match = "kubectl logs *"
+match_command = "kubectl logs *"
 description = "kubectl logs - pod logs"
 
 [rules.filter]

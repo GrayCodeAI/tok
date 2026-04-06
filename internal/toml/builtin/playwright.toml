@@ -1,5 +1,5 @@
 [[rules]]
-match = "npx playwright test *"
+match_command = "npx playwright test *"
 description = "playwright - end-to-end testing"
 
 [rules.filter]

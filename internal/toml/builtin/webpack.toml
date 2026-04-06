@@ -1,5 +1,5 @@
 [[rules]]
-match = "webpack *"
+match_command = "webpack *"
 description = "webpack - module bundler"
 
 [rules.filter]

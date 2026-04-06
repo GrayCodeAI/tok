@@ -1,5 +1,5 @@
 [[rules]]
-match = "curl *"
+match_command = "curl *"
 description = "curl - HTTP client"
 
 [rules.filter]

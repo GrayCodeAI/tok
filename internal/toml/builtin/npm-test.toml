@@ -1,5 +1,5 @@
 [[rules]]
-match = "npm test *"
+match_command = "npm test *"
 description = "npm test - run test suite"
 
 [rules.filter]

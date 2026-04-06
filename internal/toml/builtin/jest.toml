@@ -1,5 +1,5 @@
 [[rules]]
-match = "jest *"
+match_command = "jest *"
 description = "jest - JavaScript test runner"
 
 [rules.filter]

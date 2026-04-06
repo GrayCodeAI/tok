@@ -1,5 +1,5 @@
 [[rules]]
-match = "yarn *"
+match_command = "yarn *"
 description = "yarn - package manager"
 
 [rules.filter]
