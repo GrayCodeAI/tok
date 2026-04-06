@@ -7,7 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
@@ -96,8 +98,17 @@ func runMarketplaceInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unknown filter: %s (use 'tokman marketplace search' to find filters)", name)
 	}
 
-	// Download filter
-	resp, err := http.Get(url)
+	// Download filter with security controls
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if len(via) >= 5 {
+				return fmt.Errorf("stopped after 5 redirects")
+			}
+			return nil
+		},
+	}
+	resp, err := client.Get(url)
 	if err != nil {
 		return fmt.Errorf("failed to download filter: %w", err)
 	}
@@ -107,15 +118,30 @@ func runMarketplaceInstall(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("filter not found (HTTP %d)", resp.StatusCode)
 	}
 
-	content, err := io.ReadAll(resp.Body)
+	// Validate Content-Type (allow octet-stream for raw GitHub)
+	ct := resp.Header.Get("Content-Type")
+	if ct != "" && ct != "text/plain" && ct != "application/octet-stream" && !strings.HasPrefix(ct, "text/") {
+		return fmt.Errorf("unexpected content type: %s", ct)
+	}
+
+	// Limit download size to 1MB to prevent memory exhaustion
+	const maxFilterSize = 1 * 1024 * 1024
+	limitedReader := http.MaxBytesReader(nil, resp.Body, maxFilterSize)
+	content, err := io.ReadAll(limitedReader)
 	if err != nil {
-		return fmt.Errorf("failed to read filter: %w", err)
+		return fmt.Errorf("failed to read filter (exceeded %d bytes): %w", maxFilterSize, err)
+	}
+
+	// Validate the downloaded content is valid TOML
+	var dummy map[string]any
+	if _, err := toml.Decode(string(content), &dummy); err != nil {
+		return fmt.Errorf("downloaded content is not a valid TOML filter: %w", err)
 	}
 
 	// Save to user filters directory
 	filterDir := config.FiltersDir()
 	if err := os.MkdirAll(filterDir, 0700); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
+		return fmt.Errorf("failed to create filter directory: %w", err)
 	}
 
 	filterPath := filepath.Join(filterDir, name+".toml")

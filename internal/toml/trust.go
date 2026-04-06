@@ -116,6 +116,22 @@ func (tm *TrustManager) saveLocked() error {
 	return os.WriteFile(tm.storePath, data, 0600)
 }
 
+// normalizeTrustPath resolves a path to a canonical form that is
+// as CWD-independent as possible. It always produces an absolute
+// path, but also applies EvalSymlinks so the same file reached via
+// different paths / symlinks maps to one trusted entry.
+func normalizeTrustPath(filterPath string) (string, error) {
+	absPath, err := filepath.Abs(filterPath)
+	if err != nil {
+		return "", err
+	}
+	canonical, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		return absPath, nil // no symlink to resolve, use absolute
+	}
+	return canonical, nil
+}
+
 // CheckTrust verifies if a project filter file is trusted.
 // Returns TrustStatus and any error.
 func (tm *TrustManager) CheckTrust(filterPath string) (TrustStatus, error) {
@@ -127,13 +143,13 @@ func (tm *TrustManager) CheckTrust(filterPath string) (TrustStatus, error) {
 		fmt.Fprintf(os.Stderr, "[tokman] WARNING: TOKMAN_TRUST_PROJECT_FILTERS=1 ignored (CI environment not detected)\n")
 	}
 
-	absPath, err := filepath.Abs(filterPath)
+	canonicalPath, err := normalizeTrustPath(filterPath)
 	if err != nil {
 		return TrustStatusUntrusted, fmt.Errorf("failed to resolve path: %w", err)
 	}
 
 	tm.mu.RLock()
-	entry, ok := tm.store.Trusted[absPath]
+	entry, ok := tm.store.Trusted[canonicalPath]
 	tm.mu.RUnlock()
 
 	if !ok {
@@ -154,7 +170,7 @@ func (tm *TrustManager) CheckTrust(filterPath string) (TrustStatus, error) {
 
 // TrustProject stores the current SHA-256 hash as trusted.
 func (tm *TrustManager) TrustProject(filterPath string) error {
-	absPath, err := filepath.Abs(filterPath)
+	canonicalPath, err := normalizeTrustPath(filterPath)
 	if err != nil {
 		return fmt.Errorf("failed to resolve path: %w", err)
 	}
@@ -165,7 +181,7 @@ func (tm *TrustManager) TrustProject(filterPath string) error {
 	}
 
 	tm.mu.Lock()
-	tm.store.Trusted[absPath] = TrustEntry{
+	tm.store.Trusted[canonicalPath] = TrustEntry{
 		SHA256:    hash,
 		TrustedAt: time.Now().Format(time.RFC3339),
 	}
@@ -177,15 +193,15 @@ func (tm *TrustManager) TrustProject(filterPath string) error {
 
 // UntrustProject removes trust for a project filter file.
 func (tm *TrustManager) UntrustProject(filterPath string) (bool, error) {
-	absPath, err := filepath.Abs(filterPath)
+	canonicalPath, err := normalizeTrustPath(filterPath)
 	if err != nil {
 		return false, fmt.Errorf("failed to resolve path: %w", err)
 	}
 
 	tm.mu.Lock()
-	_, ok := tm.store.Trusted[absPath]
+	_, ok := tm.store.Trusted[canonicalPath]
 	if ok {
-		delete(tm.store.Trusted, absPath)
+		delete(tm.store.Trusted, canonicalPath)
 	}
 	err = tm.saveLocked()
 	tm.mu.Unlock()

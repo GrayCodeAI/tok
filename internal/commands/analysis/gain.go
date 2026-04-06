@@ -274,15 +274,7 @@ func printDefaultView(tracker *tracking.Tracker, summary *GainSummary, projectPa
 
 	// History
 	if gainHistory {
-		histTracker, err := shared.OpenTracker()
-		if err != nil {
-			if shared.Verbose > 0 {
-				fmt.Fprintf(os.Stderr, "Warning: failed to create tracker for history: %v\n", err)
-			}
-			return
-		}
-		defer histTracker.Close()
-		recent, err := histTracker.GetRecentCommands(projectPath, 10)
+		recent, err := tracker.GetRecentCommands(projectPath, 10)
 		if err == nil && len(recent) > 0 {
 			fmt.Printf("%s\n", cyan("Recent Commands"))
 			fmt.Println(strings.Repeat("─", 60))

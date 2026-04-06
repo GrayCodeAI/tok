@@ -422,38 +422,39 @@ func Defaults() *Config {
 func Load(cfgFile string) (*Config, error) {
 	cfg := Defaults()
 
-	// Set up viper
-	viper.Reset()
-	viper.SetConfigType("toml")
+	// Use a fresh Viper instance instead of the global one to avoid
+	// destroying configuration set by other callers (e.g. tests).
+	v := viper.New()
+	v.SetConfigType("toml")
 
 	if cfgFile != "" {
-		viper.SetConfigFile(os.ExpandEnv(cfgFile))
+		v.SetConfigFile(os.ExpandEnv(cfgFile))
 	} else {
 		configDir := ConfigDir()
-		viper.AddConfigPath(configDir)
+		v.AddConfigPath(configDir)
 
 		// Keep the legacy HOME-based path as a fallback when XDG points
 		// somewhere else, so existing setups still load.
 		if home, err := os.UserHomeDir(); err == nil {
 			legacyDir := filepath.Join(home, ".config", "tokman")
 			if legacyDir != configDir {
-				viper.AddConfigPath(legacyDir)
+				v.AddConfigPath(legacyDir)
 			}
 		}
-		viper.SetConfigName("config")
+		v.SetConfigName("config")
 	}
 
 	// Environment variables: Viper handles automatic TOKMAN_* → config key mapping
 	// (e.g., TOKMAN_BUDGET → pipeline.budget). Manual aliases below exist for
 	// legacy/non-standard env var names that don't map to config keys directly.
-	viper.AutomaticEnv()
-	viper.SetEnvPrefix("TOKMAN")
+	v.AutomaticEnv()
+	v.SetEnvPrefix("TOKMAN")
 
 	// Bind non-standard env var aliases (names that don't follow the config key pattern)
-	bindEnvAliases()
+	bindEnvAliases(v)
 
 	// Read config file if it exists
-	if err := viper.ReadInConfig(); err != nil {
+	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
 			return nil, err
 		}
@@ -462,7 +463,7 @@ func Load(cfgFile string) (*Config, error) {
 	}
 
 	// Unmarshal into config struct
-	if err := viper.Unmarshal(cfg); err != nil {
+	if err := v.Unmarshal(cfg); err != nil {
 		return nil, err
 	}
 
@@ -477,47 +478,47 @@ func Load(cfgFile string) (*Config, error) {
 // bindEnvAliases maps non-standard env var names to their config keys.
 // Viper's AutomaticEnv handles standard TOKMAN_<CONFIG_KEY> mappings.
 // This function covers legacy/short env var names and values requiring transformation.
-func bindEnvAliases() {
-	aliasMap := map[string]func(string){
-		"TOKMAN_DB_PATH": func(v string) { viper.Set("tracking.database_path", v) },
-		"TOKMAN_TELEMETRY_DISABLED": func(v string) {
-			if parsed, err := strconv.ParseBool(v); err == nil {
-				viper.Set("tracking.telemetry", !parsed)
+func bindEnvAliases(v *viper.Viper) {
+	aliasMap := map[string]func(v *viper.Viper, val string){
+		"TOKMAN_DB_PATH": func(v *viper.Viper, val string) { v.Set("tracking.database_path", val) },
+		"TOKMAN_TELEMETRY_DISABLED": func(v *viper.Viper, val string) {
+			if parsed, err := strconv.ParseBool(val); err == nil {
+				v.Set("tracking.telemetry", !parsed)
 			}
 		},
-		"TOKMAN_AUDIT_DIR":  func(v string) { viper.Set("hooks.audit_dir", v) },
-		"TOKMAN_TEE_DIR":    func(v string) { viper.Set("hooks.tee_dir", v) },
-		"TOKMAN_TEE":        func(v string) { viper.Set("hooks.tee_enabled", v == "true" || v == "1") },
-		"TOKMAN_HOOK_AUDIT": func(v string) { viper.Set("hooks.audit_enabled", v == "true" || v == "1") },
-		"TOKMAN_BUDGET": func(v string) {
-			if n, err := strconv.Atoi(v); err == nil {
-				viper.Set("pipeline.default_budget", n)
+		"TOKMAN_AUDIT_DIR":  func(v *viper.Viper, val string) { v.Set("hooks.audit_dir", val) },
+		"TOKMAN_TEE_DIR":    func(v *viper.Viper, val string) { v.Set("hooks.tee_dir", val) },
+		"TOKMAN_TEE":        func(v *viper.Viper, val string) { v.Set("hooks.tee_enabled", val == "true" || val == "1") },
+		"TOKMAN_HOOK_AUDIT": func(v *viper.Viper, val string) { v.Set("hooks.audit_enabled", val == "true" || val == "1") },
+		"TOKMAN_BUDGET": func(v *viper.Viper, val string) {
+			if n, err := strconv.Atoi(val); err == nil {
+				v.Set("pipeline.default_budget", n)
 			}
 		},
-		"TOKMAN_MODE":   func(v string) { viper.Set("filter.mode", v) },
-		"TOKMAN_PRESET": func(v string) { viper.Set("pipeline.preset", v) },
-		"TOKMAN_MAX_CONTEXT": func(v string) {
-			if n, err := strconv.Atoi(v); err == nil {
-				viper.Set("pipeline.max_context_tokens", n)
+		"TOKMAN_MODE":   func(v *viper.Viper, val string) { v.Set("filter.mode", val) },
+		"TOKMAN_PRESET": func(v *viper.Viper, val string) { v.Set("pipeline.preset", val) },
+		"TOKMAN_MAX_CONTEXT": func(v *viper.Viper, val string) {
+			if n, err := strconv.Atoi(val); err == nil {
+				v.Set("pipeline.max_context_tokens", n)
 			}
 		},
-		"TOKMAN_CACHE_SIZE": func(v string) {
-			if n, err := strconv.Atoi(v); err == nil {
-				viper.Set("pipeline.cache_max_size", n)
+		"TOKMAN_CACHE_SIZE": func(v *viper.Viper, val string) {
+			if n, err := strconv.Atoi(val); err == nil {
+				v.Set("pipeline.cache_max_size", n)
 			}
 		},
-		"TOKMAN_ENTROPY_THRESHOLD": func(v string) {
-			if f, err := strconv.ParseFloat(v, 64); err == nil {
-				viper.Set("pipeline.entropy_threshold", f)
+		"TOKMAN_ENTROPY_THRESHOLD": func(v *viper.Viper, val string) {
+			if f, err := strconv.ParseFloat(val, 64); err == nil {
+				v.Set("pipeline.entropy_threshold", f)
 			}
 		},
-		"TOKMAN_COMPACTION":     func(v string) { viper.Set("pipeline.enable_compaction", v == "true" || v == "1") },
-		"TOKMAN_H2O":            func(v string) { viper.Set("pipeline.enable_h2o", v == "true" || v == "1") },
-		"TOKMAN_ATTENTION_SINK": func(v string) { viper.Set("pipeline.enable_attention_sink", v == "true" || v == "1") },
+		"TOKMAN_COMPACTION":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_compaction", val == "true" || val == "1") },
+		"TOKMAN_H2O":            func(v *viper.Viper, val string) { v.Set("pipeline.enable_h2o", val == "true" || val == "1") },
+		"TOKMAN_ATTENTION_SINK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_attention_sink", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {
 		if val := os.Getenv(env); val != "" {
-			setter(val)
+			setter(v, val)
 		}
 	}
 }

@@ -2,6 +2,7 @@ package filter
 
 import (
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/GrayCodeAI/tokman/internal/utils"
@@ -150,7 +151,7 @@ func (f *SemanticAnchorFilter) detectAnchors(tokens []string) {
 		pos   int
 	}
 
-	scores := make([]tokenScore, len(tokens))
+scores := make([]tokenScore, len(tokens))
 	for i, token := range tokens {
 		scores[i] = tokenScore{
 			token: token,
@@ -159,14 +160,15 @@ func (f *SemanticAnchorFilter) detectAnchors(tokens []string) {
 		}
 	}
 
-	// Simple sort (descending by score)
-	for i := 0; i < len(scores); i++ {
-		for j := i + 1; j < len(scores); j++ {
-			if scores[j].score > scores[i].score {
-				scores[i], scores[j] = scores[j], scores[i]
-			}
+	// Sort by score descending
+	slices.SortStableFunc(scores, func(a, b tokenScore) int {
+		if a.score > b.score {
+			return -1
+		} else if a.score < b.score {
+			return 1
 		}
-	}
+		return 0
+	})
 
 	// Select anchors with minimum spacing
 	anchorCount := int(float64(len(tokens)) * f.config.AnchorRatio)
@@ -321,14 +323,8 @@ func (f *SemanticAnchorFilter) reconstructWithAnchors(tokens []string, aggregate
 		positions[i] = a.Position
 	}
 
-	// Simple sort ascending
-	for i := 0; i < len(positions); i++ {
-		for j := i + 1; j < len(positions); j++ {
-			if positions[j] < positions[i] {
-				positions[i], positions[j] = positions[j], positions[i]
-			}
-		}
-	}
+	// Sort anchor positions ascending
+	slices.Sort(positions)
 
 	// Build output with anchors
 	var result strings.Builder

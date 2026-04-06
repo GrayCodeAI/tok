@@ -118,6 +118,15 @@ func (c *LRUCache) removeElement(elem *list.Element) {
 	c.order.Remove(elem)
 }
 
+// Delete removes a key from the cache.
+func (c *LRUCache) Delete(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if elem, ok := c.entries[key]; ok {
+		c.removeElement(elem)
+	}
+}
+
 // Stats returns cache statistics.
 func (c *LRUCache) Stats() LRUStats {
 	c.mu.RLock()

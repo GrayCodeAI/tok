@@ -132,7 +132,7 @@ func runRuff(cmd *cobra.Command, args []string) error {
 func filterRuffCheckJSON(output string) string {
 	var diagnostics []RuffDiagnostic
 	if err := json.Unmarshal([]byte(output), &diagnostics); err != nil {
-		return fmt.Sprintf("Ruff check (JSON parse failed: %s)\n%s", err, truncate(output, 500))
+		return fmt.Sprintf("Ruff check (JSON parse failed: %s)\n%s", err, shared.Truncate(output, 500))
 	}
 
 	if len(diagnostics) == 0 {

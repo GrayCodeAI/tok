@@ -195,10 +195,10 @@ func configHandler(tracker *tracking.Tracker) http.HandlerFunc {
 		}
 
 		configMu.Lock()
-		if newConfig.Port > 0 {
+		if newConfig.Port > 0 && newConfig.Port <= 65535 {
 			defaultConfig.Port = newConfig.Port
 		}
-		if newConfig.Bind != "" {
+		if newConfig.Bind != "" && (newConfig.Bind == "localhost" || newConfig.Bind == "127.0.0.1") {
 			defaultConfig.Bind = newConfig.Bind
 		}
 		if newConfig.UpdateInterval > 0 {

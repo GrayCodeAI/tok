@@ -1,18 +1,24 @@
-//go:build websocket
-// +build websocket
-
-// Package dashboard provides live real-time updates for the dashboard.
 package dashboard
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
+
+// allowedOrigins lists origins permitted for WebSocket connections.
+var allowedOrigins = []string{"localhost", "127.0.0.1"}
+
+// SetAllowedOrigins configures which origins are allowed for WebSocket.
+func SetAllowedOrigins(origins []string) {
+	allowedOrigins = origins
+}
 
 // LiveServer provides WebSocket-based live updates.
 type LiveServer struct {
@@ -40,13 +46,29 @@ type Message struct {
 	Payload interface{} `json:"payload"`
 }
 
+func isAllowedOrigin(r *http.Request) bool {
+	origin := r.Header.Get("Origin")
+	if origin == "" {
+		return true // Same-origin requests have no Origin header
+	}
+	u, err := url.Parse(origin)
+	if err != nil {
+		return false
+	}
+	host := strings.ToLower(u.Hostname())
+	for _, allowed := range allowedOrigins {
+		if host == allowed || host == strings.ToLower(allowed) {
+			return true
+		}
+	}
+	return false
+}
+
 // NewLiveServer creates a new live server.
 func NewLiveServer() *LiveServer {
 	return &LiveServer{
 		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true // Allow all origins in development
-			},
+			CheckOrigin: isAllowedOrigin,
 		},
 		clients:    make(map[*Client]bool),
 		broadcast:  make(chan Message, 256),
@@ -87,7 +109,10 @@ func (s *LiveServer) run() {
 			}
 
 		case message := <-s.broadcast:
-			data, _ := json.Marshal(message)
+			data, err := json.Marshal(message)
+			if err != nil {
+				continue
+			}
 			s.mu.RLock()
 			for client := range s.clients {
 				select {
@@ -143,10 +168,13 @@ func (s *LiveServer) BroadcastTo(clientID string, msgType string, payload interf
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	data, _ := json.Marshal(Message{
+	data, err := json.Marshal(Message{
 		Type:    msgType,
 		Payload: payload,
 	})
+	if err != nil {
+		return
+	}
 
 	for client := range s.clients {
 		if client.id == clientID {
@@ -364,8 +392,7 @@ type HeatmapCell struct {
 
 // GenerateHeatmap generates heatmap data from command history.
 func GenerateHeatmap(commands []string, window time.Duration) HeatmapData {
-	// Group by hour of day and day of week
-	hours := make([]int, 24)
+	// Group by day of week and hour of day
 	days := make([][]int, 7)
 	for i := range days {
 		days[i] = make([]int, 24)

@@ -70,4 +70,4 @@ func (f *TokenQuantFilter) Apply(input string, mode Mode) (string, int) {
 }
 
 // Name returns the layer name.
-func (f *TokenQuantFilter) Name() string { return "27_token_quant" }
+func (f *TokenQuantFilter) Name() string { return "25_token_quant" }

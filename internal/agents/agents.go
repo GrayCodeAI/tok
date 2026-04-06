@@ -444,11 +444,11 @@ optimization:
   cacheEnabled: true
   tokenBudget: 4000
 `
-	return os.WriteFile(expandPath("~/.kilorc"), []byte(config), 0600)
+	return os.WriteFile(expandPath("~/.kiro/config"), []byte(config), 0600)
 }
 
 func setupKiloCode() error {
-	// Kilo Code uses similar config to Kiro
+	// Kilo Code uses its own config path (not shared with Kiro)
 	config := `# Kilo Code Configuration with TokMan Integration
 
 hooks:

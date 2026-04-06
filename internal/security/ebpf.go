@@ -3,7 +3,9 @@ package security
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -73,12 +75,30 @@ type SIEMIntegration struct {
 	format   string
 }
 
-// NewSIEMIntegration creates a new SIEM integration.
-func NewSIEMIntegration(endpoint string) *SIEMIntegration {
+// NewSIEMIntegration creates a new SIEM integration with endpoint validation.
+func NewSIEMIntegration(endpoint string) (*SIEMIntegration, error) {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("invalid SIEM endpoint %q: %w", endpoint, err)
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return nil, fmt.Errorf("SIEM endpoint must use http or https scheme, got: %s", parsed.Scheme)
+	}
+	if parsed.Hostname() == "" {
+		return nil, fmt.Errorf("SIEM endpoint must have a valid hostname")
+	}
+	// Block private/internal network endpoints
+	host := parsed.Hostname()
+	blockedHosts := []string{"localhost", "127.0.0.1", "0.0.0.0", "169.254.169.254", "metadata.google.internal"}
+	for _, bh := range blockedHosts {
+		if host == bh {
+			return nil, fmt.Errorf("SIEM endpoint %q points to a blocked internal address", host)
+		}
+	}
 	return &SIEMIntegration{
 		endpoint: endpoint,
 		format:   "ocsf",
-	}
+	}, nil
 }
 
 // FormatOCSF formats an alert in OCSF v1.1 format.
@@ -103,6 +123,7 @@ func (si *SIEMIntegration) FormatOCSF(alert SecurityAlert) string {
 // Inspired by clawshield's decision explainability.
 type DecisionExplainability struct {
 	decisions []DecisionRecord
+	maxSize   int
 }
 
 // DecisionRecord represents a forensic audit record.
@@ -116,11 +137,20 @@ type DecisionRecord struct {
 
 // NewDecisionExplainability creates a new decision explainability system.
 func NewDecisionExplainability() *DecisionExplainability {
-	return &DecisionExplainability{}
+	return &DecisionExplainability{maxSize: 10000}
+}
+
+// NewDecisionExplainabilityWithLimit creates with a custom max size.
+func NewDecisionExplainabilityWithLimit(maxSize int) *DecisionExplainability {
+	return &DecisionExplainability{maxSize: maxSize}
 }
 
 // Record records a decision with evidence.
 func (de *DecisionExplainability) Record(action, reason string, evidence []string, confidence float64) {
+	if de.maxSize > 0 && len(de.decisions) >= de.maxSize {
+		// Drop oldest entries when at capacity
+		de.decisions = de.decisions[len(de.decisions)/2:]
+	}
 	de.decisions = append(de.decisions, DecisionRecord{
 		Action:     action,
 		Reason:     reason,
@@ -170,13 +200,14 @@ func (nf *NetworkFirewall) CheckConnection(destIP string, port int, protocol str
 			return rule.Action == "allow"
 		}
 	}
-	return true // Default allow
+	return false // Default deny
 }
 
 // ContentGuardrails implements PII and prompt injection detection.
 // Inspired by token-lens's content guardrails.
 type ContentGuardrails struct {
-	rules []GuardrailRule
+	rules         []GuardrailRule
+	compiledRegex []*regexp.Regexp
 }
 
 // GuardrailRule represents a content guardrail rule.
@@ -188,7 +219,7 @@ type GuardrailRule struct {
 
 // NewContentGuardrails creates new content guardrails.
 func NewContentGuardrails() *ContentGuardrails {
-	return &ContentGuardrails{
+	cg := &ContentGuardrails{
 		rules: []GuardrailRule{
 			{Name: "pii_email", Pattern: `[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}`, Action: "redact"},
 			{Name: "pii_phone", Pattern: `\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b`, Action: "redact"},
@@ -196,19 +227,29 @@ func NewContentGuardrails() *ContentGuardrails {
 			{Name: "jailbreak", Pattern: `(?i)(?:DAN|jailbreak|act as)`, Action: "block"},
 		},
 	}
+	// Pre-compile regexes so Check uses proper regex matching
+	for _, rule := range cg.rules {
+		re, err := regexp.Compile(rule.Pattern)
+		if err == nil {
+			cg.compiledRegex = append(cg.compiledRegex, re)
+		}
+	}
+	return cg
 }
 
 // Check checks content against guardrails.
 func (cg *ContentGuardrails) Check(content string) []SecurityAlert {
 	var alerts []SecurityAlert
-	for _, rule := range cg.rules {
-		if strings.Contains(content, rule.Pattern) || matchesRegex(content, rule.Pattern) {
-			alerts = append(alerts, SecurityAlert{
-				Type:      "guardrail_violation",
-				Severity:  "high",
-				Message:   fmt.Sprintf("Guardrail violated: %s", rule.Name),
-				Timestamp: time.Now(),
-			})
+	for i, rule := range cg.rules {
+		if i < len(cg.compiledRegex) && cg.compiledRegex[i] != nil {
+			if cg.compiledRegex[i].MatchString(content) {
+				alerts = append(alerts, SecurityAlert{
+					Type:      "guardrail_violation",
+					Severity:  "high",
+					Message:   fmt.Sprintf("Guardrail violated: %s", rule.Name),
+					Timestamp: time.Now(),
+				})
+			}
 		}
 	}
 	return alerts
@@ -229,12 +270,4 @@ func severityToID(severity string) int {
 	default:
 		return 3
 	}
-}
-
-func matchesRegex(content, pattern string) bool {
-	if strings.Contains(pattern, "(?i)") || strings.Contains(pattern, "\\b") || strings.Contains(pattern, "[") {
-		// Simple regex check - use regexp for complex patterns
-		return false
-	}
-	return strings.Contains(content, pattern)
 }

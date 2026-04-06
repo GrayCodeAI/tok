@@ -4,6 +4,7 @@ package streaming
 import (
 	"bufio"
 	"io"
+	"os"
 	"runtime"
 	"strings"
 	"sync"
@@ -234,15 +235,19 @@ func (p *Pipeline) collectResults(results <-chan Result, writer io.Writer, stats
 		stats.TotalOutput += int64(len(result.Data))
 
 		if result.Offset == nextOffset {
-			// Write immediately
-			writer.Write(result.Data)
+			// Write immediately and handle errors
+			if _, writeErr := writer.Write(result.Data); writeErr != nil {
+				continue
+			}
 			nextOffset += int64(len(result.Data))
 
 			// Check buffered results
 			for {
 				if data, ok := buffer[nextOffset]; ok {
 					prevOffset := nextOffset
-					writer.Write(data)
+					if _, writeErr := writer.Write(data); writeErr != nil {
+						return
+					}
 					nextOffset += int64(len(data))
 					delete(buffer, prevOffset)
 				} else {
@@ -309,6 +314,7 @@ func (m *MemoryMappedFile) Unmap() error {
 
 // ArenaAllocator provides arena-based memory allocation.
 type ArenaAllocator struct {
+	mu     sync.RWMutex
 	buffer []byte
 	offset int
 	size   int
@@ -324,6 +330,8 @@ func NewArena(size int) *ArenaAllocator {
 
 // Alloc allocates memory from the arena.
 func (a *ArenaAllocator) Alloc(size int) []byte {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	if a.offset+size > a.size {
 		return nil // Out of memory
 	}
@@ -335,11 +343,15 @@ func (a *ArenaAllocator) Alloc(size int) []byte {
 
 // Reset resets the arena.
 func (a *ArenaAllocator) Reset() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
 	a.offset = 0
 }
 
 // Used returns used memory.
 func (a *ArenaAllocator) Used() int {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
 	return a.offset
 }
 
@@ -490,6 +502,5 @@ func (b *stringsBuilder) String() string {
 }
 
 func osReadFile(path string) ([]byte, error) {
-	// Placeholder - use os.ReadFile in production
-	return nil, nil
+	return os.ReadFile(path)
 }

@@ -113,4 +113,4 @@ func (f *MixedDimFilter) abbreviate(w string) string {
 }
 
 // Name returns the layer name.
-func (f *MixedDimFilter) Name() string { return "24_mixed_dim" }
+func (f *MixedDimFilter) Name() string { return "22_mixed_dim" }

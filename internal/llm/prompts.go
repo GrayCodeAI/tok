@@ -1,6 +1,7 @@
 package llm
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -414,12 +415,10 @@ func (m *PromptTemplateManager) BuildPrompt(template PromptTemplate, content str
 	return result
 }
 
-// hashContent creates a simple hash for caching
+// hashContent creates a SHA-256 hash for caching (first 16 chars for brevity)
 func hashContent(content string) string {
-	if len(content) > 50 {
-		return content[:50]
-	}
-	return content
+	h := sha256.Sum256([]byte(content))
+	return fmt.Sprintf("%x", h)[:16]
 }
 
 // Custom error types

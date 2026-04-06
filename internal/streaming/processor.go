@@ -3,6 +3,7 @@ package streaming
 import (
 	"bufio"
 	"strings"
+	"sync"
 )
 
 type StreamingProcessor struct {
@@ -92,6 +93,7 @@ func (sp *StreamingProcessor) ProcessWithMetrics(input string, processor func(st
 }
 
 type BackpressureController struct {
+	mu         sync.Mutex
 	maxPending int
 	pending    int
 }
@@ -101,6 +103,8 @@ func NewBackpressureController(maxPending int) *BackpressureController {
 }
 
 func (b *BackpressureController) TryAcquire() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.pending >= b.maxPending {
 		return false
 	}
@@ -109,11 +113,15 @@ func (b *BackpressureController) TryAcquire() bool {
 }
 
 func (b *BackpressureController) Release() {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.pending > 0 {
 		b.pending--
 	}
 }
 
 func (b *BackpressureController) IsBlocked() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	return b.pending >= b.maxPending
 }

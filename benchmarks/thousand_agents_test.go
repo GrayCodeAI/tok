@@ -368,7 +368,7 @@ func launchAgent(agentID int, priority string, wg *sync.WaitGroup, semaphore cha
 		EnableAttentionSink: true,
 	}
 
-	pipeline := filter.NewParallelPipeline(cfg)
+	pipeline := filter.NewPipelineCoordinator(cfg)
 
 	// Process and measure
 	start := time.Now()

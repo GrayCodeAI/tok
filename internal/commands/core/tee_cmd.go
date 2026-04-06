@@ -55,8 +55,6 @@ var teeReadCmd = &cobra.Command{
 
 func init() {
 	registry.Add(func() { registry.Register(teeCmd) })
-	registry.Add(func() { registry.Register(teeListCmd) })
-	registry.Add(func() { registry.Register(teeReadCmd) })
 	teeCmd.AddCommand(teeListCmd, teeReadCmd)
 }
 

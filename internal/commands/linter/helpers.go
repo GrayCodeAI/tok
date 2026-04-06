@@ -6,13 +6,6 @@ import (
 	"strings"
 )
 
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
-	}
-	return s[:maxLen-3] + "..."
-}
-
 func compactPath(path string) string {
 	path = strings.ReplaceAll(path, "\\", "/")
 

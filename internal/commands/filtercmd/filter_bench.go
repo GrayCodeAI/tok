@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/toml"
 )
 
@@ -128,7 +129,7 @@ func benchmarkCommandRow(reg *toml.FilterRegistry, command, input string, iterat
 	_, _, config := reg.FindMatchingFilter(command)
 	if config == nil {
 		fmt.Printf("| %-20s | %10s | %10s | %9s | %17s |\n",
-			truncateName(command, 20), "-", "-", "no match", "-")
+			shared.Truncate(command, 20), "-", "-", "no match", "-")
 		return
 	}
 
@@ -154,7 +155,7 @@ func benchmarkCommandRow(reg *toml.FilterRegistry, command, input string, iterat
 	throughput := float64(len(input)*iterations) / totalApply.Seconds() / 1024 / 1024
 
 	fmt.Printf("| %-20s | %10d | %10d | %8.1f%% | %17.2f |\n",
-		truncateName(command, 20), avgMatch.Nanoseconds(), avgApply.Nanoseconds(), savingsPct, throughput)
+		shared.Truncate(command, 20), avgMatch.Nanoseconds(), avgApply.Nanoseconds(), savingsPct, throughput)
 }
 
 func generateBenchmarkInput() string {
@@ -177,11 +178,4 @@ Untracked files:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 `
-}
-
-func truncateName(name string, maxLen int) string {
-	if len(name) <= maxLen {
-		return name
-	}
-	return name[:maxLen-3] + "..."
 }

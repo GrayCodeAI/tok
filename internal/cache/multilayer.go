@@ -62,7 +62,7 @@ func (c *MultiLayerCache) SetString(key, value string) {
 func (c *MultiLayerCache) Delete(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.lru.Set(key, nil)
+	c.lru.Delete(key)
 	c.lfu.Delete(key)
 	c.fifo.Delete(key)
 }
