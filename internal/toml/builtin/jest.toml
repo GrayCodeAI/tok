@@ -29,3 +29,48 @@ max_lines = 100
 
 [rules.filter.on_empty]
 return = "All tests passed."
+
+# Inline tests
+[tests]
+
+[[tests.jest]]
+name = "hides passing tests"
+input = """
+ PASS  tests/basic.test.js
+  ✓ basic render (3 ms)
+  ✓ basic state (2 ms)
+ PASS  tests/api.test.js
+  ✓ fetch data (5 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       3 passed, 3 total
+Time:        0.789 s
+"""
+expected = "Test Suites: 2 passed, 2 total"
+
+[[tests.jest]]
+name = "shows failures"
+input = """
+ FAIL  tests/login.test.js (0.543 s)
+  ✕ should login (12 ms)
+  ● should login
+
+    TypeError: Cannot read properties of undefined
+
+      12 |       expect(result.user).toBeDefined();
+      13 |     });
+      at Object.login (tests/login.test.js:12:21)
+
+ PASS  tests/home.test.js
+  ✓ should render home (5 ms)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 1 passed, 2 total
+Time:        0.789 s, estimated 1 s
+"""
+expected = """
+FAIL: tests/login.test.js (0.543 s)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 1 passed, 2 total
+"""
