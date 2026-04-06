@@ -23,18 +23,7 @@ value = 50
 
 [[tests.nmap]]
 name = "nmap scan compact"
-input = """
-Starting Nmap 7.94 ( https://nmap.org ) at 2026-03-10 12:00 UTC
-Nmap scan report for example.com (93.184.216.34)
-Host is up (0.050s latency).
-Not shown: 997 filtered tcp ports
-PORT    STATE SERVICE
-80/tcp  open  http
-443/tcp open  https
-22/tcp  open  ssh
-
-Nmap done: 1 IP address (1 host up) scanned in 2.50 seconds
-"""
+input = "Starting Nmap 7.94 ( https://nmap.org ) at 2026-03-10 12:00 UTC\nNmap scan report for example.com (93.184.216.34)\nHost is up (0.050s latency).\nNot shown: 997 filtered tcp ports\nPORT    STATE SERVICE\n80/tcp  open  http\n443/tcp open  https\n22/tcp  open  ssh\n\nNmap done: 1 IP address (1 host up) scanned in 2.50 seconds"
 expected_contains = "PORT"
 
 [[tests.nmap]]

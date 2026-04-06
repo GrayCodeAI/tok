@@ -14,35 +14,15 @@ max_lines = 20
 
 [[tests.rsync]]
 name = "successful sync short-circuits to ok"
-input = """
-sending incremental file list
-./
-file1.txt
-file2.txt
-
-sent 1,234 bytes  received 42 bytes  2,552.00 bytes/sec
-total size is 98,765  speedup is 77.31
-"""
+input = "sending incremental file list\n./\nfile1.txt\nfile2.txt\n\nsent 1,234 bytes  received 42 bytes  2,552.00 bytes/sec\ntotal size is 98,765  speedup is 77.31"
 expected = "ok (synced)"
 
 [[tests.rsync]]
 name = "error lines pass through"
-input = """
-sending incremental file list
-rsync: [Receiver] mkdir "/remote/path" failed: Permission denied (13)
-rsync error: error in file system (code 11) at receiver.c(741) [Receiver=3.2.7]
-"""
-expected = """rsync: [Receiver] mkdir "/remote/path" failed: Permission denied (13)
-rsync error: error in file system (code 11) at receiver.c(741) [Receiver=3.2.7]"""
+input = "sending incremental file list\nrsync: [Receiver] mkdir \"/remote/path\" failed: Permission denied (13)\nrsync error: error in file system (code 11) at receiver.c(741) [Receiver=3.2.7]"
+expected = "rsync: [Receiver] mkdir \"/remote/path\" failed: Permission denied (13)\nrsync error: error in file system (code 11) at receiver.c(741) [Receiver=3.2.7]"
 
 [[tests.rsync]]
 name = "errors not swallowed when total size present"
-input = """
-rsync: [sender] error
-error in rsync protocol data stream (code 12)
-sent 100 bytes  received 200 bytes  60.00 bytes/sec
-total size is 1000  speedup is 3.33
-"""
-expected = """rsync: [sender] error
-error in rsync protocol data stream (code 12)
-total size is 1000  speedup is 3.33"""
+input = "rsync: [sender] error\nerror in rsync protocol data stream (code 12)\nsent 100 bytes  received 200 bytes  60.00 bytes/sec\ntotal size is 1000  speedup is 3.33"
+expected = "rsync: [sender] error\nerror in rsync protocol data stream (code 12)\ntotal size is 1000  speedup is 3.33"

@@ -16,35 +16,15 @@ max_lines = 30
 
 [[tests.poetry-install]]
 name = "up to date short-circuits"
-input = """
-Installing dependencies from lock file
-
-No dependencies to install or update
-"""
+input = "Installing dependencies from lock file\n\nNo dependencies to install or update"
 expected = "ok (up to date)"
 
 [[tests.poetry-install]]
 name = "poetry 2.x bullet syntax short-circuits to ok"
-input = """
-• Installing requests (2.31.0)
-• Installing certifi (2023.11.17)
-
-No changes.
-"""
+input = "• Installing requests (2.31.0)\n• Installing certifi (2023.11.17)\n\nNo changes."
 expected = "ok (up to date)"
 
 [[tests.poetry-install]]
 name = "install strips download lines"
-input = """
-Installing dependencies from lock file
-
-  - Downloading requests-2.31.0-py3-none-any.whl (62.6 kB)
-  - Installing certifi (2023.11.17)
-  - Installing charset-normalizer (3.3.2)
-  - Installing idna (3.6)
-  - Installing urllib3 (2.1.0)
-  - Installing requests (2.31.0)
-
-Writing lock file
-"""
+input = "Installing dependencies from lock file\n\n  - Downloading requests-2.31.0-py3-none-any.whl (62.6 kB)\n  - Installing certifi (2023.11.17)\n  - Installing charset-normalizer (3.3.2)\n  - Installing idna (3.6)\n  - Installing urllib3 (2.1.0)\n  - Installing requests (2.31.0)\n\nWriting lock file"
 expected = "Installing dependencies from lock file\nWriting lock file"

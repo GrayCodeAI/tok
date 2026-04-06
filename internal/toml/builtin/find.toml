@@ -4,35 +4,10 @@
 
 [[tests.find]]
 name = "compact tree output"
-input = """
-./src
-./src/main.go
-./src/utils
-./src/utils/helper.go
-./src/utils/config.go
-./go.mod
-./go.sum
-./README.md
-"""
-expected = """
-src/
-├── main.go
-└── utils/
-    ├── helper.go
-    └── config.go
-go.mod
-go.sum
-README.md
-"""
+input = "./src\n./src/main.go\n./src/utils\n./src/utils/helper.go\n./src/utils/config.go\n./go.mod\n./go.sum\n./README.md"
+expected = "src/\n├── main.go\n└── utils/\n    ├── helper.go\n    └── config.go\ngo.mod\ngo.sum\nREADME.md"
 
 [[tests.find]]
 name = "filtered by extension"
-input = """
-./src/main.go
-./src/utils/helper.go
-./src/utils/config.go
-./src/test/main_test.go
-"""
-expected = """
-3 Go files found
-"""
+input = "./src/main.go\n./src/utils/helper.go\n./src/utils/config.go\n./src/test/main_test.go"
+expected = "3 Go files found"

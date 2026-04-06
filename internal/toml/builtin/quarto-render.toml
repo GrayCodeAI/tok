@@ -19,23 +19,10 @@ max_lines = 20
 
 [[tests.quarto-render]]
 name = "success short-circuits to ok"
-input = """
-processing file: index.qmd
-  Validating schema
-  Resolving resources
-pandoc to html5
-Output created: _site/index.html
-"""
+input = "processing file: index.qmd\n  Validating schema\n  Resolving resources\npandoc to html5\nOutput created: _site/index.html"
 expected = "ok (output created)"
 
 [[tests.quarto-render]]
 name = "error passes through"
-input = """
-processing file: broken.qmd
-  Validating schema
-ERROR: Render failed
-
-caused by:
-  syntax error at line 10
-"""
+input = "processing file: broken.qmd\n  Validating schema\nERROR: Render failed\n\ncaused by:\n  syntax error at line 10"
 expected = "ERROR: Render failed\ncaused by:\n  syntax error at line 10"

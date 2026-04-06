@@ -24,22 +24,5 @@ return = "rustc: compilation successful"
 [tests]
 [[tests.rustc]]
 name = "shows compilation errors"
-input = """
-error[E0425]: cannot find function `foo` in this scope
-  --> src/main.rs:10:5
-   |
-10 |     foo();
-   |     ^^^ not found in this scope
-
-warning: unused variable: `x`
-  --> src/main.rs:5:9
-   |
-5  |     let x = 5;
-   |         ^ help: if this is intentional, prefix it with an underscore: `_x`
-
-error: aborting due to previous error; 1 warning emitted
-"""
-expected = """
-error[E0425]: cannot find function `foo` in this scope
-warning: unused variable: `x`
-"""
+input = "error[E0425]: cannot find function `foo` in this scope\n  --> src/main.rs:10:5\n   |\n10 |     foo();\n   |     ^^^ not found in this scope\n\nwarning: unused variable: `x`\n  --> src/main.rs:5:9\n   |\n5  |     let x = 5;\n   |         ^ help: if this is intentional, prefix it with an underscore: `_x`\n\nerror: aborting due to previous error; 1 warning emitted"
+expected = "error[E0425]: cannot find function `foo` in this scope\nwarning: unused variable: `x`"

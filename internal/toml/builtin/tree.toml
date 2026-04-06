@@ -4,37 +4,10 @@
 
 [[tests.tree]]
 name = "compact directory tree"
-input = """
-.
-├── src
-│   ├── main.go
-│   └── utils
-│       └── helper.go
-├── test
-│   └── main_test.go
-├── go.mod
-└── README.md
-
-3 directories, 5 files
-"""
-expected = """
-src/
-├── main.go
-└── utils/
-    └── helper.go
-test/
-└── main_test.go
-go.mod
-README.md
-
-3 directories, 5 files
-"""
+input = ".\n├── src\n│   ├── main.go\n│   └── utils\n│       └── helper.go\n├── test\n│   └── main_test.go\n├── go.mod\n└── README.md\n\n3 directories, 5 files"
+expected = "src/\n├── main.go\n└── utils/\n    └── helper.go\ntest/\n└── main_test.go\ngo.mod\nREADME.md\n\n3 directories, 5 files"
 
 [[tests.tree]]
 name = "empty directory"
-input = """
-.
-
-0 directories, 0 files
-"""
+input = ".\n\n0 directories, 0 files"
 expected = "Empty directory"

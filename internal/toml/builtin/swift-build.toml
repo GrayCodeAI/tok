@@ -14,28 +14,15 @@ max_lines = 40
 
 [[tests.swift-build]]
 name = "successful build short-circuits to ok"
-input = """
-Build complete!
-"""
+input = "Build complete!"
 expected = "ok (build complete)"
 
 [[tests.swift-build]]
 name = "build errors pass through after stripping noise"
-input = """
-Compiling MyApp MyApp.swift
-/home/user/MyApp/Sources/MyApp/main.swift:5:1: error: use of unresolved identifier 'foo'
-foo()
-^~~
-Linking MyApp
-error: build had 1 command failure
-"""
+input = "Compiling MyApp MyApp.swift\n/home/user/MyApp/Sources/MyApp/main.swift:5:1: error: use of unresolved identifier 'foo'\nfoo()\n^~~\nLinking MyApp\nerror: build had 1 command failure"
 expected = "/home/user/MyApp/Sources/MyApp/main.swift:5:1: error: use of unresolved identifier 'foo'\nfoo()\n^~~\nerror: build had 1 command failure"
 
 [[tests.swift-build]]
 name = "warnings not swallowed when Build complete present"
-input = """
-CompileSwift normal x86_64 MyFile.swift
-/path/to/MyFile.swift:42:10: warning: unused variable 'x'
-Build complete! (with warnings)
-"""
+input = "CompileSwift normal x86_64 MyFile.swift\n/path/to/MyFile.swift:42:10: warning: unused variable 'x'\nBuild complete! (with warnings)"
 expected = "CompileSwift normal x86_64 MyFile.swift\n/path/to/MyFile.swift:42:10: warning: unused variable 'x'\nBuild complete! (with warnings)"

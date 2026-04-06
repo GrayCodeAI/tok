@@ -29,33 +29,10 @@ return = "All Playwright tests passed."
 
 [[tests.playwright]]
 name = "hides passing tests"  
-input = """
-Running 4 tests using 2 workers
-
-  ✓  tests/login.spec.ts:5:1 › should login (1.2s)
-  ✓  tests/login.spec.ts:10:1 › should logout (0.8s)
-  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)
-  ✓  tests/home.spec.ts:8:1 › should navigate (0.6s)
-
-  4 passed (5.1s)
-"""
+input = "Running 4 tests using 2 workers\n\n  ✓  tests/login.spec.ts:5:1 › should login (1.2s)\n  ✓  tests/login.spec.ts:10:1 › should logout (0.8s)\n  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)\n  ✓  tests/home.spec.ts:8:1 › should navigate (0.6s)\n\n  4 passed (5.1s)"
 expected = "4 passed (5.1s)"
 
 [[tests.playwright]]  
 name = "shows failures"
-input = """
-Running 4 tests using 2 workers
-
-  ✓  tests/login.spec.ts:5:1 › should login (1.2s)
-  ✘  tests/login.spec.ts:15:1 › should handle error (2.1s)
-  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)
-
-  1 failed
-    tests/login.spec.ts:15:1 › should handle error
-  3 passed (4.8s)
-"""
-expected = """
-1 failed
-  tests/login.spec.ts:15:1 › should handle error
-3 passed (4.8s)
-"""
+input = "Running 4 tests using 2 workers\n\n  ✓  tests/login.spec.ts:5:1 › should login (1.2s)\n  ✘  tests/login.spec.ts:15:1 › should handle error (2.1s)\n  ✓  tests/home.spec.ts:3:1 › should load home (0.5s)\n\n  1 failed\n    tests/login.spec.ts:15:1 › should handle error\n  3 passed (4.8s)"
+expected = "1 failed\n  tests/login.spec.ts:15:1 › should handle error\n3 passed (4.8s)"

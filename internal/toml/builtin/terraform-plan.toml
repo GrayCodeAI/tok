@@ -14,19 +14,7 @@ on_empty = "terraform plan: no changes detected"
 
 [[tests.terraform-plan]]
 name = "strips Refreshing state lines and blank lines"
-input = """
-Acquiring state lock. This may take a few moments...
-Refreshing state... [id=vpc-abc]
-Refreshing state... [id=sg-123]
-Releasing state lock. This may take a few moments...
-
-Terraform will perform the following actions:
-
-  # aws_instance.web will be created
-  + resource "aws_instance" "web" {}
-
-Plan: 1 to add, 0 to change, 0 to destroy.
-"""
+input = "Acquiring state lock. This may take a few moments...\nRefreshing state... [id=vpc-abc]\nRefreshing state... [id=sg-123]\nReleasing state lock. This may take a few moments...\n\nTerraform will perform the following actions:\n\n  # aws_instance.web will be created\n  + resource \"aws_instance\" \"web\" {}\n\nPlan: 1 to add, 0 to change, 0 to destroy."
 expected = "Terraform will perform the following actions:\n  # aws_instance.web will be created\n  + resource \"aws_instance\" \"web\" {}\nPlan: 1 to add, 0 to change, 0 to destroy."
 
 [[tests.terraform-plan]]

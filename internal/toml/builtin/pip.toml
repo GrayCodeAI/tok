@@ -49,18 +49,8 @@ max_lines = 200
 [tests]
 [[tests.pip]]
 name = "summarizes list"
-input = """
-Package           Version   Latest   Type
------------------ --------  -------  -----
-requests          2.31.0    2.31.0   up to date
-flask             2.3.0     3.0.0    minor
-numpy             1.24.0    1.26.0   minor
-"""
-expected = """
-requests: 2.31.0 ✓
-flask: 2.3.0 → 3.0.0 (upgrade available)
-numpy: 1.24.0 → 1.26.0 (upgrade available)
-"""
+input = "Package           Version   Latest   Type\n----------------- --------  -------  -----\nrequests          2.31.0    2.31.0   up to date\nflask             2.3.0     3.0.0    minor\nnumpy             1.24.0    1.26.0   minor"
+expected = "requests: 2.31.0 ✓\nflask: 2.3.0 → 3.0.0 (upgrade available)\nnumpy: 1.24.0 → 1.26.0 (upgrade available)"
 
 [[tests.pip]]
 name = "no packages"

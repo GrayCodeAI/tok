@@ -35,58 +35,14 @@ return = "All tests passed."
 
 [[tests.jest]]
 name = "hides passing tests"
-input = """
- PASS  tests/basic.test.js
-  ✓ basic render (3 ms)
-  ✓ basic state (2 ms)
- PASS  tests/api.test.js
-  ✓ fetch data (5 ms)
-
-Test Suites: 2 passed, 2 total
-Tests:       3 passed, 3 total
-Time:        0.789 s
-"""
+input = " PASS  tests/basic.test.js\n  ✓ basic render (3 ms)\n  ✓ basic state (2 ms)\n PASS  tests/api.test.js\n  ✓ fetch data (5 ms)\n\nTest Suites: 2 passed, 2 total\nTests:       3 passed, 3 total\nTime:        0.789 s"
 expected = "Test Suites: 2 passed, 2 total"
 
 [[tests.jest]]
 name = "shows failures"
-input = """
- FAIL  tests/login.test.js (0.543 s)
-  ✕ should login (12 ms)
-  ● should login
-
-    TypeError: Cannot read properties of undefined
-
-      12 |       expect(result.user).toBeDefined();
-      13 |     });
-      at Object.login (tests/login.test.js:12:21)
-
- PASS  tests/home.test.js
-  ✓ should render home (5 ms)
-
-Test Suites: 1 failed, 1 passed, 2 total
-Tests:       1 failed, 1 passed, 2 total
-Time:        0.789 s, estimated 1 s
-"""
-expected = """
-FAIL: tests/login.test.js (0.543 s)
-
-Test Suites: 1 failed, 1 passed, 2 total
-Tests:       1 failed, 1 passed, 2 total
-"""
+input = " FAIL  tests/login.test.js (0.543 s)\n  ✕ should login (12 ms)\n  ● should login\n\n    TypeError: Cannot read properties of undefined\n\n      12 |       expect(result.user).toBeDefined();\n      13 |     });\n      at Object.login (tests/login.test.js:12:21)\n\n PASS  tests/home.test.js\n  ✓ should render home (5 ms)\n\nTest Suites: 1 failed, 1 passed, 2 total\nTests:       1 failed, 1 passed, 2 total\nTime:        0.789 s, estimated 1 s"
+expected = "FAIL: tests/login.test.js (0.543 s)\n\nTest Suites: 1 failed, 1 passed, 2 total\nTests:       1 failed, 1 passed, 2 total"
 [[tests.jest]]
 name = "shows test suite failures"
-input = """
- FAIL  tests/auth.test.js
-  ● should validate token
-    expect(received).toBeTruthy()
-    Received: false
-      at Object.<anonymous> (tests/auth.test.js:25:18)
-Test Suites: 1 failed, 3 passed, 4 total
-Tests:       1 failed, 12 passed, 13 total
-"""
-expected = """
-FAIL: tests/auth.test.js › should validate token
-Test Suites: 1 failed, 3 passed, 4 total
-Tests:       1 failed, 12 passed, 13 total
-"""
+input = " FAIL  tests/auth.test.js\n  ● should validate token\n    expect(received).toBeTruthy()\n    Received: false\n      at Object.<anonymous> (tests/auth.test.js:25:18)\nTest Suites: 1 failed, 3 passed, 4 total\nTests:       1 failed, 12 passed, 13 total"
+expected = "FAIL: tests/auth.test.js › should validate token\nTest Suites: 1 failed, 3 passed, 4 total\nTests:       1 failed, 12 passed, 13 total"

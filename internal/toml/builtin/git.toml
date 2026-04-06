@@ -78,119 +78,35 @@ max_lines = 20
 
 [[tests.git_status]]
 name = "clean working tree"
-input = """
-On branch main
-Your branch is up to date with 'origin/main'.
-
-nothing to commit, working tree clean
-"""
-expected = """
-On branch main
-nothing to commit, working tree clean
-"""
+input = "On branch main\nYour branch is up to date with 'origin/main'.\n\nnothing to commit, working tree clean"
+expected = "On branch main\nnothing to commit, working tree clean"
 
 [[tests.git_status]]
 name = "modified files"
-input = """
-On branch main
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   README.md
-	modified:   src/main.go
-
-no changes added to commit (use "git add" and/or "git commit -a")
-"""
-expected = """
-On branch main
-Changes not staged for commit:
-	modified:   README.md
-	modified:   src/main.go
-"""
+input = "On branch main\nChanges not staged for commit:\n  (use \"git add <file>...\" to update what will be committed)\n  (use \"git restore <file>...\" to discard changes in working directory)\n	modified:   README.md\n	modified:   src/main.go\n\nno changes added to commit (use \"git add\" and/or \"git commit -a\")"
+expected = "On branch main\nChanges not staged for commit:\n	modified:   README.md\n	modified:   src/main.go"
 
 [[tests.git_status]]
 name = "untracked files"
-input = """
-On branch develop
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-	new-feature.go
-	test.txt
-
-nothing added to commit but untracked files present (use "git add" to track)
-"""
-expected = """
-On branch develop
-Untracked files:
-	new-feature.go
-	test.txt
-"""
+input = "On branch develop\nUntracked files:\n  (use \"git add <file>...\" to include in what will be committed)\n	new-feature.go\n	test.txt\n\nnothing added to commit but untracked files present (use \"git add\" to track)"
+expected = "On branch develop\nUntracked files:\n	new-feature.go\n	test.txt"
 
 [[tests.git_log]]
 name = "strips metadata"
-input = """
-commit abc123def456
-Author: John Doe <john@example.com>
-Date:   Mon Apr 7 12:00:00 2026 -0700
-
-    Add new feature
-    
-commit 789ghi012jkl
-Author: Jane Smith <jane@example.com>
-Date:   Sun Apr 6 15:30:00 2026 -0700
-
-    Fix bug in parser
-"""
-expected = """
-    Add new feature
-    Fix bug in parser
-"""
+input = "commit abc123def456\nAuthor: John Doe <john@example.com>\nDate:   Mon Apr 7 12:00:00 2026 -0700\n\n    Add new feature\n    \ncommit 789ghi012jkl\nAuthor: Jane Smith <jane@example.com>\nDate:   Sun Apr 6 15:30:00 2026 -0700\n\n    Fix bug in parser"
+expected = "    Add new feature\n    Fix bug in parser"
 
 [[tests.git_diff]]
 name = "shows additions and deletions"
-input = """
-diff --git a/file.txt b/file.txt
-index abc123..def456 100644
---- a/file.txt
-+++ b/file.txt
-@@ -1,3 +1,4 @@
- Hello
--World
-+Universe
-+New line
-"""
-expected = """
-diff --git a/file.txt b/file.txt
---- a/file.txt
-+++ b/file.txt
-@@ -1,3 +1,4 @@
- Hello
--World
-+Universe
-+New line
-"""
+input = "diff --git a/file.txt b/file.txt\nindex abc123..def456 100644\n--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,4 @@\n Hello\n-World\n+Universe\n+New line"
+expected = "diff --git a/file.txt b/file.txt\n--- a/file.txt\n+++ b/file.txt\n@@ -1,3 +1,4 @@\n Hello\n-World\n+Universe\n+New line"
 
 [[tests.git_branch]]
 name = "strips empty lines"
-input = """
-  feature-branch
-* main
-
-  develop
-"""
-expected = """
-  feature-branch
-* main
-  develop
-"""
+input = "  feature-branch\n* main\n\n  develop"
+expected = "  feature-branch\n* main\n  develop"
 
 [[tests.git_remote]]
 name = "lists remotes"
-input = """
-origin
-upstream
-"""
-expected = """
-origin
-upstream
-"""
+input = "origin\nupstream"
+expected = "origin\nupstream"

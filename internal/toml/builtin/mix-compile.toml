@@ -12,13 +12,7 @@ on_empty = "mix compile: ok"
 
 [[tests.mix-compile]]
 name = "strips compile noise, preserves warnings"
-input = """
-Compiling 12 files (.ex)
-Generated my_app app
-
-warning: variable "conn" is unused
-  lib/router.ex:42
-"""
+input = "Compiling 12 files (.ex)\nGenerated my_app app\n\nwarning: variable \"conn\" is unused\n  lib/router.ex:42"
 expected = "warning: variable \"conn\" is unused\n  lib/router.ex:42"
 
 [[tests.mix-compile]]

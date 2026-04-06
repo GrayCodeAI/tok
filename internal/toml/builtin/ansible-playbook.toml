@@ -13,21 +13,7 @@ max_lines = 60
 
 [[tests.ansible_playbook]]
 name = "strips ok and skipping lines, keeps changed and failures"
-input = """
-PLAY [all] *********************************************************************
-
-TASK [Gathering Facts] *********************************************************
-ok: [web01]
-ok: [web02]
-
-TASK [Install nginx] ***********************************************************
-changed: [web01]
-skipping: [web02]
-
-PLAY RECAP *********************************************************************
-web01                      : ok=2    changed=1    unreachable=0    failed=0
-web02                      : ok=1    changed=0    unreachable=0    failed=0
-"""
+input = "PLAY [all] *********************************************************************\n\nTASK [Gathering Facts] *********************************************************\nok: [web01]\nok: [web02]\n\nTASK [Install nginx] ***********************************************************\nchanged: [web01]\nskipping: [web02]\n\nPLAY RECAP *********************************************************************\nweb01                      : ok=2    changed=1    unreachable=0    failed=0\nweb02                      : ok=1    changed=0    unreachable=0    failed=0"
 expected = "PLAY [all] *********************************************************************\nTASK [Gathering Facts] *********************************************************\nTASK [Install nginx] ***********************************************************\nchanged: [web01]\nPLAY RECAP *********************************************************************\nweb01                      : ok=2    changed=1    unreachable=0    failed=0\nweb02                      : ok=1    changed=0    unreachable=0    failed=0"
 
 [[tests.ansible_playbook]]
@@ -38,35 +24,10 @@ expected = "TASK [Start service] ***\nfailed: [web01] => {\"msg\": \"Service not
 [tests]
 [[tests.ansible_playbook]]
 name = "summarizes playbook run"
-input = """
-PLAY [Deploy Web Server] ********************************************************
-TASK [Gathering Facts] **********************************************************
-ok: [server1]
-TASK [Install nginx] ************************************************************
-changed: [server1]
-TASK [Start nginx] **************************************************************
-changed: [server1]
-
-PLAY RECAP *********************************************************************
-server1    : ok=3    changed=2    unreachable=0    failed=0
-"""
-expected = """
-PLAY RECAP
-server1    : ok=3    changed=2    unreachable=0    failed=0
-"""
+input = "PLAY [Deploy Web Server] ********************************************************\nTASK [Gathering Facts] **********************************************************\nok: [server1]\nTASK [Install nginx] ************************************************************\nchanged: [server1]\nTASK [Start nginx] **************************************************************\nchanged: [server1]\n\nPLAY RECAP *********************************************************************\nserver1    : ok=3    changed=2    unreachable=0    failed=0"
+expected = "PLAY RECAP\nserver1    : ok=3    changed=2    unreachable=0    failed=0"
 
 [[tests.ansible_playbook]]
 name = "shows failures"
-input = """
-TASK [Install nginx] ************************************************************
-fatal: [server1]: FAILED! => {"changed": false, "msg": "Package not found"}
-
-PLAY RECAP *********************************************************************
-server1    : ok=1    changed=0    unreachable=0    failed=1
-"""
-expected = """
-FAILED: server1 - Package not found
-
-PLAY RECAP
-server1    : ok=1    changed=0    unreachable=0    failed=1
-"""
+input = "TASK [Install nginx] ************************************************************\nfatal: [server1]: FAILED! => {\"changed\": false, \"msg\": \"Package not found\"}\n\nPLAY RECAP *********************************************************************\nserver1    : ok=1    changed=0    unreachable=0    failed=1"
+expected = "FAILED: server1 - Package not found\n\nPLAY RECAP\nserver1    : ok=1    changed=0    unreachable=0    failed=1"

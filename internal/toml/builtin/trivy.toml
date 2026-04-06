@@ -31,60 +31,20 @@ return = "trivy: no vulnerabilities found"
 
 [[tests.trivy]]
 name = "summarizes vulnerabilities"
-input = """
-2024-01-15T10:00:00Z    INFO    Detected OS: alpine
-2024-01-15T10:00:00Z    INFO    Detected Library: 3.18.4
-
-app (alpine 3.18.4)
-Total: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)
-
-+-------------------+------------------+----------+-------------------+
-|     LIBRARY       | VULNERABILITY ID  | SEVERITY | INSTALLED VERSION |
-+-------------------+------------------+----------+-------------------+
-| openssl           | CVE-2023-5363    | HIGH     | 3.1.4.3           |
-| busybox           | CVE-2023-42364   | LOW      | 1.36.1            |
-+-------------------+------------------+----------+-------------------+
-"""
-expected = """
-Total: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)
-HIGH: CVE-2023-5363 openssl
-LOW: CVE-2023-42364 busybox
-"""
+input = "2024-01-15T10:00:00Z    INFO    Detected OS: alpine\n2024-01-15T10:00:00Z    INFO    Detected Library: 3.18.4\n\napp (alpine 3.18.4)\nTotal: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)\n\n+-------------------+------------------+----------+-------------------+\n|     LIBRARY       | VULNERABILITY ID  | SEVERITY | INSTALLED VERSION |\n+-------------------+------------------+----------+-------------------+\n| openssl           | CVE-2023-5363    | HIGH     | 3.1.4.3           |\n| busybox           | CVE-2023-42364   | LOW      | 1.36.1            |\n+-------------------+------------------+----------+-------------------+"
+expected = "Total: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)\nHIGH: CVE-2023-5363 openssl\nLOW: CVE-2023-42364 busybox"
 
 [[tests.trivy]]
 name = "no vulnerabilities"
-input = """
-2024-01-15T10:00:00Z    INFO    Detected OS: alpine
-
-app (alpine 3.18.4)
-Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
-"""
+input = "2024-01-15T10:00:00Z    INFO    Detected OS: alpine\n\napp (alpine 3.18.4)\nTotal: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)"
 expected = "No vulnerabilities found"
 
-[tests]
 [[tests.trivy]]
 name = "summarizes container scan"
-input = """
-app (alpine 3.18.4)
-Total: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)
-
-+-------------------+------------------+----------+-------------------+
-|     LIBRARY       | VULNERABILITY ID  | SEVERITY | INSTALLED VERSION |
-+-------------------+------------------+----------+-------------------+
-| openssl           | CVE-2023-5363    | HIGH     | 3.1.4.3           |
-| busybox           | CVE-2023-42364   | LOW      | 1.36.1            |
-+-------------------+------------------+----------+-------------------+
-"""
-expected = """
-Total: 5 (HIGH: 1, MEDIUM: 2, LOW: 2)
-HIGH: CVE-2023-5363 (openssl)
-LOW: CVE-2023-42364 (busybox)
-"""
+input = "app (alpine 3.18.4)\nTotal: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)\n\n+-------------------+------------------+----------+-------------------+\n|     LIBRARY       | VULNERABILITY ID  | SEVERITY | INSTALLED VERSION |\n+-------------------+------------------+----------+-------------------+\n| openssl           | CVE-2023-5363    | HIGH     | 3.1.4.3           |\n| busybox           | CVE-2023-42364   | LOW      | 1.36.1            |\n+-------------------+------------------+----------+-------------------+"
+expected = "Total: 5 (HIGH: 1, MEDIUM: 2, LOW: 2)\nHIGH: CVE-2023-5363 (openssl)\nLOW: CVE-2023-42364 (busybox)"
 
 [[tests.trivy]]
 name = "clean scan"
-input = """
-app (alpine 3.18.4)
-Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
-"""
+input = "app (alpine 3.18.4)\nTotal: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)"
 expected = "No vulnerabilities found"
