@@ -34,3 +34,39 @@ expected = "PLAY [all] *********************************************************
 name = "failed task preserved"
 input = "TASK [Start service] ***\nfailed: [web01] => {\"msg\": \"Service not found\"}\nPLAY RECAP ***\nweb01 : ok=1 failed=1"
 expected = "TASK [Start service] ***\nfailed: [web01] => {\"msg\": \"Service not found\"}\nPLAY RECAP ***\nweb01 : ok=1 failed=1"
+
+[tests]
+[[tests.ansible_playbook]]
+name = "summarizes playbook run"
+input = """
+PLAY [Deploy Web Server] ********************************************************
+TASK [Gathering Facts] **********************************************************
+ok: [server1]
+TASK [Install nginx] ************************************************************
+changed: [server1]
+TASK [Start nginx] **************************************************************
+changed: [server1]
+
+PLAY RECAP *********************************************************************
+server1    : ok=3    changed=2    unreachable=0    failed=0
+"""
+expected = """
+PLAY RECAP
+server1    : ok=3    changed=2    unreachable=0    failed=0
+"""
+
+[[tests.ansible_playbook]]
+name = "shows failures"
+input = """
+TASK [Install nginx] ************************************************************
+fatal: [server1]: FAILED! => {"changed": false, "msg": "Package not found"}
+
+PLAY RECAP *********************************************************************
+server1    : ok=1    changed=0    unreachable=0    failed=1
+"""
+expected = """
+FAILED: server1 - Package not found
+
+PLAY RECAP
+server1    : ok=1    changed=0    unreachable=0    failed=1
+"""
