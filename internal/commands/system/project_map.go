@@ -28,12 +28,12 @@ import (
 )
 
 var (
-	pmMaxDepth      int
-	pmIncludeHidden bool
-	pmTokenEstimate bool
+	pmMaxDepth       int
+	pmIncludeHidden  bool
+	pmTokenEstimate  bool
 	pmShowSignatures bool
-	pmOutputFormat  string // tree, json, compact
-	pmIgnore        string
+	pmOutputFormat   string // tree, json, compact
+	pmIgnore         string
 )
 
 var projectMapCmd = &cobra.Command{
@@ -69,11 +69,11 @@ func init() {
 
 // DirNode represents a directory in the project map.
 type DirNode struct {
-	Name     string
-	Path     string
-	Files    []FileInfo
-	SubDirs  []*DirNode
-	Depth    int
+	Name    string
+	Path    string
+	Files   []FileInfo
+	SubDirs []*DirNode
+	Depth   int
 }
 
 // FileInfo represents a single file's metadata.
@@ -275,7 +275,7 @@ func printDirTree(node *DirNode, prefix string, isLast bool, fileCountByDir map[
 		}
 
 		if isCodeDir(node.Name) {
-			color.New(color.FgCyan, color.Bold).Printf("%s%s/ ", prefix, connector, node.Name)
+			color.New(color.FgCyan, color.Bold).Printf("%s%s%s/\n", prefix, connector, node.Name)
 		} else {
 			color.New(color.FgYellow, color.Bold).Printf("%s%s%s/\n", prefix, connector, node.Name)
 		}

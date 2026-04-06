@@ -63,7 +63,7 @@ and output formats.`,
 		}
 
 		if reportJSON {
-			outputJSON(daily, stats, recent)
+			outputReportJSON(daily, stats, recent)
 			return nil
 		}
 
@@ -72,7 +72,7 @@ and output formats.`,
 	},
 }
 
-func outputJSON(daily []struct {
+func outputReportJSON(daily []struct {
 	Date     string
 	Saved    int
 	Original int

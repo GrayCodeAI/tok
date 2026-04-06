@@ -325,7 +325,7 @@ func init() {
 	rootCmd.PersistentFlags().IntVar(&remoteTimeout, "remote-timeout", 30,
 		"remote operation timeout in seconds (default: 30)")
 
-		// Bind viper to flags — errors are non-fatal (flags are defined above).
+	// Bind viper to flags — errors are non-fatal (flags are defined above).
 	_ = viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 	_ = viper.BindPFlag("query", rootCmd.PersistentFlags().Lookup("query"))
 	_ = viper.BindPFlag("llm", rootCmd.PersistentFlags().Lookup("llm"))

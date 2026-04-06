@@ -151,7 +151,7 @@ func (f *SemanticAnchorFilter) detectAnchors(tokens []string) {
 		pos   int
 	}
 
-scores := make([]tokenScore, len(tokens))
+	scores := make([]tokenScore, len(tokens))
 	for i, token := range tokens {
 		scores[i] = tokenScore{
 			token: token,

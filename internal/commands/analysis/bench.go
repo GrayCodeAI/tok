@@ -8,11 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/filter"
 )
@@ -52,9 +50,9 @@ func init() {
 }
 
 type benchCase struct {
-	name      string
-	command   string
-	content   string
+	name        string
+	command     string
+	content     string
 	minSavedPct float64 // Expected minimum savings percentage
 }
 
@@ -72,111 +70,111 @@ type benchResult struct {
 var benchmarkSuites = map[string][]benchCase{
 	"git-status": {
 		{
-			name:      "git status (clean)",
-			command:   "git status",
-			content:   gitStatusOutputClean,
+			name:        "git status (clean)",
+			command:     "git status",
+			content:     gitStatusOutputClean,
 			minSavedPct: 50,
 		},
 	},
 	"git-log": {
 		{
-			name:      "git log (10 commits)",
-			command:   "git log",
-			content:   gitLogOutput,
+			name:        "git log (10 commits)",
+			command:     "git log",
+			content:     gitLogOutput,
 			minSavedPct: 60,
 		},
 	},
 	"git-diff": {
 		{
-			name:      "git diff (moderate)",
-			command:   "git diff",
-			content:   gitDiffOutput,
+			name:        "git diff (moderate)",
+			command:     "git diff",
+			content:     gitDiffOutput,
 			minSavedPct: 40,
 		},
 	},
 	"test-cargo": {
 		{
-			name:      "cargo test (passing)",
-			command:   "cargo test",
-			content:   cargoTestOutput,
+			name:        "cargo test (passing)",
+			command:     "cargo test",
+			content:     cargoTestOutput,
 			minSavedPct: 70,
 		},
 		{
-			name:      "cargo test (2 failures)",
-			command:   "cargo test",
-			content:   cargoTestFailures,
+			name:        "cargo test (2 failures)",
+			command:     "cargo test",
+			content:     cargoTestFailures,
 			minSavedPct: 70,
 		},
 	},
 	"test-pytest": {
 		{
-			name:      "pytest (passing)",
-			command:   "pytest",
-			content:   pytestOutput,
+			name:        "pytest (passing)",
+			command:     "pytest",
+			content:     pytestOutput,
 			minSavedPct: 70,
 		},
 	},
 	"test-go": {
 		{
-			name:      "go test (passing)",
-			command:   "go test",
-			content:   goTestOutput,
+			name:        "go test (passing)",
+			command:     "go test",
+			content:     goTestOutput,
 			minSavedPct: 70,
 		},
 	},
 	"build-cargo": {
 		{
-			name:      "cargo build",
-			command:   "cargo build",
-			content:   cargoBuildOutput,
+			name:        "cargo build",
+			command:     "cargo build",
+			content:     cargoBuildOutput,
 			minSavedPct: 60,
 		},
 	},
 	"lint-eslint": {
 		{
-			name:      "eslint output",
-			command:   "eslint",
-			content:   eslintOutput,
+			name:        "eslint output",
+			command:     "eslint",
+			content:     eslintOutput,
 			minSavedPct: 50,
 		},
 	},
 	"lint-ruff": {
 		{
-			name:      "ruff check output",
-			command:   "ruff check",
-			content:   ruffOutput,
+			name:        "ruff check output",
+			command:     "ruff check",
+			content:     ruffOutput,
 			minSavedPct: 50,
 		},
 	},
 	"docker-ps": {
 		{
-			name:      "docker ps",
-			command:   "docker ps",
-			content:   dockerPsOutput,
+			name:        "docker ps",
+			command:     "docker ps",
+			content:     dockerPsOutput,
 			minSavedPct: 50,
 		},
 	},
 	"ls-large": {
 		{
-			name:      "ls -la (large dir)",
-			command:   "ls -la",
-			content:   lsOutputLarge,
+			name:        "ls -la (large dir)",
+			command:     "ls -la",
+			content:     lsOutputLarge,
 			minSavedPct: 60,
 		},
 	},
 	"code-file": {
 		{
-			name:      "Rust source file (120 lines)",
-			command:   "read",
-			content:   rustSourceFile,
+			name:        "Rust source file (120 lines)",
+			command:     "read",
+			content:     rustSourceFile,
 			minSavedPct: 40,
 		},
 	},
 	"log-file": {
 		{
-			name:      "Application log (85 lines)",
-			command:   "log",
-			content:   appLogFile,
+			name:        "Application log (85 lines)",
+			command:     "log",
+			content:     appLogFile,
 			minSavedPct: 50,
 		},
 	},
@@ -215,7 +213,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		for name := range benchmarkSuites {
 			suiteNames = append(suiteNames, name)
 		}
-		sliceSort(suiteNames)
+		sort.Strings(suiteNames)
 	}
 
 	for _, name := range suiteNames {
@@ -250,7 +248,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 
 	// Output in various formats
 	if benchOutput == "json" {
-		return outputJSON(allResults, totalBefore, totalAfter, totalSaved, totalPct)
+		return outputBenchmarkJSON(allResults, totalBefore, totalAfter, totalSaved, totalPct)
 	}
 	if benchOutput == "markdown" {
 		return outputMarkdown(allResults, totalBefore, totalAfter, totalSaved, totalPct)
@@ -265,7 +263,6 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	for _, mult := range []int{1, 10, 100, 1000} {
 		scaledBefore := totalBefore * mult
 		scaledAfter := totalAfter * mult
-		scaledSaved := totalSaved * mult
 		costWithout := float64(scaledBefore) / 1e6 * 3.0
 		costWith := float64(scaledAfter) / 1e6 * 3.0
 		costSaved := costWithout - costWith
@@ -288,13 +285,13 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 
 func runSingleBenchmark(tc benchCase, tier filter.Tier, mode filter.Mode) benchResult {
 	cfg := filter.TierConfig(tier, mode)
-	cfg.SessionTracking = false  // Disable tracking for speed
+	cfg.SessionTracking = false // Disable tracking for speed
 	pipeline := filter.NewPipelineCoordinator(cfg)
 
 	beforeTok := core.EstimateTokens(tc.content)
 
 	start := time.Now()
-	after, stats := pipeline.Process(tc.content)
+	after, _ := pipeline.Process(tc.content)
 	duration := time.Since(start)
 
 	afterTok := core.EstimateTokens(after)
@@ -308,12 +305,12 @@ func runSingleBenchmark(tc benchCase, tier filter.Tier, mode filter.Mode) benchR
 	}
 
 	return benchResult{
-		suite:      tc.command,
-		beforeTok:  beforeTok,
-		afterTok:   afterTok,
-		savedTok:   saved,
-		pctSaved:   pctSaved,
-		duration:   duration,
+		suite:     tc.command,
+		beforeTok: beforeTok,
+		afterTok:  afterTok,
+		savedTok:  saved,
+		pctSaved:  pctSaved,
+		duration:  duration,
 	}
 }
 
@@ -329,13 +326,13 @@ func resultToLine(r benchResult) string {
 		r.duration)
 }
 
-func outputJSON(results []benchResult, totalBefore, totalAfter, totalSaved int, totalPct float64) error {
+func outputBenchmarkJSON(results []benchResult, totalBefore, totalAfter, totalSaved int, totalPct float64) error {
 	output := map[string]any{
-		"total_before":  totalBefore,
-		"total_after":   totalAfter,
-		"total_saved":   totalSaved,
-		"total_pct":     totalPct,
-		"suites":        results,
+		"total_before": totalBefore,
+		"total_after":  totalAfter,
+		"total_saved":  totalSaved,
+		"total_pct":    totalPct,
+		"suites":       results,
 	}
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
@@ -618,8 +615,8 @@ failures:
 
 test result: FAILED. 13 passed; 2 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.23s
 
-error: test failed, to rerun pass `--lib`
-```
+error: test failed, to rerun pass '--lib'
+`
 
 const pytestOutput = `============================= test session starts ==============================
 platform linux -- Python 3.11.7, pytest-7.4.4, pluggy-1.3.0
@@ -757,26 +754,26 @@ const eslintOutput = `
    25:21 error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
 ✖ 14 problems (5 errors, 9 warnings)
-  0 errors and 3 warnings potentially fixable with the `--fix` option.
+  0 errors and 3 warnings potentially fixable with the '--fix' option.
 `
 
-const ruffOutput = `src/auth/__init__.py:1:1: F401 [*] `os` imported but unused
-src/auth/__init__.py:2:1: F401 [*] `sys` imported but unused
+const ruffOutput = `src/auth/__init__.py:1:1: F401 [*] 'os' imported but unused
+src/auth/__init__.py:2:1: F401 [*] 'sys' imported but unused
 src/auth/login.py:15:5: E501 Line too long (120 > 88 characters)
-src/auth/login.py:22:10: F821 Undefined name `currentUser`
+src/auth/login.py:22:10: F821 Undefined name 'currentUser'
 src/auth/login.py:35:3: E303 Too many blank lines (3)
-src/auth/login.py:42:21: E711 Comparison to `None` should be `cond is None`
-src/auth/logout.py:8:5: F401 [*] `datetime` imported but unused
-src/auth/logout.py:14:5: F841 Local variable `session` is assigned to but never used
+src/auth/login.py:42:21: E711 Comparison to 'None' should be 'cond is None'
+src/auth/logout.py:8:5: F401 [*] 'datetime' imported but unused
+src/auth/logout.py:14:5: F841 Local variable 'session' is assigned to but never used
 src/auth/logout.py:22:1: W293 Blank line contains whitespace
-src/utils/helpers.py:5:1: F401 [*] `hashlib` imported but unused
-src/utils/helpers.py:18:5: T201 `print` found
+src/utils/helpers.py:5:1: F401 [*] 'hashlib' imported but unused
+src/utils/helpers.py:18:5: T201 'print' found
 src/utils/helpers.py:25:1: D103 Missing docstring in public function
-src/components/__init__.py:1:1: F401 [*] `typing` imported but unused
-src/components/table.py:12:21: E711 Comparison to `None` should be `cond is None`
+src/components/__init__.py:1:1: F401 [*] 'typing' imported but unused
+src/components/table.py:12:21: E711 Comparison to 'None' should be 'cond is None'
 
 Found 14 errors.
-[*] 5 fixable with the `--fix` option.
+[*] 5 fixable with the '--fix' option.
 `
 
 const dockerPsOutput = `CONTAINER ID   IMAGE                      COMMAND                  CREATED         STATUS                    PORTS                               NAMES

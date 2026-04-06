@@ -10,14 +10,14 @@
 //   - Build tags for architecture-specific implementations
 //
 // Implementation Plan:
-//   1. Add build tags: //go:build goexperiment.simd && (amd64 || arm64)
-//   2. Use golang.org/x/sys/cpu for feature detection
-//   3. Implement SIMD versions of:
-//      - StripANSI (byte scanning with SIMD comparison)
-//      - IndexByteSet (parallel byte matching)
-//      - CountByte (population count)
-//      - SplitWords (whitespace detection)
-//   4. Benchmark against auto-vectorized versions
+//  1. Add build tags: //go:build goexperiment.simd && (amd64 || arm64)
+//  2. Use golang.org/x/sys/cpu for feature detection
+//  3. Implement SIMD versions of:
+//     - StripANSI (byte scanning with SIMD comparison)
+//     - IndexByteSet (parallel byte matching)
+//     - CountByte (population count)
+//     - SplitWords (whitespace detection)
+//  4. Benchmark against auto-vectorized versions
 //
 // References:
 //   - https://github.com/golang/go/issues/53171 (SIMD proposal)

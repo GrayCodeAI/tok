@@ -160,17 +160,17 @@ var DefaultRegistry = NewRegistry()
 // func LoadWASM(path string) (*WASMPlugin, error) {
 //     ctx := context.Background()
 //     r := wazero.NewRuntime(ctx)
-//     
+//
 //     wasm, err := os.ReadFile(path)
 //     if err != nil {
 //         return nil, err
 //     }
-//     
+//
 //     module, err := r.CompileModule(ctx, wasm)
 //     if err != nil {
 //         return nil, err
 //     }
-//     
+//
 //     return &WASMPlugin{
 //         runtime: r,
 //         module:  module,

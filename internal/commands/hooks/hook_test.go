@@ -398,10 +398,10 @@ func TestFilterEntriesByDays(t *testing.T) {
 	veryOld := now.Add(-365 * 24 * time.Hour).Format("2006-01-02T15:04:05Z")
 
 	entries := []AuditEntry{
-		{Timestamp: recent},     // 2 days ago
-		{Timestamp: weekAgo},    // 5 days ago
-		{Timestamp: oldEntry},   // 30 days ago
-		{Timestamp: veryOld},    // 1 year ago
+		{Timestamp: recent},   // 2 days ago
+		{Timestamp: weekAgo},  // 5 days ago
+		{Timestamp: oldEntry}, // 30 days ago
+		{Timestamp: veryOld},  // 1 year ago
 	}
 
 	// 0 days = all entries
