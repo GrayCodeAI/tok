@@ -25,3 +25,21 @@ max_lines = 300
 
 [rules.filter.on_empty]
 return = "curl: no output"
+[tests]
+[[tests.curl]]
+name = "compact response"
+input = """
+{
+  "status": "success",
+  "data": {
+    "id": 12345,
+    "name": "test"
+  }
+}
+% Total    % Received   % Xferd  Average Speed   Time    Time     Time  Current
+                               Dload  Upload   Total   Spent    Left  Speed
+100  1234  100  1234    0     0   5678      0 --:--:-- --:--:-- --:--:--  5678
+"""
+expected = """
+{"status":"success","data":{"id":12345,"name":"test"}}
+"""

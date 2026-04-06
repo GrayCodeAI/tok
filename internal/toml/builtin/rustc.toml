@@ -21,3 +21,25 @@ max_lines = 50
 
 [rules.filter.on_empty]
 return = "rustc: compilation successful"
+[tests]
+[[tests.rustc]]
+name = "shows compilation errors"
+input = """
+error[E0425]: cannot find function `foo` in this scope
+  --> src/main.rs:10:5
+   |
+10 |     foo();
+   |     ^^^ not found in this scope
+
+warning: unused variable: `x`
+  --> src/main.rs:5:9
+   |
+5  |     let x = 5;
+   |         ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+error: aborting due to previous error; 1 warning emitted
+"""
+expected = """
+error[E0425]: cannot find function `foo` in this scope
+warning: unused variable: `x`
+"""
