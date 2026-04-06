@@ -1,0 +1,29 @@
+
+# Inline tests
+[tests]
+
+[[tests.ruff]]
+name = "groups errors by rule"
+input = """
+main.py:10:1: F401 [*] `os` imported but unused
+main.py:15:5: E501 Line too long (120 > 88)
+tests/test_app.py:20:1: F811 redefinition of unused `test_fn` from line 10
+tests/test_app.py:25:10: E722 do not use bare `except`
+
+Found 4 errors.
+[*] 1 fixable with the `--fix` option (1 hidden fixable).
+"""
+expected = """
+main.py:10:1: F401 `os` imported but unused
+main.py:15:5: E501 Line too long (120 > 88)
+
+Found 4 errors.
+1 fixable with the `--fix` option (1 hidden fixable).
+"""
+
+[[tests.ruff]]
+name = "clean output"
+input = """
+All checks passed!
+"""
+expected = "All checks passed!"
