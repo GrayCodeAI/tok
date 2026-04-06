@@ -1,0 +1,56 @@
+# Bun - JavaScript runtime and toolkit filter
+# https://bun.sh
+
+[bun-install]
+match = "^bun (install|add|remove|update)"
+mode = "aggressive"
+description = "Bun package manager with compact output"
+
+# Strip verbose installation details
+strip_lines_matching = [
+  "^  ├",
+  "^  └",
+  "^\\[\\d+/\\d+\\]",
+  "^Resolving",
+  "^Saved lockfile",
+]
+
+# Extract key information
+output_patterns = [
+  "^(installed|added|removed|updated) \\S+",
+  "^\\d+ packages? installed",
+  "^done in \\S+",
+  "^error:",
+  "^warn:",
+]
+
+compact_repeated_lines = true
+max_repeated_context = 2
+
+[bun-run]
+match = "^bun run "
+strip_lines_matching = ["^\\$ "]
+output_patterns = ["^error:", "^✓", "^✗", "BUILD"]
+
+[bun-test]
+match = "^bun test"
+mode = "minimal"
+output_patterns = [
+  "^(✓|✗|⚠)",
+  "^\\d+ pass",
+  "^\\d+ fail",
+  "^error:",
+  "expect\\(",
+]
+strip_lines_matching = ["^  at "]
+collapse_stack_traces = true
+
+[bun-build]
+match = "^bun build"
+output_patterns = [
+  "^\\[\\d+ms\\]",
+  "^Build successful",
+  "^error:",
+  "\\.(js|ts|jsx|tsx)$",
+]
+strip_lines_matching = ["^  ├", "^  └"]
