@@ -95,3 +95,11 @@ found 3 vulnerabilities (1 low, 2 high)
   run `npm audit` for details
 """
 expected = "added 50 packages, found 3 vulnerabilities (1 low, 2 high)"
+[[tests.npm]]
+name = "shows audit issues"
+input = """
+found 5 vulnerabilities (2 moderate, 3 high) in 142 scanned packages
+  run \`npm audit fix\` to fix 2 of them.
+  3 vulnerabilities require manual review.
+"""
+expected = "found 5 vulnerabilities (2 moderate, 3 high)"

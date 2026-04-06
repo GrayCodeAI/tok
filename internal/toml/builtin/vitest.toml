@@ -69,3 +69,21 @@ FAIL: tests/login.test.ts > login > should authenticate
 Test Files  1 failed (1)
 Tests  1 failed | 1 passed (2)
 """
+[[tests.vitest]]
+name = "shows type errors"
+input = """
+ ❯ tests/type.test.ts (3)
+   ✓ should work
+   × should type check
+   ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯ FAILED ⎯⎯⎯⎯⎯⎯⎯⎯⎯
+ FAIL  tests/type.test.ts > should type check
+AssertionError: expected 1 to be 2
+ ❯ tests/type.test.ts:10:15
+Test Files  1 failed | 2 passed (3)
+     Tests  1 failed | 5 passed (6)
+"""
+expected = """
+FAIL: tests/type.test.ts > should type check
+Test Files  1 failed | 2 passed (3)
+Tests  1 failed | 5 passed (6)
+"""

@@ -137,3 +137,15 @@ error[E0425]: cannot find function `does_not_exist` in this scope
    |     ^^^^^^^^^^^^^^ not found in this scope
 """
 expected = "error[E0425]: cannot find function `does_not_exist` in this scope"
+[[tests.cargo_build]]
+name = "shows clippy warnings"
+input = """
+    Checking myapp v0.1.0
+warning: unused import: `std::collections::HashMap`
+ --> src/main.rs:1:5
+  |
+1 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+    Finished dev [unoptimized + debuginfo] target(s) in 1.23s
+"""
+expected = "warning: unused import: `std::collections::HashMap`"
