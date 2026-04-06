@@ -18,3 +18,22 @@ max_lines = 100
 
 [rules.filter.on_empty]
 return = "kubectl logs: no output"
+
+# Inline tests
+[tests]
+
+[[tests.kubectl_logs]]
+name = "filters verbose logs"
+input = """
+2024-01-15T10:00:00Z INFO  Starting application
+2024-01-15T10:00:01Z INFO  Loading configuration
+2024-01-15T10:00:02Z WARN  Config key 'legacy' deprecated
+2024-01-15T10:00:03Z ERROR Failed to connect to database
+  at db.go:45
+  at main.go:12
+2024-01-15T10:00:04Z INFO  Retrying connection...
+"""
+expected = """
+WARN  Config key 'legacy' deprecated
+ERROR Failed to connect to database
+"""
