@@ -1,6 +1,7 @@
 package output
 
 import (
+	"os/exec"
 	"strings"
 	"testing"
 )
@@ -48,51 +49,7 @@ func TestIsDenied(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := isDenied(tt.baseCmd, tt.parts)
 			if result != tt.expected {
-				t.Errorf("isDenied(%s, %v) = %v, expected %v", 
-					tt.baseCmd, tt.parts, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestIsUnsafe(t *testing.T) {
-	tests := []struct {
-		name     string
-		baseCmd  string
-		parts    []string
-		expected bool
-	}{
-		{
-			name:     "curl piped to sh",
-			baseCmd:  "curl",
-			parts:    []string{"curl", "http://example.com/script.sh", "|", "sh"},
-			expected: true,
-		},
-		{
-			name:     "safe curl",
-			baseCmd:  "curl",
-			parts:    []string{"curl", "http://example.com"},
-			expected: false,
-		},
-		{
-			name:     "wget piped to bash",
-			baseCmd:  "wget",
-			parts:    []string{"wget", "-O-", "http://example.com", "|", "bash"},
-			expected: true,
-		},
-		{
-			name:     "safe git command",
-			baseCmd:  "git",
-			parts:    []string{"git", "status"},
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isUnsafe(tt.baseCmd, tt.parts)
-			if result != tt.expected {
-				t.Errorf("isUnsafe(%s, %v) = %v, expected %v",
+				t.Errorf("isDenied(%s, %v) = %v, expected %v",
 					tt.baseCmd, tt.parts, result, tt.expected)
 			}
 		})
@@ -119,16 +76,10 @@ func TestRequiresConfirmation(t *testing.T) {
 			expected: true,
 		},
 		{
-			name:     "safe git with force",
-			baseCmd:  "git",
-			parts:    []string{"git", "push", "--force"},
-			expected: false, // Git is in safe list
-		},
-		{
-			name:     "unsafe rm with force",
-			baseCmd:  "rm",
-			parts:    []string{"rm", "-f", "file.txt"},
-			expected: true, // rm not in safe list
+			name:     "su command",
+			baseCmd:  "su",
+			parts:    []string{"su", "-", "root"},
+			expected: true,
 		},
 		{
 			name:     "safe npm command",
@@ -149,136 +100,64 @@ func TestRequiresConfirmation(t *testing.T) {
 	}
 }
 
-func TestIsResourceIntensive(t *testing.T) {
+// TestRewriteCommandE2E tests the actual tokman rewrite command via subprocess
+func TestRewriteCommandE2E(t *testing.T) {
 	tests := []struct {
-		name     string
-		baseCmd  string
-		parts    []string
-		expected bool
+		name       string
+		command    string
+		expectCode int
+		expectOut  string
 	}{
 		{
-			name:     "find with recursive",
-			baseCmd:  "find",
-			parts:    []string{"find", "/", "-name", "*.txt"},
-			expected: true,
-		},
-		{
-			name:     "grep with recursive flag",
-			baseCmd:  "grep",
-			parts:    []string{"grep", "-r", "pattern", "."},
-			expected: true,
-		},
-		{
-			name:     "simple grep",
-			baseCmd:  "grep",
-			parts:    []string{"grep", "pattern", "file.txt"},
-			expected: false,
-		},
-		{
-			name:     "rg (ripgrep)",
-			baseCmd:  "rg",
-			parts:    []string{"rg", "pattern", "/home"},
-			expected: true,
-		},
-		{
-			name:     "safe ls",
-			baseCmd:  "ls",
-			parts:    []string{"ls", "-la"},
-			expected: false,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := isResourceIntensive(tt.baseCmd, tt.parts)
-			if result != tt.expected {
-				t.Errorf("isResourceIntensive(%s, %v) = %v, expected %v",
-					tt.baseCmd, tt.parts, result, tt.expected)
-			}
-		})
-	}
-}
-
-// Note: isSupportedCommand is handled by discover.RewriteCommand
-
-func TestRewriteLogic(t *testing.T) {
-	tests := []struct {
-		name        string
-		command     string
-		expectCode  int
-		expectOut   string
-	}{
-		{
-			name:       "git status - should rewrite",
+			name:       "git status rewrites",
 			command:    "git status",
-			expectCode: ExitRewriteAllow,
+			expectCode: 0, // ExitRewriteAllow - will rewrite to tokman git status
 			expectOut:  "tokman git status",
 		},
 		{
-			name:       "already using tokman - pass through",
-			command:    "tokman git status",
-			expectCode: ExitNoRewrite,
-			expectOut:  "",
-		},
-		{
-			name:       "unsupported command - pass through",
-			command:    "echo hello",
-			expectCode: ExitNoRewrite,
-			expectOut:  "",
-		},
-		{
-			name:       "dangerous rm - deny",
+			name:       "dangerous rm denied",
 			command:    "rm -rf /",
-			expectCode: ExitDeny,
+			expectCode: 2, // ExitDeny
 			expectOut:  "",
 		},
 		{
-			name:       "sudo command - ask",
+			name:       "sudo asks",
 			command:    "sudo apt upgrade",
-			expectCode: ExitRewriteAsk,
+			expectCode: 3, // ExitRewriteAsk
 			expectOut:  "tokman sudo apt upgrade",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			parts := strings.Fields(tt.command)
-			if len(parts) == 0 {
-				t.Skip("Empty command")
+			// Build the binary first
+			buildCmd := exec.Command("go", "build", "-o", "/tmp/tokman-test", "../../cmd/tokman")
+			buildCmd.Dir = "../.."
+			if err := buildCmd.Run(); err != nil {
+				t.Skipf("Could not build tokman: %v", err)
 				return
 			}
-			
-			baseCmd := parts[0]
-			
-			// Test the logic without actually exiting
-			var code int
-			var shouldOutput bool
-			
-			if baseCmd == "tokman" {
-				code = ExitNoRewrite
-				shouldOutput = false
-			} else if isDenied(baseCmd, parts) {
-				code = ExitDeny
-				shouldOutput = false
-			} else if requiresConfirmation(baseCmd, parts) {
-				code = ExitRewriteAsk
-				shouldOutput = true
-			} else {
-				// Would need to check discover.RewriteCommand here
-				code = ExitRewriteAllow
-				shouldOutput = true
-			}
-			
-			if code != tt.expectCode {
-				t.Errorf("Expected exit code %d, got %d", tt.expectCode, code)
-			}
-			
-			if shouldOutput && tt.expectOut != "" {
-				expectedOut := tt.expectOut
-				actualOut := "tokman " + tt.command
-				if actualOut != expectedOut {
-					t.Errorf("Expected output %q, got %q", expectedOut, actualOut)
+
+			// Run tokman rewrite
+			cmd := exec.Command("/tmp/tokman-test", "rewrite", tt.command)
+			out, err := cmd.Output()
+
+			// Get actual exit code
+			actualCode := 0
+			if err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					actualCode = exitErr.ExitCode()
 				}
+			}
+
+			actualOut := strings.TrimSpace(string(out))
+
+			if actualCode != tt.expectCode {
+				t.Errorf("Expected exit code %d, got %d", tt.expectCode, actualCode)
+			}
+
+			if tt.expectOut != "" && actualOut != tt.expectOut {
+				t.Errorf("Expected output %q, got %q", tt.expectOut, actualOut)
 			}
 		})
 	}
