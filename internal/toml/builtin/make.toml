@@ -39,3 +39,22 @@ make[1]: Entering directory '/home/user'
 make[1]: Leaving directory '/home/user'
 """
 expected = "make: ok"
+[tests]
+[[tests.make]]
+name = "summarizes build"
+input = """
+gcc -c -o main.o main.c
+gcc -c -o utils.o utils.c
+gcc -o myapp main.o utils.o
+Build complete.
+"""
+expected = "Build complete."
+
+[[tests.make]]
+name = "shows failures"
+input = """
+gcc -c -o main.o main.c
+main.c:10:5: error: expected ';' before '}' token
+make: *** [Makefile:5: main.o] Error 1
+"""
+expected = "main.c:10:5: error: expected ';' before '}' token"

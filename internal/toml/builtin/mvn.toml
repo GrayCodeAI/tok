@@ -1,0 +1,22 @@
+[tests]
+[[tests.mvn]]
+name = "summarizes build"
+input = """
+[INFO] Building jar: /project/target/myapp-1.0.jar
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  15.234 s
+[INFO] Finished at: 2024-01-15T10:00:00Z
+"""
+expected = "BUILD SUCCESS (15.234 s)"
+
+[[tests.mvn]]
+name = "shows failures"
+input = """
+[ERROR] COMPILATION ERROR :
+[ERROR] /project/src/main/java/App.java:[10,5] cannot find symbol
+[INFO] BUILD FAILURE
+[ERROR] Failed to execute goal maven-compiler-plugin
+"""
+expected = "BUILD FAILURE"
