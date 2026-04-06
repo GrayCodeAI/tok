@@ -231,9 +231,17 @@ func authMiddleware(apiKey string, next http.Handler) http.Handler {
 	})
 }
 
+// inlineLogo is a minimal TokMan logo served from memory to avoid
+// path-traversal risk from http.ServeFile with a relative path.
+const inlineLogo = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="12" fill="#1a1a2e"/>
+  <text x="32" y="42" text-anchor="middle" font-family="monospace" font-size="28" font-weight="bold" fill="#00d4ff">T</text>
+</svg>`
+
 func logoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/svg+xml")
-	http.ServeFile(w, r, "docs/logo.svg")
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	fmt.Fprint(w, inlineLogo)
 }
 
 func dashboardIndexHandler(w http.ResponseWriter, r *http.Request) {

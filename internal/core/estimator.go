@@ -47,15 +47,27 @@ func newTokenCache(maxSize int) *tokenCache {
 }
 
 func (c *tokenCache) get(text string) (int, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
+	// Optimistic read: check existence under read-lock first to avoid
+	// write-lock contention on cache misses (the common case for unique inputs).
+	c.mu.RLock()
 	entry, ok := c.items[text]
 	if !ok {
+		c.mu.RUnlock()
 		return 0, false
 	}
-	c.ll.MoveToFront(entry.elem) // O(1) move to front
+	count := entry.count
+	c.mu.RUnlock()
+
+	// Promote under write-lock only on cache hit.
+	c.mu.Lock()
+	// Re-check in case entry was evicted between RUnlock and Lock.
+	if entry, ok = c.items[text]; ok {
+		c.ll.MoveToFront(entry.elem) // O(1) move to front
+	}
+	c.mu.Unlock()
+
 	atomic.AddInt64(&c.hits, 1)
-	return entry.count, true
+	return count, true
 }
 
 func (c *tokenCache) set(text string, count int) {

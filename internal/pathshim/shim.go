@@ -71,15 +71,35 @@ func NewPipeStripper() *PipeStripper {
 	}
 }
 
+// Strip removes trailing pipe commands, respecting quoted strings.
+// For example: `echo 'hello | world' | grep foo` → `echo 'hello | world'`
 func (p *PipeStripper) Strip(command string) string {
-	result := command
-	for _, cmd := range p.commands {
-		pipe := " | " + cmd
-		if idx := strings.Index(result, pipe); idx >= 0 {
-			result = strings.TrimSpace(result[:idx])
+	// Find the first unquoted pipe to any known command.
+	// Walk character-by-character to skip quoted sections.
+	inSingle := false
+	inDouble := false
+	runes := []rune(command)
+
+	for i := 0; i < len(runes); i++ {
+		ch := runes[i]
+		switch {
+		case ch == '\\' && i+1 < len(runes):
+			i++ // skip escaped character
+		case ch == '\'' && !inDouble:
+			inSingle = !inSingle
+		case ch == '"' && !inSingle:
+			inDouble = !inDouble
+		case ch == '|' && !inSingle && !inDouble:
+			// Check if the rest matches a known pipe command
+			rest := strings.TrimSpace(string(runes[i+1:]))
+			for _, cmd := range p.commands {
+				if rest == cmd || strings.HasPrefix(rest, cmd+" ") {
+					return strings.TrimSpace(string(runes[:i]))
+				}
+			}
 		}
 	}
-	return result
+	return command
 }
 
 func (p *PipeStripper) HasPipe(command string) bool {

@@ -12,20 +12,33 @@ import (
 	"io"
 )
 
+const kdfIterations = 100000
+
 // Encryptor provides AES-GCM encryption
 type Encryptor struct {
 	key []byte
 }
 
-// NewEncryptor creates a new encryptor
+// NewEncryptor creates a new encryptor.
+//
+// SECURITY WARNING: The KDF used here is an ad-hoc iterated SHA-256 scheme.
+// It is NOT equivalent to PBKDF2, bcrypt, scrypt, or argon2. Specifically:
+//   - No random salt: identical passwords produce identical keys.
+//   - SHA-256 iterations are GPU-friendly and offer weaker brute-force
+//     resistance than memory-hard functions (argon2id, scrypt).
+//
+// This is acceptable for low-risk local data (CLI token tracking) but
+// MUST be replaced with golang.org/x/crypto/argon2 before protecting
+// user credentials, API keys, or data exposed to network attackers.
 func NewEncryptor(key string) (*Encryptor, error) {
-	keyBytes := []byte(key)
+	keyBytes := sha256.Sum256([]byte(key))
+	derived := keyBytes[:]
+	for i := 0; i < kdfIterations; i++ {
+		hash := sha256.Sum256(append([]byte(key), derived...))
+		derived = hash[:]
+	}
 
-	// Derive a 32-byte key using SHA-256 for AES-256
-	hash := sha256.Sum256(keyBytes)
-	keyBytes = hash[:]
-
-	return &Encryptor{key: keyBytes}, nil
+	return &Encryptor{key: derived}, nil
 }
 
 // Encrypt encrypts plaintext
