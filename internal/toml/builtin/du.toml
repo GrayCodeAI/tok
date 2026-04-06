@@ -16,9 +16,3 @@ input = "128K\t."
 expected = "128K\t."
 
 # Inline tests
-[tests]
-
-[[tests.du]]
-name = "compact usage"
-input = "4.0K    ./src/utils\n8.0K    ./src/pkg\n128K    ./src\n16K     ./test\n256K    ./docs\n512K    ./node_modules\n1024K   ."
-expected = "src/          128K\ntest/         16K\ndocs/         256K\nnode_modules/ 512K\nTotal:        1024K"

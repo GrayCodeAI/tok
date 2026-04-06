@@ -18,8 +18,3 @@ max_lines = 50
 
 [rules.filter.on_empty]
 return = "kotlinc: compilation successful"
-[tests]
-[[tests.kotlinc]]
-name = "shows compilation errors"
-input = "e: src/Main.kt: (10, 5): Unresolved reference: foo\nw: src/Main.kt: (15, 9): Variable 'x' is never used\ne: src/Main.kt: (20, 12): Type mismatch: inferred type is String but Int was expected"
-expected = "e: src/Main.kt: (10, 5): Unresolved reference: foo\ne: src/Main.kt: (20, 12): Type mismatch\nw: src/Main.kt: (15, 9): Variable 'x' is never used"

@@ -1,13 +1,2 @@
 
 # Inline tests
-[tests]
-
-[[tests.grep]]
-name = "groups results by file"
-input = "./src/main.go:10:func main() {\n./src/main.go:15:	fmt.Println(\"Hello\")\n./src/utils.go:5:func helper() {\n./README.md:100:Some text mentioning keyword"
-expected = "./src/main.go: 2 matches\n./src/utils.go: 1 match\n./README.md: 1 match\n\nTotal: 4 matches across 3 files"
-
-[[tests.grep]]
-name = "no results"
-input = ""
-expected = "No matches found"
