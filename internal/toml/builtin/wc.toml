@@ -1,0 +1,14 @@
+[tests]
+[[tests.wc]]
+name = "compact word count"
+input = """
+   100    500   3000 README.md
+    50    200   1200 src/main.go
+   150    700   4200 total
+"""
+expected = """
+README.md:    100 lines,  500 words, 3.0K chars
+src/main.go:   50 lines,  200 words, 1.2K chars
+────────────────────────────────────────
+Total:        150 lines,  700 words, 4.2K chars
+"""

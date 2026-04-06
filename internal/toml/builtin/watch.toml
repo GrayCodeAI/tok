@@ -1,0 +1,10 @@
+[tests]
+[[tests.watch]]
+name = "summarizes watch"
+input = """
+Every 2.0s: git status
+
+On branch main                                                                  
+nothing to commit, working tree clean                                           
+"""
+expected = "nothing to commit, working tree clean"
