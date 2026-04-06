@@ -57,3 +57,30 @@ strip_lines_matching = [
     "^\\x1b\\[",
 ]
 max_lines = 50
+
+[tests]
+[[tests.aws]]
+name = "compact ec2 list"
+input = """
+{
+    "Reservations": [
+        {
+            "Instances": [
+                {
+                    "InstanceId": "i-1234567890abcdef0",
+                    "InstanceType": "t2.micro",
+                    "State": { "Name": "running" },
+                    "PublicIpAddress": "54.123.45.67"
+                },
+                {
+                    "InstanceId": "i-0987654321fedcba0",
+                    "InstanceType": "t2.small",
+                    "State": { "Name": "stopped" },
+                    "PublicIpAddress": null
+                }
+            ]
+        }
+    ]
+}
+"""
+expected = "2 EC2 instances (1 running, 1 stopped)"

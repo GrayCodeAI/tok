@@ -75,3 +75,23 @@ keep_lines_matching = [
 ]
 head = 20
 tail = 20
+
+[tests]
+[[tests.npm]]
+name = "summarizes install"
+input = """
+added 142 packages, and audited 143 packages in 5s
+18 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+"""
+expected = "added 142 packages, found 0 vulnerabilities"
+
+[[tests.npm]]
+name = "shows vulnerabilities"
+input = """
+added 50 packages, and audited 51 packages in 2s
+found 3 vulnerabilities (1 low, 2 high)
+  run `npm audit` for details
+"""
+expected = "added 50 packages, found 3 vulnerabilities (1 low, 2 high)"

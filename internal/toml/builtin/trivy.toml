@@ -60,3 +60,31 @@ app (alpine 3.18.4)
 Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
 """
 expected = "No vulnerabilities found"
+
+[tests]
+[[tests.trivy]]
+name = "summarizes container scan"
+input = """
+app (alpine 3.18.4)
+Total: 5 (UNKNOWN: 0, LOW: 2, MEDIUM: 2, HIGH: 1, CRITICAL: 0)
+
++-------------------+------------------+----------+-------------------+
+|     LIBRARY       | VULNERABILITY ID  | SEVERITY | INSTALLED VERSION |
++-------------------+------------------+----------+-------------------+
+| openssl           | CVE-2023-5363    | HIGH     | 3.1.4.3           |
+| busybox           | CVE-2023-42364   | LOW      | 1.36.1            |
++-------------------+------------------+----------+-------------------+
+"""
+expected = """
+Total: 5 (HIGH: 1, MEDIUM: 2, LOW: 2)
+HIGH: CVE-2023-5363 (openssl)
+LOW: CVE-2023-42364 (busybox)
+"""
+
+[[tests.trivy]]
+name = "clean scan"
+input = """
+app (alpine 3.18.4)
+Total: 0 (UNKNOWN: 0, LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0)
+"""
+expected = "No vulnerabilities found"
