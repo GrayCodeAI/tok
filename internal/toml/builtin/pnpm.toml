@@ -1,0 +1,23 @@
+
+# Inline tests
+[tests]
+
+[[tests.pnpm]]
+name = "summarizes install"
+input = """
+Progress: resolved 1024, reused 800, downloaded 200, added 1000
+Packages: +1000
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1024, reused 800, downloaded 200, added 1000, done
+.../node_modules/esbuild postinstall$ node install.js
+Done in 10.5s
+"""
+expected = "Packages: +1000 (Done in 10.5s)"
+
+[[tests.pnpm]]
+name = "shows errors"
+input = """
+ERR_PNPM_NO_VERSIONS  No versions available for package
+  at Resolver.resolve
+"""
+expected = "ERR_PNPM_NO_VERSIONS  No versions available for package"
