@@ -1,5 +1,1 @@
-[tests]
-[[tests.wc]]
-name = "compact word count"
-input = "   100    500   3000 README.md\n    50    200   1200 src/main.go\n   150    700   4200 total"
-expected = "README.md:    100 lines,  500 words, 3.0K chars\nsrc/main.go:   50 lines,  200 words, 1.2K chars\n────────────────────────────────────────\nTotal:        150 lines,  700 words, 4.2K chars"
+

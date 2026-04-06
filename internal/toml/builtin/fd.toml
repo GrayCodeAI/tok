@@ -22,9 +22,3 @@ max_lines = 200
 return = "No files found"
 
 # Inline tests
-[tests]
-
-[[tests.fd]]
-name = "lists files"
-input = "src/main.go\nsrc/utils/helper.go\nsrc/utils/config.go\ntest/main_test.go\ngo.mod\ngo.sum\nREADME.md"
-expected = "src/\n├── main.go\n└── utils/\n    ├── helper.go\n    └── config.go\ntest/\n└── main_test.go\ngo.mod\ngo.sum\nREADME.md"

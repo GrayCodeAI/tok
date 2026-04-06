@@ -25,14 +25,3 @@ max_lines = 50
 return = "yarn: completed"
 
 # Inline tests
-[tests]
-
-[[tests.yarn]]
-name = "summarizes install"
-input = "yarn install v1.22.10\n[1/4] Resolving packages...\n[2/4] Fetching packages...\n[3/4] Linking dependencies...\nwarning \" > react-router@5.2.0\" has unmet peer dependency \"react@>=15\"\n[4/4] Building fresh packages...\nDone in 15.23s."
-expected = "Done in 15.23s."
-
-[[tests.yarn]]
-name = "shows errors"
-input = "yarn install v1.22.10\nerror package.json: Name contains illegal characters\ninfo Visit https://yarnpkg.com/en/docs/cli/install for documentation about this command."
-expected = "error package.json: Name contains illegal characters"

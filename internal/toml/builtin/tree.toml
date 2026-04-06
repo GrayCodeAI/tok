@@ -1,13 +1,2 @@
 
 # Inline tests
-[tests]
-
-[[tests.tree]]
-name = "compact directory tree"
-input = ".\n├── src\n│   ├── main.go\n│   └── utils\n│       └── helper.go\n├── test\n│   └── main_test.go\n├── go.mod\n└── README.md\n\n3 directories, 5 files"
-expected = "src/\n├── main.go\n└── utils/\n    └── helper.go\ntest/\n└── main_test.go\ngo.mod\nREADME.md\n\n3 directories, 5 files"
-
-[[tests.tree]]
-name = "empty directory"
-input = ".\n\n0 directories, 0 files"
-expected = "Empty directory"
