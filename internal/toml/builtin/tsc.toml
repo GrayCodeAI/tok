@@ -1,0 +1,24 @@
+
+# Inline tests
+[tests.tsc]
+name = "groups errors by file"
+input = """
+src/app.ts:10:5 - error TS2322: Type 'string' is not assignable to type 'number'.
+src/app.ts:15:10 - error TS2304: Cannot find name 'FooBar'.
+src/utils.ts:5:12 - error TS7006: Parameter 'x' implicitly has an 'any' type.
+
+Found 3 errors in 2 files.
+"""
+expected = """
+src/app.ts: 2 errors
+src/utils.ts: 1 error
+
+Found 3 errors in 2 files.
+"""
+
+[[tests.tsc]]
+name = "no errors"
+input = """
+Done in 1.23s.
+"""
+expected = "Done in 1.23s."
