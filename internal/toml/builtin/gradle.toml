@@ -33,3 +33,30 @@ expected = "BUILD SUCCESSFUL in 8s\n7 actionable tasks: 7 executed"
 name = "empty after stripping"
 input = "> Configuring project :app\n"
 expected = "gradle: ok"
+[tests]
+[[tests.gradle]]
+name = "summarizes build"
+input = """
+> Task :compileJava
+> Task :processResources
+> Task :classes
+> Task :jar
+
+BUILD SUCCESSFUL in 12s
+4 actionable tasks: 4 executed
+"""
+expected = "BUILD SUCCESSFUL in 12s"
+
+[[tests.gradle]]
+name = "shows build failures"
+input = """
+> Task :compileJava FAILED
+
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler error output for details.
+
+BUILD FAILED in 3s
+"""
+expected = "BUILD FAILED in 3s"
