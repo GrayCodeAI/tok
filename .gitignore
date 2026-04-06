@@ -1,0 +1,59 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+coverage.txt
+
+# Go workspace file
+go.work
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# OS specific
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# TokMan specific
+tokman.db
+*.db-shm
+*.db-wal
+
+# Temporary files
+*.tmp
+*.bak
+*.log
+.cache/
+
+# Build artifacts (optional - comment out if you want to track binaries)
+# bin/
+# dist/
+
+# Config files with secrets (keep template, ignore actual config)
+config/local.toml
+.env
+.env.local
