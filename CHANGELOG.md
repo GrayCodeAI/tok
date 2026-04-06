@@ -5,26 +5,72 @@ All notable changes to TokMan will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-04-07
 
-### Added
-- 🚀 SIMD support for Go 1.26+ with CPU feature detection (AVX2, AVX-512, NEON)
-- 🔌 WASM plugin system using wazero runtime
-- 🧪 Comprehensive test suite (+30 unit tests)
-- 📦 TOML filters for modern tools: UV (Python), Bun (JavaScript), Turbo (Monorepo)
-- 📊 Improved test coverage in commands/analysis (5.0% → 5.9%)
+### ✨ New Features
+- 🎯 **Delegating Hook System** - All rewrite logic in binary with exit code protocol (RTK-style)
+- 🧪 **Inline Filter Tests** - TOML-based test declarations with `[[tests.filtername]]` syntax
+- ✅ **Filter Validation Command** - `tokman validate` checks 96 filters for syntax and quality
+- 🧪 **Filter Test Command** - `tokman tests` runs inline tests with color-coded output
+- 🔒 **Safety Checks** - Deny dangerous commands (rm, dd), warn on unsafe operations
+- 📦 **Homebrew Formula** - Easy installation via `brew install GrayCodeAI/tokman/tokman`
+- 🚀 **Install Script** - Cross-platform installer (`curl ... | sh`)
+- 🏷️ **Dynamic Versioning** - Version injection via ldflags from git tags
+- 🔗 **Command Aliases** - `tokman gain` (stats), `tokman grade` (quality), etc.
+- 📊 **Quality Scoring** - 6-metric analysis with A+ to F grades
+- 🎨 **Visual Diff Tool** - Color-coded comparison with HTML export
+- 📁 **Multi-File Merging** - Dependency-aware file merging with budget management
 
-### Changed
-- 🎨 Modernized README.md with better structure and visual hierarchy
-- 📖 Enhanced CONTRIBUTING.md with detailed guidelines
-- 🧹 Removed unnecessary markdown files and duplicates
+### 🎯 Quality Improvements
+- 📝 **7 Validation Checks** - Regex validation, schema matching, test verification
+- 🛡️ **19 Hook Unit Tests** - Comprehensive safety and rewrite testing
+- 🧪 **6 Inline Filter Tests** - Git filter examples (git_status, git_log, git_diff)
+- ⚠️ **Warning System** - Missing tests, conflicting configs, reasonable limits
+- 🐛 **Fixed Syntax Errors** - Printf format mismatch, backticks in raw strings, duplicate functions
+- 🧹 **Code Cleanup** - Removed unused imports, variables, and dead code
 
-### Fixed
-- 🐛 Printf format mismatch in project_map.go
-- 🐛 Backticks in raw string literals in bench.go
-- 🐛 Duplicate function declarations (outputJSON)
-- 🐛 Unused imports and variables
-- 🧹 Resolved syntax errors and build issues
+### 🛠️ Developer Experience
+- 📋 **Professional Makefile** - 18 targets with version injection and multi-platform builds
+- 📖 **Troubleshooting Guide** - Comprehensive TROUBLESHOOTING.md
+- 📦 **Release Workflow** - GitHub Actions automated releases
+- 📝 **Release Guide** - docs/RELEASE.md with step-by-step instructions
+- 🔧 **Gitignore Update** - Comprehensive `.gitignore` for clean repository
+
+### 🐛 Bug Fixes
+- Fixed printf format mismatch in `project_map.go`
+- Fixed backticks in raw string literals in `bench.go`
+- Fixed duplicate `outputJSON` function declarations
+- Fixed `match = ` → `match_command = ` in 23 builtin TOML filters
+- Fixed hook script compatibility issues
+
+### 📦 New Commands
+- `tokman rewrite` - Rewrite commands for hooks (exit code protocol)
+- `tokman tests` - Run inline TOML filter tests
+- `tokman validate` - Validate filter files
+- `tokman quality` - Compression quality analysis (A+ to F)
+- `tokman merge` - Intelligent multi-file merging
+
+### 📊 Compatibility
+- ✅ **Homebrew** - macOS and Linux
+- ✅ **Install Script** - Linux (amd64/arm64), macOS (amd64/arm64), Windows
+- ✅ **Go Install** - `go install github.com/GrayCodeAI/tokman/cmd/tokman@latest`
+- ✅ **Pre-built Binaries** - GitHub Releases
+- ✅ **Hook Support** - Claude Code, Cursor, Windsurf, Copilot, Cline, Codex
+
+---
+
+## [Unreleased] (Development)
+
+### Planned
+- 🌐 Website launch (tokman.dev)
+- 💬 Discord community
+- 🌍 Multi-language documentation
+- 📊 Performance benchmarking suite
+- 🤖 AI agent integration improvements
+
+---
+
+## [2.0.0] - 2026-03-31
 
 ---
 
