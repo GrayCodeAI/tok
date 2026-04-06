@@ -111,17 +111,41 @@ TokMan intercepts CLI commands and applies an intelligent **31-layer compression
 
 ### Installation
 
-```bash
-# Using Go (recommended)
-go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+#### 🍺 Homebrew (Recommended - macOS/Linux)
 
-# From source
+```bash
+brew tap GrayCodeAI/tokman
+brew install tokman
+```
+
+#### 🚀 Install Script (Linux/macOS/Windows)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | sh
+```
+
+#### 📦 Pre-built Binaries
+
+Download from [GitHub Releases](https://github.com/GrayCodeAI/tokman/releases/latest):
+- macOS: `tokman-darwin-amd64.tar.gz`, `tokman-darwin-arm64.tar.gz`
+- Linux: `tokman-linux-amd64.tar.gz`, `tokman-linux-arm64.tar.gz`
+- Windows: `tokman-windows-amd64.zip`
+
+#### 🐹 Go Install
+
+```bash
+go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+```
+
+#### 🔨 Build from Source
+
+```bash
 git clone https://github.com/GrayCodeAI/tokman.git
 cd tokman
 make build
 
-# SIMD-optimized (2-3x faster)
-make build-simd
+# Or build for all platforms
+make build-all
 ```
 
 ### Setup for Your AI Tool
