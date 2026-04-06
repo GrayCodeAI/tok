@@ -45,3 +45,19 @@ expected = "0 errors, 0 warnings, 0 informations"
 name = "empty input returns on_empty message"
 input = ""
 expected = "basedpyright: ok"
+[tests]
+[[tests.basedpyright]]
+name = "groups type errors"
+input = """
+/workspace/src/app.py:10:5 - error: Cannot assign to attribute 'name'
+    Type 'int' is not assignable to type 'str'
+/workspace/src/app.py:15:12 - warning: "x" is not accessed
+/workspace/src/utils.py:5:1 - error: Import 'missing_module' could not be resolved
+3 errors, 0 warnings, 0 informations
+"""
+expected = """
+/workspace/src/app.py:10:5 - error: Cannot assign to attribute 'name'
+/workspace/src/app.py:15:12 - warning: "x" is not accessed
+/workspace/src/utils.py:5:1 - error: Import 'missing_module' could not be resolved
+3 errors, 0 warnings
+"""
