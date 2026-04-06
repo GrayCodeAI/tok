@@ -1,0 +1,44 @@
+# UV - Python package manager filter
+# https://github.com/astral-sh/uv
+
+[uv]
+match = "^uv (install|add|remove|sync|lock|pip|venv|run)"
+mode = "aggressive"
+description = "UV Python package manager with compact output"
+
+# Strip verbose installation output
+strip_lines_matching = [
+  "^Resolving dependencies",
+  "^  ├─",
+  "^  └─",
+  "^Downloaded \\d+ package",
+  "^Audited \\d+ package",
+  "^Found \\d+ compatible version",
+]
+
+# Extract important information
+output_patterns = [
+  "^(Installed|Uninstalled|Updated) \\S+",
+  "^error:",
+  "^warning:",
+  "^Resolved \\d+ package",
+  "^Required \\d+ package",
+]
+
+# Compact package lists
+compact_repeated_lines = true
+max_repeated_context = 3
+
+# Keep error traces but compact them
+collapse_stack_traces = true
+keep_first_last_trace_lines = 2
+
+[uv-lock]
+match = "^uv lock"
+strip_lines_matching = ["^Resolved \\d+ package"]
+output_patterns = ["^Locked \\d+ package", "^Updated", "^error:"]
+
+[uv-sync]
+match = "^uv sync"
+strip_lines_matching = ["^  ├─", "^  └─"]
+output_patterns = ["^Installed \\d+", "^Removed \\d+", "^error:"]
