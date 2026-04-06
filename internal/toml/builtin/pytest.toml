@@ -49,53 +49,10 @@ max_lines = 200
 
 [[tests.pytest]]
 name = "shows only failures"
-input = """
-============================= test session starts ==============================
-platform linux -- Python 3.11.0
-collected 42 items
-
-tests/test_basic.py::test_one PASSED                                     [ 2%]
-tests/test_basic.py::test_two PASSED                                     [ 5%]
-tests/test_edge.py::test_edge FAILED                                     [ 7%]
-tests/test_edge.py::test_crash FAILED                                    [ 9%]
-
-=================================== FAILURES ===================================
-__________________________________ test_edge ___________________________________
-
-    def test_edge():
->       assert 1 == 2
-E       assert 1 == 2
-
-tests/test_edge.py:10: AssertionError
-__________________________________ test_crash __________________________________
-
-    def test_crash():
->       raise ValueError("crash!")
-E       ValueError: crash!
-
-tests/test_edge.py:15: ValueError
--------------------- generated xml file: /tmp/report.xml ---------------------
-=========================== short test summary info ============================
-FAILED tests/test_edge.py::test_edge - assert 1 == 2
-FAILED tests/test_edge.py::test_crash - ValueError: crash!
-========================= 2 failed, 40 passed in 1.23s =========================
-"""
-expected = """
-FAILED: tests/test_edge.py::test_edge - assert 1 == 2
-FAILED: tests/test_edge.py::test_crash - ValueError: crash!
-"""
+input = "============================= test session starts ==============================\nplatform linux -- Python 3.11.0\ncollected 42 items\n\ntests/test_basic.py::test_one PASSED                                     [ 2%]\ntests/test_basic.py::test_two PASSED                                     [ 5%]\ntests/test_edge.py::test_edge FAILED                                     [ 7%]\ntests/test_edge.py::test_crash FAILED                                    [ 9%]\n\n=================================== FAILURES ===================================\n__________________________________ test_edge ___________________________________\n\n    def test_edge():\n>       assert 1 == 2\nE       assert 1 == 2\n\ntests/test_edge.py:10: AssertionError\n__________________________________ test_crash __________________________________\n\n    def test_crash():\n>       raise ValueError(\"crash!\")\nE       ValueError: crash!\n\ntests/test_edge.py:15: ValueError\n-------------------- generated xml file: /tmp/report.xml ---------------------\n=========================== short test summary info ============================\nFAILED tests/test_edge.py::test_edge - assert 1 == 2\nFAILED tests/test_edge.py::test_crash - ValueError: crash!\n========================= 2 failed, 40 passed in 1.23s ========================="
+expected = "FAILED: tests/test_edge.py::test_edge - assert 1 == 2\nFAILED: tests/test_edge.py::test_crash - ValueError: crash!"
 
 [[tests.pytest]]
 name = "all passing shows summary"
-input = """
-============================= test session starts ==============================
-platform linux -- Python 3.11.0
-collected 10 items
-
-tests/test_a.py::test_one PASSED                                     [ 10%]
-tests/test_a.py::test_two PASSED                                     [ 20%]
-tests/test_b.py::test_three PASSED                                   [ 100%]
-
-============================= 10 passed in 0.45s ==============================
-"""
+input = "============================= test session starts ==============================\nplatform linux -- Python 3.11.0\ncollected 10 items\n\ntests/test_a.py::test_one PASSED                                     [ 10%]\ntests/test_a.py::test_two PASSED                                     [ 20%]\ntests/test_b.py::test_three PASSED                                   [ 100%]\n\n============================= 10 passed in 0.45s =============================="
 expected = "10 passed in 0.45s"

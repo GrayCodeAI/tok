@@ -74,22 +74,10 @@ on_empty = "Formatted"
 
 [[tests.go_test]]
 name = "summarizes passing tests"
-input = """
-ok  	github.com/example/mypkg	2.341s
-ok  	github.com/example/another	1.234s	coverage: 85.0%
-?   	github.com/example/util	[no test files]
-"""
-expected = """
-3 passed, 0 failed, 1 no-test
-"""
+input = "ok  	github.com/example/mypkg	2.341s\nok  	github.com/example/another	1.234s	coverage: 85.0%\n?   	github.com/example/util	[no test files]"
+expected = "3 passed, 0 failed, 1 no-test"
 
 [[tests.go_build]]
 name = "strips verbose build output"
-input = """
-internal/pkg/file.go:10:2: import declared but not used
-# github.com/example/project
-./main.go:1:1: package command-line-arguments; expected package main
-"""
-expected = """
-./main.go:1:1: package command-line-arguments; expected package main
-"""
+input = "internal/pkg/file.go:10:2: import declared but not used\n# github.com/example/project\n./main.go:1:1: package command-line-arguments; expected package main"
+expected = "./main.go:1:1: package command-line-arguments; expected package main"

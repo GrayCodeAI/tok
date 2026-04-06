@@ -12,36 +12,12 @@ on_empty = "ty: ok"
 
 [[tests.ty]]
 name = "strips noise, keeps diagnostics"
-input = """
-ty 0.1.0
-Checking 15 files
-
-error[unresolved-reference]: Name `foo` used when not defined
-  --> app/main.py:10:5
-   |
-10 |     foo()
-   |     ^^^
-   |
-
-warning[unused-variable]: Variable `x` is not used
-  --> app/utils.py:8:9
-   |
- 8 |     x = 42
-   |     ^
-   |
-
-Found 1 error, 1 warning
-"""
+input = "ty 0.1.0\nChecking 15 files\n\nerror[unresolved-reference]: Name `foo` used when not defined\n  --> app/main.py:10:5\n   |\n10 |     foo()\n   |     ^^^\n   |\n\nwarning[unused-variable]: Variable `x` is not used\n  --> app/utils.py:8:9\n   |\n 8 |     x = 42\n   |     ^\n   |\n\nFound 1 error, 1 warning"
 expected = "error[unresolved-reference]: Name `foo` used when not defined\n  --> app/main.py:10:5\n   |\n10 |     foo()\n   |     ^^^\n   |\nwarning[unused-variable]: Variable `x` is not used\n  --> app/utils.py:8:9\n   |\n 8 |     x = 42\n   |     ^\n   |\nFound 1 error, 1 warning"
 
 [[tests.ty]]
 name = "clean output"
-input = """
-ty 0.1.0
-Checking 10 files
-
-All checks passed!
-"""
+input = "ty 0.1.0\nChecking 10 files\n\nAll checks passed!"
 expected = "All checks passed!"
 
 [[tests.ty]]

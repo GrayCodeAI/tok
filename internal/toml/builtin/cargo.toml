@@ -73,79 +73,24 @@ max_lines = 150
 
 [[tests.cargo_test]]
 name = "summarizes test output"
-input = """
-   Compiling mylib v0.1.0
-   Compiling myapp v0.1.0
-   Finished test [unoptimized + debuginfo] target(s) in 3.42s
-   Running unittests src/lib.rs (target/debug/deps/mylib-abc123)
-
-running 42 tests
-test tests::test_basic ... ok
-test tests::test_advanced ... ok
-test tests::test_edge_case ... FAILED
-
-failures:
----- tests::test_edge_case stdout ----
-thread 'tests::test_edge_case' panicked at 'assertion failed', src/lib.rs:100
-note: run with `RUST_BACKTRACE=1` environment variable
-failures:
-    test
-"""
-expected = """
-FAILING: tests::test_edge_case
-  src/lib.rs:100: assertion failed
-"""
+input = "   Compiling mylib v0.1.0\n   Compiling myapp v0.1.0\n   Finished test [unoptimized + debuginfo] target(s) in 3.42s\n   Running unittests src/lib.rs (target/debug/deps/mylib-abc123)\n\nrunning 42 tests\ntest tests::test_basic ... ok\ntest tests::test_advanced ... ok\ntest tests::test_edge_case ... FAILED\n\nfailures:\n---- tests::test_edge_case stdout ----\nthread 'tests::test_edge_case' panicked at 'assertion failed', src/lib.rs:100\nnote: run with `RUST_BACKTRACE=1` environment variable\nfailures:\n    test"
+expected = "FAILING: tests::test_edge_case\n  src/lib.rs:100: assertion failed"
 
 [[tests.cargo_test]]
 name = "hides passing tests"
-input = """
-   Compiling myapp v0.1.0
-   Finished test [unoptimized + debuginfo] target(s) in 1.2s
-   Running unittests (target/debug/deps/myapp-xyz)
-
-running 10 tests
-test tests::one ... ok
-test tests::two ... ok
-test tests::three ... ok
-test tests::four ... ok
-test tests::five ... ok
-
-test result: ok. 10 passed
-"""
-expected = """
-Tests: 10 passed
-"""
+input = "   Compiling myapp v0.1.0\n   Finished test [unoptimized + debuginfo] target(s) in 1.2s\n   Running unittests (target/debug/deps/myapp-xyz)\n\nrunning 10 tests\ntest tests::one ... ok\ntest tests::two ... ok\ntest tests::three ... ok\ntest tests::four ... ok\ntest tests::five ... ok\n\ntest result: ok. 10 passed"
+expected = "Tests: 10 passed"
 
 [[tests.cargo_build]]
 name = "strips compilation steps"
-input = """
-   Compiling serde v1.0.0
-   Compiling tokio v1.2.0
-   Compiling myapp v0.1.0 (src/main.rs)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.15s
-"""
+input = "   Compiling serde v1.0.0\n   Compiling tokio v1.2.0\n   Compiling myapp v0.1.0 (src/main.rs)\n    Finished dev [unoptimized + debuginfo] target(s) in 2.15s"
 expected = "Build: myapp v0.1.0 (2.15s)"
 
 [[tests.cargo_build]]
 name = "shows build errors"
-input = """
-   Compiling myapp v0.1.0
-error[E0425]: cannot find function `does_not_exist` in this scope
-  --> src/main.rs:10:5
-   |
-10 |     does_not_exist();
-   |     ^^^^^^^^^^^^^^ not found in this scope
-"""
+input = "   Compiling myapp v0.1.0\nerror[E0425]: cannot find function `does_not_exist` in this scope\n  --> src/main.rs:10:5\n   |\n10 |     does_not_exist();\n   |     ^^^^^^^^^^^^^^ not found in this scope"
 expected = "error[E0425]: cannot find function `does_not_exist` in this scope"
 [[tests.cargo_build]]
 name = "shows clippy warnings"
-input = """
-    Checking myapp v0.1.0
-warning: unused import: `std::collections::HashMap`
- --> src/main.rs:1:5
-  |
-1 | use std::collections::HashMap;
-  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
-    Finished dev [unoptimized + debuginfo] target(s) in 1.23s
-"""
+input = "    Checking myapp v0.1.0\nwarning: unused import: `std::collections::HashMap`\n --> src/main.rs:1:5\n  |\n1 | use std::collections::HashMap;\n  |     ^^^^^^^^^^^^^^^^^^^^^^^^^\n    Finished dev [unoptimized + debuginfo] target(s) in 1.23s"
 expected = "warning: unused import: `std::collections::HashMap`"

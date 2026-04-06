@@ -25,18 +25,7 @@ value = 20
 
 [[tests.wget]]
 name = "download complete"
-input = """
---2026-03-10 12:00:00--  https://example.com/file.tar.gz
-Resolving example.com... 93.184.216.34
-Connecting to example.com|93.184.216.34|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 1048576 (1.0M) [application/gzip]
-Saving to: 'file.tar.gz'
-
-file.tar.gz         100%[===================>]   1.00M  5.23MB/s    in 0.2s
-
-2026-03-10 12:00:01 (5.23 MB/s) - 'file.tar.gz' saved [1048576/1048576]
-"""
+input = "--2026-03-10 12:00:00--  https://example.com/file.tar.gz\nResolving example.com... 93.184.216.34\nConnecting to example.com|93.184.216.34|:443... connected.\nHTTP request sent, awaiting response... 200 OK\nLength: 1048576 (1.0M) [application/gzip]\nSaving to: 'file.tar.gz'\n\nfile.tar.gz         100%[===================>]   1.00M  5.23MB/s    in 0.2s\n\n2026-03-10 12:00:01 (5.23 MB/s) - 'file.tar.gz' saved [1048576/1048576]"
 expected_contains = "file.tar.gz"
 
 [[tests.wget]]

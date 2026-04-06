@@ -13,14 +13,7 @@ on_empty = "shopify theme: ok"
 
 [[tests.shopify-theme]]
 name = "strips upload/download lines, keeps tail"
-input = """
-Uploading assets/app.css
-Uploading assets/app.js
-Uploading templates/index.liquid
-Downloading assets/old.css
-
-Theme 'Development' (id: 12345) pushed to store.example.myshopify.com
-"""
+input = "Uploading assets/app.css\nUploading assets/app.js\nUploading templates/index.liquid\nDownloading assets/old.css\n\nTheme 'Development' (id: 12345) pushed to store.example.myshopify.com"
 expected = "Theme 'Development' (id: 12345) pushed to store.example.myshopify.com"
 
 [[tests.shopify-theme]]

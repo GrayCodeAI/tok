@@ -29,24 +29,10 @@ return = "pip: installation completed"
 
 [[tests.pip_install]]
 name = "summarizes install output"
-input = """
-Collecting requests
-  Downloading requests-2.31.0-py3-none-any.whl
-Collecting urllib3
-  Downloading urllib3-2.1.0-py3-none-any.whl
-Installing collected packages: urllib3, requests
-Successfully installed requests-2.31.0 urllib3-2.1.0
-"""
+input = "Collecting requests\n  Downloading requests-2.31.0-py3-none-any.whl\nCollecting urllib3\n  Downloading urllib3-2.1.0-py3-none-any.whl\nInstalling collected packages: urllib3, requests\nSuccessfully installed requests-2.31.0 urllib3-2.1.0"
 expected = "Successfully installed requests-2.31.0 urllib3-2.1.0"
 
 [[tests.pip_install]]
 name = "shows installation errors"
-input = """
-Collecting flask
-  Downloading Flask-3.0.0.tar.gz
-  Installing build dependencies: started
-  Installing build dependencies: finished with status 'error'
-  error: subprocess-exited-with-error
-  × Building wheel for flask failed
-"""
+input = "Collecting flask\n  Downloading Flask-3.0.0.tar.gz\n  Installing build dependencies: started\n  Installing build dependencies: finished with status 'error'\n  error: subprocess-exited-with-error\n  × Building wheel for flask failed"
 expected = "error: subprocess-exited-with-error"

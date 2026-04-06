@@ -21,16 +21,5 @@ return = "No resources found"
 [tests]
 [[tests.kubectl_get]]
 name = "compact pod list"
-input = """
-NAME                        READY   STATUS    RESTARTS   AGE
-web-server-abc123           1/1     Running   0          2d
-api-server-def456           1/1     Running   1          5d
-db-statefulset-0            1/1     Running   0          10d
-redis-xyz-789               0/1     Error     3          1d
-"""
-expected = """
-web-server-abc123     Running  (0 restarts)
-api-server-def456     Running  (1 restarts)
-db-statefulset-0      Running  (0 restarts)
-redis-xyz-789         Error    (3 restarts)
-"""
+input = "NAME                        READY   STATUS    RESTARTS   AGE\nweb-server-abc123           1/1     Running   0          2d\napi-server-def456           1/1     Running   1          5d\ndb-statefulset-0            1/1     Running   0          10d\nredis-xyz-789               0/1     Error     3          1d"
+expected = "web-server-abc123     Running  (0 restarts)\napi-server-def456     Running  (1 restarts)\ndb-statefulset-0      Running  (0 restarts)\nredis-xyz-789         Error    (3 restarts)"

@@ -30,27 +30,10 @@ return = "ESLint: no problems found"
 
 [[tests.eslint]]
 name = "groups errors by rule"
-input = """
-/path/to/file1.js
-  1:1  error  'require' is not defined    node/no-unpublished-require
-  2:1  error  'describe' is not defined   jest/no-disabled-tests
-
-/path/to/file2.js
-  5:1  error  Unexpected console statement  no-console
-  6:1  error  'require' is not defined      node/no-unpublished-require
-
-✖ 4 problems (4 errors, 0 warnings)
-"""
-expected = """
-/path/to/file1.js: 2 errors
-/path/to/file2.js: 2 errors
-
-4 errors, 0 warnings
-"""
+input = "/path/to/file1.js\n  1:1  error  'require' is not defined    node/no-unpublished-require\n  2:1  error  'describe' is not defined   jest/no-disabled-tests\n\n/path/to/file2.js\n  5:1  error  Unexpected console statement  no-console\n  6:1  error  'require' is not defined      node/no-unpublished-require\n\n✖ 4 problems (4 errors, 0 warnings)"
+expected = "/path/to/file1.js: 2 errors\n/path/to/file2.js: 2 errors\n\n4 errors, 0 warnings"
 
 [[tests.eslint]]
 name = "clean output"
-input = """
-All files passed linting!
-"""
+input = "All files passed linting!"
 expected = "All files passed linting!"

@@ -11,50 +11,25 @@ on_empty = "make: ok"
 
 [[tests.make]]
 name = "strips entering/leaving lines"
-input = """
-make[1]: Entering directory '/home/user'
-gcc -O2 foo.c
-make[1]: Leaving directory '/home/user'
-"""
-expected = """
-gcc -O2 foo.c
-"""
+input = "make[1]: Entering directory '/home/user'\ngcc -O2 foo.c\nmake[1]: Leaving directory '/home/user'"
+expected = "gcc -O2 foo.c"
 
 [[tests.make]]
 name = "strips blank lines"
-input = """
-gcc -O2 foo.c
-
-gcc -O2 bar.c
-"""
-expected = """
-gcc -O2 foo.c
-gcc -O2 bar.c
-"""
+input = "gcc -O2 foo.c\n\ngcc -O2 bar.c"
+expected = "gcc -O2 foo.c\ngcc -O2 bar.c"
 
 [[tests.make]]
 name = "on_empty when all stripped"
-input = """
-make[1]: Entering directory '/home/user'
-make[1]: Leaving directory '/home/user'
-"""
+input = "make[1]: Entering directory '/home/user'\nmake[1]: Leaving directory '/home/user'"
 expected = "make: ok"
 [tests]
 [[tests.make]]
 name = "summarizes build"
-input = """
-gcc -c -o main.o main.c
-gcc -c -o utils.o utils.c
-gcc -o myapp main.o utils.o
-Build complete.
-"""
+input = "gcc -c -o main.o main.c\ngcc -c -o utils.o utils.c\ngcc -o myapp main.o utils.o\nBuild complete."
 expected = "Build complete."
 
 [[tests.make]]
 name = "shows failures"
-input = """
-gcc -c -o main.o main.c
-main.c:10:5: error: expected ';' before '}' token
-make: *** [Makefile:5: main.o] Error 1
-"""
+input = "gcc -c -o main.o main.c\nmain.c:10:5: error: expected ';' before '}' token\nmake: *** [Makefile:5: main.o] Error 1"
 expected = "main.c:10:5: error: expected ';' before '}' token"

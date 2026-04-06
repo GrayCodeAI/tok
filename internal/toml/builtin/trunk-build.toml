@@ -16,24 +16,10 @@ on_empty = "trunk build: ok"
 
 [[tests.trunk-build]]
 name = "strips compile noise, keeps tail summary"
-input = """
-   Compiling tokio v1.35.0
-   Compiling hyper v0.14.28
-   Compiling my-crate v0.1.0
-   Downloading serde v1.0.195
-   Fresh regex v1.10.2
-
-   Finished release [optimized] target(s) in 45.23s
-   Binary: target/release/my-crate (5.2MB)
-"""
+input = "   Compiling tokio v1.35.0\n   Compiling hyper v0.14.28\n   Compiling my-crate v0.1.0\n   Downloading serde v1.0.195\n   Fresh regex v1.10.2\n\n   Finished release [optimized] target(s) in 45.23s\n   Binary: target/release/my-crate (5.2MB)"
 expected = "   Finished release [optimized] target(s) in 45.23s\n   Binary: target/release/my-crate (5.2MB)"
 
 [[tests.trunk-build]]
 name = "on_empty when all noise stripped"
-input = """
-   Compiling my-crate v0.1.0
-   Fresh serde v1.0
-   Checking tokio v1.35.0
-
-"""
+input = "   Compiling my-crate v0.1.0\n   Fresh serde v1.0\n   Checking tokio v1.35.0\n"
 expected = "trunk build: ok"

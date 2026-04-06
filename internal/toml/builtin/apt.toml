@@ -26,26 +26,7 @@ value = 30
 
 [[tests.apt]]
 name = "apt install compact"
-input = """
-Reading package lists... Done
-Building dependency tree... Done
-Reading state information... Done
-The following NEW packages will be installed:
-  nginx nginx-common nginx-core
-0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.
-Need to get 614 kB of archives.
-After this operation, 2,621 kB of additional disk space will be used.
-Get:1 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx amd64 1.18.0-6.1ubuntu1 [3,978 B]
-Get:2 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx-common all 1.18.0-6.1ubuntu1 [40.7 kB]
-Get:3 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx-core amd64 1.18.0-6.1ubuntu1 [570 kB]
-Fetched 614 kB in 1s (614 kB/s)
-Selecting previously unselected package nginx-common.
-(Reading database ... 200000 files and directories currently installed.)
-Preparing to unpack .../nginx-common_1.18.0-6.1ubuntu1_all.deb ...
-Unpacking nginx-common (1.18.0-6.1ubuntu1) ...
-Setting up nginx-common (1.18.0-6.1ubuntu1) ...
-Processing triggers for systemd (249.11-0ubuntu3.12) ...
-"""
+input = "Reading package lists... Done\nBuilding dependency tree... Done\nReading state information... Done\nThe following NEW packages will be installed:\n  nginx nginx-common nginx-core\n0 upgraded, 3 newly installed, 0 to remove and 0 not upgraded.\nNeed to get 614 kB of archives.\nAfter this operation, 2,621 kB of additional disk space will be used.\nGet:1 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx amd64 1.18.0-6.1ubuntu1 [3,978 B]\nGet:2 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx-common all 1.18.0-6.1ubuntu1 [40.7 kB]\nGet:3 http://archive.ubuntu.com/ubuntu jammy/main amd64 nginx-core amd64 1.18.0-6.1ubuntu1 [570 kB]\nFetched 614 kB in 1s (614 kB/s)\nSelecting previously unselected package nginx-common.\n(Reading database ... 200000 files and directories currently installed.)\nPreparing to unpack .../nginx-common_1.18.0-6.1ubuntu1_all.deb ...\nUnpacking nginx-common (1.18.0-6.1ubuntu1) ...\nSetting up nginx-common (1.18.0-6.1ubuntu1) ...\nProcessing triggers for systemd (249.11-0ubuntu3.12) ..."
 expected = "nginx"
 
 [[tests.apt]]

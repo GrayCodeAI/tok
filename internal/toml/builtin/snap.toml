@@ -25,17 +25,7 @@ value = 20
 
 [[tests.snap]]
 name = "snap install compact"
-input = """
-Download snap "code"
-Fetch and check assertions for snap "code"
-Mount snap "code"
-Copy snap "code" data
-Setup snap "code" aliases
-Connect code:home to home
-Connect code:network to network
-Run install hook of snap "code"
-code 9a8f7e6d from Visual Studio Code (vscode*) installed
-"""
+input = "Download snap \"code\"\nFetch and check assertions for snap \"code\"\nMount snap \"code\"\nCopy snap \"code\" data\nSetup snap \"code\" aliases\nConnect code:home to home\nConnect code:network to network\nRun install hook of snap \"code\"\ncode 9a8f7e6d from Visual Studio Code (vscode*) installed"
 expected_contains = "code"
 
 [[tests.snap]]

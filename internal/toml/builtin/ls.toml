@@ -4,25 +4,10 @@
 
 [[tests.ls]]
 name = "compact file listing"
-input = """
-total 128
-drwxr-xr-x  12 user staff   384 Jan 15 10:00 .
-drwxr-xr-x   8 user staff   256 Jan 15 09:00 ..
--rw-r--r--   1 user staff  4096 Jan 15 10:00 file.txt
-drwxr-xr-x   3 user staff    96 Jan 15 09:30 subdir
--rw-r--r--   1 user staff  2048 Jan 15 09:45 main.go
-"""
-expected = """
-file.txt (4096)
-subdir/
-main.go (2048)
-"""
+input = "total 128\ndrwxr-xr-x  12 user staff   384 Jan 15 10:00 .\ndrwxr-xr-x   8 user staff   256 Jan 15 09:00 ..\n-rw-r--r--   1 user staff  4096 Jan 15 10:00 file.txt\ndrwxr-xr-x   3 user staff    96 Jan 15 09:30 subdir\n-rw-r--r--   1 user staff  2048 Jan 15 09:45 main.go"
+expected = "file.txt (4096)\nsubdir/\nmain.go (2048)"
 
 [[tests.ls]]
 name = "empty directory"
-input = """
-total 0
-drwxr-xr-x  2 user staff  64 Jan 15 10:00 .
-drwxr-xr-x  8 user staff 256 Jan 15 09:00 ..
-"""
+input = "total 0\ndrwxr-xr-x  2 user staff  64 Jan 15 10:00 .\ndrwxr-xr-x  8 user staff 256 Jan 15 09:00 .."
 expected = "Empty directory"

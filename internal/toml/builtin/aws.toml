@@ -61,26 +61,5 @@ max_lines = 50
 [tests]
 [[tests.aws]]
 name = "compact ec2 list"
-input = """
-{
-    "Reservations": [
-        {
-            "Instances": [
-                {
-                    "InstanceId": "i-1234567890abcdef0",
-                    "InstanceType": "t2.micro",
-                    "State": { "Name": "running" },
-                    "PublicIpAddress": "54.123.45.67"
-                },
-                {
-                    "InstanceId": "i-0987654321fedcba0",
-                    "InstanceType": "t2.small",
-                    "State": { "Name": "stopped" },
-                    "PublicIpAddress": null
-                }
-            ]
-        }
-    ]
-}
-"""
+input = "{\n    \"Reservations\": [\n        {\n            \"Instances\": [\n                {\n                    \"InstanceId\": \"i-1234567890abcdef0\",\n                    \"InstanceType\": \"t2.micro\",\n                    \"State\": { \"Name\": \"running\" },\n                    \"PublicIpAddress\": \"54.123.45.67\"\n                },\n                {\n                    \"InstanceId\": \"i-0987654321fedcba0\",\n                    \"InstanceType\": \"t2.small\",\n                    \"State\": { \"Name\": \"stopped\" },\n                    \"PublicIpAddress\": null\n                }\n            ]\n        }\n    ]\n}"
 expected = "2 EC2 instances (1 running, 1 stopped)"

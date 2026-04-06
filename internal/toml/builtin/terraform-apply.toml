@@ -32,34 +32,10 @@ return = "terraform apply: completed"
 
 [[tests.terraform_apply]]
 name = "summarizes apply output"
-input = """
-Acquiring state lock...
-
-Terraform used the selected providers to generate the following execution plan.
-Resource actions are indicated with the following symbols:
-  + create
-  ~ update in-place
-
-Plan: 3 to add, 1 to change, 0 to destroy.
-
-aws_s3_bucket.data: Creating...
-aws_s3_bucket.data: Creation complete after 2s [id=my-bucket]
-aws_instance.web: Creating...
-aws_instance.web: Still creating... [10s elapsed]
-aws_instance.web: Creation complete after 15s [id=i-1234567890abcdef]
-
-Apply complete! Resources: 3 added, 1 changed, 0 destroyed.
-"""
-expected = """
-Apply complete! Resources: 3 added, 1 changed, 0 destroyed.
-"""
+input = "Acquiring state lock...\n\nTerraform used the selected providers to generate the following execution plan.\nResource actions are indicated with the following symbols:\n  + create\n  ~ update in-place\n\nPlan: 3 to add, 1 to change, 0 to destroy.\n\naws_s3_bucket.data: Creating...\naws_s3_bucket.data: Creation complete after 2s [id=my-bucket]\naws_instance.web: Creating...\naws_instance.web: Still creating... [10s elapsed]\naws_instance.web: Creation complete after 15s [id=i-1234567890abcdef]\n\nApply complete! Resources: 3 added, 1 changed, 0 destroyed."
+expected = "Apply complete! Resources: 3 added, 1 changed, 0 destroyed."
 
 [[tests.terraform_apply]]
 name = "shows errors"
-input = """
-Error: Error creating S3 bucket: AccessDenied
-
-  on main.tf line 5, in resource "aws_s3_bucket" "data":
-   5: resource "aws_s3_bucket" "data" {
-"""
+input = "Error: Error creating S3 bucket: AccessDenied\n\n  on main.tf line 5, in resource \"aws_s3_bucket\" \"data\":\n   5: resource \"aws_s3_bucket\" \"data\" {"
 expected = "Error: Error creating S3 bucket: AccessDenied"

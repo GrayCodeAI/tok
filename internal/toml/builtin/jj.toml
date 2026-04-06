@@ -28,23 +28,10 @@ value = 40
 
 [[tests.jj]]
 name = "log output stripped of hints"
-input = """@  qpvuntsm patrick@example.com 2026-03-10 12:00 abc123
-│  feat: add new feature
-◉  zzzzzzzz root()
-
-Working copy now at: qpvuntsm abc123 feat: add new feature
-Hint: use `jj log` to see the full history
-"""
+input = "@  qpvuntsm patrick@example.com 2026-03-10 12:00 abc123\n│  feat: add new feature\n◉  zzzzzzzz root()\n\nWorking copy now at: qpvuntsm abc123 feat: add new feature\nHint: use `jj log` to see the full history"
 expected_contains = "qpvuntsm"
 
 [[tests.jj]]
 name = "jj status compact"
-input = """Parent commit: qpvuntsm abc123 feat: feature
-Working copy : rlvkpnrz def456
-Modified files:
-  src/main.rs
-  src/lib.rs
-
-Nothing changed.
-"""
+input = "Parent commit: qpvuntsm abc123 feat: feature\nWorking copy : rlvkpnrz def456\nModified files:\n  src/main.rs\n  src/lib.rs\n\nNothing changed."
 expected_contains = "src/main.rs"
