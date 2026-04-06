@@ -74,3 +74,19 @@ FAIL: tests/login.test.js (0.543 s)
 Test Suites: 1 failed, 1 passed, 2 total
 Tests:       1 failed, 1 passed, 2 total
 """
+[[tests.jest]]
+name = "shows test suite failures"
+input = """
+ FAIL  tests/auth.test.js
+  ● should validate token
+    expect(received).toBeTruthy()
+    Received: false
+      at Object.<anonymous> (tests/auth.test.js:25:18)
+Test Suites: 1 failed, 3 passed, 4 total
+Tests:       1 failed, 12 passed, 13 total
+"""
+expected = """
+FAIL: tests/auth.test.js › should validate token
+Test Suites: 1 failed, 3 passed, 4 total
+Tests:       1 failed, 12 passed, 13 total
+"""
