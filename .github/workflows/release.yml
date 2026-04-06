@@ -3,200 +3,101 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*' # Trigger on version tags like v0.1.0
 
 permissions:
-  contents: write
+  contents: write # Required for creating releases
 
 jobs:
-  build:
-    name: Build binaries
+  build-and-release:
+    name: Build and Release
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - goos: linux
-            goarch: amd64
-            suffix: ''
-          - goos: linux
-            goarch: arm64
-            suffix: ''
-          - goos: darwin
-            goarch: amd64
-            suffix: ''
-          - goos: darwin
-            goarch: arm64
-            suffix: ''
-          - goos: windows
-            goarch: amd64
-            suffix: '.exe'
+    
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch all history for proper version detection
       
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.21'
       
       - name: Get version
         id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
       
-      - name: Build
-        env:
-          GOOS: ${{ matrix.goos }}
-          GOARCH: ${{ matrix.goarch }}
-          CGO_ENABLED: 0
+      - name: Build all platforms
+        run: make build-all
+      
+      - name: Create archives
         run: |
-          go build -ldflags="-s -w -X github.com/GrayCodeAI/tokman/internal/commands.Version=${{ steps.version.outputs.VERSION }}" -o tokman${{ matrix.suffix }} ./cmd/tokman
+          # Create tar.gz archives for Unix platforms
+          tar -czf tokman-linux-amd64.tar.gz tokman-linux-amd64
+          tar -czf tokman-linux-arm64.tar.gz tokman-linux-arm64
+          tar -czf tokman-darwin-amd64.tar.gz tokman-darwin-amd64
+          tar -czf tokman-darwin-arm64.tar.gz tokman-darwin-arm64
+          
+          # Create zip archive for Windows
+          zip tokman-windows-amd64.zip tokman-windows-amd64.exe
+          
+          # List created archives
+          ls -lh tokman-*.tar.gz tokman-*.zip
       
-      - name: Create tarball
+      - name: Generate checksums
         run: |
-          mkdir -p release
-          cp tokman${{ matrix.suffix }} release/
-          cp LICENSE release/ 2>/dev/null || true
-          cp README.md release/ 2>/dev/null || true
-          cd release && tar -czvf ../tokman-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz *
+          sha256sum tokman-*.tar.gz tokman-*.zip > checksums.txt
+          cat checksums.txt
       
-      - name: Generate SBOM (T196)
-        if: matrix.goos == 'linux' && matrix.goarch == 'amd64'
-        run: |
-          go install github.com/anchore/syft/cmd/syft@latest
-          syft dir:. -o spdx-json > sbom.spdx.json
-      
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tokman-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: tokman-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
-
-  release:
-    name: Create release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-      
-      - name: Generate SHA256 checksums
-        run: |
-          cd artifacts
-          find . -name "*.tar.gz" -exec sha256sum {} \; > ../checksums.txt
-          cat ../checksums.txt
-      
-      - name: Create release
+      - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/**/tokman-*.tar.gz
+            tokman-linux-amd64.tar.gz
+            tokman-linux-arm64.tar.gz
+            tokman-darwin-amd64.tar.gz
+            tokman-darwin-arm64.tar.gz
+            tokman-windows-amd64.zip
             checksums.txt
-            sbom.spdx.json
-          generate_release_notes: true
           body: |
-            ## TokMan ${{ github.ref_name }}
+            ## TokMan ${{ steps.version.outputs.VERSION }}
             
             ### Installation
             
             **Homebrew (macOS/Linux):**
             ```bash
-            brew tap GrayCodeAI/tokman
-            brew install tokman
+            brew install GrayCodeAI/tokman/tokman
             ```
             
-            **AUR (Arch Linux):**
+            **Install script (Linux/macOS):**
             ```bash
-            yay -S tokman-bin
+            curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | sh
             ```
             
-            **Docker:**
-            ```bash
-            docker pull graycodeai/tokman:latest
-            ```
-            
-            **Manual:**
+            **Manual download:**
             Download the appropriate binary for your platform below.
             
+            ### Verify checksums
+            ```bash
+            sha256sum -c checksums.txt
+            ```
+            
             ### What's Changed
-            See [CHANGELOG.md](https://github.com/GrayCodeAI/tokman/blob/main/CHANGELOG.md) for details.
-
-  docker:
-    name: Build and push Docker image
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+            
+            See [CHANGELOG.md](https://github.com/GrayCodeAI/tokman/blob/main/CHANGELOG.md) for full details.
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      
-      - name: Get version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: docker/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            graycodeai/tokman:latest
-            graycodeai/tokman:${{ steps.version.outputs.VERSION }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  update-homebrew:
-    name: Update Homebrew formula
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Get version
-        id: version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-      
-      - name: Update formula checksums
+      - name: Update Homebrew Formula
+        if: success()
         run: |
-          VERSION=${{ steps.version.outputs.VERSION }}
-          
-          # Download checksums from release
-          curl -sL "https://github.com/GrayCodeAI/tokman/releases/download/${VERSION}/checksums.txt" -o checksums.txt
-          
-          # Extract checksums for each platform
-          DARWIN_AMD64=$(grep "darwin-amd64" checksums.txt | awk '{print $1}')
-          DARWIN_ARM64=$(grep "darwin-arm64" checksums.txt | awk '{print $1}')
-          LINUX_AMD64=$(grep "linux-amd64" checksums.txt | awk '{print $1}')
-          LINUX_ARM64=$(grep "linux-arm64" checksums.txt | awk '{print $1}')
-          
-          # Update Homebrew formula
-          sed -i "s/version \".*/version \"${VERSION#v}\"/" homebrew/tokman.rb
-          sed -i "s/PLACEHOLDER_DARWIN_AMD64_SHA256/${DARWIN_AMD64}/" homebrew/tokman.rb
-          sed -i "s/PLACEHOLDER_DARWIN_ARM64_SHA256/${DARWIN_ARM64}/" homebrew/tokman.rb
-          sed -i "s/PLACEHOLDER_LINUX_AMD64_SHA256/${LINUX_AMD64}/" homebrew/tokman.rb
-          sed -i "s/PLACEHOLDER_LINUX_ARM64_SHA256/${LINUX_ARM64}/" homebrew/tokman.rb
-          
-          # Update AUR PKGBUILD
-          sed -i "s/pkgver=.*/pkgver=${VERSION#v}/" aur/PKGBUILD
-          sed -i "s/PLACEHOLDER_LINUX_AMD64_SHA256/${LINUX_AMD64}/" aur/PKGBUILD
-          sed -i "s/PLACEHOLDER_LINUX_ARM64_SHA256/${LINUX_ARM64}/" aur/PKGBUILD
-      
-      - name: Create PR for Homebrew tap
-        run: |
-          # This would create a PR to the homebrew-tap repo
-          # For now, just show the updated formula
-          cat homebrew/tokman.rb
+          # Calculate SHA256 for darwin-arm64 (most common Mac)
+          SHA256=$(sha256sum tokman-darwin-arm64.tar.gz | awk '{print $1}')
+          echo "SHA256 for Homebrew formula: $SHA256"
+          echo ""
+          echo "Update Formula/tokman.rb with:"
+          echo "  url \"https://github.com/GrayCodeAI/tokman/archive/refs/tags/v${{ steps.version.outputs.VERSION }}.tar.gz\""
+          echo "  sha256 \"$SHA256\""

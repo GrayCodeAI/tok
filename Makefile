@@ -1,100 +1,112 @@
-.PHONY: build build-small build-all build-simd build-tiny test test-cover race bench lint typecheck vet fmt clean benchmark coverage tidy check check-quick ci
+.PHONY: build build-small build-all test test-race test-cover lint typecheck check install clean help
 
-BINARY_NAME := tokman
-VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-BUILD_DIR := bin
+# Binary name
+BINARY=tokman
+BUILD_DIR=cmd/tokman
 
-# Go 1.25+ includes SIMD by default; GOEXPERIMENT is no longer needed.
-GO ?= go
+# Version from git tag (e.g., v0.1.0 -> 0.1.0) or "dev"
+VERSION=$(shell git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' || echo "dev")
 
-# Aggressive optimization flags for smaller binary
-LDFLAGS := -s -w -X github.com/GrayCodeAI/tokman/internal/commands.Version=$(VERSION)
+# Build flags with version injection
+LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tokman/internal/commands/shared.Version=$(VERSION)'"
 
-# Standard build (stripped symbols)
+# Go flags
+GOFLAGS=CGO_ENABLED=0
+
+## build: Build standard binary
 build:
-	$(GO) build -ldflags="$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/tokman
+	$(GOFLAGS) go build -o $(BINARY) $(LDFLAGS) ./$(BUILD_DIR)
 
-# Optimized small binary (strip + compress)
+## build-small: Build optimized small binary (with UPX if available)
 build-small:
-	$(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/tokman
-	@echo "Binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME) | cut -f1)"
+	$(GOFLAGS) go build -o $(BINARY) $(LDFLAGS) -gcflags="-trimpath" ./$(BUILD_DIR)
+	@command -v upx >/dev/null 2>&1 && upx --best --lzma $(BINARY) 2>/dev/null || echo "UPX not found, skipping compression"
 
-# Tiny binary with maximum optimization
+## build-tiny: Build ultra-optimized binary
 build-tiny:
-	CGO_ENABLED=0 $(GO) build -ldflags="$(LDFLAGS) -extldflags '-static'" -trimpath -tags netgo,osusergo -o $(BUILD_DIR)/$(BINARY_NAME)-tiny ./cmd/tokman
-	@echo "Tiny binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-tiny | cut -f1)"
-	@if command -v upx >/dev/null 2>&1; then \
-		upx --best $(BUILD_DIR)/$(BINARY_NAME)-tiny -o $(BUILD_DIR)/$(BINARY_NAME)-upx 2>/dev/null || true; \
-		echo "UPX compressed size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-upx 2>/dev/null | cut -f1 || echo 'N/A')"; \
-	fi
+	$(GOFLAGS) go build -tags netgo -o $(BINARY) $(LDFLAGS) \
+		-gcflags="-trimpath" \
+		-asmflags="-trimpath" \
+		./$(BUILD_DIR)
+	@command -v upx >/dev/null 2>&1 && upx --ultra-brute $(BINARY) 2>/dev/null || echo "UPX not found, skipping compression"
 
-# SIMD-optimized build (SIMD is default in Go 1.25+, target kept for compatibility)
-build-simd:
-	$(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-simd ./cmd/tokman
-	@echo "SIMD binary size: $$(du -h $(BUILD_DIR)/$(BINARY_NAME)-simd | cut -f1)"
-
-# Multi-platform build
+## build-all: Build for all platforms (Linux, macOS, Windows)
 build-all:
-	GOOS=linux GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 ./cmd/tokman
-	GOOS=linux GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 ./cmd/tokman
-	GOOS=darwin GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-amd64 ./cmd/tokman
-	GOOS=darwin GOARCH=arm64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-darwin-arm64 ./cmd/tokman
-	GOOS=windows GOARCH=amd64 $(GO) build -ldflags="$(LDFLAGS)" -trimpath -o $(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe ./cmd/tokman
+	@echo "Building for all platforms..."
+	GOOS=linux GOARCH=amd64 $(GOFLAGS) go build -o tokman-linux-amd64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=linux GOARCH=arm64 $(GOFLAGS) go build -o tokman-linux-arm64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=darwin GOARCH=amd64 $(GOFLAGS) go build -o tokman-darwin-amd64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=darwin GOARCH=arm64 $(GOFLAGS) go build -o tokman-darwin-arm64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=windows GOARCH=amd64 $(GOFLAGS) go build -o tokman-windows-amd64.exe $(LDFLAGS) ./$(BUILD_DIR)
+	@echo "Done! Created binaries:"
+	@ls -lh tokman-*
 
+## build-simd: Build with SIMD optimizations (Go 1.26+)
+build-simd:
+	$(GOFLAGS) go build -tags simd -o $(BINARY) $(LDFLAGS) ./$(BUILD_DIR)
+
+## test: Run tests
 test:
-	$(GO) test -race -count=1 ./...
+	go test -cover ./...
 
-test-short:
-	$(GO) test -short -count=1 ./...
+## test-race: Run tests with race detector
+test-race:
+	go test -race ./...
 
+## test-cover: Run tests with coverage report
 test-cover:
-	$(GO) test -race -coverprofile=coverage.out ./...
-	$(GO) tool cover -html=coverage.out -o coverage.html
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: coverage.html"
 
-# race: run tests with the race detector
-race:
-	$(GO) test -race ./...
+## test-verbose: Run tests with verbose output
+test-verbose:
+	go test -v -cover ./...
 
-# bench: run benchmarks with memory profiling
-bench:
-	$(GO) test -bench=. -benchmem ./...
-
-# coverage: generate HTML coverage report
-coverage:
-	$(GO) test -race -coverprofile=coverage.out ./...
-	$(GO) tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report written to coverage.html"
-
-# tidy: tidy go module dependencies
-tidy:
-	$(GO) mod tidy
-
+## lint: Run linters
 lint:
-	@if command -v golangci-lint >/dev/null 2>&1; then \
-		golangci-lint run ./...; \
-	else \
-		echo "golangci-lint not found, falling back to go vet"; \
-		$(GO) vet ./...; \
-	fi
+	go vet ./...
+	@command -v golangci-lint >/dev/null 2>&1 && golangci-lint run || echo "golangci-lint not installed, skipping"
 
+## typecheck: Run type checking
 typecheck:
-	$(GO) vet ./...
+	go vet ./...
 
-vet:
-	$(GO) vet ./...
+## check: Run all checks (fmt, vet, typecheck, lint, test)
+check: typecheck lint test
+	@echo "All checks passed!"
 
-fmt:
-	gofmt -s -w .
-	goimports -w .
+## install: Install binary to ~/.local/bin
+install: build
+	@mkdir -p $(HOME)/.local/bin
+	@cp $(BINARY) $(HOME)/.local/bin/$(BINARY)
+	@echo "Installed $(BINARY) to $(HOME)/.local/bin/$(BINARY)"
+	@echo "Make sure $(HOME)/.local/bin is in your PATH"
 
+## install-global: Install binary to /usr/local/bin (requires sudo)
+install-global: build
+	@sudo cp $(BINARY) /usr/local/bin/$(BINARY)
+	@echo "Installed $(BINARY) to /usr/local/bin/$(BINARY)"
+
+## clean: Clean build artifacts
 clean:
-	rm -rf $(BUILD_DIR)/ coverage.out coverage.html
+	rm -f $(BINARY) tokman-* coverage.out coverage.html
+	go clean -testcache
+	@echo "Cleaned build artifacts"
 
-# Run all checks
-check: vet typecheck lint test fmt
+## benchmark: Run benchmarks
+benchmark:
+	go test -bench=. -benchmem ./...
 
-# Quick check (skip slow tests)
-check-quick: fmt vet typecheck lint test-short
+## version: Show version
+version:
+	@echo "Version: $(VERSION)"
 
-# CI check (what CI runs)
-ci: test lint bench
+## help: Show this help
+help:
+	@echo "TokMan Makefile"
+	@echo ""
+	@echo "Usage: make [target]"
+	@echo ""
+	@echo "Targets:"
+	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'

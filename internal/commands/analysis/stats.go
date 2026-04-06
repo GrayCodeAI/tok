@@ -18,10 +18,11 @@ var statsJSON bool
 var statsCache bool
 
 var statsCmd = &cobra.Command{
-	Use:   "stats",
-	Short: "Show token savings statistics",
-	Long:  `Display aggregate token savings for the current project.`,
-	RunE:  runStats,
+	Use:     "stats",
+	Aliases: []string{"gain", "savings"}, // Like RTK's 'gain' command
+	Short:   "Show token savings statistics",
+	Long:    `Display aggregate token savings for the current project.`,
+	RunE:    runStats,
 }
 
 func init() {

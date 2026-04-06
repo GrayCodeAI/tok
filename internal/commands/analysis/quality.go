@@ -21,8 +21,9 @@ var (
 )
 
 var qualityCmd = &cobra.Command{
-	Use:   "quality [file]",
-	Short: "Analyze compression quality (competitive feature vs LLMLingua/AutoCompressor)",
+	Use:     "quality [file]",
+	Aliases: []string{"grade", "score"},
+	Short:   "Analyze compression quality (competitive feature vs LLMLingua/AutoCompressor)",
 	Long: `Evaluate the quality of compression beyond just token count.
 
 This is a competitive feature that automatically measures:
