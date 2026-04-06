@@ -26,3 +26,58 @@ max_lines = 80
 
 [rules.filter.on_empty]
 return = "All tests passed."
+
+# Inline tests
+[tests]
+
+[[tests.npm_test]]
+name = "shows test failures"
+input = """
+> myapp@1.0.0 test
+> jest
+
+ FAIL  tests/app.test.js
+  ✕ should render correctly (12 ms)
+  ✓ should handle input (3 ms)
+
+  ● should render correctly
+
+    expect(received).toBe(expected)
+
+    Expected: "Hello"
+    Received: undefined
+
+      at Object.<anonymous> (tests/app.test.js:10:16)
+
+ PASS  tests/utils.test.js
+  ✓ should add numbers (2 ms)
+  ✓ should divide numbers (1 ms)
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 3 passed, 4 total
+Time:        1.234 s
+"""
+expected = """
+FAIL: tests/app.test.js › should render correctly
+
+Test Suites: 1 failed, 1 passed, 2 total
+Tests:       1 failed, 3 passed, 4 total
+"""
+
+[[tests.npm_test]]
+name = "all passing summary"
+input = """
+> myapp@1.0.0 test
+> jest
+
+ PASS  tests/app.test.js
+  ✓ should render correctly (3 ms)
+  ✓ should handle input (2 ms)
+ PASS  tests/utils.test.js
+  ✓ should add numbers (1 ms)
+
+Test Suites: 2 passed, 2 total
+Tests:       4 passed, 4 total
+Time:        0.567 s
+"""
+expected = "Test Suites: 2 passed, 2 total"
