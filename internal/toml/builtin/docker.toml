@@ -60,3 +60,39 @@ match_command = "^docker-compose(\\s+ps)?(\\s+.*)?$"
 strip_ansi = true
 truncate_lines_at = 200
 max_lines = 50
+
+# Inline tests for docker filters
+[tests]
+
+[[tests.docker_build]]
+name = "strips build steps"
+input = """
+Sending build context to Docker daemon  2.048MB
+Step 1/5 : FROM golang:1.21-alpine
+ ---> abc123
+Step 2/5 : WORKDIR /app
+ ---> Running in def456
+Removing intermediate container def456
+Step 3/5 : COPY . .
+ ---> ghi789
+Successfully built jkl012
+Successfully tagged myapp:latest
+"""
+expected = "Build completed"
+
+[[tests.docker_build]]
+name = "shows errors"
+input = """
+Step 3/5 : COPY . .
+COPY failed: file not found
+"""
+expected = "COPY failed: file not found"
+
+[[tests.docker_ps]]
+name = "truncates long output"
+input = "CONTAINER ID   IMAGE   STATUS   PORTS   NAMES
+abc123   myapp:latest   Up 2 hours   8080->80   web
+"""
+expected = "CONTAINER ID   IMAGE   STATUS   PORTS   NAMES
+abc123   myapp:latest   Up 2 hours   8080->80   web
+"
