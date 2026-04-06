@@ -14,3 +14,27 @@ strip_lines_matching = [
 from = ".*"
 to = "$0"
 max_lines = 50
+
+# Inline tests
+[tests]
+
+[[tests.terraform_init]]
+name = "summarizes init output"
+input = """
+Initializing the backend...
+Initializing provider plugins...
+- Finding latest version of hashicorp/aws...
+- Installing hashicorp/aws v5.31.0...
+- Installed hashicorp/aws v5.31.0
+Terraform has been successfully initialized!
+"""
+expected = "Terraform has been successfully initialized!"
+
+[[tests.terraform_init]]
+name = "shows init errors"
+input = """
+Initializing the backend...
+Error: Unsupported Terraform Core version
+This configuration does not support Terraform version 1.0.0
+"""
+expected = "Error: Unsupported Terraform Core version"
