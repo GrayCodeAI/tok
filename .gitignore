@@ -52,6 +52,7 @@ tokman.db
 # Build artifacts (optional - comment out if you want to track binaries)
 # bin/
 # dist/
+tokman
 
 # Config files with secrets (keep template, ignore actual config)
 config/local.toml
