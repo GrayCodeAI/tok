@@ -215,10 +215,10 @@ func Summarize(results []TestResult) TestSummary {
 // FormatSummary formats a test summary for display
 func (s TestSummary) FormatSummary() string {
 	var sb strings.Builder
-	
+
 	sb.WriteString(fmt.Sprintf("Total: %d, Passed: %d, Failed: %d, Skipped: %d\n",
 		s.Total, s.Passed, s.Failed, s.Skipped))
-	
+
 	if s.Failed > 0 {
 		sb.WriteString("\nFailed tests:\n")
 		for _, result := range s.Results {
@@ -233,7 +233,7 @@ func (s TestSummary) FormatSummary() string {
 			}
 		}
 	}
-	
+
 	if s.Skipped > 0 {
 		sb.WriteString("\nSkipped tests:\n")
 		for _, result := range s.Results {
@@ -246,6 +246,6 @@ func (s TestSummary) FormatSummary() string {
 			}
 		}
 	}
-	
+
 	return sb.String()
 }

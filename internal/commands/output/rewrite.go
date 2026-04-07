@@ -50,10 +50,10 @@ Examples:
   tokman rewrite "echo hello"          # No output, exit 1
   tokman rewrite "rm -rf /"            # No output, exit 2
   tokman rewrite "sudo apt upgrade"    # Output: tokman sudo apt upgrade, exit 3`,
-	Args:              cobra.MinimumNArgs(1),
-	RunE:              runRewrite,
-	SilenceUsage:      true,
-	SilenceErrors:     true,
+	Args:               cobra.MinimumNArgs(1),
+	RunE:               runRewrite,
+	SilenceUsage:       true,
+	SilenceErrors:      true,
 	DisableFlagParsing: true,
 }
 
@@ -64,13 +64,13 @@ func runRewrite(cmd *cobra.Command, args []string) error {
 
 	fullCmd := strings.Join(args, " ")
 	parts := strings.Fields(fullCmd)
-	
+
 	if len(parts) == 0 {
 		os.Exit(ExitInvalidInput)
 	}
 
 	baseCmd := parts[0]
-	
+
 	// Check if command is already using tokman
 	if baseCmd == "tokman" {
 		os.Exit(ExitNoRewrite)
@@ -113,13 +113,13 @@ func runRewrite(cmd *cobra.Command, args []string) error {
 
 	// Rewrite and auto-allow
 	fmt.Println(rewritten)
-	
+
 	if shared.Verbose > 0 {
 		cyan := color.New(color.FgCyan).SprintFunc()
 		green := color.New(color.FgGreen).SprintFunc()
 		fmt.Fprintf(cmd.ErrOrStderr(), "%s → %s\n", cyan(fullCmd), green(rewritten))
 	}
-	
+
 	os.Exit(ExitRewriteAllow)
 	return nil
 }
@@ -182,9 +182,9 @@ func isUnsafe(baseCmd string, parts []string) bool {
 		if baseCmd == unsafe {
 			// Check if piping to shell
 			cmdStr := strings.Join(parts, " ")
-			if strings.Contains(cmdStr, "| sh") || 
-			   strings.Contains(cmdStr, "| bash") ||
-			   strings.Contains(cmdStr, "| zsh") {
+			if strings.Contains(cmdStr, "| sh") ||
+				strings.Contains(cmdStr, "| bash") ||
+				strings.Contains(cmdStr, "| zsh") {
 				return true
 			}
 		}
@@ -249,9 +249,9 @@ func isResourceIntensive(baseCmd string, parts []string) bool {
 		if baseCmd == intensive {
 			// Check if operating on large directories
 			cmdStr := strings.Join(parts, " ")
-			if strings.Contains(cmdStr, "/") || 
-			   strings.Contains(cmdStr, "-r") ||
-			   strings.Contains(cmdStr, "--recursive") {
+			if strings.Contains(cmdStr, "/") ||
+				strings.Contains(cmdStr, "-r") ||
+				strings.Contains(cmdStr, "--recursive") {
 				return true
 			}
 		}

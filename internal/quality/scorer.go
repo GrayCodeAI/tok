@@ -18,7 +18,7 @@ type QualityScore struct {
 	InformationDensity float64 // 0-100, information per token
 	CompressionRatio   float64 // 0-100, based on token reduction
 	KeywordsPreserved  float64 // 0-100, important terms retained
-	
+
 	Details string // Human-readable explanation
 	Grade   string // A+, A, B+, B, C+, C, D, F
 }
@@ -26,7 +26,7 @@ type QualityScore struct {
 // ScoreCompression evaluates the quality of compression.
 func ScoreCompression(original, compressed string, originalTokens, compressedTokens int) QualityScore {
 	score := QualityScore{}
-	
+
 	// 1. Compression Ratio (20% weight)
 	if originalTokens > 0 {
 		ratio := float64(compressedTokens) / float64(originalTokens)
@@ -35,37 +35,36 @@ func ScoreCompression(original, compressed string, originalTokens, compressedTok
 			score.CompressionRatio = 100
 		}
 	}
-	
+
 	// 2. Keywords Preserved (25% weight)
 	score.KeywordsPreserved = calculateKeywordPreservation(original, compressed)
-	
+
 	// 3. Structure Intact (20% weight)
 	score.StructureIntact = calculateStructurePreservation(original, compressed)
-	
+
 	// 4. Readability (15% weight)
 	score.ReadabilityScore = calculateReadability(compressed)
-	
+
 	// 5. Information Density (10% weight)
 	score.InformationDensity = calculateInformationDensity(compressed, compressedTokens)
-	
+
 	// 6. Semantic Preserved (10% weight) - heuristic-based
 	score.SemanticPreserved = calculateSemanticPreservation(original, compressed)
-	
+
 	// Calculate weighted overall score
-	score.Overall = (
-		score.CompressionRatio*0.20 +
+	score.Overall = (score.CompressionRatio*0.20 +
 		score.KeywordsPreserved*0.25 +
 		score.StructureIntact*0.20 +
 		score.ReadabilityScore*0.15 +
 		score.InformationDensity*0.10 +
 		score.SemanticPreserved*0.10)
-	
+
 	// Assign grade
 	score.Grade = assignGrade(score.Overall)
-	
+
 	// Generate details
 	score.Details = generateScoreDetails(score)
-	
+
 	return score
 }
 
@@ -75,7 +74,7 @@ func calculateKeywordPreservation(original, compressed string) float64 {
 	if len(keywords) == 0 {
 		return 100.0
 	}
-	
+
 	compressedLower := strings.ToLower(compressed)
 	preserved := 0
 	for _, kw := range keywords {
@@ -83,7 +82,7 @@ func calculateKeywordPreservation(original, compressed string) float64 {
 			preserved++
 		}
 	}
-	
+
 	return (float64(preserved) / float64(len(keywords))) * 100
 }
 
@@ -92,23 +91,23 @@ func extractKeywords(text string) []string {
 	// Simple heuristic: words longer than 5 chars, capitalized, or technical
 	words := strings.Fields(text)
 	keywords := make(map[string]bool)
-	
+
 	for _, word := range words {
 		cleaned := strings.Trim(word, ".,;:!?()[]{}\"'")
-		
+
 		// Include if:
 		// - Length > 5 chars
 		// - Starts with capital
 		// - Contains underscore (technical)
 		// - All caps (acronym)
-		if len(cleaned) > 5 || 
-		   (len(cleaned) > 0 && cleaned[0] >= 'A' && cleaned[0] <= 'Z') ||
-		   strings.Contains(cleaned, "_") ||
-		   (len(cleaned) > 1 && strings.ToUpper(cleaned) == cleaned) {
+		if len(cleaned) > 5 ||
+			(len(cleaned) > 0 && cleaned[0] >= 'A' && cleaned[0] <= 'Z') ||
+			strings.Contains(cleaned, "_") ||
+			(len(cleaned) > 1 && strings.ToUpper(cleaned) == cleaned) {
 			keywords[cleaned] = true
 		}
 	}
-	
+
 	result := make([]string, 0, len(keywords))
 	for kw := range keywords {
 		result = append(result, kw)
@@ -124,24 +123,24 @@ func calculateStructurePreservation(original, compressed string) float64 {
 		"error:", "warning:", "info:",
 		"//", "/*", "*/", "#",
 	}
-	
+
 	originalCount := 0
 	compressedCount := 0
-	
+
 	for _, marker := range structureMarkers {
 		originalCount += strings.Count(original, marker)
 		compressedCount += strings.Count(compressed, marker)
 	}
-	
+
 	if originalCount == 0 {
 		return 100.0
 	}
-	
+
 	preservation := (float64(compressedCount) / float64(originalCount)) * 100
 	if preservation > 100 {
 		preservation = 100
 	}
-	
+
 	return preservation
 }
 
@@ -150,24 +149,24 @@ func calculateReadability(text string) float64 {
 	if len(text) == 0 {
 		return 0.0
 	}
-	
+
 	lines := strings.Split(text, "\n")
 	words := strings.Fields(text)
-	
+
 	// Factors that reduce readability:
 	score := 100.0
-	
+
 	// Too short per line
 	avgLineLen := float64(len(text)) / float64(len(lines))
 	if avgLineLen < 10 {
 		score -= 20
 	}
-	
+
 	// Too few words
 	if len(words) < 5 {
 		score -= 20
 	}
-	
+
 	// Check for complete words (not truncated)
 	truncatedWords := 0
 	for _, word := range words {
@@ -179,11 +178,11 @@ func calculateReadability(text string) float64 {
 		truncationRate := float64(truncatedWords) / float64(len(words))
 		score -= truncationRate * 30
 	}
-	
+
 	if score < 0 {
 		score = 0
 	}
-	
+
 	return score
 }
 
@@ -192,18 +191,18 @@ func calculateInformationDensity(text string, tokens int) float64 {
 	if tokens == 0 {
 		return 0.0
 	}
-	
+
 	// Measure unique meaningful words
 	words := strings.Fields(text)
 	uniqueWords := make(map[string]bool)
 	meaningfulWords := 0
-	
+
 	stopWords := map[string]bool{
 		"the": true, "a": true, "an": true, "and": true, "or": true,
 		"but": true, "in": true, "on": true, "at": true, "to": true,
 		"for": true, "of": true, "with": true, "by": true,
 	}
-	
+
 	for _, word := range words {
 		cleaned := strings.ToLower(strings.Trim(word, ".,;:!?()[]{}\"'"))
 		if len(cleaned) > 2 && !stopWords[cleaned] {
@@ -211,15 +210,15 @@ func calculateInformationDensity(text string, tokens int) float64 {
 			meaningfulWords++
 		}
 	}
-	
+
 	// Information density = unique meaningful words / total tokens
 	density := (float64(len(uniqueWords)) / float64(tokens)) * 100
-	
+
 	// Normalize to 0-100 scale
 	if density > 100 {
 		density = 100
 	}
-	
+
 	return density
 }
 
@@ -228,11 +227,11 @@ func calculateSemanticPreservation(original, compressed string) float64 {
 	// Simple heuristic: check if key phrases/sentences are preserved
 	originalSentences := strings.Split(original, ".")
 	_ = compressed // use compressed for future enhancement
-	
+
 	if len(originalSentences) == 0 {
 		return 100.0
 	}
-	
+
 	// Check how many original sentences have some representation in compressed
 	preserved := 0
 	for _, origSent := range originalSentences {
@@ -240,7 +239,7 @@ func calculateSemanticPreservation(original, compressed string) float64 {
 		if len(origWords) < 3 {
 			continue // Skip very short sentences
 		}
-		
+
 		// Check if at least 30% of words appear in compressed text
 		foundWords := 0
 		for _, word := range origWords {
@@ -248,23 +247,23 @@ func calculateSemanticPreservation(original, compressed string) float64 {
 				foundWords++
 			}
 		}
-		
+
 		if float64(foundWords)/float64(len(origWords)) >= 0.3 {
 			preserved++
 		}
 	}
-	
+
 	significantSentences := 0
 	for _, sent := range originalSentences {
 		if len(strings.Fields(sent)) >= 3 {
 			significantSentences++
 		}
 	}
-	
+
 	if significantSentences == 0 {
 		return 100.0
 	}
-	
+
 	return (float64(preserved) / float64(significantSentences)) * 100
 }
 
@@ -303,7 +302,7 @@ func assignGrade(score float64) string {
 // generateScoreDetails creates human-readable explanation.
 func generateScoreDetails(score QualityScore) string {
 	var details strings.Builder
-	
+
 	details.WriteString(fmt.Sprintf("Overall Quality: %.1f%% (%s)\n", score.Overall, score.Grade))
 	details.WriteString("\nBreakdown:\n")
 	details.WriteString(fmt.Sprintf("  • Compression Ratio: %.1f%%\n", score.CompressionRatio))
@@ -312,7 +311,7 @@ func generateScoreDetails(score QualityScore) string {
 	details.WriteString(fmt.Sprintf("  • Readability: %.1f%%\n", score.ReadabilityScore))
 	details.WriteString(fmt.Sprintf("  • Information Density: %.1f%%\n", score.InformationDensity))
 	details.WriteString(fmt.Sprintf("  • Semantic Preserved: %.1f%%\n", score.SemanticPreserved))
-	
+
 	// Add recommendations
 	details.WriteString("\nRecommendations:\n")
 	if score.KeywordsPreserved < 70 {
@@ -333,7 +332,7 @@ func generateScoreDetails(score QualityScore) string {
 	} else {
 		details.WriteString("  ❌ Quality needs improvement; try different settings\n")
 	}
-	
+
 	return details.String()
 }
 
@@ -343,11 +342,11 @@ func CompareCompressionMethods(original string, originalTokens int, results map[
 	Tokens     int
 }) map[string]QualityScore {
 	scores := make(map[string]QualityScore)
-	
+
 	for method, result := range results {
 		scores[method] = ScoreCompression(original, result.Compressed, originalTokens, result.Tokens)
 	}
-	
+
 	return scores
 }
 
@@ -356,7 +355,7 @@ func RecommendBestMethod(scores map[string]QualityScore) (string, QualityScore) 
 	var bestMethod string
 	var bestScore QualityScore
 	bestOverall := -1.0
-	
+
 	for method, score := range scores {
 		if score.Overall > bestOverall {
 			bestOverall = score.Overall
@@ -364,7 +363,7 @@ func RecommendBestMethod(scores map[string]QualityScore) (string, QualityScore) 
 			bestScore = score
 		}
 	}
-	
+
 	return bestMethod, bestScore
 }
 
@@ -373,36 +372,36 @@ func CalculateQualityTrend(historicalScores []QualityScore) (trend string, avgSc
 	if len(historicalScores) == 0 {
 		return "no data", 0.0
 	}
-	
+
 	// Calculate average
 	sum := 0.0
 	for _, score := range historicalScores {
 		sum += score.Overall
 	}
 	avgScore = sum / float64(len(historicalScores))
-	
+
 	// Determine trend
 	if len(historicalScores) < 2 {
 		return "stable", avgScore
 	}
-	
+
 	// Compare first half vs second half
 	midpoint := len(historicalScores) / 2
 	firstHalfAvg := 0.0
 	secondHalfAvg := 0.0
-	
+
 	for i := 0; i < midpoint; i++ {
 		firstHalfAvg += historicalScores[i].Overall
 	}
 	firstHalfAvg /= float64(midpoint)
-	
+
 	for i := midpoint; i < len(historicalScores); i++ {
 		secondHalfAvg += historicalScores[i].Overall
 	}
 	secondHalfAvg /= float64(len(historicalScores) - midpoint)
-	
+
 	diff := secondHalfAvg - firstHalfAvg
-	
+
 	switch {
 	case math.Abs(diff) < 2:
 		trend = "stable"
@@ -411,6 +410,6 @@ func CalculateQualityTrend(historicalScores []QualityScore) (trend string, avgSc
 	default:
 		trend = "declining"
 	}
-	
+
 	return trend, avgScore
 }

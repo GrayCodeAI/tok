@@ -57,7 +57,7 @@ func init() {
 	mergeCmd.Flags().IntVar(&mergeMaxTokens, "max-tokens", 100000, "maximum tokens in merged output")
 	mergeCmd.Flags().BoolVar(&mergeIntelligent, "intelligent", false, "use dependency analysis for optimal ordering")
 	mergeCmd.Flags().BoolVar(&mergeAddHeaders, "headers", true, "add file headers for clarity")
-	
+
 	registry.Add(func() { registry.Register(mergeCmd) })
 }
 
@@ -65,23 +65,23 @@ func runMerge(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("no files specified")
 	}
-	
+
 	// Collect all files
 	files, err := collectFiles(args, mergeRecursive)
 	if err != nil {
 		return fmt.Errorf("collect files: %w", err)
 	}
-	
+
 	if len(files) == 0 {
 		return fmt.Errorf("no files found")
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "📁 Merging %d files...\n", len(files))
-	
+
 	// Read all files
 	fileContents := make(map[string]string)
 	totalSize := 0
-	
+
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
@@ -91,49 +91,49 @@ func runMerge(cmd *cobra.Command, args []string) error {
 		fileContents[file] = string(content)
 		totalSize += len(content)
 	}
-	
+
 	fmt.Fprintf(os.Stderr, "📊 Total size: %d bytes\n", totalSize)
-	
+
 	// Apply intelligent ordering if requested
 	orderedFiles := files
 	if mergeIntelligent {
 		fmt.Fprintf(os.Stderr, "🧠 Analyzing dependencies...\n")
 		orderedFiles = intelligentOrder(fileContents)
 	}
-	
+
 	// Merge files
 	merged := mergeFiles(orderedFiles, fileContents)
-	
+
 	// Compress if needed to meet budget
 	mergedTokens := core.EstimateTokens(merged)
 	fmt.Fprintf(os.Stderr, "📉 Initial: %d tokens\n", mergedTokens)
-	
+
 	if mergedTokens > mergeMaxTokens {
 		fmt.Fprintf(os.Stderr, "🔄 Compressing to meet %d token budget...\n", mergeMaxTokens)
 		merged = compressToFit(merged, mergeMaxTokens)
 		mergedTokens = core.EstimateTokens(merged)
 		fmt.Fprintf(os.Stderr, "✅ Final: %d tokens\n", mergedTokens)
 	}
-	
+
 	// Format output
 	formatted := formatMergedOutput(merged, mergeFormat, orderedFiles)
-	
+
 	// Output
 	fmt.Println(formatted)
-	
+
 	return nil
 }
 
 func collectFiles(paths []string, recursive bool) ([]string, error) {
 	var files []string
 	seen := make(map[string]bool)
-	
+
 	for _, path := range paths {
 		info, err := os.Stat(path)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		if info.IsDir() {
 			if recursive {
 				err := filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
@@ -157,7 +157,7 @@ func collectFiles(paths []string, recursive bool) ([]string, error) {
 			}
 		}
 	}
-	
+
 	return files, nil
 }
 
@@ -176,43 +176,43 @@ func isTextFile(path string) bool {
 func intelligentOrder(fileContents map[string]string) []string {
 	// Analyze import/dependency relationships
 	dependencies := make(map[string][]string)
-	
+
 	for file, content := range fileContents {
 		deps := extractDependencies(content)
 		dependencies[file] = deps
 	}
-	
+
 	// Topological sort (simplified)
 	ordered := make([]string, 0, len(fileContents))
 	visited := make(map[string]bool)
-	
+
 	var visit func(string)
 	visit = func(file string) {
 		if visited[file] {
 			return
 		}
 		visited[file] = true
-		
+
 		// Visit dependencies first
 		for _, dep := range dependencies[file] {
 			if _, exists := fileContents[dep]; exists {
 				visit(dep)
 			}
 		}
-		
+
 		ordered = append(ordered, file)
 	}
-	
+
 	for file := range fileContents {
 		visit(file)
 	}
-	
+
 	return ordered
 }
 
 func extractDependencies(content string) []string {
 	var deps []string
-	
+
 	// Go imports
 	if strings.Contains(content, "import") {
 		lines := strings.Split(content, "\n")
@@ -224,23 +224,23 @@ func extractDependencies(content string) []string {
 			}
 		}
 	}
-	
+
 	// JavaScript/TypeScript imports
 	if strings.Contains(content, "from '") || strings.Contains(content, "from \"") {
 		// Extract imports
 	}
-	
+
 	// Python imports
 	if strings.Contains(content, "from ") || strings.Contains(content, "import ") {
 		// Extract imports
 	}
-	
+
 	return deps
 }
 
 func mergeFiles(files []string, contents map[string]string) string {
 	var merged strings.Builder
-	
+
 	for i, file := range files {
 		if mergeAddHeaders {
 			// Add file separator
@@ -251,10 +251,10 @@ func mergeFiles(files []string, contents map[string]string) string {
 			merged.WriteString(fmt.Sprintf("File: %s\n", file))
 			merged.WriteString(fmt.Sprintf("═══════════════════════════════════════\n\n"))
 		}
-		
+
 		merged.WriteString(contents[file])
 	}
-	
+
 	return merged.String()
 }
 
@@ -264,10 +264,10 @@ func compressToFit(content string, maxTokens int) string {
 		Mode:   filter.ModeAggressive,
 		Budget: maxTokens,
 	}
-	
+
 	pipeline := filter.NewPipelineCoordinator(cfg)
 	compressed, _ := pipeline.Process(content)
-	
+
 	return compressed
 }
 
@@ -309,12 +309,12 @@ func formatJSON(content string, files []string) string {
 	}
 	json.WriteString("  ],\n")
 	json.WriteString("  \"content\": ")
-	
+
 	// Escape content for JSON
 	escaped := strings.ReplaceAll(content, "\\", "\\\\")
 	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
 	escaped = strings.ReplaceAll(escaped, "\n", "\\n")
-	
+
 	json.WriteString(fmt.Sprintf("\"%s\"\n", escaped))
 	json.WriteString("}\n")
 	return json.String()

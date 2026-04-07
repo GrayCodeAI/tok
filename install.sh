@@ -1,18 +1,18 @@
-#!/usr/bin/env bash
-# TokMan installer - Cross-platform installation script
+#!/bin/bash
+# TokMan Installer Script
+# Usage: curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | bash
 #
-# Usage:
-#   curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | sh
-#
-# Or with custom install directory:
-#   INSTALL_DIR=/usr/local/bin curl -fsSL ... | sh
+# Options:
+#   TOKMAN_VERSION=v0.28.2  Install specific version
+#   TOKMAN_DIR=~/.local/bin Install to specific directory
 
-set -e
+set -euo pipefail
 
 # Configuration
 REPO="GrayCodeAI/tokman"
-INSTALL_DIR="${INSTALL_DIR:-${HOME}/.local/bin}"
-BINARY_NAME="tokman"
+BINARY="tokman"
+DEFAULT_DIR="${HOME}/.local/bin"
+INSTALL_DIR="${TOKMAN_DIR:-$DEFAULT_DIR}"
 
 # Colors
 RED='\033[0;31m'
@@ -21,202 +21,191 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Helper functions
-info() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-warn() {
-    echo -e "${YELLOW}[WARN]${NC} $1"
-}
-
-error() {
-    echo -e "${RED}[ERROR]${NC} $1"
-    exit 1
-}
+log()    { echo -e "${GREEN}[tokman]${NC} $*"; }
+warn()   { echo -e "${YELLOW}[tokman]${NC} $*"; }
+error()  { echo -e "${RED}[tokman]${NC} $*" >&2; }
+info()   { echo -e "${BLUE}[tokman]${NC} $*"; }
 
 # Detect OS and architecture
 detect_platform() {
-    OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-    ARCH=$(uname -m)
+    local os arch
 
-    case "$OS" in
-        linux)
-            OS="linux"
-            ;;
-        darwin)
-            OS="darwin"
-            ;;
-        mingw*|msys*|cygwin*)
-            OS="windows"
-            ;;
-        *)
-            error "Unsupported operating system: $OS"
-            ;;
+    case "$(uname -s)" in
+        Linux*)   os="linux" ;;
+        Darwin*)  os="darwin" ;;
+        MINGW*|MSYS*|CYGWIN*) os="windows" ;;
+        FreeBSD*) os="freebsd" ;;
+        *)        error "Unsupported OS: $(uname -s)"; exit 1 ;;
     esac
 
-    case "$ARCH" in
-        x86_64|amd64)
-            ARCH="amd64"
-            ;;
-        aarch64|arm64)
-            ARCH="arm64"
-            ;;
-        armv7l|armv6l)
-            ARCH="arm"
-            ;;
-        *)
-            error "Unsupported architecture: $ARCH"
-            ;;
+    case "$(uname -m)" in
+        x86_64|amd64)  arch="amd64" ;;
+        aarch64|arm64) arch="arm64" ;;
+        i386|i686)     arch="386" ;;
+        *)             error "Unsupported architecture: $(uname -m)"; exit 1 ;;
     esac
 
-    info "Detected platform: ${OS}-${ARCH}"
+    echo "${os}_${arch}"
 }
 
-# Check if command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+# Get latest version from GitHub
+get_latest_version() {
+    if [ -n "${TOKMAN_VERSION:-}" ]; then
+        echo "$TOKMAN_VERSION"
+        return
+    fi
+
+    local version
+    version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | \
+        grep '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')
+
+    if [ -z "$version" ]; then
+        error "Could not determine latest version"
+        error "Set TOKMAN_VERSION manually or check https://github.com/${REPO}/releases"
+        exit 1
+    fi
+
+    echo "$version"
 }
 
-# Download and extract binary
-install_binary() {
-    local tmp_dir
+# Download and install
+install_tokman() {
+    local platform version url tmp_dir archive_name
+
+    platform=$(detect_platform)
+    version=$(get_latest_version)
+
+    log "Installing TokMan ${version} for ${platform}..."
+
+    # Determine archive format
+    local ext="tar.gz"
+    if [[ "$platform" == windows_* ]]; then
+        ext="zip"
+    fi
+
+    archive_name="${BINARY}_${version#v}_${platform}.${ext}"
+    url="https://github.com/${REPO}/releases/download/${version}/${archive_name}"
+
+    # Create temp directory
     tmp_dir=$(mktemp -d)
-    trap "rm -rf $tmp_dir" EXIT
+    trap 'rm -rf "$tmp_dir"' EXIT
 
-    info "Downloading TokMan for ${OS}-${ARCH}..."
-
-    # Construct download URL
-    local release_url="https://github.com/${REPO}/releases/latest/download/tokman-${OS}-${ARCH}"
-    
-    if [ "$OS" = "windows" ]; then
-        release_url="${release_url}.exe"
-        BINARY_NAME="tokman.exe"
+    # Download
+    info "Downloading from ${url}..."
+    if ! curl -fsSL -o "${tmp_dir}/${archive_name}" "$url"; then
+        error "Download failed. Check the URL or try:"
+        error "  TOKMAN_VERSION=v0.28.2 bash install.sh"
+        exit 1
     fi
 
-    # Try to download with curl
-    if command_exists curl; then
-        if ! curl -fsSL -o "${tmp_dir}/${BINARY_NAME}" "$release_url"; then
-            # Try with .tar.gz extension (GitHub releases format)
-            release_url="https://github.com/${REPO}/releases/latest/download/tokman-${OS}-${ARCH}.tar.gz"
-            info "Trying compressed archive..."
-            if curl -fsSL "$release_url" | tar -xz -C "$tmp_dir"; then
-                success "Downloaded and extracted TokMan"
-            else
-                error "Failed to download TokMan. Check that releases exist at: $release_url"
+    # Verify checksum if available
+    local checksum_url="https://github.com/${REPO}/releases/download/${version}/checksums.txt"
+    if curl -fsSL -o "${tmp_dir}/checksums.txt" "$checksum_url" 2>/dev/null; then
+        info "Verifying checksum..."
+        local expected actual
+        expected=$(grep "${archive_name}" "${tmp_dir}/checksums.txt" | awk '{print $1}')
+        if [ -n "$expected" ]; then
+            if command -v sha256sum &>/dev/null; then
+                actual=$(sha256sum "${tmp_dir}/${archive_name}" | awk '{print $1}')
+            elif command -v shasum &>/dev/null; then
+                actual=$(shasum -a 256 "${tmp_dir}/${archive_name}" | awk '{print $1}')
             fi
-        else
-            success "Downloaded TokMan"
-        fi
-    elif command_exists wget; then
-        if ! wget -q -O "${tmp_dir}/${BINARY_NAME}" "$release_url"; then
-            release_url="https://github.com/${REPO}/releases/latest/download/tokman-${OS}-${ARCH}.tar.gz"
-            info "Trying compressed archive..."
-            if wget -q -O - "$release_url" | tar -xz -C "$tmp_dir"; then
-                success "Downloaded and extracted TokMan"
-            else
-                error "Failed to download TokMan"
+
+            if [ -n "${actual:-}" ] && [ "$expected" != "$actual" ]; then
+                error "Checksum verification failed!"
+                error "Expected: ${expected}"
+                error "Actual:   ${actual}"
+                exit 1
             fi
-        else
-            success "Downloaded TokMan"
+            log "Checksum verified ✓"
         fi
+    fi
+
+    # Extract
+    info "Extracting..."
+    if [[ "$ext" == "tar.gz" ]]; then
+        tar xzf "${tmp_dir}/${archive_name}" -C "$tmp_dir"
     else
-        error "Neither curl nor wget found. Please install one of them."
+        unzip -q "${tmp_dir}/${archive_name}" -d "$tmp_dir"
     fi
 
-    # Create install directory
-    info "Installing to ${INSTALL_DIR}..."
+    # Install
     mkdir -p "$INSTALL_DIR"
+    mv "${tmp_dir}/${BINARY}" "${INSTALL_DIR}/${BINARY}"
+    chmod +x "${INSTALL_DIR}/${BINARY}"
 
-    # Copy binary
-    cp "${tmp_dir}/${BINARY_NAME}" "${INSTALL_DIR}/${BINARY_NAME}"
-    chmod +x "${INSTALL_DIR}/${BINARY_NAME}"
-
-    success "TokMan installed to ${INSTALL_DIR}/${BINARY_NAME}"
+    log "Installed to ${INSTALL_DIR}/${BINARY}"
 }
 
-# Check if PATH contains install directory
+# Check if install dir is in PATH
 check_path() {
-    if [[ ":$PATH:" != *":${INSTALL_DIR}:"* ]]; then
+    if ! echo "$PATH" | tr ':' '\n' | grep -q "^${INSTALL_DIR}$"; then
         warn "${INSTALL_DIR} is not in your PATH"
         echo ""
-        echo "Add to PATH by running:"
-        echo ""
-        
-        # Detect shell
-        if [ -n "$BASH_VERSION" ]; then
-            echo "  echo 'export PATH=\"${INSTALL_DIR}:\$PATH\"' >> ~/.bashrc"
-            echo "  source ~/.bashrc"
-        elif [ -n "$ZSH_VERSION" ]; then
-            echo "  echo 'export PATH=\"${INSTALL_DIR}:\$PATH\"' >> ~/.zshrc"
-            echo "  source ~/.zshrc"
-        else
-            echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
-        fi
+        info "Add it to your shell config:"
+
+        local shell_name
+        shell_name=$(basename "${SHELL:-bash}")
+
+        case "$shell_name" in
+            bash)
+                echo "  echo 'export PATH=\"${INSTALL_DIR}:\$PATH\"' >> ~/.bashrc"
+                echo "  source ~/.bashrc"
+                ;;
+            zsh)
+                echo "  echo 'export PATH=\"${INSTALL_DIR}:\$PATH\"' >> ~/.zshrc"
+                echo "  source ~/.zshrc"
+                ;;
+            fish)
+                echo "  fish_add_path ${INSTALL_DIR}"
+                ;;
+            *)
+                echo "  export PATH=\"${INSTALL_DIR}:\$PATH\""
+                ;;
+        esac
         echo ""
     fi
 }
 
-# Verify installation
-verify_installation() {
-    info "Verifying installation..."
-    
-    if [ -x "${INSTALL_DIR}/${BINARY_NAME}" ]; then
-        local version
-        version=$("${INSTALL_DIR}/${BINARY_NAME}" --version 2>/dev/null || echo "unknown")
-        success "Installation verified! Version: $version"
-        return 0
+# Post-install verification
+verify_install() {
+    if "${INSTALL_DIR}/${BINARY}" --version &>/dev/null; then
+        log "TokMan installed successfully! ✓"
+        echo ""
+        info "Version: $("${INSTALL_DIR}/${BINARY}" --version 2>&1 || echo 'unknown')"
+        echo ""
+        log "Quick start:"
+        echo "  tokman init -g          # Set up for Claude Code"
+        echo "  tokman doctor           # Verify installation"
+        echo "  tokman --help           # See all commands"
+        echo ""
+        info "Documentation: https://github.com/${REPO}"
     else
         error "Installation verification failed"
-        return 1
+        error "Binary exists at: ${INSTALL_DIR}/${BINARY}"
+        error "Try running: ${INSTALL_DIR}/${BINARY} --version"
+        exit 1
     fi
 }
 
-# Print next steps
-print_next_steps() {
-    echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "✅ TokMan installed successfully!"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-    echo "Next steps:"
-    echo ""
-    echo "1. Verify installation:"
-    echo "   tokman --version"
-    echo ""
-    echo "2. Initialize for your AI coding assistant:"
-    echo "   tokman init -g               # Claude Code (default)"
-    echo "   tokman init --cursor         # Cursor"
-    echo "   tokman init --windsurf       # Windsurf"
-    echo "   tokman init --copilot        # GitHub Copilot"
-    echo ""
-    echo "3. Test it out:"
-    echo "   tokman git status"
-    echo "   tokman stats                 # Show token savings"
-    echo ""
-    echo "Documentation: https://github.com/${REPO}"
-    echo "Discord: Coming soon!"
-    echo ""
-}
-
-# Main installation flow
+# Main
 main() {
     echo ""
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "  TokMan Installer"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "  ╔══════════════════════════════════════╗"
+    echo "  ║        TokMan Installer              ║"
+    echo "  ║  Token-aware CLI proxy for AI tools   ║"
+    echo "  ╚══════════════════════════════════════╝"
     echo ""
 
-    detect_platform
-    install_binary
-    verify_installation
+    # Check for required tools
+    if ! command -v curl &>/dev/null; then
+        error "curl is required but not installed"
+        exit 1
+    fi
+
+    install_tokman
     check_path
-    print_next_steps
+    verify_install
 }
 
-# Run main
-main
+main "$@"

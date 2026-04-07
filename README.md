@@ -383,6 +383,129 @@ make check          # Run all checks
 - [ ] Real-time collaboration features
 - [ ] Advanced ML-based compression
 
+## 🏆 How TokMan Compares
+
+| Feature | TokMan | RTK | OMNI | Snip | Token-MCP |
+|---------|--------|-----|------|------|-----------|
+| **Language** | Go | Rust | Rust | Go | TypeScript |
+| **Compression Layers** | **31** | ~15 | Semantic | YAML | Cache |
+| **Token Reduction** | 60-90% | 60-90% | ~90% | 60-90% | 60-90% |
+| **Quality Metrics** | ✅ 6 metrics | ❌ | ❌ | ❌ | ❌ |
+| **Research-Backed** | ✅ 120+ papers | ❌ | ❌ | ❌ | ❌ |
+| **Multi-File** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **TOML Filters** | ✅ 97+ | ❌ | ✅ | ❌ | ❌ |
+| **Dashboard** | ✅ | ❌ | ✅ | ❌ | ❌ |
+| **Cost Analysis** | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **Standalone Binary** | ✅ | ✅ | ✅ | ✅ | ❌ |
+
+> TokMan has the deepest compression pipeline (31 layers) and is the only tool with quality metrics and research-backed architecture.
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><b>How does TokMan reduce tokens?</b></summary>
+
+TokMan applies a 31-layer compression pipeline that removes noise, groups similar content, truncates redundancy, and preserves critical information. Each layer is based on published research.
+</details>
+
+<details>
+<summary><b>Does it lose important information?</b></summary>
+
+TokMan uses quality metrics (6-metric grading, A+ to F) to ensure compression preserves signal. The goal is to remove noise while keeping everything the AI needs.
+</details>
+
+<details>
+<summary><b>Which AI tools does it support?</b></summary>
+
+Claude Code, Cursor, GitHub Copilot, Windsurf, Cline/Roo Code, Gemini CLI, Codex, and Aider. Basically any tool that runs shell commands.
+</details>
+
+<details>
+<summary><b>Is it fast enough for real-time use?</b></summary>
+
+Yes. Most commands complete in <20ms of overhead. SIMD optimizations planned for Go 1.26+ will reduce this further.
+</details>
+
+<details>
+<summary><b>Can I add custom filters?</b></summary>
+
+Yes! Create `.toml` filter files in `~/.config/tokman/filters/`. See the [filter writing guide](docs/DEVELOPMENT.md) for details.
+</details>
+
+<details>
+<summary><b>Is my data safe?</b></summary>
+
+TokMan processes everything locally. No data is sent externally. Telemetry is opt-in and never collects file contents. See [SECURITY.md](SECURITY.md).
+</details>
+
+<details>
+<summary><b>How does it compare to RTK?</b></summary>
+
+RTK is a Rust-based competitor with ~15 filtering strategies. TokMan has 31 research-backed layers, quality metrics, multi-file intelligence, and cost analysis that RTK lacks.
+</details>
+
+<details>
+<summary><b>Can I use it in CI/CD?</b></summary>
+
+Yes! See the [deployment guide](docs/DEPLOYMENT.md) for GitHub Actions, GitLab CI, and Docker integration.
+</details>
+
+---
+
+## 🔧 Troubleshooting
+
+<details>
+<summary><b>TokMan not found after installation</b></summary>
+
+```bash
+# Check if in PATH
+which tokman
+
+# Add Go bin to PATH
+export PATH="$HOME/go/bin:$PATH"
+# Add to ~/.bashrc or ~/.zshrc for persistence
+```
+</details>
+
+<details>
+<summary><b>Hooks not intercepting commands</b></summary>
+
+```bash
+# Reinstall hooks
+tokman init --uninstall
+tokman init -g
+
+# Verify with doctor
+tokman doctor
+```
+</details>
+
+<details>
+<summary><b>Database errors</b></summary>
+
+```bash
+# Reset database
+rm ~/.local/share/tokman/tokman.db
+tokman status  # Recreates automatically
+```
+</details>
+
+<details>
+<summary><b>High memory usage on large files</b></summary>
+
+```bash
+# Use streaming mode (auto-enabled for >500K tokens)
+# Or set a budget to limit output
+tokman --budget 2000 cat large_file.txt
+```
+</details>
+
+For more help, see the [full troubleshooting guide](docs/DEPLOYMENT.md#troubleshooting) or [open an issue](https://github.com/GrayCodeAI/tokman/issues).
+
+---
+
 ## 📄 License
 
 TokMan is released under the [MIT License](LICENSE).
@@ -390,14 +513,21 @@ TokMan is released under the [MIT License](LICENSE).
 ## 🙏 Acknowledgments
 
 Built with research from:
-- Microsoft Research
-- Stanford University  
-- MIT CSAIL
-- Princeton University
-- UC Berkeley
-- And 25+ other institutions
+- Microsoft Research (LLMLingua, LongLLMLingua)
+- Stanford University (Gist Compression)
+- MIT CSAIL (AutoCompressor)
+- Princeton University (AutoCompressor)
+- UC Berkeley (MemGPT, H2O)
+- Tsinghua University (EHPC)
+- Mila (Selective Context)
+- NUS (LongCodeZip)
+- Shanghai Jiao Tong University (SWE-Pruner)
+- LinkedIn (ProCut)
+- And 20+ other institutions
 
-Special thanks to the open-source community and all contributors.
+See [CITATION.cff](CITATION.cff) for academic citation information.
+
+Special thanks to the open-source community and all contributors. See [AUTHORS.md](AUTHORS.md).
 
 ## 💬 Community & Support
 

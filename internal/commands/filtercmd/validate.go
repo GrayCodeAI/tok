@@ -245,7 +245,7 @@ func printValidationResults(results []ValidationResult) {
 	for _, result := range results {
 		// Print file name
 		fileName := filepath.Base(result.FilePath)
-		
+
 		if result.Valid {
 			totalValid++
 			fmt.Printf("%s %s", green("✓"), fileName)
