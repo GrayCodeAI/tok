@@ -1,0 +1,118 @@
+# Français (fr)
+
+[common]
+success = "✓ {action} terminé avec succès"
+error = "✗ Erreur : {error}"
+warning = "⚠ Attention : {message}"
+loading = "Chargement..."
+processing = "Traitement..."
+no_data = "Aucune donnée trouvée"
+not_found = "Non trouvé : {item}"
+invalid_input = "Entrée invalide : {field}"
+missing_arg = "Argument requis manquant : {arg}"
+
+[tokman]
+name = "TokMan"
+description = "Proxy CLI conscient des tokens avec pipeline de compression à 31 couches"
+version = "Version : {version}"
+
+[commands]
+init = "Initialiser TokMan pour votre outil IA"
+doctor = "Exécuter les vérifications système"
+status = "Afficher le statut actuel"
+stats = "Afficher les statistiques de compression"
+gain = "Afficher le rapport d'économie de tokens"
+filter = "Filtrer le texte via le pipeline"
+help = "Afficher l'aide"
+
+[doctor]
+title = "Vérification de TokMan"
+check_hooks = "Vérification de l'intégrité des hooks..."
+check_config = "Vérification de la configuration..."
+check_database = "Vérification de la base de données..."
+check_version = "Vérification de la version..."
+all_ok = "Toutes les vérifications réussies ✓"
+issues_found = "{count} problème(s) trouvé(s)"
+
+[filter]
+pipeline = "Pipeline"
+layers = "couches"
+tokens_in = "Tokens d'entrée"
+tokens_out = "Tokens de sortie"
+saved = "Économisés"
+compression_rate = "Taux de compression"
+quality = "Qualité"
+time = "Temps"
+preset_fast = "rapide"
+preset_balanced = "équilibré"
+preset_full = "complet"
+mode_minimal = "minimal"
+mode_aggressive = "agressif"
+
+[quality]
+grade = "Note : {grade}"
+semantic = "Sémantique"
+signal = "Signal/bruit"
+context = "Rétention du contexte"
+readable = "Lisibilité"
+complete = "Complétude"
+ratio = "Taux de compression"
+excellent = "Excellent"
+great = "Très bien"
+good = "Bon"
+acceptable = "Acceptable"
+fair = "Moyen"
+poor = "Médiocre"
+
+[stats]
+total_commands = "Commandes filtrées au total"
+total_saved = "Tokens économisés au total"
+avg_savings = "Économie moyenne"
+efficiency = "Efficacité"
+top_commands = "Meilleures commandes par tokens économisés"
+
+[rewind]
+title = "RewindStore"
+entries = "entrées"
+original = "Original"
+filtered = "Filtré"
+deleted = "Entrée supprimée"
+not_found = "Entrée non trouvée"
+pruned = "{count} entrées expirées supprimées"
+
+[learn]
+title = "Mode Apprentissage"
+status_active = "Actif ✓"
+status_inactive = "Inactif"
+samples = "Exemples collectés"
+patterns = "Motifs trouvés"
+pending = "En attente"
+approved = "Approuvés"
+rejected = "Rejetés"
+start = "Mode apprentissage démarré"
+stop = "Mode apprentissage arrêté"
+applied = "Filtres appliqués avec succès"
+dry_run = "Mode simulation : aucun changement"
+
+[recovery]
+title = "Récupération de Session"
+no_sessions = "Aucune session active"
+interrupted = "Session interrompue détectée"
+resuming = "Reprise de la session"
+closed = "Session fermée et archivée"
+
+[install]
+welcome = "Bienvenue sur TokMan"
+installing = "Installation de TokMan {version} pour {platform}..."
+downloading = "Téléchargement..."
+verifying = "Vérification du checksum..."
+extracting = "Extraction..."
+installed = "Installé dans {path}"
+quick_start = "Démarrage rapide"
+help = "Exécutez 'tokman --help' pour plus d'options"
+
+[dashboard]
+title = "Tableau de Bord TokMan"
+starting = "Démarrage du tableau de bord sur {addr}..."
+stopping = "Arrêt du tableau de bord..."
+open_browser = "Ouvrir dans le navigateur : {url}"

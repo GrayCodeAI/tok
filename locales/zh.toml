@@ -1,0 +1,118 @@
+# 中文 (zh-CN)
+
+[common]
+success = "✓ {action} 成功完成"
+error = "✗ 错误：{error}"
+warning = "⚠ 警告：{message}"
+loading = "加载中..."
+processing = "处理中..."
+no_data = "未找到数据"
+not_found = "未找到：{item}"
+invalid_input = "无效输入：{field}"
+missing_arg = "缺少必填参数：{arg}"
+
+[tokman]
+name = "TokMan"
+description = "具有31层压缩管道的Token感知CLI代理"
+version = "版本：{version}"
+
+[commands]
+init = "为AI工具初始化TokMan"
+doctor = "运行系统健康检查"
+status = "显示当前TokMan状态"
+stats = "显示压缩统计"
+gain = "显示Token节省报告"
+filter = "通过压缩管道过滤文本"
+help = "显示帮助信息"
+
+[doctor]
+title = "TokMan健康检查"
+check_hooks = "正在检查Hook完整性..."
+check_config = "正在检查配置..."
+check_database = "正在检查数据库..."
+check_version = "正在检查版本..."
+all_ok = "所有检查通过 ✓"
+issues_found = "发现 {count} 个问题"
+
+[filter]
+pipeline = "管道"
+layers = "层"
+tokens_in = "输入Tokens"
+tokens_out = "输出Tokens"
+saved = "已节省"
+compression_rate = "压缩率"
+quality = "质量"
+time = "时间"
+preset_fast = "快速"
+preset_balanced = "均衡"
+preset_full = "完整"
+mode_minimal = "最小"
+mode_aggressive = "激进"
+
+[quality]
+grade = "等级：{grade}"
+semantic = "语义"
+signal = "信噪比"
+context = "上下文保留"
+readable = "可读性"
+complete = "完整性"
+ratio = "压缩率"
+excellent = "优秀"
+great = "很好"
+good = "良好"
+acceptable = "可接受"
+fair = "一般"
+poor = "差"
+
+[stats]
+total_commands = "已过滤命令总数"
+total_saved = "已节省Tokens总数"
+avg_savings = "平均节省"
+efficiency = "效率"
+top_commands = "节省Tokens最多的命令"
+
+[rewind]
+title = "回滚存储"
+entries = "条记录"
+original = "原始"
+filtered = "已过滤"
+deleted = "已删除记录"
+not_found = "未找到记录"
+pruned = "已清理 {count} 条过期记录"
+
+[learn]
+title = "学习模式"
+status_active = "活跃 ✓"
+status_inactive = "未激活"
+samples = "已采样"
+patterns = "发现的模式"
+pending = "待审核"
+approved = "已批准"
+rejected = "已拒绝"
+start = "学习模式已启动"
+stop = "学习模式已停止"
+applied = "过滤器已成功应用"
+dry_run = "试运行模式：未进行更改"
+
+[recovery]
+title = "会话恢复"
+no_sessions = "无活动会话"
+interrupted = "检测到中断的会话"
+resuming = "正在恢复会话"
+closed = "会话已关闭并存档"
+
+[install]
+welcome = "欢迎使用 TokMan"
+installing = "正在为 {platform} 安装 TokMan {version}..."
+downloading = "下载中..."
+verifying = "正在验证校验和..."
+extracting = "解压中..."
+installed = "已安装至 {path}"
+quick_start = "快速开始"
+help = "运行 'tokman --help' 获取更多选项"
+
+[dashboard]
+title = "TokMan 仪表板"
+starting = "正在启动仪表板：{addr}..."
+stopping = "正在停止仪表板..."
+open_browser = "浏览器打开：{url}"
