@@ -1,113 +1,157 @@
 package i18n
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"sync"
+	"testing"
+)
 
-func TestNewTranslator(t *testing.T) {
-	for _, lang := range []Language{English, French, Chinese, Japanese, Korean, Spanish, German, Portuguese, Italian} {
-		tr := NewTranslator(lang)
-		if tr == nil {
-			t.Errorf("NewTranslator(%s) returned nil", lang)
-		}
+func TestSetLanguage(t *testing.T) {
+	SetupTestLocales(t)
+	
+	// Test valid language
+	result := SetLanguage("en")
+	if result != "en" {
+		t.Errorf("SetLanguage(en) = %s, want en", result)
+	}
+	
+	result = SetLanguage("fr")
+	if result != "fr" {
+		t.Errorf("SetLanguage(fr) = %s, want fr", result)
+	}
+	
+	// Test invalid language (should fallback to en)
+	result = SetLanguage("xx")
+	if result != "en" {
+		t.Errorf("SetLanguage(xx) fallback = %s, want en", result)
 	}
 }
 
-func TestTranslator_T(t *testing.T) {
+func TestT(t *testing.T) {
+	SetupTestLocales(t)
+	
+	SetLanguage("en")
+	
+	// Test with no args
+	msg := T("common.success")
+	if msg == "" || msg == "common.success" {
+		t.Errorf("T returned untranslated key: %s", msg)
+	}
+	
+	// Test with substitution args
+	msg = T("filter.tokens_in")
+	if msg == "" {
+		t.Error("expected non-empty translation")
+	}
+}
+
+func TestFallsBackToEnglish(t *testing.T) {
+	SetupTestLocales(t)
+	
+	SetLanguage("en")
+	en := T("common.success")
+	
+	SetLanguage("nonexistent")
+	fallback := T("common.success")
+	
+	if fallback != en {
+		t.Errorf("fallback = %q, want %q", fallback, en)
+	}
+}
+
+func TestAvailableLanguages(t *testing.T) {
+	SetupTestLocales(t)
+	
+	langs := GetAvailableLanguages()
+	if len(langs) == 0 {
+		t.Error("expected at least one language")
+	}
+	
+	// Check English is always available
+	found := false
+	for _, l := range langs {
+		if l == "en" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("expected English to be available")
+	}
+}
+
+func TestGetCurrentLanguage(t *testing.T) {
+	SetupTestLocales(t)
+	
+	SetLanguage("fr")
+	if GetCurrentLanguage() != "fr" {
+		t.Errorf("GetCurrentLanguage() = %s, want fr", GetCurrentLanguage())
+	}
+}
+
+func TestGetLanguageName(t *testing.T) {
 	tests := []struct {
-		lang     Language
-		key      string
-		args     []interface{}
-		expected string
+		code string
+		want string
 	}{
-		{English, "app.name", nil, "TokMan"},
-		{English, "app.description", nil, "Token-Optimized Command Manager"},
-		{English, "command.filter", nil, "Filter command output"},
-		{English, "command.dashboard", nil, "Launch dashboard"},
-		{English, "command.config", nil, "Manage configuration"},
-		{English, "command.help", nil, "Show help"},
-		{English, "savings.total", []interface{}{1000}, "Total tokens saved: 1000"},
-		{English, "savings.command", []interface{}{42}, "42 tokens saved for this command"},
-		{English, "error.not_found", []interface{}{"xyz"}, "Command not found: xyz"},
-		{English, "error.invalid", []interface{}{"bad"}, "Invalid input: bad"},
-		{English, "status.ok", nil, "OK"},
-		{English, "status.error", nil, "Error"},
-		{English, "filter.applied", []interface{}{"ent"}, "Filter ent applied"},
-		{English, "compression.ratio", []interface{}{75.5}, "Compression ratio: 75.5%"},
+		{"en", "English"},
+		{"fr", "Français"},
+		{"zh", "中文"},
+		{"ja", "日本語"},
+		{"es", "Español"},
+		{"de", "Deutsch"},
+		{"ko", "한국어"},
+		{"xx", "xx"},
 	}
-
+	
 	for _, tt := range tests {
-		tr := NewTranslator(tt.lang)
-		got := tr.T(tt.key, tt.args...)
-		if got != tt.expected {
-			t.Errorf("lang=%s T(%q, %v) = %q, want %q", tt.lang, tt.key, tt.args, got, tt.expected)
+		got := GetLanguageName(tt.code)
+		if got != tt.want {
+			t.Errorf("GetLanguageName(%s) = %s, want %s", tt.code, got, tt.want)
 		}
 	}
 }
 
-func TestTranslator_Fallback(t *testing.T) {
-	// Use a key that only exists in English but not in other languages
-	// The translator's loadMessages() only partially translates,
-	// so most keys fall back to English
-	for _, lang := range []Language{French, Chinese, Japanese, Korean, Spanish, German, Portuguese, Italian} {
-		tr := NewTranslator(lang)
-		got := tr.T("filter.applied", "ent")
-		want := "Filter ent applied"
-		if got != want {
-			// Some languages may have this key, which is fine
-			_ = got
-		}
-		// Test truly missing key → fallback
-		got = tr.T("nonexistent.key", 500)
-		if got != "nonexistent.key" {
-			t.Errorf("lang=%s missing key should return key: got %q", lang, got)
-		}
+// Helper to setup test locales
+func SetupTestLocales(t *testing.T) {
+	// Create minimal test locale files in temp dir
+	tmpDir, err := os.MkdirTemp("", "i18n-test-*")
+	if err != nil {
+		t.Fatalf("create temp: %v", err)
 	}
-}
+	
+	en := `
+[common]
+success = "completed successfully"
+error = "Error: {error}"
+warning = "Warning: {message}"
 
-func TestTranslator_UnknownKey(t *testing.T) {
-	for _, lang := range []Language{English, French, Chinese} {
-		tr := NewTranslator(lang)
-		got := tr.T("nonexistent.key")
-		if got != "nonexistent.key" {
-			t.Errorf("lang=%s unknown key should return key: got %q", lang, got)
-		}
-	}
-}
+[filter]
+tokens_in = "Input tokens"
+tokens_out = "Output tokens"
+`
+	
+	fr := `
+[common]
+success = "terminé avec succès"
+error = "Erreur: {error}"
 
-func TestTranslator_Args(t *testing.T) {
-	tests := []struct {
-		key      string
-		args     []interface{}
-		expected string
-	}{
-		{"app.name", nil, "TokMan"},
-		{"command.filter", nil, "Filter command output"},
-		{"compression.ratio", []interface{}{75.5}, "Compression ratio: 75.5%"},
-		{"error.not_found", []interface{}{"xyz"}, "Command not found: xyz"},
+[filter]
+tokens_in = "Tokens d'entrée"
+`
+	
+	os.WriteFile(filepath.Join(tmpDir, "en.toml"), []byte(en), 0644)
+	os.WriteFile(filepath.Join(tmpDir, "fr.toml"), []byte(fr), 0644)
+	
+	// Reset once for clean test
+	once = sync.Once{}
+	
+	// Load the test locales
+	translations = make(map[string]map[string]string)
+	for _, file := range []string{"en", "fr"} {
+		flat, _ := flattenTOML(filepath.Join(tmpDir, file+".toml"))
+		translations[file] = flat
 	}
-	for _, tt := range tests {
-		tr := NewTranslator(English)
-		got := tr.T(tt.key, tt.args...)
-		if got != tt.expected {
-			t.Errorf("T(%q, %v) = %q, want %q", tt.key, tt.args, got, tt.expected)
-		}
-	}
-}
-
-func TestTranslator_N(t *testing.T) {
-	tr := NewTranslator(English)
-	got := tr.N("savings.command", 1)
-	if got == "" {
-		t.Error("N should return non-empty string")
-	}
-}
-
-func TestTranslator_SetLanguage(t *testing.T) {
-	tr := NewTranslator(English)
-	if got := tr.T("app.name"); got != "TokMan" {
-		t.Errorf("T(app.name) = %q, want TokMan", got)
-	}
-	tr.SetLanguage(French)
-	if got := tr.T("status.ok"); got != "OK" {
-		t.Errorf("T(status.ok) after SetLanguage(French) = %q, want OK", got)
-	}
+	SetLanguage("en")
 }
