@@ -54,7 +54,7 @@ func init() {
 	qualityCmd.Flags().BoolVar(&qualityShowDiff, "diff", false, "show visual before/after comparison")
 	qualityCmd.Flags().StringVar(&qualityExportHTML, "html", "", "export diff as HTML file")
 	qualityCmd.Flags().BoolVar(&qualityCompareAll, "compare-all", false, "compare all compression modes")
-	
+
 	registry.Add(func() { registry.Register(qualityCmd) })
 }
 
@@ -62,7 +62,7 @@ func runQuality(cmd *cobra.Command, args []string) error {
 	// Read input
 	var input []byte
 	var err error
-	
+
 	if len(args) > 0 {
 		input, err = os.ReadFile(args[0])
 		if err != nil {
@@ -74,14 +74,14 @@ func runQuality(cmd *cobra.Command, args []string) error {
 			return fmt.Errorf("read stdin: %w", err)
 		}
 	}
-	
+
 	original := string(input)
 	originalTokens := core.EstimateTokens(original)
-	
+
 	if qualityCompareAll {
 		return compareAllModes(original, originalTokens)
 	}
-	
+
 	// Compress with default settings
 	cfg := filter.PipelineConfig{
 		Mode: filter.ModeMinimal,
@@ -89,18 +89,18 @@ func runQuality(cmd *cobra.Command, args []string) error {
 	pipeline := filter.NewPipelineCoordinator(cfg)
 	compressed, _ := pipeline.Process(original)
 	compressedTokens := core.EstimateTokens(compressed)
-	
+
 	// Calculate quality score
 	score := quality.ScoreCompression(original, compressed, originalTokens, compressedTokens)
-	
+
 	// Display results
 	fmt.Println(score.Details)
-	
+
 	// Show visual diff if requested
 	if qualityShowDiff {
 		fmt.Println("\n" + visual.VisualDiff(original, compressed, originalTokens, compressedTokens))
 	}
-	
+
 	// Export HTML if requested
 	if qualityExportHTML != "" {
 		html := visual.ExportDiffHTML(original, compressed, originalTokens, compressedTokens)
@@ -109,48 +109,48 @@ func runQuality(cmd *cobra.Command, args []string) error {
 		}
 		fmt.Printf("\n✅ HTML diff exported to: %s\n", qualityExportHTML)
 	}
-	
+
 	return nil
 }
 
 func compareAllModes(original string, originalTokens int) error {
 	fmt.Println("🔍 Comparing All Compression Modes...")
-	
+
 	modes := map[string]filter.Mode{
 		"Minimal":    filter.ModeMinimal,
 		"Aggressive": filter.ModeAggressive,
 	}
-	
+
 	results := make(map[string]struct {
 		Compressed string
 		Tokens     int
 	})
-	
+
 	// Run each mode
 	for name, mode := range modes {
 		cfg := filter.PipelineConfig{Mode: mode}
 		pipeline := filter.NewPipelineCoordinator(cfg)
 		compressed, _ := pipeline.Process(original)
 		tokens := core.EstimateTokens(compressed)
-		
+
 		results[name] = struct {
 			Compressed string
 			Tokens     int
 		}{compressed, tokens}
-		
+
 		fmt.Printf("Processing %s mode... ", name)
 		fmt.Printf("%s\n", visual.CompactDiff(originalTokens, tokens))
 	}
-	
+
 	// Calculate quality scores
 	scores := quality.CompareCompressionMethods(original, originalTokens, results)
-	
+
 	// Find best method
 	bestMethod, bestScore := quality.RecommendBestMethod(scores)
-	
+
 	fmt.Println("\n📊 QUALITY COMPARISON:")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-	
+
 	for method, score := range scores {
 		marker := "  "
 		if method == bestMethod {
@@ -160,10 +160,10 @@ func compareAllModes(original string, originalTokens int) error {
 		fmt.Printf("     Compression: %.1f%% | Keywords: %.1f%% | Readability: %.1f%%\n",
 			score.CompressionRatio, score.KeywordsPreserved, score.ReadabilityScore)
 	}
-	
+
 	fmt.Println("\n✅ RECOMMENDATION:")
-	fmt.Printf("Use '%s' mode for best quality (%.1f%% overall score)\n", 
+	fmt.Printf("Use '%s' mode for best quality (%.1f%% overall score)\n",
 		bestMethod, bestScore.Overall)
-	
+
 	return nil
 }

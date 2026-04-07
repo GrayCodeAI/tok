@@ -1,0 +1,156 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go mod verify
+
+builds:
+  - id: tokman
+    main: ./cmd/tokman
+    binary: tokman
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+      - freebsd
+    goarch:
+      - amd64
+      - arm64
+      - "386"
+    goarm:
+      - "7"
+    ldflags:
+      - -s -w
+      - -X main.version={{.Version}}
+      - -X main.commit={{.Commit}}
+      - -X main.date={{.Date}}
+      - -X main.builtBy=goreleaser
+    ignore:
+      - goos: windows
+        goarch: arm64
+      - goos: freebsd
+        goarch: "386"
+      - goos: freebsd
+        goarch: arm64
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: default
+    builds:
+      - tokman
+    formats: ['tar.gz']
+    format_overrides:
+      - goos: windows
+        formats: ['zip']
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - README.md
+      - LICENSE
+      - CHANGELOG.md
+      - docs/examples/*.md
+
+checksum:
+  name_template: "checksums.txt"
+  algorithm: sha256
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "^ci:"
+      - "^style:"
+      - Merge pull request
+      - Merge branch
+  groups:
+    - title: "🚀 Features"
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: "🐛 Bug Fixes"
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: "⚡ Performance"
+      regexp: '^.*?perf(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: "📝 Documentation"
+      regexp: '^.*?docs(\([[:word:]]+\))??!?:.+$'
+      order: 3
+    - title: "🔧 Other"
+      order: 999
+
+release:
+  github:
+    owner: GrayCodeAI
+    name: tokman
+  draft: false
+  prerelease: auto
+  name_template: "v{{ .Version }}"
+  header: |
+    ## TokMan v{{ .Version }}
+    
+    Token-aware CLI proxy with 31-layer compression pipeline.
+    
+    ### Installation
+    
+    ```bash
+    # Homebrew
+    brew install GrayCodeAI/tap/tokman
+    
+    # Quick install
+    curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | bash
+    
+    # Go install
+    go install github.com/GrayCodeAI/tokman/cmd/tokman@v{{ .Version }}
+    ```
+  footer: |
+    
+    **Full Changelog**: https://github.com/GrayCodeAI/tokman/compare/{{ .PreviousTag }}...{{ .Tag }}
+    
+    ---
+    ⭐ Star us on GitHub if TokMan helps you save tokens!
+
+brews:
+  - repository:
+      owner: GrayCodeAI
+      name: homebrew-tokman
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/GrayCodeAI/tokman"
+    description: "Token-aware CLI proxy with 31-layer compression pipeline for AI coding assistants"
+    license: "MIT"
+    install: |
+      bin.install "tokman"
+    test: |
+      system "#{bin}/tokman", "--version"
+    caveats: |
+      To get started:
+        tokman init -g        # Set up for Claude Code
+        tokman doctor         # Verify installation
+
+nfpms:
+  - id: packages
+    package_name: tokman
+    vendor: GrayCode AI
+    homepage: https://github.com/GrayCodeAI/tokman
+    maintainer: GrayCode AI <maintainers@graycode.ai>
+    description: Token-aware CLI proxy with 31-layer compression pipeline for AI coding assistants
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/local/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/tokman/LICENSE
+      - src: README.md
+        dst: /usr/share/doc/tokman/README.md

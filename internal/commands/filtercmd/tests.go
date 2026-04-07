@@ -118,7 +118,7 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 		if len(tests) == 0 {
 			return fmt.Errorf("no tests found for filter '%s'", filterName)
 		}
-		
+
 		// Create new suite with only requested filter
 		filteredSuite := toml.NewFilterTestSuite()
 		for _, test := range tests {

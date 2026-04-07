@@ -8,16 +8,16 @@ import (
 
 // SIMD feature flags detected at runtime
 var (
-	hasAVX2    bool
-	hasAVX512  bool
-	hasNEON    bool
-	simdWidth  int // SIMD register width in bytes
+	hasAVX2   bool
+	hasAVX512 bool
+	hasNEON   bool
+	simdWidth int // SIMD register width in bytes
 )
 
 func init() {
 	// Detect CPU features at runtime
 	detectSIMDCapabilities()
-	
+
 	// Enable SIMD if supported
 	if hasAVX2 || hasAVX512 || hasNEON {
 		Enabled = true
@@ -35,7 +35,7 @@ func detectSIMDCapabilities() {
 		hasAVX512 = true
 		simdWidth = 64 // AVX-512 uses 512-bit (64-byte) registers
 	}
-	
+
 	// ARM64 detection
 	if cpu.ARM64.HasASIMD {
 		hasNEON = true
@@ -49,16 +49,16 @@ func StripANSINative(input string) string {
 	if !Enabled {
 		return StripANSI(input) // Fallback to non-SIMD version
 	}
-	
+
 	if len(input) == 0 {
 		return input
 	}
-	
+
 	// For small inputs, fallback is faster due to setup overhead
 	if len(input) < simdWidth*2 {
 		return StripANSI(input)
 	}
-	
+
 	return stripANSISIMD(input)
 }
 
@@ -66,16 +66,16 @@ func StripANSINative(input string) string {
 func stripANSISIMD(input string) string {
 	inputBytes := []byte(input)
 	output := make([]byte, 0, len(inputBytes))
-	
+
 	i := 0
 	escByte := byte(0x1b)
-	
+
 	// Process in SIMD-width chunks
 	for i+simdWidth <= len(inputBytes) {
 		// Find ESC character in parallel
 		chunk := inputBytes[i : i+simdWidth]
 		escPos := indexByteSIMD(chunk, escByte)
-		
+
 		if escPos < 0 {
 			// No escape in this chunk, copy it
 			output = append(output, chunk...)
@@ -84,7 +84,7 @@ func stripANSISIMD(input string) string {
 			// Found escape, copy up to it
 			output = append(output, chunk[:escPos]...)
 			i += escPos
-			
+
 			// Skip the escape sequence
 			skip := skipANSISequence(inputBytes, i)
 			if skip > 0 {
@@ -94,7 +94,7 @@ func stripANSISIMD(input string) string {
 			}
 		}
 	}
-	
+
 	// Process remaining bytes
 	for i < len(inputBytes) {
 		if inputBytes[i] == escByte {
@@ -107,7 +107,7 @@ func stripANSISIMD(input string) string {
 		output = append(output, inputBytes[i])
 		i++
 	}
-	
+
 	return string(output)
 }
 
@@ -122,7 +122,7 @@ func indexByteSIMD(data []byte, c byte) int {
 		}
 		return -1
 	}
-	
+
 	// SIMD implementation would use parallel comparison
 	// Placeholder: actual SIMD intrinsics would go here
 	// For now, use optimized loop that compiler can auto-vectorize
@@ -139,10 +139,10 @@ func CountByteSIMD(s string, c byte) int {
 	if !Enabled || len(s) < simdWidth*2 {
 		return CountByte(s, c)
 	}
-	
+
 	count := 0
 	data := []byte(s)
-	
+
 	// Process in SIMD-width chunks
 	i := 0
 	for i+simdWidth <= len(data) {
@@ -150,7 +150,7 @@ func CountByteSIMD(s string, c byte) int {
 		count += countByteInChunk(chunk, c)
 		i += simdWidth
 	}
-	
+
 	// Process remaining bytes
 	for i < len(data) {
 		if data[i] == c {
@@ -158,7 +158,7 @@ func CountByteSIMD(s string, c byte) int {
 		}
 		i++
 	}
-	
+
 	return count
 }
 
@@ -180,15 +180,15 @@ func IndexByteSetSIMD(s string, set []byte) int {
 	if !Enabled || len(s) < simdWidth*2 {
 		return IndexByteSet(s, set)
 	}
-	
+
 	// Build lookup table
 	var lut [256]bool
 	for _, c := range set {
 		lut[c] = true
 	}
-	
+
 	data := []byte(s)
-	
+
 	// Process in SIMD-width chunks
 	i := 0
 	for i+simdWidth <= len(data) {
@@ -199,7 +199,7 @@ func IndexByteSetSIMD(s string, set []byte) int {
 		}
 		i += simdWidth
 	}
-	
+
 	// Process remaining bytes
 	for i < len(data) {
 		if lut[data[i]] {
@@ -207,7 +207,7 @@ func IndexByteSetSIMD(s string, set []byte) int {
 		}
 		i++
 	}
-	
+
 	return -1
 }
 
@@ -223,11 +223,11 @@ func indexByteSetInChunk(chunk []byte, lut *[256]bool) int {
 
 // SIMDInfo returns information about SIMD capabilities
 type SIMDInfo struct {
-	Enabled   bool
-	AVX2      bool
-	AVX512    bool
-	NEON      bool
-	Width     int
+	Enabled bool
+	AVX2    bool
+	AVX512  bool
+	NEON    bool
+	Width   int
 }
 
 // GetSIMDInfo returns the current SIMD configuration

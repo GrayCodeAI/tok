@@ -194,11 +194,11 @@ func (p *WASMPlugin) readString(ptr uint32) string {
 	}
 
 	mem := p.module.Memory()
-	
+
 	// Find string length (null-terminated)
 	length := uint32(0)
 	maxLen := uint32(10 * 1024 * 1024) // 10MB max
-	
+
 	for length < maxLen {
 		b, ok := mem.ReadByte(ptr + length)
 		if !ok || b == 0 {
@@ -222,10 +222,10 @@ func (p *WASMPlugin) readString(ptr uint32) string {
 
 // WASMPluginBuilder helps build WASM plugins with a fluent API.
 type WASMPluginBuilder struct {
-	path        string
-	maxMemory   uint32
-	config      wazero.ModuleConfig
-	hostFuncs   map[string]interface{}
+	path      string
+	maxMemory uint32
+	config    wazero.ModuleConfig
+	hostFuncs map[string]interface{}
 }
 
 // NewWASMPluginBuilder creates a new WASM plugin builder.
@@ -251,7 +251,7 @@ func (b *WASMPluginBuilder) WithStdout(w *os.File) *WASMPluginBuilder {
 }
 
 // WithStderr redirects stderr to the given writer.
-func (b *WASMPluginBuilder) WithStderr(w *os.File) *WASMPluginBuilder{
+func (b *WASMPluginBuilder) WithStderr(w *os.File) *WASMPluginBuilder {
 	b.config = b.config.WithStderr(w)
 	return b
 }
