@@ -1,0 +1,74 @@
+name: 'TokMan - Token Analytics & Compression'
+description: 'Analyze token usage and add compression metrics to pull requests'
+author: 'GrayCodeAI'
+
+inputs:
+  api_endpoint:
+    description: 'TokMan API endpoint'
+    required: false
+    default: 'http://localhost:8083'
+
+  api_token:
+    description: 'TokMan API authentication token'
+    required: false
+
+  team_id:
+    description: 'Team ID for analytics'
+    required: false
+
+  analyze_logs:
+    description: 'Analyze test logs and build logs'
+    required: false
+    default: 'true'
+
+  token_budget:
+    description: 'Monthly token budget for the team'
+    required: false
+    default: '10000000'
+
+  fail_on_budget_exceeded:
+    description: 'Fail the workflow if token budget is exceeded'
+    required: false
+    default: 'false'
+
+  comment_on_pr:
+    description: 'Add cost analysis comment to pull requests'
+    required: false
+    default: 'true'
+
+  compression_level:
+    description: 'Compression level: minimal, aggressive'
+    required: false
+    default: 'aggressive'
+
+outputs:
+  tokens_analyzed:
+    description: 'Total tokens analyzed'
+
+  tokens_saved:
+    description: 'Total tokens saved'
+
+  cost_before:
+    description: 'Estimated cost before compression'
+
+  cost_after:
+    description: 'Estimated cost after compression'
+
+  savings_percent:
+    description: 'Savings percentage'
+
+runs:
+  using: 'docker'
+  image: 'docker://graycodeai/tokman-github-action:latest'
+  env:
+    INPUT_API_ENDPOINT: ${{ inputs.api_endpoint }}
+    INPUT_API_TOKEN: ${{ inputs.api_token }}
+    INPUT_TEAM_ID: ${{ inputs.team_id }}
+    INPUT_ANALYZE_LOGS: ${{ inputs.analyze_logs }}
+    INPUT_TOKEN_BUDGET: ${{ inputs.token_budget }}
+    INPUT_FAIL_ON_BUDGET_EXCEEDED: ${{ inputs.fail_on_budget_exceeded }}
+    INPUT_COMMENT_ON_PR: ${{ inputs.comment_on_pr }}
+    INPUT_COMPRESSION_LEVEL: ${{ inputs.compression_level }}
+    GITHUB_TOKEN: ${{ github.token }}
+    GITHUB_REPOSITORY: ${{ github.repository }}
+    GITHUB_PR_NUMBER: ${{ github.event.pull_request.number }}

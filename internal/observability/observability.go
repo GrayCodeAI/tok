@@ -12,7 +12,7 @@ const (
 	LogDebug LogLevel = "DEBUG"
 	LogInfo  LogLevel = "INFO"
 	LogWarn  LogLevel = "WARN"
-	LogError LogLevel = "ERROR"
+	LogErr   LogLevel = "ERROR"
 )
 
 type LogEntry struct {
@@ -45,7 +45,7 @@ func (l *StructuredLogger) Warn(msg string, fields map[string]interface{}) {
 }
 
 func (l *StructuredLogger) Error(msg string, fields map[string]interface{}) {
-	l.log(LogError, msg, fields)
+	l.log(LogErr, msg, fields)
 }
 
 func (l *StructuredLogger) log(level LogLevel, msg string, fields map[string]interface{}) {

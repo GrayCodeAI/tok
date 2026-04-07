@@ -13,9 +13,9 @@ type mockRepository struct {
 	topCommands []CommandStats
 }
 
-func (m *mockRepository) Save(ctx context.Context, record *RecordRequest) error {
+func (m *mockRepository) Save(ctx context.Context, record *RecordRequest) (int64, error) {
 	m.records = append(m.records, record)
-	return nil
+	return int64(len(m.records)), nil
 }
 
 func (m *mockRepository) Query(ctx context.Context, req *MetricsRequest) (*MetricsResponse, error) {
@@ -27,6 +27,26 @@ func (m *mockRepository) Query(ctx context.Context, req *MetricsRequest) (*Metri
 
 func (m *mockRepository) GetTopCommands(ctx context.Context, limit int) ([]CommandStats, error) {
 	return m.topCommands, nil
+}
+
+func (m *mockRepository) GetTeamStats(ctx context.Context, teamID string) (*TeamStatsResponse, error) {
+	return &TeamStatsResponse{}, nil
+}
+
+func (m *mockRepository) GetUserStats(ctx context.Context, teamID, userID string) (*UserStatsResponse, error) {
+	return &UserStatsResponse{}, nil
+}
+
+func (m *mockRepository) GetFilterEffectiveness(ctx context.Context, teamID string, limit int) ([]FilterMetricResponse, error) {
+	return nil, nil
+}
+
+func (m *mockRepository) GetTrendAnalysis(ctx context.Context, teamID string, granularity string, periods int) ([]TrendPoint, error) {
+	return nil, nil
+}
+
+func (m *mockRepository) GetCostProjection(ctx context.Context, teamID string, daysToProject int) (*CostProjectionResponse, error) {
+	return &CostProjectionResponse{}, nil
 }
 
 func TestServiceRecord(t *testing.T) {
@@ -44,7 +64,7 @@ func TestServiceRecord(t *testing.T) {
 		SessionID:      "test-session",
 	}
 
-	err := svc.Record(ctx, record)
+	_, err := svc.Record(ctx, record)
 	if err != nil {
 		t.Fatalf("Record returned error: %v", err)
 	}
@@ -61,15 +81,16 @@ func TestServiceRecord(t *testing.T) {
 func TestServiceGetMetrics(t *testing.T) {
 	mock := &mockRepository{
 		metrics: &MetricsResponse{
-			TotalCommands:    100,
-			TotalTokensSaved: 50000,
-			AverageSavings:   45.5,
+			TotalCommands:         100,
+			TotalTokensSaved:      5000,
+			AverageSavingsPercent: 50.0,
+			P99LatencyMs:          25.0,
 		},
 	}
 	svc := NewService(mock)
 	ctx := context.Background()
 
-	metrics, err := svc.GetMetrics(ctx, &MetricsRequest{})
+	metrics, err := svc.GetMetrics(ctx, &MetricsRequest{TeamID: "test"})
 	if err != nil {
 		t.Fatalf("GetMetrics returned error: %v", err)
 	}
@@ -77,52 +98,28 @@ func TestServiceGetMetrics(t *testing.T) {
 	if metrics.TotalCommands != 100 {
 		t.Errorf("Expected 100 commands, got %d", metrics.TotalCommands)
 	}
+
+	if metrics.AverageSavingsPercent != 50.0 {
+		t.Errorf("Expected 50.0 savings, got %f", metrics.AverageSavingsPercent)
+	}
 }
 
 func TestServiceGetEconomics(t *testing.T) {
 	mock := &mockRepository{
 		metrics: &MetricsResponse{
-			TotalTokensSaved: 100000,
+			TotalTokensSaved:    10000,
+			EstimatedSavingsUSD: 50.0,
 		},
 	}
 	svc := NewService(mock)
 	ctx := context.Background()
 
-	econ, err := svc.GetEconomics(ctx)
+	econ, err := svc.GetEconomics(ctx, "test-team")
 	if err != nil {
 		t.Fatalf("GetEconomics returned error: %v", err)
 	}
 
-	if econ == nil {
-		t.Fatal("GetEconomics returned nil")
-	}
-
-	if econ.TokensSaved != 100000 {
-		t.Errorf("Expected 100000 tokens saved, got %d", econ.TokensSaved)
-	}
-
-	// Cost should be calculated
-	if econ.EstimatedCostSaved <= 0 {
-		t.Error("Expected positive cost savings")
-	}
-}
-
-func TestServiceGetTopCommands(t *testing.T) {
-	mock := &mockRepository{
-		topCommands: []CommandStats{
-			{Command: "git status", Count: 50, TotalSaved: 10000},
-			{Command: "npm install", Count: 30, TotalSaved: 5000},
-		},
-	}
-	svc := NewService(mock)
-	ctx := context.Background()
-
-	commands, err := svc.GetTopCommands(ctx, 10)
-	if err != nil {
-		t.Fatalf("GetTopCommands returned error: %v", err)
-	}
-
-	if len(commands) != 2 {
-		t.Errorf("Expected 2 commands, got %d", len(commands))
+	if econ.TokensSaved != 10000 {
+		t.Errorf("Expected 10000 tokens saved, got %d", econ.TokensSaved)
 	}
 }

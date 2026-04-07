@@ -139,12 +139,12 @@ func (fc *FingerprintCache) evictOldest() {
 }
 
 // Stats returns cache statistics
-func (fc *FingerprintCache) Stats() CacheStats {
+func (fc *FingerprintCache) Stats() FingerprintCacheStats {
 	fc.mu.RLock()
 	entries := len(fc.cache)
 	fc.mu.RUnlock()
 
-	return CacheStats{
+	return FingerprintCacheStats{
 		Entries:    entries,
 		MaxEntries: fc.maxEntries,
 		Hits:       fc.hits.Load(),
@@ -153,8 +153,8 @@ func (fc *FingerprintCache) Stats() CacheStats {
 	}
 }
 
-// CacheStats holds cache statistics
-type CacheStats struct {
+// FingerprintCacheStats holds cache statistics for fingerprint cache
+type FingerprintCacheStats struct {
 	Entries    int
 	MaxEntries int
 	Hits       int64
