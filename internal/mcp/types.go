@@ -236,6 +236,25 @@ type BundleFile struct {
 	Language string `json:"language"`
 }
 
+// Resource represents an MCP resource.
+type Resource struct {
+	URI         string          `json:"uri"`
+	Name        string          `json:"name"`
+	Description string          `json:"description,omitempty"`
+	MimeType    string          `json:"mimeType,omitempty"`
+	Handler     ResourceHandler `json:"-"`
+}
+
+// ResourceHandler handles resource requests.
+type ResourceHandler func(ctx context.Context) (string, error)
+
+// Prompt represents an MCP prompt.
+type Prompt struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Template    string `json:"template"`
+}
+
 // Stats represents cache statistics.
 type Stats struct {
 	TotalEntries int64     `json:"total_entries"`

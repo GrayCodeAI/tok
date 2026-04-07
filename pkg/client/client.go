@@ -201,8 +201,8 @@ func (c *analyticsClient) GetMetrics(ctx context.Context) (*MetricsResult, error
 	return &MetricsResult{
 		TotalCommands:    resp.TotalCommands,
 		TotalTokensSaved: resp.TotalTokensSaved,
-		AverageSavings:   resp.AverageSavings,
-		P99LatencyMs:     resp.P99LatencyMs,
+		AverageSavings:   resp.GetAverageSavingsPercent(),
+		P99LatencyMs:     resp.GetP99LatencyMs(),
 	}, nil
 }
 
@@ -214,8 +214,8 @@ func (c *analyticsClient) GetEconomics(ctx context.Context) (*EconomicsResult, e
 	}
 
 	return &EconomicsResult{
-		TokensSaved:        resp.TokensSaved,
-		EstimatedCostSaved: resp.EstimatedCostSaved,
-		ModelUsed:          resp.ModelUsed,
+		TokensSaved:        resp.GetTokensSaved(),
+		EstimatedCostSaved: resp.GetEstimatedCostSaved(),
+		ModelUsed:          resp.GetPrimaryModel(),
 	}, nil
 }

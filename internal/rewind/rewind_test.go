@@ -289,7 +289,10 @@ func TestStorePrune(t *testing.T) {
 		FilteredTokens: 2,
 	}
 
-	store.Save(entry)
+	_, err := store.Save(entry)
+	if err != nil {
+		t.Fatalf("Save() failed: %v", err)
+	}
 
 	// With normal TTL (24h), nothing should be pruned
 	pruned, err := store.Prune()

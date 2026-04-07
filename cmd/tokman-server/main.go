@@ -295,12 +295,12 @@ type analyticsRepository struct {
 	tracker *tracking.Tracker
 }
 
-func (r *analyticsRepository) Save(ctx context.Context, record *analytics.RecordRequest) error {
+func (r *analyticsRepository) Save(ctx context.Context, record *analytics.RecordRequest) (int64, error) {
 	saved := record.OriginalTokens - record.FilteredTokens
 	if saved < 0 {
 		saved = 0
 	}
-	return r.tracker.Record(&tracking.CommandRecord{
+	err := r.tracker.Record(&tracking.CommandRecord{
 		Command:        record.Command,
 		OriginalTokens: record.OriginalTokens,
 		FilteredTokens: record.FilteredTokens,
@@ -310,6 +310,7 @@ func (r *analyticsRepository) Save(ctx context.Context, record *analytics.Record
 		Timestamp:      time.Now(),
 		ParseSuccess:   true,
 	})
+	return 0, err
 }
 
 func (r *analyticsRepository) Query(ctx context.Context, req *analytics.MetricsRequest) (*analytics.MetricsResponse, error) {
@@ -320,11 +321,11 @@ func (r *analyticsRepository) Query(ctx context.Context, req *analytics.MetricsR
 	}
 
 	return &analytics.MetricsResponse{
-		TotalCommands:    int64(summary.TotalCommands),
-		TotalTokensSaved: int64(summary.TotalSaved),
-		TotalTokensIn:    int64(summary.TotalOriginal),
-		TotalTokensOut:   int64(summary.TotalFiltered),
-		AverageSavings:   summary.ReductionPct,
+		TotalCommands:         int64(summary.TotalCommands),
+		TotalTokensSaved:      int64(summary.TotalSaved),
+		TotalTokensIn:         int64(summary.TotalOriginal),
+		TotalTokensOut:        int64(summary.TotalFiltered),
+		AverageSavingsPercent: summary.ReductionPct,
 	}, nil
 }
 
@@ -344,4 +345,30 @@ func (r *analyticsRepository) GetTopCommands(ctx context.Context, limit int) ([]
 		})
 	}
 	return result, nil
+}
+
+func (r *analyticsRepository) GetTeamStats(ctx context.Context, teamID string) (*analytics.TeamStatsResponse, error) {
+	return &analytics.TeamStatsResponse{
+		TeamID: teamID,
+	}, nil
+}
+
+func (r *analyticsRepository) GetUserStats(ctx context.Context, teamID, userID string) (*analytics.UserStatsResponse, error) {
+	return &analytics.UserStatsResponse{
+		UserID: userID,
+	}, nil
+}
+
+func (r *analyticsRepository) GetFilterEffectiveness(ctx context.Context, teamID string, limit int) ([]analytics.FilterMetricResponse, error) {
+	return nil, nil
+}
+
+func (r *analyticsRepository) GetTrendAnalysis(ctx context.Context, teamID string, granularity string, periods int) ([]analytics.TrendPoint, error) {
+	return nil, nil
+}
+
+func (r *analyticsRepository) GetCostProjection(ctx context.Context, teamID string, daysToProject int) (*analytics.CostProjectionResponse, error) {
+	return &analytics.CostProjectionResponse{
+		ProjectionBasis: "last_30_days",
+	}, nil
 }

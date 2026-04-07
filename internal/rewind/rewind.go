@@ -36,12 +36,12 @@ type Entry struct {
 
 // Stats contains aggregate statistics for the RewindStore.
 type Stats struct {
-	TotalEntries   int     `json:"total_entries"`
-	TotalOriginal  int     `json:"total_original_tokens"`
-	TotalFiltered  int     `json:"total_filtered_tokens"`
-	TotalSaved     int     `json:"total_saved_tokens"`
-	AvgCompression float64 `json:"avg_compression_pct"`
-	DatabaseSize   int64   `json:"database_size_bytes"`
+	TotalEntries   int       `json:"total_entries"`
+	TotalOriginal  int       `json:"total_original_tokens"`
+	TotalFiltered  int       `json:"total_filtered_tokens"`
+	TotalSaved     int       `json:"total_saved_tokens"`
+	AvgCompression float64   `json:"avg_compression_pct"`
+	DatabaseSize   int64     `json:"database_size_bytes"`
 	OldestEntry    time.Time `json:"oldest_entry"`
 	NewestEntry    time.Time `json:"newest_entry"`
 }
@@ -49,18 +49,18 @@ type Stats struct {
 // Store provides persistent storage for original command outputs.
 // It uses SQLite for storage and supports concurrent access.
 type Store struct {
-	db       *sql.DB
-	dbPath   string
-	mu       sync.RWMutex
-	maxSize  int64 // Maximum database size in bytes
-	ttl      time.Duration // Time-to-live for entries
+	db      *sql.DB
+	dbPath  string
+	mu      sync.RWMutex
+	maxSize int64         // Maximum database size in bytes
+	ttl     time.Duration // Time-to-live for entries
 }
 
 // Config holds configuration for the RewindStore.
 type Config struct {
 	DatabasePath string        `json:"database_path"`
-	MaxSize      int64         `json:"max_size"`      // Max DB size in bytes (default: 100MB)
-	TTL          time.Duration `json:"ttl"`           // Entry TTL (default: 7 days)
+	MaxSize      int64         `json:"max_size"` // Max DB size in bytes (default: 100MB)
+	TTL          time.Duration `json:"ttl"`      // Entry TTL (default: 7 days)
 	Enabled      bool          `json:"enabled"`
 }
 
@@ -69,7 +69,7 @@ func DefaultConfig() Config {
 	homeDir, _ := os.UserHomeDir()
 	return Config{
 		DatabasePath: filepath.Join(homeDir, ".local", "share", "tokman", "rewind.db"),
-		MaxSize:      100 * 1024 * 1024, // 100MB
+		MaxSize:      100 * 1024 * 1024,  // 100MB
 		TTL:          7 * 24 * time.Hour, // 7 days
 		Enabled:      true,
 	}
@@ -275,18 +275,26 @@ func (s *Store) Prune() (int, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	cutoff := time.Now().UTC().Add(-s.ttl)
+	cutoff := time.Now().Add(-s.ttl)
 
-	result, err := s.db.Exec(
+	// Get count before
+	var countBefore int
+	s.db.QueryRow("SELECT COUNT(*) FROM rewind_entries").Scan(&countBefore)
+
+	// Delete entries where created_at timestamp is before cutoff
+	_, err := s.db.Exec(
 		"DELETE FROM rewind_entries WHERE created_at < ?",
-		cutoff.Format("2006-01-02T15:04:05Z"),
+		cutoff.Format(time.RFC3339Nano),
 	)
 	if err != nil {
 		return 0, fmt.Errorf("prune rewind entries: %w", err)
 	}
 
-	affected, _ := result.RowsAffected()
-	return int(affected), nil
+	// Get count after
+	var countAfter int
+	s.db.QueryRow("SELECT COUNT(*) FROM rewind_entries").Scan(&countAfter)
+
+	return countBefore - countAfter, nil
 }
 
 // GetStats returns aggregate statistics for the RewindStore.

@@ -43,10 +43,10 @@ type mockAnalyticsServer struct {
 
 func (s *mockAnalyticsServer) GetMetrics(ctx context.Context, req *analyticspb.GetMetricsRequest) (*analyticspb.GetMetricsResponse, error) {
 	return &analyticspb.GetMetricsResponse{
-		TotalCommands:    1000,
-		TotalTokensSaved: 50000,
-		AverageSavings:   45.5,
-		P99LatencyMs:     25.0,
+		TotalCommands:         1000,
+		TotalTokensSaved:      50000,
+		AverageSavingsPercent: 45.5,
+		P99LatencyMs:          25.0,
 	}, nil
 }
 
@@ -54,7 +54,7 @@ func (s *mockAnalyticsServer) GetEconomics(ctx context.Context, req *analyticspb
 	return &analyticspb.GetEconomicsResponse{
 		TokensSaved:        50000,
 		EstimatedCostSaved: 15.50,
-		ModelUsed:          "gpt-4",
+		PrimaryModel:       "gpt-4",
 	}, nil
 }
 
