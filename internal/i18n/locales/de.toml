@@ -1,0 +1,118 @@
+# Deutsche (de)
+
+[common]
+success = "✓ {action} erfolgreich abgeschlossen"
+error = "✗ Fehler: {error}"
+warning = "⚠ Warnung: {message}"
+loading = "Laden..."
+processing = "Verarbeiten..."
+no_data = "Keine Daten gefunden"
+not_found = "Nicht gefunden: {item}"
+invalid_input = "Ungültige Eingabe: {field}"
+missing_arg = "Fehlendes Argument: {arg}"
+
+[tokman]
+name = "TokMan"
+description = "Token-bewusster CLI-Proxy mit 31-Schichten-Komprimierungspipeline"
+version = "Version: {version}"
+
+[commands]
+init = "TokMan für KI-Tool initialisieren"
+doctor = "Systemprüfung"
+status = "Aktuellen Status anzeigen"
+stats = "Komprimierungsstatistiken"
+gain = "Token-Einsparungsbericht"
+filter = "Text durch Pipeline filtern"
+help = "Hilfe anzeigen"
+
+[doctor]
+title = "TokMan Gesundheitscheck"
+check_hooks = "Hook-Integrität prüfen..."
+check_config = "Konfiguration prüfen..."
+check_database = "Datenbank prüfen..."
+check_version = "Version prüfen..."
+all_ok = "Alle Prüfungen bestanden ✓"
+issues_found = "{count} Problem(e) gefunden"
+
+[filter]
+pipeline = "Pipeline"
+layers = "Schichten"
+tokens_in = "Eingabe-Tokens"
+tokens_out = "Ausgabe-Tokens"
+saved = "Gespart"
+compression_rate = "Kompressionsrate"
+quality = "Qualität"
+time = "Zeit"
+preset_fast = "schnell"
+preset_balanced = "ausgewogen"
+preset_full = "vollständig"
+mode_minimal = "minimal"
+mode_aggressive = "aggressiv"
+
+[quality]
+grade = "Note: {grade}"
+semantic = "Semantik"
+signal = "Signal/Rauschen"
+context = "Kontext-Erhalt"
+readable = "Lesbarkeit"
+complete = "Vollständigkeit"
+ratio = "Kompressionsrate"
+excellent = "Ausgezeichnet"
+great = "Sehr gut"
+good = "Gut"
+acceptable = "Akzeptabel"
+fair = "Mittel"
+poor = "Schlecht"
+
+[stats]
+total_commands = "Gefilterte Befehle gesamt"
+total_saved = "Gesparte Tokens gesamt"
+avg_savings = "Durchschnittliche Einsparung"
+efficiency = "Effizienz"
+top_commands = "Top-Befehle nach gesparten Tokens"
+
+[rewind]
+title = "RewindStore"
+entries = "Einträge"
+original = "Original"
+filtered = "Gefiltert"
+deleted = "Eintrag gelöscht"
+not_found = "Eintrag nicht gefunden"
+pruned = "{count} abgelaufene Einträge entfernt"
+
+[learn]
+title = "Lernmodus"
+status_active = "Aktiv ✓"
+status_inactive = "Inaktiv"
+samples = "Gesammelte Beispiele"
+patterns = "Gefundene Muster"
+pending = "Ausstehend"
+approved = "Genehmigt"
+rejected = "Abgelehnt"
+start = "Lernmodus gestartet"
+stop = "Lernmodus gestoppt"
+applied = "Filter erfolgreich angewendet"
+dry_run = "Probelauf: keine Änderungen"
+
+[recovery]
+title = "Sitzungswiederherstellung"
+no_sessions = "Keine aktiven Sitzungen"
+interrupted = "Unterbrochene Sitzung erkannt"
+resuming = "Sitzung wird wiederhergestellt"
+closed = "Sitzung geschlossen und archiviert"
+
+[install]
+welcome = "Willkommen bei TokMan"
+installing = "TokMan {version} für {platform} wird installiert..."
+downloading = "Herunterladen..."
+verifying = "Prüfsumme wird überprüft..."
+extracting = "Entpacken..."
+installed = "Installiert nach {path}"
+quick_start = "Schnellstart"
+help = "'tokman --help' für weitere Optionen"
+
+[dashboard]
+title = "TokMan Dashboard"
+starting = "Dashboard wird auf {addr} gestartet..."
+stopping = "Dashboard wird gestoppt..."
+open_browser = "Im Browser öffnen: {url}"
