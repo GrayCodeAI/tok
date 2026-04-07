@@ -34,6 +34,7 @@ import (
 	_ "github.com/GrayCodeAI/tokman/internal/commands/output"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/pkgmgr"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/rewindcmd"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/recoverycmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/sessioncmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/system"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/test"
