@@ -1,0 +1,59 @@
+cff-version: 1.2.0
+title: "TokMan: Token-Aware CLI Proxy with 31-Layer Compression Pipeline"
+message: "If you use TokMan in your research, please cite it using these metadata."
+type: software
+authors:
+  - name: "GrayCode AI"
+    website: "https://github.com/GrayCodeAI"
+repository-code: "https://github.com/GrayCodeAI/tokman"
+url: "https://github.com/GrayCodeAI/tokman"
+license: MIT
+version: "0.28.2"
+date-released: "2026-04-03"
+keywords:
+  - token-reduction
+  - llm
+  - ai-coding-assistant
+  - compression
+  - cli-proxy
+  - context-window
+  - claude-code
+  - cursor
+  - copilot
+abstract: >-
+  TokMan is a token-aware CLI proxy that intercepts CLI commands and applies
+  a 31-layer compression pipeline to reduce token usage for AI coding assistants.
+  Built on research from 120+ papers, it achieves 60-90% token reduction on
+  common development operations. The pipeline includes entropy filtering,
+  perplexity pruning, goal-driven selection, AST preservation, contrastive
+  ranking, and 15+ additional research-backed compression layers.
+references:
+  - type: article
+    title: "Selective Context for Language Models"
+    authors:
+      - family-names: "Li"
+        given-names: "Yucheng"
+    year: 2023
+    notes: "Foundation for Layer 1: Entropy Filtering"
+  - type: article
+    title: "LLMLingua: Compressing Prompts for Accelerated Inference"
+    authors:
+      - family-names: "Jiang"
+        given-names: "Huiqiang"
+    year: 2023
+    notes: "Foundation for Layer 2: Perplexity Pruning"
+  - type: article
+    title: "LongLLMLingua: Accelerating and Enhancing LLMs in Long Context Scenarios"
+    authors:
+      - family-names: "Jiang"
+        given-names: "Huiqiang"
+    year: 2024
+    notes: "Foundation for Layer 5: Contrastive Ranking"
+  - type: article
+    title: "H2O: Heavy-Hitter Oracle for Efficient Generative Inference"
+    year: 2023
+    notes: "Foundation for Layer 13: H2O Filter"
+  - type: article
+    title: "Efficient Streaming Language Models with Attention Sinks"
+    year: 2023
+    notes: "Foundation for Layer 14: Attention Sink"

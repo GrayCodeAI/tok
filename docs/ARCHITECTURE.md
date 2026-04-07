@@ -1,252 +1,494 @@
-# 🏗️ TokMan Architecture
+# TokMan Architecture
 
-This document explains how TokMan is structured and how its components work together.
+## Overview
 
----
+TokMan is a token-aware CLI proxy that intercepts CLI commands and applies a 31-layer compression pipeline to reduce token usage for AI coding assistants.
 
-## 📐 High-Level Architecture
+## System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        User / AI Assistant                    │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      CLI Commands (Cobra)                     │
-│  ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐      │
-│  │  git  │ │ docker│ │ npm  │ │cargo │ │ pytest│ │ ...  │      │
-│  └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘ └──┬───┘      │
-└─────┼────────┼────────┼────────┼────────┼─────────┼──────────┘
-      │        │        │        │        │         │
-      ▼        ▼        ▼        ▼        ▼         ▼
-┌─────────────────────────────────────────────────────────────┐
-│                    Filter Pipeline (31 layers)                │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
-│  │Entropy  │ │Perplexity│ │  H2O    │ │  Gist   │  ...      │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                     Output Processing                        │
-│  ┌───────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐       │
-│  │  Quality  │ │ Vis Diff  │ │  Merge   │ │  Export  │       │
-│  └───────────┘ └──────────┘ └──────────┘ └──────────┘       │
-└───────────────────────┬─────────────────────────────────────┘
-                        │
-                        ▼
-┌─────────────────────────────────────────────────────────────┐
-│                 Tracking & Analytics (SQLite)                 │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                     AI Coding Assistant                   │
+│              (Claude Code, Cursor, etc.)                  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                      Hook Layer                          │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐ │
+│  │ PreToolUse  │  │ PostToolUse  │  │ SessionStart   │ │
+│  │   Hook      │  │   Hook       │  │   Hook         │ │
+│  └─────────────┘  └──────────────┘  └────────────────┘ │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                   TokMan CLI Proxy                       │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │              Command Router                       │  │
+│  │  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌───────┐ │  │
+│  │  │ Filter  │ │ Commands│ │ Analysis│ │System │ │  │
+│  │  │ Pipeline│ │ Runner  │ │ Engine  │ │ Utils │ │  │
+│  │  └─────────┘ └─────────┘ └─────────┘ └───────┘ │  │
+│  └──────────────────────────────────────────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Filter Pipeline (31 Layers)              │
+│  ┌────────────────────────────────────────────────────┐ │
+│  │  Stage 1: Information Analysis                     │ │
+│  │  ├─ L1: Entropy Filtering                          │ │
+│  │  ├─ L2: Perplexity Pruning                         │ │
+│  │  ├─ L3: Goal-Driven Selection                      │ │
+│  │  └─ L4: AST Preservation                           │ │
+│  ├────────────────────────────────────────────────────┤ │
+│  │  Stage 2: Semantic Compression                     │ │
+│  │  ├─ L5: Contrastive Ranking                        │ │
+│  │  ├─ L6: N-gram Abbreviation                        │ │
+│  │  ├─ L7: Evaluator Heads                            │ │
+│  │  ├─ L8: Gist Compression                           │ │
+│  │  └─ L9: Hierarchical Summary                       │ │
+│  ├────────────────────────────────────────────────────┤ │
+│  │  Stage 3: Advanced Filtering                       │ │
+│  │  ├─ L10: Budget Enforcement                        │ │
+│  │  ├─ L11: Compaction                                │ │
+│  │  ├─ L12: Attribution Filter                        │ │
+│  │  ├─ L13: H2O Filter                                │ │
+│  │  └─ L14: Attention Sink                            │ │
+│  ├────────────────────────────────────────────────────┤ │
+│  │  Stage 4: Intelligence Enhancement                 │ │
+│  │  ├─ L15: Meta-Token Compression                    │ │
+│  │  ├─ L16: Semantic Chunking                         │ │
+│  │  ├─ L17: Sketch Store                              │ │
+│  │  ├─ L18: Lazy Pruner                               │ │
+│  │  ├─ L19: Semantic Anchor                           │ │
+│  │  └─ L20: Agent Memory                              │ │
+│  └────────────────────────────────────────────────────┘ │
+└────────────────────────┬────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────┐
+│                  Output & Analytics                      │
+│  ┌─────────────┐  ┌──────────────┐  ┌────────────────┐ │
+│  │ Filtered    │  │ Quality      │  │ Tracking &     │ │
+│  │ Output      │  │ Metrics      │  │ Analytics      │ │
+│  └─────────────┘  └──────────────┘  └────────────────┘ │
+└─────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 📁 Directory Structure
+## Directory Structure
 
 ```
 tokman/
 ├── cmd/tokman/main.go              # Entry point
 ├── internal/
-│   ├── commands/                   # CLI commands (Cobra)
-│   │   ├── registry/               # Command registration
-│   │   ├── shared/                 # Global state & flags
-│   │   ├── core/                   # Core commands (doctor, etc.)
-│   │   ├── analysis/               # Stats, quality, benchmark
-│   │   ├── output/                 # Rewrite, diff, merge
-│   │   ├── system/                 # ls, grep, find, tree
-│   │   ├── vcs/                    # git, gh, gt
-│   │   ├── container/              # docker, kubectl
-│   │   ├── pkgmgr/                 # npm, cargo, pip
-│   │   ├── filtercmd/              # filter, tests, validate
-│   │   └── init/                   # tokman init (hooks)
-│   ├── filter/                     # 31-layer pipeline
+│   ├── commands/                   # CLI command definitions
+│   │   ├── root.go                 # Root command
+│   │   ├── registry/               # Command registry pattern
+│   │   ├── shared/                 # Shared state
+│   │   └── [categories]/           # Command categories
+│   ├── filter/                     # 31-layer compression pipeline
 │   │   ├── pipeline.go             # Pipeline coordinator
-│   │   ├── entropy.go              # Layer 1
-│   │   ├── perplexity.go           # Layer 2
-│   │   ├── ...                     # Layers 3-31
-│   │   └── presets.go              # Fast/balanced/full
-│   ├── toml/                       # TOML filter system
-│   │   ├── parser.go               # Parse TOML filters
-│   │   ├── loader.go               # Discover & load filters
-│   │   ├── test.go                 # Inline test framework
-│   │   └── builtin/                # 97+ builtin filters
-│   ├── tracking/                   # SQLite tracking
-│   ├── quality/                    # Quality scoring (6 metrics)
-│   ├── visual/                     # Visual diff tool
-│   ├── core/                       # Command runner, estimator
-│   └── config/                     # Configuration (Viper + TOML)
-├── hooks/                          # Delegating hook scripts
-├── Formula/                        # Homebrew formula
-├── homebrew-tokman/                # Homebrew tap repo
-├── docs/                           # Documentation
-└── OSS-REF/                        # Competitor reference repos
+│   │   ├── filter.go               # Filter types and modes
+│   │   ├── presets.go              # Pipeline presets
+│   │   └── [layer_*.go]           # Individual layers
+│   ├── core/                       # Core functionality
+│   │   ├── runner.go               # Command runner
+│   │   ├── estimator.go            # Token estimation
+│   │   └── interfaces.go           # Core interfaces
+│   ├── config/                     # Configuration loading
+│   ├── tracking/                   # Command tracking & SQLite
+│   ├── toml/                       # TOML filter configuration
+│   ├── tee/                        # Output tee/logging
+│   ├── dashboard/                  # Dashboard web interface
+│   ├── economics/                  # Cost analysis
+│   ├── telemetry/                  # Telemetry collection
+│   ├── integrity/                  # Hook integrity verification
+│   └── utils/                      # Logging utilities
+├── config/                         # Default config files
+├── templates/                      # Init templates
+├── tests/                          # Integration tests
+└── benchmarks/                     # Performance benchmarks
 ```
 
----
+## Core Components
 
-## 🔄 Command Flow
+### 1. Command Runner (`internal/core/runner.go`)
 
-### 1. User invokes command
+The `OSCommandRunner` executes shell commands via `os/exec`:
+
+```go
+type OSCommandRunner struct {
+    logger  Logger
+    timeout time.Duration
+}
+
+func (r *OSCommandRunner) Run(ctx context.Context, cmd string, args ...string) (string, error) {
+    // 1. Create command
+    command := exec.CommandContext(ctx, cmd, args...)
+    
+    // 2. Capture stdout/stderr
+    var stdout, stderr bytes.Buffer
+    command.Stdout = &stdout
+    command.Stderr = &stderr
+    
+    // 3. Execute with timeout
+    err := command.Run()
+    if err != nil {
+        return "", fmt.Errorf("command failed: %w, stderr: %s", err, stderr.String())
+    }
+    
+    return stdout.String(), nil
+}
+```
+
+### 2. Filter Pipeline (`internal/filter/pipeline.go`)
+
+The `PipelineCoordinator` orchestrates all 31 layers with early-exit support and stage gates:
+
+```go
+type PipelineCoordinator struct {
+    config  PipelineConfig
+    layers  []Layer
+    stats   PipelineStats
+}
+
+func (p *PipelineCoordinator) Process(input string) (string, PipelineStats) {
+    output := input
+    
+    for _, layer := range p.layers {
+        // Stage gate: skip if layer wouldn't add value
+        if p.shouldSkipLayer(layer) {
+            continue
+        }
+        
+        // Apply layer
+        filtered, saved := layer.Apply(output, p.config.Mode)
+        output = filtered
+        
+        // Update stats
+        p.stats.TokensSaved += saved
+        
+        // Early exit if budget met
+        if p.config.Budget > 0 && p.stats.TokensSaved >= p.config.Budget {
+            break
+        }
+    }
+    
+    return output, p.stats
+}
+```
+
+### 3. Token Estimator (`internal/core/estimator.go`)
+
+Unified token estimation using `len(text) / 4` heuristic:
+
+```go
+func EstimateTokens(text string) int {
+    // Approximation: 1 token ≈ 4 characters
+    return len(text) / 4
+}
+```
+
+### 4. Configuration (`internal/config/config.go`)
+
+Viper-based configuration loading:
+
+```go
+type Config struct {
+    Tracking  TrackingConfig
+    Filter    FilterConfig
+    Pipeline  PipelineConfig
+    Hooks     HooksConfig
+    Dashboard DashboardConfig
+}
+```
+
+### 5. Tracking (`internal/tracking/tracker.go`)
+
+SQLite-based command tracking:
+
+```go
+type Tracker struct {
+    db *sql.DB
+}
+
+func (t *Tracker) Record(record CommandRecord) error {
+    // Insert into SQLite
+    _, err := t.db.Exec(
+        "INSERT INTO commands (name, args, output_tokens, saved_tokens) VALUES (?, ?, ?, ?)",
+        record.Name, record.Args, record.OutputTokens, record.SavedTokens,
+    )
+    return err
+}
+```
+
+## Filter Layer Architecture
+
+Each layer implements the `Layer` interface:
+
+```go
+type Layer interface {
+    Apply(input string, mode Mode) (string, int)
+    Name() string
+    ShouldSkip(input string, config PipelineConfig) bool
+}
+```
+
+### Layer Execution Flow
+
+```
+Input Text
+    │
+    ▼
+┌─────────────────┐
+│  Stage Gate     │ ← Skip check (cost ≈ 0)
+│  shouldSkip?    │
+└────────┬────────┘
+         │ No
+         ▼
+┌─────────────────┐
+│  Apply Filter   │ ← Core filtering logic
+│  layer.Apply()  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Update Stats   │ ← Tokens saved, time taken
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Early Exit?    │ ← Budget met?
+└────────┬────────┘
+         │ No
+         ▼
+    Next Layer
+```
+
+## Hook System Architecture
+
+### PreToolUse Hook
+
+Intercepts commands before execution:
+
 ```bash
-tokman git status
+#!/bin/bash
+# tokman-pre-hook.sh
+
+# Check if command should be intercepted
+if should_intercept "$command"; then
+    # Rewrite to tokman
+    exec tokman "$command" "$@"
+fi
 ```
 
-### 2. Command resolution
-- Root command receives `git status`
-- `registry` package finds matching handler
-- Command runner executes shell command
+### PostToolUse Hook
 
-### 3. Output capture
-- Command runs, output captured via `os/exec`
-- Output piped to token estimator
-- Output stored in tracking database
+Processes output after execution:
 
-### 4. Filter pipeline
+```bash
+#!/bin/bash
+# tokman-post-hook.sh
+
+# Read output from file
+output=$(cat "$output_file")
+
+# Process through tokman
+processed=$(tokman filter --input "$output")
+
+# Replace with filtered version
+echo "$processed" > "$output_file"
 ```
-Raw Output → Layer 1 (Entropy) → Layer 2 (Perplexity) → ...
-                                                              → Layer 31 (Agent Memory)
+
+## Quality Metrics System
+
+6-metric analysis for each filtered output:
+
+```go
+type QualityMetrics struct {
+    SemanticScore     float64  // 0.0-1.0, how much meaning preserved
+    SignalToNoise     float64  // 0.0-1.0, relevant vs noise ratio
+    ContextRetention  float64  // 0.0-1.0, context preserved
+    Readability       float64  // 0.0-1.0, human readability
+    Completeness      float64  // 0.0-1.0, information completeness
+    CompressionRatio  float64  // 0.0-1.0, size reduction
+}
+
+func CalculateGrade(metrics QualityMetrics) string {
+    // A+: 0.95-1.0, A: 0.90-0.95, etc.
+    // F: < 0.50
+}
 ```
 
-Each layer:
-- Receives text input
-- Applies transformation
-- Returns filtered text + tokens saved
-- Early exit if budget met
+## Data Flow
 
-### 5. Quality analysis (optional)
-- 6 metrics calculated
-- Grade assigned (A+ to F)
-- Recommendations generated
+### Command Execution Flow
 
-### 6. Output delivery
-- Filtered output to stdout
-- Stats to stderr
-- Results tracked in SQLite
+```
+1. User runs: git status
+2. Hook intercepts
+3. tokman command router receives
+4. Command runner executes: git status
+5. Output captured
+6. Pipeline processes through 31 layers
+7. Quality metrics calculated
+8. Filtered output returned
+9. Tracking recorded to SQLite
+10. Telemetry sent (if enabled)
+```
 
----
+### Configuration Flow
 
-## 🧩 Key Components
+```
+1. tokman starts
+2. Load ~/.config/tokman/config.toml
+3. Override with env vars (TOKMAN_*)
+4. Override with CLI flags
+5. Initialize components
+6. Ready to process
+```
 
-### Filter Pipeline (31 Layers)
+## Preset System
 
-| Layer | Component | Purpose |
-|-------|-----------|---------|
-| 1 | Entropy | Remove low-information content |
-| 2 | Perplexity | Iterative token removal |
-| 3 | Goal-Driven | Select lines relevant to query |
-| 4 | AST Preserve | Syntax-aware code compression |
-| 5 | Contrastive | Question-relevance scoring |
-| 6-20 | Various | N-grams, gist, attention, etc. |
-| 21-31 | Advanced | LLM, memory, agent-specific |
+Three presets via `--preset`:
 
-### TOML Filter System
+```go
+type Preset struct {
+    Name        string
+    Mode        Mode
+    Layers      map[string]bool
+    Description string
+}
+
+var Presets = map[string]Preset{
+    "fast": {
+        Name:        "fast",
+        Mode:        ModeMinimal,
+        Layers:      fastLayers,
+        Description: "Fewer layers, faster processing",
+    },
+    "balanced": {
+        Name:        "balanced",
+        Mode:        ModeMinimal,
+        Layers:      balancedLayers,
+        Description: "Default mix of speed and compression",
+    },
+    "full": {
+        Name:        "full",
+        Mode:        ModeAggressive,
+        Layers:      allLayers,
+        Description: "All layers enabled, maximum compression",
+    },
+}
+```
+
+## Extension Points
+
+### TOML Filters
+
+Custom filter definitions:
 
 ```toml
-[git_status]
-match_command = "^git(\\s+status)?(\\s+.*)?$"
-strip_lines_matching = ["^\\s*$", "^On branch"]
-max_lines = 50
-
-[[tests.git_status]]
-name = "clean working tree"
-input = "On branch main\nnothing to commit"
-expected = "nothing to commit"
+[my_command]
+match = "^my-tool (build|test)"
+output_patterns = ["^Building...", "^Testing..."]
+strip_lines_matching = ["^INFO:"]
 ```
 
-### Hook System (Delegating Pattern)
+### Commands
 
+Registry pattern for easy addition:
+
+```go
+func init() {
+    registry.Add(func() { registry.Register(myCmd) })
+}
 ```
-AI Assistant → Hook Script → tokman rewrite → Exit Code (0-7) → Hook Script → AI
-```
 
-Exit Codes:
-- 0: Rewrite found, auto-allow
-- 1: No equivalent, pass-through
-- 2: Deny rule matched
-- 3: Rewrite found, ask user
-- 4-7: Other conditions
+### Filter Layers
 
----
+Add to pipeline:
 
-## 🧪 Testing Strategy
+1. Create `internal/filter/my_layer.go`
+2. Implement `Layer` interface
+3. Add to `PipelineConfig`
+4. Add to `PipelineCoordinator`
+5. Initialize and execute in pipeline
 
-### Unit Tests
-- Each package has `_test.go` files
-- Filter layers tested in isolation
-- Registry and commands tested
+## Performance Considerations
 
-### Inline Filter Tests
-- TOML-based test declarations
-- Run via `tokman tests`
-- 41 tests across 17 filters
+### SIMD Optimization
 
-### Integration Tests
-- End-to-end command testing
-- Full pipeline validation
-- Cross-platform verification
+- Auto-vectorized by Go compiler
+- Native SIMD planned for Go 1.26+
+- `internal/simd/` package for optimizations
 
----
+### Streaming
 
-## ⚡ Performance
+- Large inputs (>500K tokens) use streaming
+- Process in chunks to avoid memory issues
+- `internal/filter/stream.go`
 
-### Build Optimizations
-- `CGO_ENABLED=0` for static binaries
-- ldflags strip (`-s -w`) for smaller size
-- `-gcflags="-trimpath"` for reproducible builds
-- `UPX` compression available
+### Caching
 
-### Runtime Optimizations
-- Stage gates skip unnecessary layers
+- Fingerprint-based result caching
+- `internal/cache/` package
+- Skip reprocessing identical outputs
+
+### Stage Gates
+
+- Skip layers when not applicable (zero cost)
 - Early exit when budget met
-- SIMD support (AVX2/AVX-512/NEON)
-- Streaming for large inputs (>500K tokens)
-- Fingerprint caching
+- Minimal overhead per layer
 
----
-
-## 🔒 Security
+## Security Considerations
 
 ### Hook Integrity
-- SHA-256 hash verification
-- Runtime checks prevent tampering
-- Trust model for project directories
 
-### Safety Checks
-- Dangerous commands denied (rm, dd)
-- Unsafe operations flagged (curl | bash)
-- User confirmation required for sudo
+- SHA-256 checksums for hooks
+- Tamper detection via `tokman doctor`
+- `tokman hook-audit` for detailed reports
+
+### Input Validation
+
+- Command allowlist
+- Path traversal protection
+- SQL injection prevention
+
+### Data Protection
+
+- No secrets logged
+- No credentials in telemetry
+- Local-only SQLite database
+
+## Testing Strategy
+
+### Unit Tests
+
+- Table-driven tests for all layers
+- Edge cases, error paths, nil inputs
+- `*_test.go` alongside source
+
+### Integration Tests
+
+- End-to-end command execution
+- Real AI tool integration
+- `tests/` directory
+
+### Benchmarks
+
+- Performance baselines
+- Layer-by-layer benchmarks
+- `benchmarks/` directory
+
+### Fuzz Testing
+
+- Parser fuzz tests
+- Filter input fuzz tests
+- `filter/fuzz_test.go`
 
 ---
 
-## 📊 Tracking
-
-### SQLite Database
-- Command history
-- Token savings per command
-- Per-project analytics
-- 24h and total statistics
-
-### Schema
-```sql
-CREATE TABLE command_records (
-  id INTEGER PRIMARY KEY,
-  command TEXT,
-  input_tokens INTEGER,
-  output_tokens INTEGER,
-  saved_tokens INTEGER,
-  project_path TEXT,
-  timestamp DATETIME
-);
-```
-
----
-
-<div align="center">
-
-**TokMan Architecture v0.1.0**
-
-*Production-ready token-aware CLI proxy*
-
-</div>
+**This document is a living reference for TokMan's architecture.** Update it as the system evolves.

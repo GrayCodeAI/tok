@@ -1,0 +1,153 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for TokMan
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! We appreciate your ideas to make TokMan better.
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: What area does this feature relate to?
+      options:
+        - Filter Pipeline (compression layers)
+        - Performance (speed/memory)
+        - Commands (new commands or improvements)
+        - Configuration (TOML/YAML)
+        - RewindStore
+        - Learning Mode
+        - MCP Integration
+        - Session Management
+        - Quality Metrics
+        - Dashboard/Analytics
+        - Installation/Distribution
+        - Documentation
+        - CLI/UX
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Why is it needed?
+      placeholder: |
+        I'm frustrated when...
+        Currently, there's no way to...
+        Users need...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe your preferred solution
+      placeholder: |
+        I would like TokMan to...
+        The feature should work like...
+        Example usage:
+          $ tokman new-feature --option
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe alternative solutions or features you've considered
+      placeholder: |
+        Alternative 1: ...
+        Alternative 2: ...
+        I rejected these because...
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Real-World Examples
+      description: Provide concrete examples or use cases
+      placeholder: |
+        Use case 1: When working with large codebases...
+        Use case 2: During CI/CD pipelines...
+        Example from other tools: RTK does this by...
+
+  - type: textarea
+    id: competitive
+    attributes:
+      label: Competitive Analysis
+      description: How do RTK, OMNI, Snip, or other tools handle this?
+      placeholder: |
+        RTK: has feature X that does...
+        OMNI: solves this with...
+        TokMan could do it better by...
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Expected Impact
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my usage
+        - High - Significantly improves my workflow
+        - Medium - Nice to have
+        - Low - Minor improvement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: effort
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature is to implement? (rough guess)
+      options:
+        - Small - Few hours
+        - Medium - Few days
+        - Large - Few weeks
+        - Extra Large - Months
+        - Unknown
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Would you be willing to help implement this feature?
+      options:
+        - label: I would like to work on this feature myself
+          required: false
+        - label: I can help test this feature
+          required: false
+        - label: I can help with documentation
+          required: false
+        - label: I can provide feedback during development
+          required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, mockups, or references
+      placeholder: |
+        Screenshots: ...
+        Related issues: #...
+        Research papers: ...
+        Blog posts: ...
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for similar feature requests
+          required: true
+        - label: This feature aligns with TokMan's goals (token reduction, quality, performance)
+          required: true
+        - label: I have provided clear use cases and examples
+          required: true
