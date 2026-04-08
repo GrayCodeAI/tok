@@ -32,6 +32,6 @@ func (g *Graph) FindRelatedFiles(file string, max int) []string {
 	return nil
 }
 
-func (g *Graph) ImpactAnalysis(file string) string {
-	return "No impact analysis available"
+func (g *Graph) ImpactAnalysis(file string) []string {
+	return nil
 }
