@@ -117,3 +117,8 @@ func ConfigDir() string {
 func FiltersDir() string {
 	return filepath.Join(ConfigDir(), "filters")
 }
+
+// FiltersPath returns the path to the filters directory (alias for FiltersDir).
+func FiltersPath() string {
+	return FiltersDir()
+}
