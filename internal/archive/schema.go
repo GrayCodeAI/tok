@@ -8,7 +8,7 @@ import (
 )
 
 // SchemaVersion represents the current database schema version
-const SchemaVersion = 1
+const SchemaVersion = 2
 
 // SchemaDefinition contains all SQL statements to create the archive database schema
 var SchemaDefinition = `
@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS archives (
     filtered_content BLOB,
     command TEXT,
     working_directory TEXT,
+    project_path TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     expires_at DATETIME,
     accessed_at DATETIME,
@@ -89,7 +90,7 @@ CREATE TABLE IF NOT EXISTS schema_version (
 );
 
 -- Insert current schema version (use INSERT OR REPLACE to ensure it exists)
-INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (1, CURRENT_TIMESTAMP);
+INSERT OR REPLACE INTO schema_version (version, applied_at) VALUES (2, CURRENT_TIMESTAMP);
 
 -- Archive statistics (aggregated, updated periodically)
 CREATE TABLE IF NOT EXISTS archive_stats (
@@ -230,6 +231,17 @@ func (sm *SchemaManager) applyMigration(ctx context.Context, version int) error 
 	case 1:
 		// Initial schema - already applied by Initialize
 		// Just record the version
+	case 2:
+		// Migration to version 2: Add project_path column
+		if _, err := tx.ExecContext(ctx,
+			`ALTER TABLE archives ADD COLUMN IF NOT EXISTS project_path TEXT`); err != nil {
+			return fmt.Errorf("failed to add project_path column: %w", err)
+		}
+		// Add index for project_path
+		if _, err := tx.ExecContext(ctx,
+			`CREATE INDEX IF NOT EXISTS idx_archives_project_path ON archives(project_path)`); err != nil {
+			return fmt.Errorf("failed to create project_path index: %w", err)
+		}
 
 	default:
 		return fmt.Errorf("unknown schema version: %d", version)

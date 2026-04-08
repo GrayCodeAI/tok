@@ -30,12 +30,17 @@ type ArchiveManager struct {
 // NewArchiveManager creates a new archive manager
 func NewArchiveManager(cfg ArchiveConfig) (*ArchiveManager, error) {
 	// Determine database path
-	dataDir := config.DataPath()
-
-	dbPath := filepath.Join(dataDir, "archive.db")
+	var dbPath string
+	if cfg.DatabasePath != "" {
+		dbPath = cfg.DatabasePath
+	} else {
+		dataDir := config.DataPath()
+		dbPath = filepath.Join(dataDir, "archive.db")
+	}
 
 	// Ensure directory exists
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
+	dbDir := filepath.Dir(dbPath)
+	if err := os.MkdirAll(dbDir, 0755); err != nil {
 		return nil, fmt.Errorf("failed to create data directory: %w", err)
 	}
 
@@ -74,6 +79,11 @@ func (am *ArchiveManager) Initialize(ctx context.Context) error {
 	// Initialize schema
 	if err := am.schema.Initialize(ctx); err != nil {
 		return fmt.Errorf("failed to initialize schema: %w", err)
+	}
+
+	// Run migrations to ensure schema is up to date
+	if err := am.schema.Migrate(ctx, SchemaVersion); err != nil {
+		return fmt.Errorf("failed to migrate schema: %w", err)
 	}
 
 	am.initialized = true
@@ -338,43 +348,45 @@ func (am *ArchiveManager) List(ctx context.Context, opts ArchiveListOptions) (*A
 		return nil, fmt.Errorf("archive manager not initialized")
 	}
 
-	// Build query
-	query := `
-		SELECT id, hash, command, working_directory, agent, category,
-			original_size, compressed_size, created_at, accessed_at, expires_at,
-			access_count
-		FROM archives WHERE 1=1
-	`
+	// Build WHERE clause and args
+	whereClause := "WHERE 1=1"
 	var args []interface{}
 
 	// Apply filters
 	if opts.Category != "" {
-		query += " AND category = ?"
+		whereClause += " AND category = ?"
 		args = append(args, opts.Category)
 	}
 	if opts.Agent != "" {
-		query += " AND agent = ?"
+		whereClause += " AND agent = ?"
 		args = append(args, opts.Agent)
 	}
 	if opts.ProjectPath != "" {
-		query += " AND project_path = ?"
+		whereClause += " AND project_path = ?"
 		args = append(args, opts.ProjectPath)
 	}
 	if opts.CreatedAfter != nil {
-		query += " AND created_at >= ?"
-		args = append(args, *opts.CreatedAfter)
+		whereClause += " AND created_at >= ?"
+		args = append(args, opts.CreatedAfter.Format(time.RFC3339))
 	}
 	if opts.CreatedBefore != nil {
-		query += " AND created_at <= ?"
-		args = append(args, *opts.CreatedBefore)
+		whereClause += " AND created_at <= ?"
+		args = append(args, opts.CreatedBefore.Format(time.RFC3339))
 	}
 
 	// Count total
-	countQuery := "SELECT COUNT(*) FROM archives WHERE 1=1" + query[len("SELECT id, hash, command, working_directory, agent, category, original_size, compressed_size, created_at, accessed_at, expires_at, access_count FROM archives WHERE 1=1"):]
+	countQuery := "SELECT COUNT(*) FROM archives " + whereClause
 	var total int64
 	if err := am.db.QueryRowContext(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, fmt.Errorf("failed to count archives: %w", err)
 	}
+
+	// Build main query
+	query := `
+		SELECT id, hash, command, working_directory, agent, category,
+			original_size, compressed_size, created_at, accessed_at, expires_at,
+			access_count
+		FROM archives ` + whereClause
 
 	// Apply sorting
 	sortBy := opts.SortBy

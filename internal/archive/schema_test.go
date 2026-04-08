@@ -81,7 +81,7 @@ func TestSchemaManager_GetVersion(t *testing.T) {
 		t.Error("GetVersion() should error before initialization")
 	}
 
-	// After initialization, version should be 1
+	// After initialization, version should be 2 (current schema version)
 	if err := sm.Initialize(ctx); err != nil {
 		t.Fatalf("Initialize() error = %v", err)
 	}
@@ -90,8 +90,8 @@ func TestSchemaManager_GetVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("GetVersion() error = %v", err)
 	}
-	if version != 1 {
-		t.Errorf("GetVersion() = %d, want 1", version)
+	if version != 2 {
+		t.Errorf("GetVersion() = %d, want 2", version)
 	}
 }
 
@@ -140,8 +140,8 @@ func TestSchemaManager_Stats(t *testing.T) {
 		t.Errorf("TotalArchives = %d, want 0", stats.TotalArchives)
 	}
 
-	if stats.SchemaVersion != 1 {
-		t.Errorf("SchemaVersion = %d, want 1", stats.SchemaVersion)
+	if stats.SchemaVersion != 2 {
+		t.Errorf("SchemaVersion = %d, want 2", stats.SchemaVersion)
 	}
 }
 
