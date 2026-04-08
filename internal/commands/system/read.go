@@ -139,11 +139,11 @@ type readOptions struct {
 	startLine    int
 	endLine      int
 	saveSnapshot bool
-	relatedFiles int
+	relatedFiles []string
 }
 
 func buildReadOutput(filePath, content string, opts readOptions) (string, int, int, error) {
-	return contextread.Build(filePath, content, contextread.Options{
+	output, orig, filt, err := contextread.Build(filePath, content, "", contextread.Options{
 		Level:        opts.level,
 		Mode:         opts.mode,
 		MaxLines:     opts.maxLines,
@@ -154,6 +154,7 @@ func buildReadOutput(filePath, content string, opts readOptions) (string, int, i
 		SaveSnapshot: opts.saveSnapshot,
 		RelatedFiles: opts.relatedFiles,
 	})
+	return output, orig, filt, err
 }
 
 func recordSmartRead(commandName, filePath, content string, opts readOptions, originalTokens, filteredTokens int, execTimeMs int64) {
@@ -170,7 +171,7 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		savedTokens = 0
 	}
 
-	meta := contextread.Describe("read", filePath, content, contextread.Options{
+	meta := contextread.Describe("read", filePath, content, "", contextread.Options{
 		Level:        opts.level,
 		Mode:         opts.mode,
 		MaxLines:     opts.maxLines,
@@ -182,6 +183,8 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		RelatedFiles: opts.relatedFiles,
 	})
 
+	metaInfo := contextread.ReadMeta{}
+
 	if err := tracker.Record(&tracking.CommandRecord{
 		Command:             fmt.Sprintf("%s %s", commandName, filePath),
 		OriginalTokens:      originalTokens,
@@ -190,12 +193,12 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		ProjectPath:         projectPath,
 		ExecTimeMs:          execTimeMs,
 		ParseSuccess:        true,
-		ContextKind:         meta.Kind,
-		ContextMode:         meta.RequestedMode,
-		ContextResolvedMode: meta.ResolvedMode,
-		ContextTarget:       meta.Target,
-		ContextRelatedFiles: meta.RelatedFiles,
-		ContextBundle:       meta.Bundle,
+		ContextKind:         metaInfo.Kind,
+		ContextMode:         metaInfo.RequestedMode,
+		ContextResolvedMode: metaInfo.ResolvedMode,
+		ContextTarget:       metaInfo.Target,
+		ContextRelatedFiles: metaInfo.RelatedFiles,
+		ContextBundle:       metaInfo.Bundle,
 	}); err != nil {
 		log.Printf("failed to record smart read: %v", err)
 	}

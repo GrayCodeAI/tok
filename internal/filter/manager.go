@@ -120,7 +120,7 @@ func (m *PipelineManager) Process(input string, mode Mode, ctx CommandContext) (
 
 	// Try LRU cache first (faster, TTL-aware)
 	if m.lruCache != nil {
-		if val := m.lruCache.Get(cacheKey); val != nil {
+		if val, ok := m.lruCache.Get(cacheKey); ok && val != nil {
 			cached := val.(*CachedResult)
 			result.Output = cached.Output
 			result.FinalTokens = EstimateTokens(result.Output)

@@ -2,11 +2,11 @@ package utils
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
 
-// Min returns the smaller of a and b.
 func Min(a, b int) int {
 	if a < b {
 		return a
@@ -14,7 +14,6 @@ func Min(a, b int) int {
 	return b
 }
 
-// Max returns the larger of a and b.
 func Max(a, b int) int {
 	if a > b {
 		return a
@@ -22,7 +21,6 @@ func Max(a, b int) int {
 	return b
 }
 
-// Abs returns the absolute value of x.
 func Abs(x int) int {
 	if x < 0 {
 		return -x
@@ -30,7 +28,6 @@ func Abs(x int) int {
 	return x
 }
 
-// Clamp returns x constrained to the range [min, max].
 func Clamp(x, min, max int) int {
 	if x < min {
 		return min
@@ -41,29 +38,18 @@ func Clamp(x, min, max int) int {
 	return x
 }
 
-// ShortenPath truncates a path to fit within maxLen characters.
-// It preserves the end of the path and adds "..." prefix if truncated.
 func ShortenPath(path string, maxLen int) string {
 	if len(path) <= maxLen {
 		return path
 	}
-
-	// If maxLen is too small, just return truncated with ...
 	if maxLen <= 3 {
 		return "..." + path[len(path)-maxLen+3:]
 	}
-
-	// Try to preserve the filename and as much of the path as possible
-	// Start from the end and work backwards
 	truncated := "..." + path[len(path)-maxLen+3:]
-
-	// Clean the path to use consistent separators
 	truncated = filepath.Clean(truncated)
-
 	return truncated
 }
 
-// FormatBytes converts a byte count to a human-readable string.
 func FormatBytes(bytes int64) string {
 	const (
 		KB = 1024
@@ -71,7 +57,6 @@ func FormatBytes(bytes int64) string {
 		GB = MB * 1024
 		TB = GB * 1024
 	)
-
 	switch {
 	case bytes >= TB:
 		return fmt.Sprintf("%.1fT", float64(bytes)/TB)
@@ -86,14 +71,12 @@ func FormatBytes(bytes int64) string {
 	}
 }
 
-// FormatDuration converts milliseconds to a human-readable duration string.
 func FormatDuration(ms int64) string {
 	const (
 		Second = 1000
 		Minute = Second * 60
 		Hour   = Minute * 60
 	)
-
 	switch {
 	case ms >= Hour:
 		hours := ms / Hour
@@ -117,7 +100,6 @@ func FormatDuration(ms int64) string {
 	}
 }
 
-// FormatTokens formats a token count with K/M/B suffixes.
 func FormatTokens(n int) string {
 	if n >= 1_000_000_000 {
 		return fmt.Sprintf("%.1fB", float64(n)/1_000_000_000)
@@ -131,7 +113,6 @@ func FormatTokens(n int) string {
 	return fmt.Sprintf("%d", n)
 }
 
-// FormatTokens64 formats a uint64 token count with K/M/B suffixes.
 func FormatTokens64(n uint64) string {
 	if n >= 1_000_000_000 {
 		return fmt.Sprintf("%.1fB", float64(n)/1_000_000_000)
@@ -145,9 +126,6 @@ func FormatTokens64(n uint64) string {
 	return fmt.Sprintf("%d", n)
 }
 
-// GetModelFamily extracts the model family from a model name.
-// Returns the family identifier (e.g., "claude", "gpt", "gemini") or "other".
-// Used by tracking and command execution for AI agent attribution.
 func GetModelFamily(modelName string) string {
 	if modelName == "" {
 		return ""
@@ -171,4 +149,9 @@ func GetModelFamily(modelName string) string {
 	default:
 		return "other"
 	}
+}
+
+func GetTokmanSourceDir() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".local", "share", "tokman")
 }

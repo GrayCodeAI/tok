@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 var changelogCmd = &cobra.Command{
@@ -26,10 +27,9 @@ func init() {
 }
 
 func runChangelog(cmd *cobra.Command, args []string) error {
-	// Find CHANGELOG.md
 	paths := []string{
 		"CHANGELOG.md",
-		filepath.Join(GetTokmanSourceDir(), "CHANGELOG.md"),
+		filepath.Join(utils.GetTokmanSourceDir(), "CHANGELOG.md"),
 	}
 
 	var content []byte
