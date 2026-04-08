@@ -49,7 +49,7 @@ func runGraph(cmd *cobra.Command, args []string) error {
 	}
 
 	g := graph.NewProjectGraph(dir)
-	if err := g.Analyze(); err != nil {
+	if err := g.Analyze(dir); err != nil {
 		return fmt.Errorf("failed to analyze project: %w", err)
 	}
 

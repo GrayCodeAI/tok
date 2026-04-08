@@ -6,16 +6,13 @@ func New() *Graph {
 	return &Graph{}
 }
 
-type GraphStats struct {
-	Nodes int
-	Edges int
-}
+type GraphStats map[string]any
 
 func NewProjectGraph(root string) *Graph {
 	return &Graph{}
 }
 
-func FormatGraphStats(stats *GraphStats) string {
+func FormatGraphStats(stats GraphStats) string {
 	return "Graph: 0 nodes, 0 edges"
 }
 
@@ -27,8 +24,8 @@ func (g *Graph) AnalyzeWithDepth(root string, depth int) error {
 	return nil
 }
 
-func (g *Graph) Stats() *GraphStats {
-	return &GraphStats{Nodes: 0, Edges: 0}
+func (g *Graph) Stats() GraphStats {
+	return GraphStats{"nodes": 0, "edges": 0}
 }
 
 func (g *Graph) FindRelatedFiles(file string, max int) []string {

@@ -93,15 +93,15 @@ func runRead(cmd *cobra.Command, args []string) error {
 
 	start := time.Now()
 	opts := readOptions{
-		level:        readLevel,
-		mode:         readMode,
-		maxLines:     readMaxLines,
-		maxTokens:    readMaxTokens,
-		lineNumbers:  readLineNums,
-		startLine:    readStartLine,
-		endLine:      readEndLine,
-		saveSnapshot: readSaveSnapshot && filePath != "stdin",
-		relatedFiles: readRelatedFiles,
+		level:             readLevel,
+		mode:              readMode,
+		maxLines:          readMaxLines,
+		maxTokens:         readMaxTokens,
+		lineNumbers:       readLineNums,
+		startLine:         readStartLine,
+		endLine:           readEndLine,
+		saveSnapshot:      readSaveSnapshot && filePath != "stdin",
+		relatedFilesCount: readRelatedFiles,
 	}
 	filtered, originalTokens, filteredTokens, err := buildReadOutput(filePath, content, opts)
 	if err != nil {
@@ -131,28 +131,28 @@ func runRead(cmd *cobra.Command, args []string) error {
 }
 
 type readOptions struct {
-	level        string
-	mode         string
-	maxLines     int
-	maxTokens    int
-	lineNumbers  bool
-	startLine    int
-	endLine      int
-	saveSnapshot bool
-	relatedFiles []string
+	level             string
+	mode              string
+	maxLines          int
+	maxTokens         int
+	lineNumbers       bool
+	startLine         int
+	endLine           int
+	saveSnapshot      bool
+	relatedFilesCount int
 }
 
 func buildReadOutput(filePath, content string, opts readOptions) (string, int, int, error) {
 	output, orig, filt, err := contextread.Build(filePath, content, "", contextread.Options{
-		Level:        opts.level,
-		Mode:         opts.mode,
-		MaxLines:     opts.maxLines,
-		MaxTokens:    opts.maxTokens,
-		LineNumbers:  opts.lineNumbers,
-		StartLine:    opts.startLine,
-		EndLine:      opts.endLine,
-		SaveSnapshot: opts.saveSnapshot,
-		RelatedFiles: opts.relatedFiles,
+		Level:             opts.level,
+		Mode:              opts.mode,
+		MaxLines:          opts.maxLines,
+		MaxTokens:         opts.maxTokens,
+		LineNumbers:       opts.lineNumbers,
+		StartLine:         opts.startLine,
+		EndLine:           opts.endLine,
+		SaveSnapshot:      opts.saveSnapshot,
+		RelatedFilesCount: opts.relatedFilesCount,
 	})
 	return output, orig, filt, err
 }
@@ -171,20 +171,6 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		savedTokens = 0
 	}
 
-	meta := contextread.Describe("read", filePath, content, "", contextread.Options{
-		Level:        opts.level,
-		Mode:         opts.mode,
-		MaxLines:     opts.maxLines,
-		MaxTokens:    opts.maxTokens,
-		LineNumbers:  opts.lineNumbers,
-		StartLine:    opts.startLine,
-		EndLine:      opts.endLine,
-		SaveSnapshot: opts.saveSnapshot,
-		RelatedFiles: opts.relatedFiles,
-	})
-
-	metaInfo := contextread.ReadMeta{}
-
 	if err := tracker.Record(&tracking.CommandRecord{
 		Command:             fmt.Sprintf("%s %s", commandName, filePath),
 		OriginalTokens:      originalTokens,
@@ -193,12 +179,11 @@ func recordSmartRead(commandName, filePath, content string, opts readOptions, or
 		ProjectPath:         projectPath,
 		ExecTimeMs:          execTimeMs,
 		ParseSuccess:        true,
-		ContextKind:         metaInfo.Kind,
-		ContextMode:         metaInfo.RequestedMode,
-		ContextResolvedMode: metaInfo.ResolvedMode,
-		ContextTarget:       metaInfo.Target,
-		ContextRelatedFiles: metaInfo.RelatedFiles,
-		ContextBundle:       metaInfo.Bundle,
+		ContextKind:         "read",
+		ContextMode:         opts.mode,
+		ContextResolvedMode: opts.mode,
+		ContextTarget:       filePath,
+		ContextBundle:       false,
 	}); err != nil {
 		log.Printf("failed to record smart read: %v", err)
 	}

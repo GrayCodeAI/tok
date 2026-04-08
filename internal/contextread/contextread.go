@@ -44,16 +44,17 @@ func ContainsCodeBlocks(s string) bool {
 }
 
 type Options struct {
-	MaxTokens    int
-	Format       string
-	Level        string
-	Mode         string
-	MaxLines     int
-	LineNumbers  bool
-	StartLine    int
-	EndLine      int
-	SaveSnapshot bool
-	RelatedFiles []string
+	MaxTokens         int
+	Format            string
+	Level             string
+	Mode              string
+	MaxLines          int
+	LineNumbers       bool
+	StartLine         int
+	EndLine           int
+	SaveSnapshot      bool
+	RelatedFiles      []string
+	RelatedFilesCount int
 }
 
 func Build(file string, content string, format string, opts Options) (string, int, int, error) {

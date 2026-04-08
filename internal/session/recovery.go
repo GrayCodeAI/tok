@@ -22,14 +22,14 @@ type RecoveryManager struct {
 
 // RecoverableSession represents a session that can be recovered after crash
 type RecoverableSession struct {
-	ID            string                 `json:"id"`
-	Agent         string                 `json:"agent"`
-	StartTime     time.Time              `json:"start_time"`
-	LastActivity  time.Time              `json:"last_activity"`
-	Commands      []RecoveredCommand     `json:"commands"`
-	Context       map[string]interface{} `json:"context"`
-	RecoveryState RecoveryState          `json:"recovery_state"`
-	Checksum      string                 `json:"checksum"`
+	ID           string                 `json:"id"`
+	Agent        string                 `json:"agent"`
+	StartTime    time.Time              `json:"start_time"`
+	LastActivity time.Time              `json:"last_activity"`
+	Commands     []RecoveredCommand     `json:"commands"`
+	Context      map[string]interface{} `json:"context"`
+	State        RecoveryState          `json:"recovery_state"`
+	Checksum     string                 `json:"checksum"`
 }
 
 // RecoveredCommand represents a command that can be recovered
@@ -159,7 +159,7 @@ func (rm *RecoveryManager) PauseSession(id string) error {
 		return fmt.Errorf("session not found: %s", id)
 	}
 
-	session.RecoveryState = StatePaused
+	session.State = StatePaused
 	rm.saveSession(session)
 
 	slog.Info("Session paused", "id", id)
@@ -179,7 +179,7 @@ func (rm *RecoveryManager) ResumeSession(id string) (*RecoverableSession, error)
 		rm.sessions[id] = session
 	}
 
-	session.RecoveryState = StateActive
+	session.State = StateActive
 	session.LastActivity = time.Now()
 	rm.saveSession(session)
 
@@ -194,7 +194,7 @@ func (rm *RecoveryManager) CloseSession(id string) error {
 		return fmt.Errorf("session not found: %s", id)
 	}
 
-	session.RecoveryState = StateClosed
+	session.State = StateClosed
 	rm.saveSession(session)
 
 	// Remove from memory but keep on disk for history
@@ -210,7 +210,7 @@ func (rm *RecoveryManager) ListRecoverableSessions() ([]*RecoverableSession, err
 
 	// List from memory
 	for _, session := range rm.sessions {
-		if session.RecoveryState == StateActive || session.RecoveryState == StateCrashed {
+		if session.State == StateActive || session.State == StateCrashed {
 			sessions = append(sessions, session)
 		}
 	}
@@ -237,7 +237,7 @@ func (rm *RecoveryManager) ListRecoverableSessions() ([]*RecoverableSession, err
 			continue
 		}
 
-		if session.RecoveryState == StateActive || session.RecoveryState == StateCrashed {
+		if session.State == StateActive || session.State == StateCrashed {
 			sessions = append(sessions, session)
 		}
 	}
@@ -257,11 +257,11 @@ func (rm *RecoveryManager) RecoverSession(id string) (*RecoverableSession, error
 		session = loaded
 	}
 
-	if session.RecoveryState != StateCrashed && session.RecoveryState != StateActive {
-		return nil, fmt.Errorf("session is not recoverable, state: %s", session.RecoveryState)
+	if session.State != StateCrashed && session.State != StateActive {
+		return nil, fmt.Errorf("session is not recoverable, state: %s", session.State)
 	}
 
-	session.RecoveryState = StateRecovered
+	session.State = StateRecovered
 	session.LastActivity = time.Now()
 	rm.sessions[id] = session
 	rm.saveSession(session)
@@ -310,7 +310,7 @@ func (rm *RecoveryManager) CleanupOldSessions(maxAge time.Duration) error {
 // SaveAllSessions saves all active sessions to disk
 func (rm *RecoveryManager) SaveAllSessions() {
 	for _, session := range rm.sessions {
-		if session.RecoveryState == StateActive {
+		if session.State == StateActive {
 			rm.saveSession(session)
 		}
 	}
@@ -356,7 +356,7 @@ func (rm *RecoveryManager) GetRecoveryStats() RecoveryStats {
 	}
 
 	for _, session := range rm.sessions {
-		switch session.RecoveryState {
+		switch session.State {
 		case StateActive:
 			stats.ActiveSessions++
 		case StatePaused:
@@ -415,8 +415,8 @@ func (rm *RecoveryManager) CheckForCrashes() ([]*RecoverableSession, error) {
 		}
 
 		// If session was active but not properly closed, mark as crashed
-		if session.RecoveryState == StateActive {
-			session.RecoveryState = StateCrashed
+		if session.State == StateActive {
+			session.State = StateCrashed
 			rm.saveSession(session)
 			crashed = append(crashed, session)
 		}
