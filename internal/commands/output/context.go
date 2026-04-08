@@ -157,15 +157,15 @@ func addContextReadFlags(cmd *cobra.Command) {
 
 func runContextRead(cmd *cobra.Command, args []string) error {
 	return emitContextFile(args[0], contextread.Options{
-		Level:        contextLevel,
-		Mode:         contextMode,
-		MaxLines:     contextMaxLines,
-		MaxTokens:    contextMaxTokens,
-		LineNumbers:  contextLineNumbers,
-		StartLine:    contextStartLine,
-		EndLine:      contextEndLine,
-		SaveSnapshot: contextSaveSnapshot,
-		RelatedFiles: contextRelatedFiles,
+		Level:             contextLevel,
+		Mode:              contextMode,
+		MaxLines:          contextMaxLines,
+		MaxTokens:         contextMaxTokens,
+		LineNumbers:       contextLineNumbers,
+		StartLine:         contextStartLine,
+		EndLine:           contextEndLine,
+		SaveSnapshot:      contextSaveSnapshot,
+		RelatedFilesCount: contextRelatedFiles,
 	})
 }
 
@@ -175,15 +175,15 @@ func runContextDelta(cmd *cobra.Command, args []string) error {
 		mode = "delta"
 	}
 	return emitContextFile(args[0], contextread.Options{
-		Level:        contextLevel,
-		Mode:         mode,
-		MaxLines:     contextMaxLines,
-		MaxTokens:    contextMaxTokens,
-		LineNumbers:  contextLineNumbers,
-		StartLine:    contextStartLine,
-		EndLine:      contextEndLine,
-		SaveSnapshot: contextSaveSnapshot,
-		RelatedFiles: contextRelatedFiles,
+		Level:             contextLevel,
+		Mode:              mode,
+		MaxLines:          contextMaxLines,
+		MaxTokens:         contextMaxTokens,
+		LineNumbers:       contextLineNumbers,
+		StartLine:         contextStartLine,
+		EndLine:           contextEndLine,
+		SaveSnapshot:      contextSaveSnapshot,
+		RelatedFilesCount: contextRelatedFiles,
 	})
 }
 
@@ -214,7 +214,7 @@ func buildContextFile(path string, opts contextread.Options) (string, string, in
 		return "", "", 0, 0, fmt.Errorf("failed to read file %s: %w", cleanPath, err)
 	}
 
-	content, originalTokens, filteredTokens, err := contextread.Build(cleanPath, string(data), opts)
+	content, originalTokens, filteredTokens, err := contextread.Build(cleanPath, string(data), "auto", opts)
 	if err != nil {
 		return "", "", 0, 0, err
 	}
@@ -235,11 +235,6 @@ func recordContextRead(commandName, path, rawContent string, opts contextread.Op
 		savedTokens = 0
 	}
 
-	meta := contextread.Describe("read", path, rawContent, opts)
-	if strings.Contains(commandName, "ctx delta") {
-		meta.Kind = "delta"
-	}
-
 	if err := tracker.Record(&tracking.CommandRecord{
 		Command:             fmt.Sprintf("%s %s", commandName, filepath.Clean(path)),
 		OriginalTokens:      originalTokens,
@@ -248,12 +243,11 @@ func recordContextRead(commandName, path, rawContent string, opts contextread.Op
 		ProjectPath:         projectPath,
 		ExecTimeMs:          execTimeMs,
 		ParseSuccess:        true,
-		ContextKind:         meta.Kind,
-		ContextMode:         meta.RequestedMode,
-		ContextResolvedMode: meta.ResolvedMode,
-		ContextTarget:       meta.Target,
-		ContextRelatedFiles: meta.RelatedFiles,
-		ContextBundle:       meta.Bundle,
+		ContextKind:         "read",
+		ContextMode:         opts.Mode,
+		ContextResolvedMode: opts.Mode,
+		ContextTarget:       path,
+		ContextBundle:       false,
 	}); err != nil {
 		log.Printf("failed to record context read: %v", err)
 	}

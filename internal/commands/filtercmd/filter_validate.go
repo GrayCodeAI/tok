@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/core"
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 var filterValidateCmd = &cobra.Command{
@@ -28,7 +28,7 @@ func init() {
 func runFilterValidate(cmd *cobra.Command, args []string) error {
 	var filterDirs []string
 
-	builtinDir := filepath.Join(core.GetTokmanSourceDir(), "internal", "toml", "builtin")
+	builtinDir := filepath.Join(utils.GetTokmanSourceDir(), "internal", "toml", "builtin")
 	if _, err := os.Stat(builtinDir); err == nil {
 		filterDirs = append(filterDirs, builtinDir)
 	}

@@ -1,9 +1,11 @@
 package cortex
 
 type Finding struct {
-	Rule     string
-	Severity string
-	Message  string
+	ContentType string
+	Language    string
+	Rule        string
+	Severity    string
+	Message     string
 }
 
 type GateRegistry struct{}
@@ -17,7 +19,10 @@ func (g *GateRegistry) ApplyGates(content string) string {
 }
 
 func (g *GateRegistry) Analyze(content string) *Finding {
-	return nil
+	return &Finding{
+		ContentType: "text",
+		Language:    "unknown",
+	}
 }
 
 func (g *GateRegistry) GetApplicableGates(content string) []string {

@@ -79,8 +79,8 @@ func (p *PreProcessor) Process(content string) *PreProcessResult {
 
 	// 4. Content detection
 	detection := p.cortex.Analyze(content)
-	result.ContentType = detection.ContentType.String()
-	result.Language = detection.Language.String()
+	result.ContentType = detection.ContentType
+	result.Language = detection.Language
 
 	// 5. Get applicable gates
 	result.AppliedGates = p.cortex.GetApplicableGates(content)
