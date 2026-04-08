@@ -15,13 +15,13 @@ func TestRegisterAllTools(t *testing.T) {
 	RegisterAllTools(registry, cache)
 
 	tools := registry.ListTools()
-	if len(tools) != 22 {
-		t.Errorf("expected 22 tools, got %d", len(tools))
+	if len(tools) != 27 {
+		t.Errorf("expected 27 tools, got %d", len(tools))
 	}
 
-	// Verify all 22 tools are present
-	if len(tools) != 22 {
-		t.Errorf("expected 22 tools, got %d", len(tools))
+	// Verify all 27 tools are present
+	if len(tools) != 27 {
+		t.Errorf("expected 27 tools, got %d", len(tools))
 	}
 
 	// Verify all expected tools are present
@@ -33,6 +33,8 @@ func TestRegisterAllTools(t *testing.T) {
 		"ctx_bundle_summary", "ctx_exec", "ctx_tldr",
 		"ctx_patterns", "ctx_modes", "ctx_mode",
 		"ctx_status", "ctx_config", "ctx_mcp",
+		"ctx_tree", "ctx_stats", "ctx_session",
+		"ctx_archive", "ctx_rewind",
 	}
 
 	for _, name := range expectedTools {
@@ -136,7 +138,7 @@ func TestCtxStatusHandler(t *testing.T) {
 		t.Fatal("result is not a map")
 	}
 
-	if resultMap["tools_count"] != 22 {
-		t.Errorf("expected 22 tools, got %v", resultMap["tools_count"])
+	if resultMap["tools_count"] != 27 {
+		t.Errorf("expected 27 tools, got %v", resultMap["tools_count"])
 	}
 }

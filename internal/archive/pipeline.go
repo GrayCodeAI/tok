@@ -208,6 +208,7 @@ type ArchiveConfig struct {
 	MaxSize           int64           `mapstructure:"max_size"`           // Maximum content size to archive
 	Async             bool            `mapstructure:"async"`              // Archive asynchronously
 	EnableCompression bool            `mapstructure:"enable_compression"` // Enable Brotli compression
+	DatabasePath      string          `mapstructure:"database_path"`      // Custom database path (optional, for testing)
 }
 
 // DefaultArchiveConfig returns default archive configuration
