@@ -58,14 +58,19 @@ func GetRemoteClient() *client.Client {
 // Returns the compressed output and tokens saved, or an error.
 func RemoteCompress(input, mode string, budget int) (output string, tokensSaved int, err error) {
 	c := GetRemoteClient()
-	if c == nil || c.Compression == nil {
+	if c == nil {
 		return "", 0, fmt.Errorf("remote client not available")
+	}
+
+	comp := c.Compression()
+	if comp == nil {
+		return "", 0, fmt.Errorf("remote compression client not available")
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(GetRemoteTimeout())*time.Second)
 	defer cancel()
 
-	result, err := c.Compression.Compress(ctx, input, mode, budget)
+	result, err := comp.Compress(ctx, input, mode, budget)
 	if err != nil {
 		return "", 0, fmt.Errorf("remote compression failed: %w", err)
 	}

@@ -12,6 +12,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
 var doctorFix bool
@@ -187,7 +188,7 @@ func checkTokenizer() checkResult {
 }
 
 func checkTOMLFilters() checkResult {
-	srcDir := GetTokmanSourceDir()
+	srcDir := utils.GetTokmanSourceDir()
 	if srcDir == "" {
 		// Installed binary with embedded filters - still functional
 		return checkResult{"TOML Filters", "ok", "embedded (installed binary)"}

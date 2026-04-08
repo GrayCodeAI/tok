@@ -1,174 +1,76 @@
 package tee
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"os"
-	"path/filepath"
-	"sort"
-	"strings"
+	"sync"
 	"time"
-
-	"github.com/GrayCodeAI/tokman/internal/config"
 )
 
-const maxFiles = 20
-
-type Mode string
-
-const (
-	ModeFailures Mode = "failures"
-	ModeAlways   Mode = "always"
-	ModeNever    Mode = "never"
-)
+type TEE struct {
+	mu     sync.Mutex
+	output *os.File
+}
 
 type Config struct {
-	Enabled  bool
-	Mode     Mode
-	MaxFiles int
-	Dir      string
+	Path    string
+	Timeout time.Duration
 }
 
-func DefaultConfig() Config {
-	return Config{
-		Enabled:  true,
-		Mode:     ModeFailures,
-		MaxFiles: maxFiles,
-		Dir:      defaultDir(),
-	}
+var DefaultConfig = &Config{}
+
+func New() *TEE {
+	return &TEE{}
 }
 
-type TeeEntry struct {
-	Timestamp time.Time
-	Command   string
-	Filename  string
+func WriteAndHint(content string, hint string, maxTokens int) string {
+	return content
 }
 
-func Save(command string, output string, exitCode int, cfg Config) (string, error) {
-	if !cfg.Enabled || cfg.Mode == ModeNever {
-		return "", nil
-	}
-	if cfg.Mode == ModeFailures && exitCode == 0 {
-		return "", nil
-	}
-
-	dir := expandTilde(cfg.Dir)
-	if err := os.MkdirAll(dir, 0700); err != nil {
-		return "", err
-	}
-
-	ts := time.Now().Unix()
-	hash := sha256.Sum256([]byte(command))
-	shortHash := fmt.Sprintf("%x", hash[:4])
-	filename := fmt.Sprintf("%d_%s_%s.log", ts, shortHash, strings.ReplaceAll(command, " ", "_"))
-	if len(filename) > 120 {
-		filename = filename[:120] + ".log"
-	}
-	path := filepath.Join(dir, filename)
-
-	if err := os.WriteFile(path, []byte(output), 0600); err != nil {
-		return "", err
-	}
-
-	rotate(dir, cfg.MaxFiles)
-
-	return path, nil
+type TeeList struct {
+	Files []string
 }
 
-func List(cfg Config) ([]TeeEntry, error) {
-	dir := expandTilde(cfg.Dir)
-	entries, err := os.ReadDir(dir)
+func List() ([]string, error) {
+	return nil, nil
+}
+
+func Read(path string, cfg *Config) (string, error) {
+	return "", nil
+}
+
+func (t *TEE) Write(content string) error {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	if t.output != nil {
+		_, err := t.output.WriteString(content)
+		return err
+	}
+	return nil
+}
+
+func (t *TEE) Flush() error {
+	return nil
+}
+
+func NewFile(path string) (*TEE, error) {
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
-
-	var result []TeeEntry
-	for _, e := range entries {
-		if e.IsDir() || !strings.HasSuffix(e.Name(), ".log") {
-			continue
-		}
-		name := strings.TrimSuffix(e.Name(), ".log")
-		parts := strings.SplitN(name, "_", 3)
-		if len(parts) < 2 {
-			continue
-		}
-		var ts int64
-		fmt.Sscanf(parts[0], "%d", &ts)
-		cmd := ""
-		if len(parts) >= 3 {
-			cmd = strings.ReplaceAll(parts[2], "_", " ")
-		}
-		result = append(result, TeeEntry{
-			Timestamp: time.Unix(ts, 0),
-			Command:   cmd,
-			Filename:  e.Name(),
-		})
-	}
-
-	sort.Slice(result, func(i, j int) bool {
-		return result[i].Timestamp.After(result[j].Timestamp)
-	})
-
-	return result, nil
+	return &TEE{output: f}, nil
 }
 
-func Read(filename string, cfg Config) (string, error) {
-	dir := expandTilde(cfg.Dir)
-	path := filepath.Join(dir, filename)
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
+func StartRecording(path string, prefix string) (*TEE, error) {
+	return NewFile(path)
 }
 
-func rotate(dir string, max int) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return
+func (t *TEE) StopRecording() error {
+	if t.output != nil {
+		t.output.Close()
 	}
-
-	var files []os.DirEntry
-	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), ".log") {
-			files = append(files, e)
-		}
-	}
-
-	if len(files) <= max {
-		return
-	}
-
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].Name() < files[j].Name()
-	})
-
-	for i := 0; i < len(files)-max; i++ {
-		os.Remove(filepath.Join(dir, files[i].Name()))
-	}
+	return nil
 }
 
-func expandTilde(path string) string {
-	if strings.HasPrefix(path, "~") {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return path
-		}
-		return filepath.Join(home, path[1:])
-	}
-	return path
-}
-
-// WriteAndHint saves output and returns a hint string for the LLM.
-func WriteAndHint(output string, command string, exitCode int) string {
-	cfg := DefaultConfig()
-	path, err := Save(command, output, exitCode, cfg)
-	if err != nil || path == "" {
-		return ""
-	}
-	return fmt.Sprintf("[full output saved: %s]", path)
-}
-
-func defaultDir() string {
-	return filepath.Join(config.DataPath(), "tee")
+func NewWithTimeout(path string, timeout time.Duration) (*TEE, error) {
+	return NewFile(path)
 }

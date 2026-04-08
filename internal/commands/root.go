@@ -15,31 +15,16 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/integrity"
-	"github.com/GrayCodeAI/tokman/internal/tracing"
 	"github.com/GrayCodeAI/tokman/internal/utils"
 
-	// Sub-package imports (blank imports for side effects - init() registration)
-	_ "github.com/GrayCodeAI/tokman/internal/commands/agents"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/analysis"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/build"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/cloud"
+	// CLI commands
 	_ "github.com/GrayCodeAI/tokman/internal/commands/configcmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/container"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/core"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/filtercmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/hooks"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/init"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/lang"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/linter"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/output"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/pkgmgr"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/rewindcmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/recoverycmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/sessioncmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/system"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/test"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/vcs"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/web"
 )
 
 var (
@@ -95,15 +80,6 @@ to reduce token usage in LLM interactions.
 It acts as a transparent proxy that executes commands, captures their
 output, applies intelligent filtering, and tracks token savings.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Attach a trace to every command for production observability
-			trace := tracing.NewTrace("")
-			ctx := tracing.NewContext(cmd.Context(), trace)
-			cmd.SetContext(ctx)
-
-			span := trace.StartSpan("command")
-			span.SetAttr("command", cmd.Name())
-			defer span.Finish()
-
 			shared.SetRootCmd(cmd)
 			// Version is already set in shared.Version via ldflags
 			shared.SetConfig(struct {
