@@ -17,6 +17,29 @@ GOFLAGS=CGO_ENABLED=0
 build:
 	$(GOFLAGS) go build -o $(BINARY) $(LDFLAGS) ./$(BUILD_DIR)
 
+## docker-build: Build Docker image
+docker-build:
+	docker build -t tokman:latest .
+
+## docker-build-dev: Build development Docker image
+docker-build-dev:
+	docker build -f Dockerfile.dev -t tokman:dev .
+
+## docker-run: Run TokMan in Docker
+docker-run:
+	docker run --rm -v $(PWD):/workspace tokman:latest
+
+## docker-test: Run tests in Docker
+docker-test:
+	docker run --rm -v $(PWD):/app tokman:dev go test ./...
+
+## docker-push: Push Docker image to registry
+docker-push:
+	docker tag tokman:latest ghcr.io/graycodeai/tokman:latest
+	docker tag tokman:latest ghcr.io/graycodeai/tokman:$(VERSION)
+	docker push ghcr.io/graycodeai/tokman:latest
+	docker push ghcr.io/graycodeai/tokman:$(VERSION)
+
 ## build-small: Build optimized small binary (with UPX if available)
 build-small:
 	$(GOFLAGS) go build -o $(BINARY) $(LDFLAGS) -gcflags="-trimpath" ./$(BUILD_DIR)
