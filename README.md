@@ -189,7 +189,7 @@ cat large-file.json
 # Or use standalone:
 tokman compress < input.txt
 tokman benchmark --suite git-status
-tokman tui  # Launch analytics dashboard
+tokman dashboard  # Launch analytics dashboard
 ```
 
 ## 🧠 How It Works
