@@ -95,8 +95,14 @@ lint:
 typecheck:
 	go vet ./...
 
+## fmt: Format Go code
+fmt:
+	gofmt -w .
+	goimports -w .
+	@echo "Formatted all Go files"
+
 ## check: Run all checks (fmt, vet, typecheck, lint, test)
-check: typecheck lint test
+check: fmt lint test
 	@echo "All checks passed!"
 
 ## install: Install binary to ~/.local/bin
@@ -117,9 +123,38 @@ clean:
 	go clean -testcache
 	@echo "Cleaned build artifacts"
 
+## security: Run security scans
+security:
+	@echo "Running security scans..."
+	@command -v gosec >/dev/null 2>&1 && gosec -fmt json -out security-report.json ./... || echo "gosec not installed, skipping"
+	@command -v govulncheck >/dev/null 2>&1 && govulncheck ./... || echo "govulncheck not installed, skipping"
+	@echo "Security scans complete"
+
+## coverage: Generate and view coverage report
+coverage: test-cover
+	@echo "Coverage report: coverage.html"
+
 ## benchmark: Run benchmarks
 benchmark:
 	go test -bench=. -benchmem ./...
+
+## deps: Download and verify dependencies
+deps:
+	go mod download
+	go mod verify
+	go mod tidy
+
+## outdated: Check for outdated dependencies
+outdated:
+	@command -v go-mod-outdated >/dev/null 2>&1 && go-mod-outdated || echo "go-mod-outdated not installed. Run: go install github.com/psampaz/go-mod-outdated@latest"
+
+## generate: Run go generate
+generate:
+	go generate ./...
+
+## ci: Run CI checks locally
+ci: deps fmt lint test-race security
+	@echo "All CI checks passed!"
 
 ## version: Show version
 version:

@@ -9,24 +9,24 @@ import (
 
 // BenchmarkResult represents the result of a benchmark run.
 type BenchmarkResult struct {
-	Name                string
-	InputSize           int
-	OutputSize          int
-	TokensSaved         int
-	CompressionRatio    float64
-	ProcessingTimeMs    int64
-	ThroughputMBPerSec  float64
-	CostSavedUSD        float64
+	Name                 string
+	InputSize            int
+	OutputSize           int
+	TokensSaved          int
+	CompressionRatio     float64
+	ProcessingTimeMs     int64
+	ThroughputMBPerSec   float64
+	CostSavedUSD         float64
 	ComparisonVsBaseline float64 // percentage
 }
 
 // BenchmarkSuite runs a series of benchmarks.
 type BenchmarkSuite struct {
-	name        string
-	benchmarks  []Benchmark
-	results     []*BenchmarkResult
-	logger      *slog.Logger
-	mu          sync.Mutex
+	name       string
+	benchmarks []Benchmark
+	results    []*BenchmarkResult
+	logger     *slog.Logger
+	mu         sync.Mutex
 }
 
 // Benchmark represents a single benchmark test.
@@ -141,15 +141,15 @@ func (bs *BenchmarkSuite) Summary() *BenchmarkSummary {
 
 // BenchmarkSummary contains aggregate benchmark statistics.
 type BenchmarkSummary struct {
-	TotalBenchmarks        int
-	Results                []*BenchmarkResult
-	AverageTimeMs          int64
-	MinTimeMs              int64
-	MaxTimeMs              int64
+	TotalBenchmarks         int
+	Results                 []*BenchmarkResult
+	AverageTimeMs           int64
+	MinTimeMs               int64
+	MaxTimeMs               int64
 	AverageCompressionRatio float64
-	MinCompressionRatio    float64
-	MaxCompressionRatio    float64
-	TotalCostSavedUSD      float64
+	MinCompressionRatio     float64
+	MaxCompressionRatio     float64
+	TotalCostSavedUSD       float64
 }
 
 // FormatResults returns a formatted string of benchmark results.
@@ -177,11 +177,11 @@ func (bs *BenchmarkSummary) FormatResults() string {
 
 // ComparisonResult compares TokMan against baseline tools.
 type ComparisonResult struct {
-	Tool             string
-	CompressionRatio float64
-	ProcessingTimeMs int64
+	Tool              string
+	CompressionRatio  float64
+	ProcessingTimeMs  int64
 	TokensSavedPerSec float64
-	ScoreVsTokman    float64 // 1.0 = equal, >1.0 = better than TokMan
+	ScoreVsTokman     float64 // 1.0 = equal, >1.0 = better than TokMan
 }
 
 // Benchmark standard datasets

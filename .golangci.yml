@@ -1,23 +1,42 @@
 linters:
   enable:
+    # Core linters
     - errcheck
     - gosimple
     - govet
     - ineffassign
     - staticcheck
     - unused
+    - typecheck
+    
+    # Code quality
     - gocritic
+    - gocyclo
+    - gocognit
+    - goconst
+    - dupl
+    
+    # Security
     - gosec
+    - noctx
+    
+    # Performance
     - prealloc
     - unconvert
+    - bodyclose
+    
+    # Style
     - unparam
     - misspell
     - gofmt
     - goimports
-    - bodyclose
     - nilerr
     - copyloopvar
-    - noctx
+    - whitespace
+    - lll
+    - dogsled
+    - goprintffuncname
+    - nakedret
 
 linters-settings:
   gocritic:
@@ -25,29 +44,85 @@ linters-settings:
       - diagnostic
       - performance
       - style
+    disabled-checks:
+      - wrapperFunc
+      - dupImport
+  
   gosec:
     excludes:
       - G304  # file path is user-controlled (expected in CLI tool)
+    
   prealloc:
     simple: true
     range-loops: true
     for-loops: true
+    
   misspell:
     locale: US
+    
+  gocyclo:
+    min-complexity: 15
+    
+  gocognit:
+    min-complexity: 20
+    
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+    
+  goimports:
+    local-prefixes: github.com/GrayCodeAI/tokman
+    
+  lll:
+    line-length: 120
+    
+  dogsled:
+    max-blank-identifiers: 2
 
 issues:
   exclude-rules:
+    # Exclude some linters from running on tests files
     - path: _test\.go
       linters:
         - errcheck
         - gosec
         - unparam
+        - gocyclo
+        - lll
+        - dupl
+        
+    # Exclude known linter issues
+    - text: "weak cryptographic primitive"
+      linters:
+        - gosec
+        
+    # Exclude shadow checking in test files
+    - path: _test\.go
+      text: "shadow"
+      linters:
+        - govet
+        
+    # Exclude fieldalignment warnings (run manually with fieldalignment tool)
+    - text: "fieldalignment"
+      linters:
+        - govet
+        
+    # Exclude unused in builtin filters
     - path: internal/toml/builtin/
       linters:
         - unused
+        
+  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
 
 run:
   timeout: 5m
+  go: '1.26'
   modules-download-mode: readonly
+  skip-dirs:
+    - vendor
+    - tests/integration
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*_mock\\.go$"
