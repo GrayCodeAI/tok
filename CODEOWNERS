@@ -1,0 +1,24 @@
+# Global code owners
+* @GrayCodeAI/maintainers
+
+# Filter pipeline
+/internal/filter/ @GrayCodeAI/core-team
+
+# Command system
+/internal/commands/ @GrayCodeAI/core-team
+
+# Configuration
+/internal/config/ @GrayCodeAI/core-team
+
+# Core functionality
+/internal/core/ @GrayCodeAI/core-team
+
+# Security
+/internal/security/ @GrayCodeAI/security-team
+
+# CI/CD
+/.github/ @GrayCodeAI/devops-team
+
+# Documentation
+/docs/ @GrayCodeAI/docs-team
+*.md @GrayCodeAI/docs-team
