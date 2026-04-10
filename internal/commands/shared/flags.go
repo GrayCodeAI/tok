@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -49,9 +51,15 @@ type AppState struct {
 	ReversibleEnabled bool
 
 	// Custom layer configuration
-	EnableLayers  []string
-	DisableLayers []string
-	StreamMode    bool
+	EnableLayers     []string
+	DisableLayers    []string
+	StreamMode       bool
+	PolicyRouter     bool
+	Extractive       bool
+	ExtractiveMax    int
+	ExtractiveHead   int
+	ExtractiveTail   int
+	ExtractiveSignal int
 }
 
 // Version is set at build time.
@@ -102,6 +110,12 @@ type FlagConfig struct {
 	EnableLayers         []string
 	DisableLayers        []string
 	StreamMode           bool
+	PolicyRouter         bool
+	Extractive           bool
+	ExtractiveMax        int
+	ExtractiveHead       int
+	ExtractiveTail       int
+	ExtractiveSignal     int
 }
 
 // Set sets all flag values atomically.
@@ -134,6 +148,12 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.EnableLayers = cfg.EnableLayers
 	s.DisableLayers = cfg.DisableLayers
 	s.StreamMode = cfg.StreamMode
+	s.PolicyRouter = cfg.PolicyRouter
+	s.Extractive = cfg.Extractive
+	s.ExtractiveMax = cfg.ExtractiveMax
+	s.ExtractiveHead = cfg.ExtractiveHead
+	s.ExtractiveTail = cfg.ExtractiveTail
+	s.ExtractiveSignal = cfg.ExtractiveSignal
 	s.mu.Unlock()
 }
 
@@ -276,6 +296,78 @@ func (s *AppState) IsStreamMode() bool {
 	return s.StreamMode
 }
 
+// IsPolicyRouterEnabled returns true if policy router mode is enabled.
+func (s *AppState) IsPolicyRouterEnabled() bool {
+	s.mu.RLock()
+	enabled := s.PolicyRouter
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_POLICY_ROUTER") == "true"
+}
+
+// IsExtractiveEnabled returns true if extractive prefilter is enabled.
+func (s *AppState) IsExtractiveEnabled() bool {
+	s.mu.RLock()
+	enabled := s.Extractive
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_EXTRACTIVE_PREFILTER") == "true"
+}
+
+func envInt(name string, def int) int {
+	v := strings.TrimSpace(os.Getenv(name))
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return def
+	}
+	return n
+}
+
+// GetExtractiveMax returns max lines for extractive prefilter.
+func (s *AppState) GetExtractiveMax() int {
+	s.mu.RLock()
+	v := s.ExtractiveMax
+	s.mu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOKMAN_EXTRACTIVE_MAX_LINES", 400)
+}
+
+// GetExtractiveHead returns preserved head lines for extractive prefilter.
+func (s *AppState) GetExtractiveHead() int {
+	s.mu.RLock()
+	v := s.ExtractiveHead
+	s.mu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOKMAN_EXTRACTIVE_HEAD_LINES", 80)
+}
+
+// GetExtractiveTail returns preserved tail lines for extractive prefilter.
+func (s *AppState) GetExtractiveTail() int {
+	s.mu.RLock()
+	v := s.ExtractiveTail
+	s.mu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOKMAN_EXTRACTIVE_TAIL_LINES", 60)
+}
+
+// GetExtractiveSignal returns signal line budget for extractive prefilter.
+func (s *AppState) GetExtractiveSignal() int {
+	s.mu.RLock()
+	v := s.ExtractiveSignal
+	s.mu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOKMAN_EXTRACTIVE_SIGNAL_LINES", 120)
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -310,6 +402,12 @@ var (
 	EnableLayers         []string
 	DisableLayers        []string
 	StreamMode           bool
+	PolicyRouter         bool
+	Extractive           bool
+	ExtractiveMax        int
+	ExtractiveHead       int
+	ExtractiveTail       int
+	ExtractiveSignal     int
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -345,6 +443,12 @@ func (s *AppState) syncGlobals() {
 		EnableLayers:         s.EnableLayers,
 		DisableLayers:        s.DisableLayers,
 		StreamMode:           s.StreamMode,
+		PolicyRouter:         s.PolicyRouter,
+		Extractive:           s.Extractive,
+		ExtractiveMax:        s.ExtractiveMax,
+		ExtractiveHead:       s.ExtractiveHead,
+		ExtractiveTail:       s.ExtractiveTail,
+		ExtractiveSignal:     s.ExtractiveSignal,
 	}
 	s.mu.RUnlock()
 
@@ -376,6 +480,12 @@ func (s *AppState) syncGlobals() {
 	EnableLayers = state.EnableLayers
 	DisableLayers = state.DisableLayers
 	StreamMode = state.StreamMode
+	PolicyRouter = state.PolicyRouter
+	Extractive = state.Extractive
+	ExtractiveMax = state.ExtractiveMax
+	ExtractiveHead = state.ExtractiveHead
+	ExtractiveTail = state.ExtractiveTail
+	ExtractiveSignal = state.ExtractiveSignal
 	globalsMu.Unlock()
 }
 
@@ -412,6 +522,12 @@ func (s *AppState) syncFromGlobals() {
 		EnableLayers:         EnableLayers,
 		DisableLayers:        DisableLayers,
 		StreamMode:           StreamMode,
+		PolicyRouter:         PolicyRouter,
+		Extractive:           Extractive,
+		ExtractiveMax:        ExtractiveMax,
+		ExtractiveHead:       ExtractiveHead,
+		ExtractiveTail:       ExtractiveTail,
+		ExtractiveSignal:     ExtractiveSignal,
 	}
 	globalsMu.RUnlock()
 
@@ -516,4 +632,40 @@ func GetDisableLayers() []string {
 func IsStreamMode() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsStreamMode()
+}
+
+// IsPolicyRouterEnabled returns true if policy router is enabled.
+func IsPolicyRouterEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsPolicyRouterEnabled()
+}
+
+// IsExtractiveEnabled returns true if extractive prefilter is enabled.
+func IsExtractiveEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsExtractiveEnabled()
+}
+
+// GetExtractiveMax returns max lines for extractive prefilter.
+func GetExtractiveMax() int {
+	globalState.syncFromGlobals()
+	return globalState.GetExtractiveMax()
+}
+
+// GetExtractiveHead returns preserved head lines for extractive prefilter.
+func GetExtractiveHead() int {
+	globalState.syncFromGlobals()
+	return globalState.GetExtractiveHead()
+}
+
+// GetExtractiveTail returns preserved tail lines for extractive prefilter.
+func GetExtractiveTail() int {
+	globalState.syncFromGlobals()
+	return globalState.GetExtractiveTail()
+}
+
+// GetExtractiveSignal returns signal line budget for extractive prefilter.
+func GetExtractiveSignal() int {
+	globalState.syncFromGlobals()
+	return globalState.GetExtractiveSignal()
 }

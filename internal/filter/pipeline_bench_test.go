@@ -50,6 +50,35 @@ func BenchmarkPipelineScaling(b *testing.B) {
 	}
 }
 
+// BenchmarkPipelineAdaptiveCompare compares baseline vs adaptive profile.
+func BenchmarkPipelineAdaptiveCompare(b *testing.B) {
+	input := generateTestContent(3000)
+
+	cases := []struct {
+		name string
+		cfg  PipelineConfig
+	}{
+		{
+			name: "baseline_trim",
+			cfg:  TierConfig(TierTrim, ModeMinimal),
+		},
+		{
+			name: "adaptive",
+			cfg:  TierConfig(TierAdaptive, ModeMinimal),
+		},
+	}
+
+	for _, tc := range cases {
+		b.Run(tc.name, func(b *testing.B) {
+			b.ResetTimer()
+			for i := 0; i < b.N; i++ {
+				p := NewPipelineCoordinator(tc.cfg)
+				p.Process(input)
+			}
+		})
+	}
+}
+
 // BenchmarkPipelineContextSizes tests large context handling
 // Important: Validates 1M-2M token capacity
 func BenchmarkPipelineContextSizes(b *testing.B) {

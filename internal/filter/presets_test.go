@@ -100,6 +100,19 @@ func TestQuickProcessPreset(t *testing.T) {
 	}
 }
 
+func TestAdaptiveProfileEnablesRouterAndExtractive(t *testing.T) {
+	cfg := ProfileConfig(Profile(TierAdaptive), ModeMinimal)
+	if !cfg.EnablePolicyRouter {
+		t.Fatal("adaptive profile should enable policy router")
+	}
+	if !cfg.EnableExtractivePrefilter {
+		t.Fatal("adaptive profile should enable extractive prefilter")
+	}
+	if cfg.ExtractiveMaxLines <= 0 || cfg.ExtractiveHeadLines <= 0 || cfg.ExtractiveTailLines <= 0 {
+		t.Fatal("adaptive profile should set extractive thresholds")
+	}
+}
+
 func TestPipelineEarlyExit(t *testing.T) {
 	// Test that early exit works when budget is set
 	input := strings.Repeat("the a an is are was were ", 1000)
