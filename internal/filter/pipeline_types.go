@@ -22,6 +22,8 @@ type PipelineCoordinator struct {
 
 	layers []filterLayer
 
+	runtimeQueryIntent string
+
 	// Layer 1: Entropy Filtering
 	entropyFilter *EntropyFilter
 
@@ -116,6 +118,10 @@ type PipelineCoordinator struct {
 	// TOML Filter Integration (declarative filters)
 	tomlFilterWrapper Filter
 	tomlFilterName    string
+
+	// Optional routing/compression pre-stage
+	policyRouter        *PolicyRouter
+	extractivePrefilter *ExtractivePrefilter
 
 	// 2026 Research layers
 	hypernymCompressor *HypernymCompressor
@@ -305,16 +311,22 @@ type LayerConfig struct {
 // Use this gradually: migrate from flat fields to nested Layers config over time.
 type PipelineConfigWithNestedLayers struct {
 	// Core fields
-	Mode              Mode
-	QueryIntent       string
-	Budget            int
-	LLMEnabled        bool
-	SessionTracking   bool
-	NgramEnabled      bool
-	MultiFileEnabled  bool
-	PromptTemplate    string
-	EnableTOMLFilter  bool
-	TOMLFilterCommand string
+	Mode                      Mode
+	QueryIntent               string
+	Budget                    int
+	LLMEnabled                bool
+	SessionTracking           bool
+	NgramEnabled              bool
+	MultiFileEnabled          bool
+	PromptTemplate            string
+	EnableTOMLFilter          bool
+	TOMLFilterCommand         string
+	EnablePolicyRouter        bool
+	EnableExtractivePrefilter bool
+	ExtractiveMaxLines        int
+	ExtractiveHeadLines       int
+	ExtractiveTailLines       int
+	ExtractiveSignalLines     int
 
 	// Layer sub-configs (preferred)
 	Layers LayerConfig
