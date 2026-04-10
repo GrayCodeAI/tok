@@ -146,7 +146,7 @@ Each layer implements `Apply(input string, mode Mode) (string, int)`:
 | 14 | Attention Sink | `attention_sink.go` | StreamingLLM (2023) | Infinite context stability |
 | 15 | Meta-Token | `meta_token.go` | arXiv:2506.00307 (2025) | 27% lossless |
 | 16 | Semantic Chunk | `semantic_chunk.go` | ChunkKV-style | Context-aware boundaries |
-| 17 | Sketch Store | `sketch_store.go` | KVReviver (Dec 2025) | 90% memory reduction |
+| 17 | Semantic Cache | `sketch_store.go` | KVReviver + semantic reuse | Reuse similar-context compression |
 | 18 | Lazy Pruner | `lazy_pruner.go` | LazyLLM (July 2024) | 2.34x speedup |
 | 19 | Semantic Anchor | `semantic_anchor.go` | Attention Gradient Detection | Context preservation |
 | 20 | Agent Memory | `agent_memory.go` | Focus-inspired | Knowledge graph extraction |

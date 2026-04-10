@@ -55,7 +55,7 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "14_attention_sink", Name: "Attention Sink", Tier: LayerTierStable, Status: "implemented", PaperRef: "StreamingLLM"},
 		{ID: "15_meta_token", Name: "Meta Token", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Meta Token (2025)"},
 		{ID: "16_semantic_chunk", Name: "Semantic Chunk", Tier: LayerTierStable, Status: "implemented", PaperRef: "ChunkKV-like"},
-		{ID: "17_sketch_store", Name: "Sketch Store", Tier: LayerTierStable, Status: "implemented", PaperRef: "KVReviver"},
+		{ID: "17_semantic_cache", Name: "Semantic Cache", Tier: LayerTierStable, Status: "implemented", PaperRef: "Semantic cache + KVReviver-style storage"},
 		{ID: "18_lazy_pruner", Name: "Lazy Pruner", Tier: LayerTierStable, Status: "implemented", PaperRef: "LazyLLM"},
 		{ID: "19_semantic_anchor", Name: "Semantic Anchor", Tier: LayerTierStable, Status: "implemented", PaperRef: "SAC"},
 		{ID: "20_agent_memory", Name: "Agent Memory", Tier: LayerTierStable, Status: "implemented", PaperRef: "Focus-inspired"},

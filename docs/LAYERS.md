@@ -262,7 +262,7 @@ semantic_chunk_threshold = 0.7   # Similarity threshold for boundaries
 
 ---
 
-### Layer 17: Sketch Store Filter
+### Layer 17: Semantic Cache Layer
 **Research**: KVReviver (arXiv, December 2025)  
 **Compression**: 90% memory reduction at 10% budget  
 **Algorithm**: Sketch-based reversible compression. Creates compressed sketches (quantized/low-rank representations) for evicted content. Stores sketches for on-demand reconstruction when context requires it. Heavy hitters stay uncompressed.

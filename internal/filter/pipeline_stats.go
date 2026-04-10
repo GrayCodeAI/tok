@@ -22,7 +22,7 @@ func (s *PipelineStats) String() string {
 		"1_entropy", "2_perplexity", "3_goal_driven", "4_ast_preserve",
 		"5_contrastive", "6_ngram", "7_evaluator", "8_gist", "9_hierarchical",
 		"10_budget", "11_compaction", "12_attribution", "13_h2o", "14_attention_sink",
-		"15_meta_token", "16_semantic_chunk", "17_sketch_store", "18_lazy_pruner",
+		"15_meta_token", "16_semantic_chunk", "17_semantic_cache", "18_lazy_pruner",
 		"19_semantic_anchor", "20_agent_memory",
 	}
 
