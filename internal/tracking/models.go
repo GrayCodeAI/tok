@@ -162,3 +162,24 @@ type TrendData struct {
 	AvgReductionPercent    float64 `json:"avg_reduction_percent"`
 	ActualReductionPercent float64 `json:"actual_reduction_percent"`
 }
+
+// CheckpointEventRecord captures runtime checkpoint-trigger events.
+type CheckpointEventRecord struct {
+	ID          int64     `json:"id"`
+	CommandID   int64     `json:"command_id"`
+	SessionID   string    `json:"session_id"`
+	Trigger     string    `json:"trigger"`
+	Reason      string    `json:"reason"`
+	FillPct     float64   `json:"fill_pct"`
+	Quality     float64   `json:"quality"`
+	CooldownSec int       `json:"cooldown_sec"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
+// CheckpointTelemetry summarizes checkpoint events in a time window.
+type CheckpointTelemetry struct {
+	Days        int                    `json:"days"`
+	TotalEvents int64                  `json:"total_events"`
+	ByTrigger   map[string]int64       `json:"by_trigger"`
+	LastEvent   *CheckpointEventRecord `json:"last_event,omitempty"`
+}

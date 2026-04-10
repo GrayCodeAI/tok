@@ -59,7 +59,9 @@ func runAudit(cmd *cobra.Command, args []string) error {
 	}
 	defer tracker.Close()
 
-	report, err := audit.Generate(tracker, auditDays)
+	report, err := audit.GenerateWithOptions(tracker, auditDays, audit.GenerateOptions{
+		ConfigPath: shared.GetConfigPath(),
+	})
 	if err != nil {
 		return fmt.Errorf("generate audit: %w", err)
 	}
@@ -124,6 +126,7 @@ func runAuditCompare() error {
 	fmt.Printf("Reduction Delta:     %+0.2f%%\n", compare.DeltaReductionPct)
 	fmt.Printf("Quality Delta:       %+0.2f\n", compare.DeltaQualityScore)
 	fmt.Printf("Parse Failure Delta: %+d\n", compare.DeltaParseFailures)
+	fmt.Printf("Drift Changed:       %v\n", compare.DriftChanged)
 	fmt.Printf("Verdict:             %s\n", compare.Verdict)
 	return nil
 }
@@ -138,6 +141,9 @@ func printAuditReport(r *audit.Report) {
 	fmt.Printf("Saved Tokens: %d\n", r.Summary.Saved)
 	fmt.Printf("Reduction: %.2f%%\n", r.Summary.ReductionPct)
 	fmt.Printf("Quality: %.1f (%s)\n", r.Quality.Score, r.Quality.Band)
+	if r.DriftFingerprint != "" {
+		fmt.Printf("Drift Fingerprint: %s\n", r.DriftFingerprint[:16])
+	}
 	fmt.Println()
 
 	fmt.Println("Waste Findings")
@@ -167,6 +173,17 @@ func printAuditReport(r *audit.Report) {
 	} else {
 		for _, l := range r.TopLayers {
 			fmt.Printf("%s | total=%d avg=%.1f calls=%d\n", l.LayerName, l.TotalSaved, l.AvgSaved, l.CallCount)
+		}
+	}
+	fmt.Println()
+
+	fmt.Println("Costly Prompts")
+	fmt.Println("-------------")
+	if len(r.CostlyPrompts) == 0 {
+		fmt.Println("No costly prompt data yet.")
+	} else {
+		for _, cp := range r.CostlyPrompts {
+			fmt.Printf("%s | count=%d original=%d est=$%.4f\n", cp.Command, cp.Count, cp.Original, cp.EstimatedUS)
 		}
 	}
 	fmt.Println()
