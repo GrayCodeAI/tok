@@ -316,6 +316,10 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.EnableLightMem = IsLightMemEnabled()
 	cfg.EnablePathShorten = IsPathShortenEnabled()
 	cfg.EnableJSONSampler = IsJSONSamplerEnabled()
+	cfg.EnableLogCrunch = IsLogCrunchEnabled()
+	cfg.EnableSearchCrunch = IsSearchCrunchEnabled()
+	cfg.EnableDiffCrunch = IsDiffCrunchEnabled()
+	cfg.EnableStructColl = IsStructCollapseEnabled()
 	if IsResearchPackEnabled() {
 		cfg.EnableDiffAdapt = true
 		cfg.EnableEPiC = true
@@ -332,6 +336,10 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		cfg.EnableLightMem = true
 		cfg.EnablePathShorten = true
 		cfg.EnableJSONSampler = true
+		cfg.EnableLogCrunch = true
+		cfg.EnableSearchCrunch = true
+		cfg.EnableDiffCrunch = true
+		cfg.EnableStructColl = true
 	}
 
 	pipeline := filter.NewPipelineCoordinator(cfg)

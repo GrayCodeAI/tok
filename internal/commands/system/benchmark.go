@@ -56,6 +56,10 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	cfg.EnableLightMem = true
 	cfg.EnablePathShorten = true
 	cfg.EnableJSONSampler = true
+	cfg.EnableLogCrunch = true
+	cfg.EnableSearchCrunch = true
+	cfg.EnableDiffCrunch = true
+	cfg.EnableStructColl = true
 
 	input := syntheticBenchmarkInput(benchLines)
 	p := filter.NewPipelineCoordinator(cfg)
@@ -65,6 +69,8 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("TokMan Pipeline Benchmark\n")
 	fmt.Printf("Profile=%s Mode=%s Lines=%d\n\n", profile, mode, benchLines)
+	fusion := filter.ClawFusionStageCoverage()
+	fmt.Printf("Fusion Coverage: %d/14 stages mapped\n\n", len(fusion))
 	fmt.Printf("%-26s %-10s %-12s\n", "Stage", "Saved", "Time")
 	fmt.Printf("%-26s %-10s %-12s\n", strings.Repeat("-", 26), strings.Repeat("-", 10), strings.Repeat("-", 12))
 

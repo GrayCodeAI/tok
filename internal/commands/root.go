@@ -86,7 +86,7 @@ var (
 	agentOCR         bool     // Enable AgentOCR layer
 	s2mad            bool     // Enable S2-MAD layer
 	acon             bool     // Enable ACON layer
-	researchPack     bool     // Enable research layer pack (31-45)
+	researchPack     bool     // Enable research layer pack (31-49)
 	latentCollab     bool     // Enable latent collaboration merge layer
 	graphCoT         bool     // Enable graph-CoT compression layer
 	roleBudget       bool     // Enable role-aware budgeting layer
@@ -96,6 +96,10 @@ var (
 	lightmem         bool     // Enable LightMem-style context reuse layer
 	pathShorten      bool     // Enable path/identifier shortening layer
 	jsonSampler      bool     // Enable JSON sampler layer
+	logCrunch        bool     // Enable log crunch layer
+	searchCrunch     bool     // Enable search crunch layer
+	diffCrunch       bool     // Enable diff crunch layer
+	structuralColl   bool     // Enable structural collapse layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -165,6 +169,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 				LightMem:             lightmem,
 				PathShorten:          pathShorten,
 				JSONSampler:          jsonSampler,
+				LogCrunch:            logCrunch,
+				SearchCrunch:         searchCrunch,
+				DiffCrunch:           diffCrunch,
+				StructCollapse:       structuralColl,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -374,7 +382,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
 		"enable ACON adaptive context optimization layer")
 	rootCmd.PersistentFlags().BoolVar(&researchPack, "research-pack", false,
-		"enable research layer pack (31-45): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem, PathShorten, JSONSampler")
+		"enable research layer pack (31-49): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem, PathShorten, JSONSampler, LogCrunch, SearchCrunch, DiffCrunch, StructuralCollapse")
 	rootCmd.PersistentFlags().BoolVar(&latentCollab, "latent-collab", false,
 		"enable latent collaboration merge layer")
 	rootCmd.PersistentFlags().BoolVar(&graphCoT, "graph-cot", false,
@@ -393,6 +401,14 @@ func init() {
 		"enable path/identifier shortening layer")
 	rootCmd.PersistentFlags().BoolVar(&jsonSampler, "json-sampler", false,
 		"enable JSON statistical sampler layer")
+	rootCmd.PersistentFlags().BoolVar(&logCrunch, "log-crunch", false,
+		"enable log crunch folding layer")
+	rootCmd.PersistentFlags().BoolVar(&searchCrunch, "search-crunch", false,
+		"enable search results crunch layer")
+	rootCmd.PersistentFlags().BoolVar(&diffCrunch, "diff-crunch", false,
+		"enable diff context crunch layer")
+	rootCmd.PersistentFlags().BoolVar(&structuralColl, "structural-collapse", false,
+		"enable structural collapse layer")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -420,6 +436,10 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_lightmem", rootCmd.PersistentFlags().Lookup("lightmem"))
 	_ = viper.BindPFlag("pipeline.enable_path_shorten", rootCmd.PersistentFlags().Lookup("path-shorten"))
 	_ = viper.BindPFlag("pipeline.enable_json_sampler", rootCmd.PersistentFlags().Lookup("json-sampler"))
+	_ = viper.BindPFlag("pipeline.enable_log_crunch", rootCmd.PersistentFlags().Lookup("log-crunch"))
+	_ = viper.BindPFlag("pipeline.enable_search_crunch", rootCmd.PersistentFlags().Lookup("search-crunch"))
+	_ = viper.BindPFlag("pipeline.enable_diff_crunch", rootCmd.PersistentFlags().Lookup("diff-crunch"))
+	_ = viper.BindPFlag("pipeline.enable_structural_collapse", rootCmd.PersistentFlags().Lookup("structural-collapse"))
 
 	registry.RegisterAll()
 }

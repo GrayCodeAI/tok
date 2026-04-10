@@ -84,6 +84,10 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "43_lightmem", Name: "LightMem Context Reuse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightMem (ICLR 2026)"},
 		{ID: "44_path_shorten", Name: "Path and Identifier Shortener", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Photon-like path shortening"},
 		{ID: "45_json_sampler", Name: "JSON Statistical Sampler", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Ionizer-like JSON sampling"},
+		{ID: "46_log_crunch", Name: "Log Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "47_search_crunch", Name: "Search Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "48_diff_crunch", Name: "Diff Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "49_structural_collapse", Name: "Structural Collapse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
 	}
 	return implemented
 }

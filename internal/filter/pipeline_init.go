@@ -287,6 +287,18 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableJSONSampler {
 		p.jsonSamplerFilter = NewJSONSamplerFilter()
 	}
+	if cfg.EnableLogCrunch {
+		p.logCrunchFilter = NewLogCrunchFilter()
+	}
+	if cfg.EnableSearchCrunch {
+		p.searchCrunchFilter = NewSearchCrunchFilter()
+	}
+	if cfg.EnableDiffCrunch {
+		p.diffCrunchFilter = NewDiffCrunchFilter()
+	}
+	if cfg.EnableStructColl {
+		p.structuralCollapse = NewStructuralCollapseFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -335,5 +347,9 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.lightMemFilter, "43_lightmem"},
 		{p.pathShortenFilter, "44_path_shorten"},
 		{p.jsonSamplerFilter, "45_json_sampler"},
+		{p.logCrunchFilter, "46_log_crunch"},
+		{p.searchCrunchFilter, "47_search_crunch"},
+		{p.diffCrunchFilter, "48_diff_crunch"},
+		{p.structuralCollapse, "49_structural_collapse"},
 	}
 }

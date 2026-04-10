@@ -128,6 +128,10 @@ type PipelineCoordinator struct {
 	lightMemFilter      *LightMemFilter
 	pathShortenFilter   *PathShortenFilter
 	jsonSamplerFilter   *JSONSamplerFilter
+	logCrunchFilter     *LogCrunchFilter
+	searchCrunchFilter  *SearchCrunchFilter
+	diffCrunchFilter    *DiffCrunchFilter
+	structuralCollapse  *StructuralCollapseFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
@@ -458,6 +462,10 @@ type PipelineConfigWithNestedLayers struct {
 	EnableLightMem     bool
 	EnablePathShorten  bool
 	EnableJSONSampler  bool
+	EnableLogCrunch    bool
+	EnableSearchCrunch bool
+	EnableDiffCrunch   bool
+	EnableStructColl   bool
 
 	// Cache
 	CacheEnabled bool

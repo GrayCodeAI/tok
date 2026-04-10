@@ -80,6 +80,10 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		EnableLightMem:            c.EnableLightMem,
 		EnablePathShorten:         c.EnablePathShorten,
 		EnableJSONSampler:         c.EnableJSONSampler,
+		EnableLogCrunch:           c.EnableLogCrunch,
+		EnableSearchCrunch:        c.EnableSearchCrunch,
+		EnableDiffCrunch:          c.EnableDiffCrunch,
+		EnableStructColl:          c.EnableStructColl,
 	}
 
 	if c.EnableResearchPack {
@@ -98,6 +102,10 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		cfg.EnableLightMem = true
 		cfg.EnablePathShorten = true
 		cfg.EnableJSONSampler = true
+		cfg.EnableLogCrunch = true
+		cfg.EnableSearchCrunch = true
+		cfg.EnableDiffCrunch = true
+		cfg.EnableStructColl = true
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {
