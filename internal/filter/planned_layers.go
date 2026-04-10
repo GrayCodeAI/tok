@@ -20,7 +20,8 @@ func (f *plannedHeuristicFilter) Apply(input string, mode Mode) (string, int) {
 	}
 	output := input
 
-	switch f.id {
+	// Alias IDs are consolidated to canonical behaviors to avoid duplicate work.
+	switch plannedLayerCanonicalID(f.id) {
 	case "30_salience_graph", "38_semantic_dedup":
 		output = dedupLines(output)
 	case "31_trace_preserve", "36_stacktrace_focus", "41_error_window":
@@ -60,6 +61,25 @@ func (f *plannedHeuristicFilter) Apply(input string, mode Mode) (string, int) {
 	return output, saved
 }
 
+// plannedLayerCanonicalID maps overlapping planned layers to a canonical executor.
+// This keeps the registry IDs for tracking while avoiding redundant runtime passes.
+func plannedLayerCanonicalID(id string) string {
+	switch id {
+	case "36_stacktrace_focus", "41_error_window":
+		return "31_trace_preserve"
+	case "38_semantic_dedup", "40_log_cluster", "46_context_cache":
+		return "30_salience_graph"
+	case "43_symbolic_patch":
+		return "32_ast_diff_focus"
+	case "49_repair_pass":
+		return "39_recall_booster"
+	case "47_confidence_gate":
+		return "48_loss_guard"
+	default:
+		return id
+	}
+}
+
 func (p *PipelineCoordinator) initPlannedLayers() {
 	if !p.config.EnablePlannedLayers {
 		return
@@ -88,10 +108,16 @@ func (p *PipelineCoordinator) initPlannedLayers() {
 	}
 
 	p.plannedLayers = make([]filterLayer, 0, len(ids))
+	seen := make(map[string]struct{}, len(ids))
 	for _, id := range ids {
+		canonical := plannedLayerCanonicalID(id)
+		if _, ok := seen[canonical]; ok {
+			continue
+		}
+		seen[canonical] = struct{}{}
 		p.plannedLayers = append(p.plannedLayers, filterLayer{
-			filter: &plannedHeuristicFilter{id: id},
-			name:   id,
+			filter: &plannedHeuristicFilter{id: canonical},
+			name:   canonical,
 		})
 	}
 }
