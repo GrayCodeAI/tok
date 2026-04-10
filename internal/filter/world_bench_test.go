@@ -81,7 +81,6 @@ func BenchmarkAllFilters(b *testing.B) {
 		{"H2OFilter", filter.NewH2OFilter().Apply},
 		{"AttentionSinkFilter", filter.NewAttentionSinkFilter().Apply},
 		{"SketchStoreFilter", filter.NewSketchStoreFilter().Apply},
-		{"DynamicRatioFilter", filter.NewDynamicRatioFilter().Apply},
 	}
 
 	for _, tc := range cases {
