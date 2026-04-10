@@ -164,6 +164,7 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableDynamicRatio = true
 		cfg.EnablePolicyRouter = true
 		cfg.EnableExtractivePrefilter = true
+		cfg.EnableQualityGuardrail = true
 		cfg.ExtractiveMaxLines = 400
 		cfg.ExtractiveHeadLines = 80
 		cfg.ExtractiveTailLines = 60

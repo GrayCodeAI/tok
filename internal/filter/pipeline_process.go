@@ -56,7 +56,26 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	// Quality feedback
 	p.recordFeedback(input, output, stats)
 
+	if p.qualityGuardrail != nil {
+		gr := p.qualityGuardrail.Validate(input, output)
+		if !gr.Passed {
+			safeOutput, safeStats := p.runGuardrailFallback(input)
+			safeStats.LayerStats["guardrail_fallback"] = LayerStat{TokensSaved: 0}
+			safeStats.LayerStats["guardrail_reason_"+gr.Reason] = LayerStat{TokensSaved: 0}
+			return safeOutput, safeStats
+		}
+	}
+
 	return output, p.finalizeStats(stats, output)
+}
+
+func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *PipelineStats) {
+	fallbackCfg := p.config
+	fallbackCfg.Mode = ModeMinimal
+	fallbackCfg.EnableExtractivePrefilter = false
+	fallbackCfg.EnableQualityGuardrail = false
+	fallback := NewPipelineCoordinator(fallbackCfg)
+	return fallback.Process(input)
 }
 
 func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {

@@ -122,6 +122,7 @@ type PipelineCoordinator struct {
 	// Optional routing/compression pre-stage
 	policyRouter        *PolicyRouter
 	extractivePrefilter *ExtractivePrefilter
+	qualityGuardrail    *QualityGuardrail
 
 	// 2026 Research layers
 	hypernymCompressor *HypernymCompressor
@@ -327,6 +328,7 @@ type PipelineConfigWithNestedLayers struct {
 	ExtractiveHeadLines       int
 	ExtractiveTailLines       int
 	ExtractiveSignalLines     int
+	EnableQualityGuardrail    bool
 
 	// Layer sub-configs (preferred)
 	Layers LayerConfig

@@ -60,6 +60,7 @@ type AppState struct {
 	ExtractiveHead   int
 	ExtractiveTail   int
 	ExtractiveSignal int
+	QualityGuardrail bool
 }
 
 // Version is set at build time.
@@ -116,6 +117,7 @@ type FlagConfig struct {
 	ExtractiveHead       int
 	ExtractiveTail       int
 	ExtractiveSignal     int
+	QualityGuardrail     bool
 }
 
 // Set sets all flag values atomically.
@@ -154,6 +156,7 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.ExtractiveHead = cfg.ExtractiveHead
 	s.ExtractiveTail = cfg.ExtractiveTail
 	s.ExtractiveSignal = cfg.ExtractiveSignal
+	s.QualityGuardrail = cfg.QualityGuardrail
 	s.mu.Unlock()
 }
 
@@ -368,6 +371,14 @@ func (s *AppState) GetExtractiveSignal() int {
 	return envInt("TOKMAN_EXTRACTIVE_SIGNAL_LINES", 120)
 }
 
+// IsQualityGuardrailEnabled returns true if quality guardrail is enabled.
+func (s *AppState) IsQualityGuardrailEnabled() bool {
+	s.mu.RLock()
+	enabled := s.QualityGuardrail
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_QUALITY_GUARDRAIL") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -408,6 +419,7 @@ var (
 	ExtractiveHead       int
 	ExtractiveTail       int
 	ExtractiveSignal     int
+	QualityGuardrail     bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -449,6 +461,7 @@ func (s *AppState) syncGlobals() {
 		ExtractiveHead:       s.ExtractiveHead,
 		ExtractiveTail:       s.ExtractiveTail,
 		ExtractiveSignal:     s.ExtractiveSignal,
+		QualityGuardrail:     s.QualityGuardrail,
 	}
 	s.mu.RUnlock()
 
@@ -486,6 +499,7 @@ func (s *AppState) syncGlobals() {
 	ExtractiveHead = state.ExtractiveHead
 	ExtractiveTail = state.ExtractiveTail
 	ExtractiveSignal = state.ExtractiveSignal
+	QualityGuardrail = state.QualityGuardrail
 	globalsMu.Unlock()
 }
 
@@ -528,6 +542,7 @@ func (s *AppState) syncFromGlobals() {
 		ExtractiveHead:       ExtractiveHead,
 		ExtractiveTail:       ExtractiveTail,
 		ExtractiveSignal:     ExtractiveSignal,
+		QualityGuardrail:     QualityGuardrail,
 	}
 	globalsMu.RUnlock()
 
@@ -668,4 +683,10 @@ func GetExtractiveTail() int {
 func GetExtractiveSignal() int {
 	globalState.syncFromGlobals()
 	return globalState.GetExtractiveSignal()
+}
+
+// IsQualityGuardrailEnabled returns true if quality guardrail is enabled.
+func IsQualityGuardrailEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsQualityGuardrailEnabled()
 }

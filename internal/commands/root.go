@@ -70,6 +70,7 @@ var (
 	extractiveHead   int      // Head lines to preserve
 	extractiveTail   int      // Tail lines to preserve
 	extractiveSignal int      // Signal lines to preserve
+	qualityGuardrail bool     // Enable quality guardrail auto-fallback
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -122,6 +123,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 				ExtractiveHead:       extractiveHead,
 				ExtractiveTail:       extractiveTail,
 				ExtractiveSignal:     extractiveSignal,
+				QualityGuardrail:     qualityGuardrail,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -316,6 +318,8 @@ func init() {
 		"tail lines to preserve in extractive prefilter")
 	rootCmd.PersistentFlags().IntVar(&extractiveSignal, "extractive-signal-lines", 120,
 		"signal lines to preserve in extractive prefilter")
+	rootCmd.PersistentFlags().BoolVar(&qualityGuardrail, "quality-guardrail", false,
+		"enable quality guardrail with safe fallback when critical context is lost")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -326,6 +330,7 @@ func init() {
 	_ = viper.BindPFlag("pipeline.extractive_head_lines", rootCmd.PersistentFlags().Lookup("extractive-head-lines"))
 	_ = viper.BindPFlag("pipeline.extractive_tail_lines", rootCmd.PersistentFlags().Lookup("extractive-tail-lines"))
 	_ = viper.BindPFlag("pipeline.extractive_signal_lines", rootCmd.PersistentFlags().Lookup("extractive-signal-lines"))
+	_ = viper.BindPFlag("pipeline.enable_quality_guardrail", rootCmd.PersistentFlags().Lookup("quality-guardrail"))
 
 	registry.RegisterAll()
 }

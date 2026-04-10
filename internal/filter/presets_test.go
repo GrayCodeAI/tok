@@ -108,6 +108,9 @@ func TestAdaptiveProfileEnablesRouterAndExtractive(t *testing.T) {
 	if !cfg.EnableExtractivePrefilter {
 		t.Fatal("adaptive profile should enable extractive prefilter")
 	}
+	if !cfg.EnableQualityGuardrail {
+		t.Fatal("adaptive profile should enable quality guardrail")
+	}
 	if cfg.ExtractiveMaxLines <= 0 || cfg.ExtractiveHeadLines <= 0 || cfg.ExtractiveTailLines <= 0 {
 		t.Fatal("adaptive profile should set extractive thresholds")
 	}

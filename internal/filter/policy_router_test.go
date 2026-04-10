@@ -33,3 +33,19 @@ func TestPolicyRouterRoute_InferReview(t *testing.T) {
 		t.Fatalf("got %q, want review", route.QueryIntent)
 	}
 }
+
+func TestPolicyRouterRoute_InferBuild(t *testing.T) {
+	r := NewPolicyRouter()
+	route := r.Route("build failed during compile and linker stage", "")
+	if route.QueryIntent != "build" {
+		t.Fatalf("got %q, want build", route.QueryIntent)
+	}
+}
+
+func TestPolicyRouterRoute_InferSearch(t *testing.T) {
+	r := NewPolicyRouter()
+	route := r.Route("rg \"NewPipelineCoordinator\" internal/filter", "")
+	if route.QueryIntent != "search" {
+		t.Fatalf("got %q, want search", route.QueryIntent)
+	}
+}
