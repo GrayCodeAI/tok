@@ -85,12 +85,6 @@ func (v *Validator) ValidatePath(path string) error {
 		return errors.Wrap(errors.ErrInvalidInput, "path contains directory traversal sequences")
 	}
 
-	// Check for absolute paths that might be dangerous
-	if strings.HasPrefix(path, "/") || strings.HasPrefix(path, "\\") {
-		// Absolute paths are allowed but should be carefully validated
-		// In a production environment, you might want to whitelist allowed roots
-	}
-
 	return nil
 }
 

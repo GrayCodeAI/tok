@@ -3,6 +3,7 @@ package compression
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -124,6 +125,8 @@ func runBrotli(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		// Write to file
+		brotliOutput = filepath.Clean(brotliOutput)
+		// #nosec G703 -- output path is an explicit CLI destination selected by the user.
 		if err := os.WriteFile(brotliOutput, output, 0644); err != nil {
 			return fmt.Errorf("failed to write file: %w", err)
 		}

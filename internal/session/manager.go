@@ -13,9 +13,10 @@ import (
 	"sync"
 	"time"
 
+	_ "modernc.org/sqlite"
+
 	"github.com/GrayCodeAI/tokman/internal/compression"
 	"github.com/GrayCodeAI/tokman/internal/config"
-	_ "modernc.org/sqlite"
 )
 
 // SessionManager manages sessions and their state

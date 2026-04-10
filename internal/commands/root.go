@@ -82,35 +82,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			shared.SetRootCmd(cmd)
 			// Version is already set in shared.Version via ldflags
-			shared.SetConfig(struct {
-				Verbose              int
-				DryRun               bool
-				UltraCompact         bool
-				SkipEnv              bool
-				QueryIntent          string
-				LLMEnabled           bool
-				TokenBudget          int
-				FallbackArgs         []string
-				LayerPreset          string
-				LayerProfile         string
-				OutputFile           string
-				QuietMode            bool
-				JSONOutput           bool
-				RemoteMode           bool
-				CompressionAddr      string
-				AnalyticsAddr        string
-				RemoteTimeout        int
-				CompactionEnabled    bool
-				CompactionThreshold  int
-				CompactionPreserve   int
-				CompactionMaxTokens  int
-				CompactionSnapshot   bool
-				CompactionAutoDetect bool
-				ReversibleEnabled    bool
-				EnableLayers         []string
-				DisableLayers        []string
-				StreamMode           bool
-			}{
+			shared.SetFlags(shared.FlagConfig{
 				Verbose:              verbose,
 				DryRun:               dryRun,
 				UltraCompact:         ultraCompact,

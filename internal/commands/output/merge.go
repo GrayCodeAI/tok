@@ -211,31 +211,8 @@ func intelligentOrder(fileContents map[string]string) []string {
 }
 
 func extractDependencies(content string) []string {
-	var deps []string
-
-	// Go imports
-	if strings.Contains(content, "import") {
-		lines := strings.Split(content, "\n")
-		for _, line := range lines {
-			line = strings.TrimSpace(line)
-			if strings.HasPrefix(line, "import \"") || strings.HasPrefix(line, "import (") {
-				// Extract import path
-				// Simplified - just capture the pattern
-			}
-		}
-	}
-
-	// JavaScript/TypeScript imports
-	if strings.Contains(content, "from '") || strings.Contains(content, "from \"") {
-		// Extract imports
-	}
-
-	// Python imports
-	if strings.Contains(content, "from ") || strings.Contains(content, "import ") {
-		// Extract imports
-	}
-
-	return deps
+	_ = content
+	return nil
 }
 
 func mergeFiles(files []string, contents map[string]string) string {

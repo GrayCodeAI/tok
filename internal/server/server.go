@@ -6,10 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	_ "net/http/pprof"
 	"os"
 	"os/signal"
-	"runtime/pprof"
 	"syscall"
 	"time"
 
@@ -45,14 +43,6 @@ func New(cfg *config.Config, version string) *Server {
 // Start starts the HTTP server
 func (s *Server) Start(addr string) error {
 	mux := http.NewServeMux()
-
-	// pprof endpoints (for debugging)
-	mux.Handle("/debug/pprof/", http.HandlerFunc(http.DefaultServeMux.ServeHTTP))
-	mux.Handle("/debug/pprof/heap", pprofHandler("heap"))
-	mux.Handle("/debug/pprof/goroutine", pprofHandler("goroutine"))
-	mux.Handle("/debug/pprof/block", pprofHandler("block"))
-	mux.Handle("/debug/pprof/mutex", pprofHandler("mutex"))
-	mux.Handle("/debug/pprof/threadcreate", pprofHandler("threadcreate"))
 
 	// Health endpoints
 	mux.HandleFunc("/health", s.handleHealth())
@@ -329,15 +319,4 @@ func (s *Server) writeError(w http.ResponseWriter, code int, errCode string, mes
 		"error":   errCode,
 		"message": message,
 	})
-}
-
-func pprofHandler(name string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		p := pprof.Lookup(name)
-		if p == nil {
-			http.Error(w, "profile not found", http.StatusNotFound)
-			return
-		}
-		p.WriteTo(w, 1)
-	}
 }

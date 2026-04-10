@@ -165,6 +165,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	}
 
 	content := strings.Join(newLines, "\n")
+	// #nosec G703 -- configPath is resolved via shared.GetConfigPath and points to tokman config.
 	if err := os.WriteFile(configPath, []byte(content), 0600); err != nil {
 		return fmt.Errorf("cannot write config: %w", err)
 	}
