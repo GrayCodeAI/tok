@@ -59,6 +59,11 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "18_lazy_pruner", Name: "Lazy Pruner", Tier: LayerTierStable, Status: "implemented", PaperRef: "LazyLLM"},
 		{ID: "19_semantic_anchor", Name: "Semantic Anchor", Tier: LayerTierStable, Status: "implemented", PaperRef: "SAC"},
 		{ID: "20_agent_memory", Name: "Agent Memory", Tier: LayerTierStable, Status: "implemented", PaperRef: "Focus-inspired"},
+		{ID: "21_marginal_info_gain", Name: "Marginal Information Gain", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "COMI (2026)"},
+		{ID: "22_near_dedup", Name: "Near-Duplicate Collapse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "DART (EMNLP 2025)"},
+		{ID: "23_cot_compress", Name: "Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "TokenSkip (2025)"},
+		{ID: "24_coding_agent_ctx", Name: "Coding Agent Context Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SWE-Pruner (2026)"},
+		{ID: "25_perception_compress", Name: "Perception Compress", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Perception Compressor (2025)"},
 	}
 	return implemented
 }

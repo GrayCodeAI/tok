@@ -100,6 +100,13 @@ type PipelineCoordinator struct {
 	// Optional guardrail
 	qualityGuardrail *QualityGuardrail
 
+	// Layers 21-25: 2026 Research filters
+	marginalInfoGainFilter   *MarginalInfoGainFilter
+	nearDedupFilter          *NearDedupFilter
+	cotCompressFilter        *CoTCompressFilter
+	codingAgentCtxFilter     *CodingAgentContextFilter
+	perceptionCompressFilter *PerceptionCompressFilter
+
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
 
@@ -399,6 +406,13 @@ type PipelineConfigWithNestedLayers struct {
 	EnableTokenQuant     bool
 	EnableTokenRetention bool
 	EnableACON           bool
+
+	// Layers 21-25: new 2025/2026 research filters
+	EnableMarginalInfoGain   bool
+	EnableNearDedup          bool
+	EnableCoTCompress        bool
+	EnableCodingAgentCtx     bool
+	EnablePerceptionCompress bool
 
 	// Cache
 	CacheEnabled bool

@@ -31,6 +31,12 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output)
 	}
 
+	// Research layers (21-25)
+	output = p.processResearchLayers(output, stats)
+	if p.shouldEarlyExit(stats) {
+		return output, p.finalizeStats(stats, output)
+	}
+
 	// Budget enforcement
 	output = p.processBudgetLayer(output, stats)
 
@@ -214,6 +220,37 @@ func (p *PipelineCoordinator) processSemanticLayers(output string, stats *Pipeli
 
 	if p.agentMemoryFilter != nil {
 		output = p.processLayer(p.layers[18], output, stats)
+	}
+	return output
+}
+
+func (p *PipelineCoordinator) processResearchLayers(output string, stats *PipelineStats) string {
+	if p.marginalInfoGainFilter != nil {
+		output = p.processLayer(p.layers[19], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.nearDedupFilter != nil {
+		output = p.processLayer(p.layers[20], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.cotCompressFilter != nil {
+		output = p.processLayer(p.layers[21], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.codingAgentCtxFilter != nil {
+		output = p.processLayer(p.layers[22], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.perceptionCompressFilter != nil {
+		output = p.processLayer(p.layers[23], output, stats)
 	}
 	return output
 }
