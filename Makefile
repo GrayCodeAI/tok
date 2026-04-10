@@ -13,6 +13,7 @@ LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tokman/internal/commands/share
 # Go flags
 GOFLAGS=CGO_ENABLED=0
 GOBIN_DIR=$(shell go env GOPATH)/bin
+GO_CMD=PATH="$(shell go env GOROOT)/bin:$$PATH" go
 
 ## build: Build standard binary
 build:
@@ -71,32 +72,32 @@ build-simd:
 
 ## test: Run tests
 test:
-	go test -cover ./...
+	$(GO_CMD) test -cover ./...
 
 ## test-race: Run tests with race detector
 test-race:
-	go test -race ./...
+	$(GO_CMD) test -race ./...
 
 ## test-cover: Run tests with coverage report
 test-cover:
-	go test -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out -o coverage.html
+	$(GO_CMD) test -coverprofile=coverage.out ./...
+	$(GO_CMD) tool cover -html=coverage.out -o coverage.html
 	@echo "Coverage report: coverage.html"
 
 ## test-verbose: Run tests with verbose output
 test-verbose:
-	go test -v -cover ./...
+	$(GO_CMD) test -v -cover ./...
 
 ## lint: Run linters
 lint:
-	go vet ./...
+	$(GO_CMD) vet ./...
 	@command -v golangci-lint >/dev/null 2>&1 || (echo "golangci-lint not installed" && exit 1)
 	@mkdir -p .cache/go-build .cache/golangci
 	GOCACHE=$(CURDIR)/.cache/go-build GOLANGCI_LINT_CACHE=$(CURDIR)/.cache/golangci golangci-lint run
 
 ## typecheck: Run type checking
 typecheck:
-	go vet ./...
+	$(GO_CMD) vet ./...
 
 ## fmt: Format Go code
 fmt:
