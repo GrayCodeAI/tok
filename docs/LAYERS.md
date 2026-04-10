@@ -1,11 +1,11 @@
-# Tokman 20-Layer Compression Pipeline
+# Tokman Layer Compression Pipeline (Core + Experimental)
 
 Tokman implements a world-class token reduction system based on 120+ research papers from top institutions worldwide (2023-2026).
 
 ## Architecture Overview
 
 ```
-Input → [Layers 1-9: Research Compression] → [Layer 10: Budget] → [Layers 11-14: Advanced] → [Layers 15-20: SOTA 2024-2025] → Output
+Input → [Research Compression Layers] → [Budget + Recovery Layers] → [Experimental Layers] → Output
          ↓
     Streaming for large inputs (up to 2M tokens)
 ```

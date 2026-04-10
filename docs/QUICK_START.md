@@ -32,13 +32,13 @@ TokMan uses a **4-tier adaptive system** that selects the right compression leve
 If you want explicit control:
 
 ```bash
-# Fast: 3 layers, maximum speed
+# Fast: minimal layer set, maximum speed
 tokman --preset=fast git status
 
-# Balanced: 8 layers, good compression (default)
+# Balanced: default quality/latency tradeoff
 tokman --preset=balanced git diff
 
-# Full: 20 layers, maximum compression
+# Full: deepest available compression path
 tokman --preset=full cat large-file.log
 
 # Auto: Let TokMan decide (recommended)
