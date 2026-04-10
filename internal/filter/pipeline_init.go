@@ -281,6 +281,12 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableLightMem {
 		p.lightMemFilter = NewLightMemFilter()
 	}
+	if cfg.EnablePathShorten {
+		p.pathShortenFilter = NewPathShortenFilter()
+	}
+	if cfg.EnableJSONSampler {
+		p.jsonSamplerFilter = NewJSONSamplerFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -327,5 +333,7 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.agentOCRHistory, "41_agent_ocr_history"},
 		{p.planBudgetFilter, "42_plan_budget"},
 		{p.lightMemFilter, "43_lightmem"},
+		{p.pathShortenFilter, "44_path_shorten"},
+		{p.jsonSamplerFilter, "45_json_sampler"},
 	}
 }

@@ -97,6 +97,8 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableAgentOCRHist = true
 		cfg.EnablePlanBudget = true
 		cfg.EnableLightMem = true
+		cfg.EnablePathShorten = true
+		cfg.EnableJSONSampler = true
 
 	case TierCore:
 		cfg.EnableEntropy = true
@@ -196,6 +198,8 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableAgentOCRHist = true
 		cfg.EnablePlanBudget = true
 		cfg.EnableLightMem = true
+		cfg.EnablePathShorten = true
+		cfg.EnableJSONSampler = true
 	}
 
 	return cfg

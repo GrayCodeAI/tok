@@ -314,6 +314,8 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.EnableAgentOCRHist = IsAgentOCRHistoryEnabled()
 	cfg.EnablePlanBudget = IsPlanBudgetEnabled()
 	cfg.EnableLightMem = IsLightMemEnabled()
+	cfg.EnablePathShorten = IsPathShortenEnabled()
+	cfg.EnableJSONSampler = IsJSONSamplerEnabled()
 	if IsResearchPackEnabled() {
 		cfg.EnableDiffAdapt = true
 		cfg.EnableEPiC = true
@@ -328,6 +330,8 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		cfg.EnableAgentOCRHist = true
 		cfg.EnablePlanBudget = true
 		cfg.EnableLightMem = true
+		cfg.EnablePathShorten = true
+		cfg.EnableJSONSampler = true
 	}
 
 	pipeline := filter.NewPipelineCoordinator(cfg)

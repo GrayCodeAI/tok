@@ -151,7 +151,7 @@ type PipelineConfig struct {
 	AgentMemoryMaxEdges  int    `mapstructure:"agent_memory_max_edges"`  // Max edges in knowledge graph
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
-	// Research Layers (31-43)
+	// Research Layers (31-45)
 	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`       // Difficulty-adaptive pruning
 	EnableEPiC         bool `mapstructure:"enable_epic"`              // Causal-edge preservation
 	EnableSSDP         bool `mapstructure:"enable_ssdp"`              // ToT branch pruning
@@ -165,6 +165,8 @@ type PipelineConfig struct {
 	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"` // AgentOCR history compaction
 	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`       // Plan-and-budget controller
 	EnableLightMem     bool `mapstructure:"enable_lightmem"`          // Lightweight memory reuse
+	EnablePathShorten  bool `mapstructure:"enable_path_shorten"`      // Path/identifier shortening
+	EnableJSONSampler  bool `mapstructure:"enable_json_sampler"`      // JSON statistical sampler
 	EnableResearchPack bool `mapstructure:"enable_research_pack"`     // One-toggle research bundle
 
 	// Perplexity Filter (Layer 2) - Detailed settings
@@ -413,7 +415,7 @@ func Defaults() *Config {
 			AgentMemoryMaxEdges:  200,       // Max graph edges
 			AgentMemoryExtractFn: "default", // Extraction function
 
-			// Research Layers 31-43 (off by default unless preset/profile enables)
+			// Research Layers 31-45 (off by default unless preset/profile enables)
 			EnableDiffAdapt:    false,
 			EnableEPiC:         false,
 			EnableSSDP:         false,
@@ -427,6 +429,8 @@ func Defaults() *Config {
 			EnableAgentOCRHist: false,
 			EnablePlanBudget:   false,
 			EnableLightMem:     false,
+			EnablePathShorten:  false,
+			EnableJSONSampler:  false,
 			EnableResearchPack: false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings
@@ -582,6 +586,8 @@ func bindEnvAliases(v *viper.Viper) {
 		},
 		"TOKMAN_PLAN_BUDGET":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_plan_budget", val == "true" || val == "1") },
 		"TOKMAN_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
+		"TOKMAN_PATH_SHORTEN":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_path_shorten", val == "true" || val == "1") },
+		"TOKMAN_JSON_SAMPLER":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_json_sampler", val == "true" || val == "1") },
 		"TOKMAN_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {

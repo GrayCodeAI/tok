@@ -2,6 +2,7 @@ package filter
 
 import (
 	"strings"
+	"time"
 
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
@@ -147,11 +148,13 @@ func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stat
 	if p.layerGate != nil && !p.layerGate.Allows(layer.name) {
 		return input
 	}
+	start := time.Now()
 	output, saved := layer.filter.Apply(input, p.config.Mode)
+	dur := time.Since(start).Nanoseconds()
 	if p.config.SessionTracking {
-		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: 0}
+		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
 	} else {
-		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved}
+		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
 	}
 	stats.runningSaved += saved
 	return output

@@ -126,6 +126,8 @@ type PipelineCoordinator struct {
 	agentOCRHistory     *AgentOCRHistoryFilter
 	planBudgetFilter    *PlanBudgetFilter
 	lightMemFilter      *LightMemFilter
+	pathShortenFilter   *PathShortenFilter
+	jsonSamplerFilter   *JSONSamplerFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
@@ -441,7 +443,7 @@ type PipelineConfigWithNestedLayers struct {
 	EnableCARL          bool
 	EnableSlimInfer     bool
 
-	// Layers 31-43: adaptive reasoning + trajectory filters
+	// Layers 31-45: adaptive reasoning + trajectory filters
 	EnableDiffAdapt    bool
 	EnableEPiC         bool
 	EnableSSDP         bool
@@ -454,6 +456,8 @@ type PipelineConfigWithNestedLayers struct {
 	EnableAgentOCRHist bool
 	EnablePlanBudget   bool
 	EnableLightMem     bool
+	EnablePathShorten  bool
+	EnableJSONSampler  bool
 
 	// Cache
 	CacheEnabled bool

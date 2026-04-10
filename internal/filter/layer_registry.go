@@ -82,6 +82,8 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "41_agent_ocr_history", Name: "AgentOCR History Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR history extension"},
 		{ID: "42_plan_budget", Name: "Plan and Budget Dynamic Control", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Plan and Budget (ICLR 2026)"},
 		{ID: "43_lightmem", Name: "LightMem Context Reuse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightMem (ICLR 2026)"},
+		{ID: "44_path_shorten", Name: "Path and Identifier Shortener", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Photon-like path shortening"},
+		{ID: "45_json_sampler", Name: "JSON Statistical Sampler", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Ionizer-like JSON sampling"},
 	}
 	return implemented
 }
