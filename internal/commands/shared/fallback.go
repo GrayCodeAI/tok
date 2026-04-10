@@ -294,6 +294,13 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		}
 	}
 
+	cfg.EnablePolicyRouter = IsPolicyRouterEnabled()
+	cfg.EnableExtractivePrefilter = IsExtractiveEnabled()
+	cfg.ExtractiveMaxLines = GetExtractiveMax()
+	cfg.ExtractiveHeadLines = GetExtractiveHead()
+	cfg.ExtractiveTailLines = GetExtractiveTail()
+	cfg.ExtractiveSignalLines = GetExtractiveSignal()
+
 	pipeline := filter.NewPipelineCoordinator(cfg)
 
 	filtered, stats := pipeline.Process(output)

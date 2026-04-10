@@ -61,9 +61,15 @@ var (
 	reversibleEnabled bool
 
 	// Custom layer configuration (Task 5: Layer enable/disable)
-	enableLayers  []string // Layers to explicitly enable
-	disableLayers []string // Layers to explicitly disable
-	streamMode    bool     // Enable streaming for large inputs
+	enableLayers     []string // Layers to explicitly enable
+	disableLayers    []string // Layers to explicitly disable
+	streamMode       bool     // Enable streaming for large inputs
+	policyRouter     bool     // Enable policy-based routing
+	extractive       bool     // Enable extractive prefilter
+	extractiveMax    int      // Max lines before extractive prefilter triggers
+	extractiveHead   int      // Head lines to preserve
+	extractiveTail   int      // Tail lines to preserve
+	extractiveSignal int      // Signal lines to preserve
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -110,6 +116,12 @@ output, applies intelligent filtering, and tracks token savings.`,
 				EnableLayers:         enableLayers,
 				DisableLayers:        disableLayers,
 				StreamMode:           streamMode,
+				PolicyRouter:         policyRouter,
+				Extractive:           extractive,
+				ExtractiveMax:        extractiveMax,
+				ExtractiveHead:       extractiveHead,
+				ExtractiveTail:       extractiveTail,
+				ExtractiveSignal:     extractiveSignal,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -237,7 +249,7 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&layerPreset, "preset", "",
 		"pipeline preset: fast, balanced, or full (T90)")
 	rootCmd.PersistentFlags().StringVar(&layerProfile, "profile", "",
-		"compression mode: surface, trim, extract, core, code, log, thread (auto-detects if unset)")
+		"compression mode: surface, trim, extract, core, adaptive, code, log, thread (auto-detects if unset)")
 	rootCmd.PersistentFlags().StringVarP(&outputFile, "output", "o", "",
 		"write output to file instead of stdout")
 	rootCmd.PersistentFlags().BoolVarP(&quietMode, "quiet", "q", false,
@@ -292,10 +304,28 @@ func init() {
 		"disable specific layers (comma-separated: entropy,perplexity,h2o,etc.)")
 	rootCmd.PersistentFlags().BoolVar(&streamMode, "stream", false,
 		"enable streaming mode for large inputs (>500K tokens)")
+	rootCmd.PersistentFlags().BoolVar(&policyRouter, "policy-router", false,
+		"enable policy router to infer query intent from output")
+	rootCmd.PersistentFlags().BoolVar(&extractive, "extractive-prefilter", false,
+		"enable extractive prefilter for large outputs")
+	rootCmd.PersistentFlags().IntVar(&extractiveMax, "extractive-max-lines", 400,
+		"max lines before extractive prefilter triggers")
+	rootCmd.PersistentFlags().IntVar(&extractiveHead, "extractive-head-lines", 80,
+		"head lines to preserve in extractive prefilter")
+	rootCmd.PersistentFlags().IntVar(&extractiveTail, "extractive-tail-lines", 60,
+		"tail lines to preserve in extractive prefilter")
+	rootCmd.PersistentFlags().IntVar(&extractiveSignal, "extractive-signal-lines", 120,
+		"signal lines to preserve in extractive prefilter")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
 	_ = viper.BindPFlag("pipeline.streaming", rootCmd.PersistentFlags().Lookup("stream"))
+	_ = viper.BindPFlag("pipeline.enable_policy_router", rootCmd.PersistentFlags().Lookup("policy-router"))
+	_ = viper.BindPFlag("pipeline.enable_extractive_prefilter", rootCmd.PersistentFlags().Lookup("extractive-prefilter"))
+	_ = viper.BindPFlag("pipeline.extractive_max_lines", rootCmd.PersistentFlags().Lookup("extractive-max-lines"))
+	_ = viper.BindPFlag("pipeline.extractive_head_lines", rootCmd.PersistentFlags().Lookup("extractive-head-lines"))
+	_ = viper.BindPFlag("pipeline.extractive_tail_lines", rootCmd.PersistentFlags().Lookup("extractive-tail-lines"))
+	_ = viper.BindPFlag("pipeline.extractive_signal_lines", rootCmd.PersistentFlags().Lookup("extractive-signal-lines"))
 
 	registry.RegisterAll()
 }

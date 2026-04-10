@@ -25,6 +25,9 @@ const (
 
 	// Tier T: Thread — conversation-aware, preserves context
 	TierThread Tier = "thread" // 6 layers, 55-75% reduction
+
+	// Tier A: Adaptive — routing + extractive-first for large/mixed outputs
+	TierAdaptive Tier = "adaptive" // dynamic path, quality-first
 )
 
 // TierConfig returns a PipelineConfig for the given tier.
@@ -147,6 +150,24 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLazyPruner = true
 		cfg.EnableSemanticAnchor = true
 		cfg.EnableAgentMemory = true
+
+	case TierAdaptive:
+		cfg.EnableEntropy = true
+		cfg.EnablePerplexity = true
+		cfg.EnableGoalDriven = true
+		cfg.EnableContrastive = true
+		cfg.EnableEvaluator = true
+		cfg.EnableAttribution = true
+		cfg.EnableH2O = true
+		cfg.EnableAttentionSink = true
+		cfg.EnableQuestionAware = true
+		cfg.EnableDynamicRatio = true
+		cfg.EnablePolicyRouter = true
+		cfg.EnableExtractivePrefilter = true
+		cfg.ExtractiveMaxLines = 400
+		cfg.ExtractiveHeadLines = 80
+		cfg.ExtractiveTailLines = 60
+		cfg.ExtractiveSignalLines = 120
 	}
 
 	return cfg

@@ -80,6 +80,14 @@ type PipelineConfig struct {
 	CacheMaxSize    int  `mapstructure:"cache_max_size"`   // Max cache entries
 	StreamThreshold int  `mapstructure:"stream_threshold"` // Stream if input > N tokens
 
+	// Adaptive routing and extractive prefilter
+	EnablePolicyRouter     bool `mapstructure:"enable_policy_router"`        // Infer intent from output
+	EnableExtractiveFilter bool `mapstructure:"enable_extractive_prefilter"` // Enable extractive prefilter
+	ExtractiveMaxLines     int  `mapstructure:"extractive_max_lines"`        // Trigger threshold
+	ExtractiveHeadLines    int  `mapstructure:"extractive_head_lines"`       // Head lines to preserve
+	ExtractiveTailLines    int  `mapstructure:"extractive_tail_lines"`       // Tail lines to preserve
+	ExtractiveSignalLines  int  `mapstructure:"extractive_signal_lines"`     // Signal lines to preserve
+
 	// LLM Compaction (Layer 11) - Semantic compression
 	EnableCompaction        bool   `mapstructure:"enable_compaction"`         // Enable LLM-based compaction
 	CompactionThreshold     int    `mapstructure:"compaction_threshold"`      // Minimum tokens to trigger
@@ -316,10 +324,16 @@ func Defaults() *Config {
 			ShortCircuitBudget: true,
 
 			// Performance
-			ParallelLayers:  false, // Sequential for deterministic output
-			CacheEnabled:    true,
-			CacheMaxSize:    DefaultCacheMaxSize,
-			StreamThreshold: DefaultStreamThreshold,
+			ParallelLayers:         false, // Sequential for deterministic output
+			CacheEnabled:           true,
+			CacheMaxSize:           DefaultCacheMaxSize,
+			StreamThreshold:        DefaultStreamThreshold,
+			EnablePolicyRouter:     false,
+			EnableExtractiveFilter: false,
+			ExtractiveMaxLines:     400,
+			ExtractiveHeadLines:    80,
+			ExtractiveTailLines:    60,
+			ExtractiveSignalLines:  120,
 
 			// Layer 11: Compaction (enabled by default for automatic chat compression)
 			EnableCompaction:        true,
