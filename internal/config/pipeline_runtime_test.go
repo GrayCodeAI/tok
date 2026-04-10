@@ -35,6 +35,7 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 		EnableSSDP:              true,
 		EnableAgentOCR:          true,
 		EnableS2MAD:             true,
+		EnableACON:              true,
 	}
 
 	runtime := cfg.ToFilterPipelineConfig(PipelineRuntimeOptions{
@@ -80,7 +81,7 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 	if runtime.AgentConsolidationMax != 42 {
 		t.Fatalf("AgentConsolidationMax = %d, want 42", runtime.AgentConsolidationMax)
 	}
-	if !runtime.EnableDiffAdapt || !runtime.EnableEPiC || !runtime.EnableSSDP || !runtime.EnableAgentOCR || !runtime.EnableS2MAD {
+	if !runtime.EnableDiffAdapt || !runtime.EnableEPiC || !runtime.EnableSSDP || !runtime.EnableAgentOCR || !runtime.EnableS2MAD || !runtime.EnableACON {
 		t.Fatalf("research layer mapping failed: %+v", runtime)
 	}
 }

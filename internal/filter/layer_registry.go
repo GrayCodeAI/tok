@@ -74,6 +74,7 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "33_ssdp", Name: "ToT Branch Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SSDP / Chopping Trees (NeurIPSW 2025)"},
 		{ID: "34_agent_ocr", Name: "Agent Turn Density Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR (2026)"},
 		{ID: "35_s2_mad", Name: "Debate Agreement Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "S2-MAD (NAACL 2025)"},
+		{ID: "36_acon", Name: "Adaptive Context Optimization", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "ACON (ICLR 2026)"},
 	}
 	return implemented
 }

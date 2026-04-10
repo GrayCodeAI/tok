@@ -151,12 +151,13 @@ type PipelineConfig struct {
 	AgentMemoryMaxEdges  int    `mapstructure:"agent_memory_max_edges"`  // Max edges in knowledge graph
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
-	// Research Layers (31-35)
+	// Research Layers (31-36)
 	EnableDiffAdapt bool `mapstructure:"enable_difft_adapt"` // Difficulty-adaptive pruning
 	EnableEPiC      bool `mapstructure:"enable_epic"`        // Causal-edge preservation
 	EnableSSDP      bool `mapstructure:"enable_ssdp"`        // ToT branch pruning
 	EnableAgentOCR  bool `mapstructure:"enable_agent_ocr"`   // Turn-density compression
 	EnableS2MAD     bool `mapstructure:"enable_s2_mad"`      // Agreement collapse
+	EnableACON      bool `mapstructure:"enable_acon"`        // Adaptive context optimization
 
 	// Perplexity Filter (Layer 2) - Detailed settings
 	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`          // Target compression ratio (default: 0.3)
@@ -404,12 +405,13 @@ func Defaults() *Config {
 			AgentMemoryMaxEdges:  200,       // Max graph edges
 			AgentMemoryExtractFn: "default", // Extraction function
 
-			// Research Layers 31-35 (off by default unless preset/profile enables)
+			// Research Layers 31-36 (off by default unless preset/profile enables)
 			EnableDiffAdapt: false,
 			EnableEPiC:      false,
 			EnableSSDP:      false,
 			EnableAgentOCR:  false,
 			EnableS2MAD:     false,
+			EnableACON:      false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings
 			PerplexityTargetRatio:          0.3,  // Keep 30% of tokens
@@ -552,6 +554,7 @@ func bindEnvAliases(v *viper.Viper) {
 		"TOKMAN_SSDP":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_ssdp", val == "true" || val == "1") },
 		"TOKMAN_AGENT_OCR":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_agent_ocr", val == "true" || val == "1") },
 		"TOKMAN_S2_MAD":         func(v *viper.Viper, val string) { v.Set("pipeline.enable_s2_mad", val == "true" || val == "1") },
+		"TOKMAN_ACON":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_acon", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {
 		if val := os.Getenv(env); val != "" {

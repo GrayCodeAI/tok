@@ -85,6 +85,7 @@ var (
 	ssdp             bool     // Enable SSDP layer
 	agentOCR         bool     // Enable AgentOCR layer
 	s2mad            bool     // Enable S2-MAD layer
+	acon             bool     // Enable ACON layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -143,6 +144,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 				SSDP:                 ssdp,
 				AgentOCR:             agentOCR,
 				S2MAD:                s2mad,
+				ACON:                 acon,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -349,6 +351,8 @@ func init() {
 		"enable AgentOCR multi-turn content-density compression layer")
 	rootCmd.PersistentFlags().BoolVar(&s2mad, "s2-mad", false,
 		"enable S2-MAD agreement-collapse layer for debate traces")
+	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
+		"enable ACON adaptive context optimization layer")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -365,6 +369,7 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_ssdp", rootCmd.PersistentFlags().Lookup("ssdp"))
 	_ = viper.BindPFlag("pipeline.enable_agent_ocr", rootCmd.PersistentFlags().Lookup("agent-ocr"))
 	_ = viper.BindPFlag("pipeline.enable_s2_mad", rootCmd.PersistentFlags().Lookup("s2-mad"))
+	_ = viper.BindPFlag("pipeline.enable_acon", rootCmd.PersistentFlags().Lookup("acon"))
 
 	registry.RegisterAll()
 }

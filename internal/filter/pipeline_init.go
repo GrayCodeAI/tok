@@ -257,6 +257,9 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableS2MAD {
 		p.s2madFilter = NewS2MADFilter()
 	}
+	if cfg.EnableACON {
+		p.aconFilter = NewACONFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -295,5 +298,6 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.ssdpFilter, "33_ssdp"},
 		{p.agentOCRFilter, "34_agent_ocr"},
 		{p.s2madFilter, "35_s2_mad"},
+		{p.aconFilter, "36_acon"},
 	}
 }

@@ -311,6 +311,12 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.s2madFilter != nil {
 		output = p.processLayer(p.layers[33], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.aconFilter != nil {
+		output = p.processLayer(p.layers[34], output, stats)
 	}
 	return output
 }
