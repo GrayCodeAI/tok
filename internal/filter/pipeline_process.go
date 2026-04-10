@@ -19,6 +19,19 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output)
 	}
 
+	// EngramLearner: Analyze patterns and learn from content
+	if p.engramLearner != nil && p.config.EnableEngramLearner {
+		output = p.processLayer(filterLayer{p.engramLearner, "50_engram_learner"}, output, stats)
+	}
+
+	// TieredSummary: Generate progressive summaries for large content
+	if p.tieredSummary != nil && p.config.EnableTieredSummary && len(output) > 1000 {
+		output = p.processLayer(filterLayer{p.tieredSummary, "51_tiered_summary"}, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output, p.finalizeStats(stats, output)
+		}
+	}
+
 	// Core layers (1-9) + Neural
 	output = p.processCoreLayers(output, stats)
 	if p.shouldEarlyExit(stats) {

@@ -7,13 +7,15 @@ import (
 
 func TestLogCrunchFilter_FoldsRepeatingLogs(t *testing.T) {
 	f := NewLogCrunchFilter()
+	// Need 4+ identical lines to trigger actual compression (folds to 3 lines)
 	input := strings.Join([]string{
+		"INFO request completed path=/api/v1/items duration=45ms",
 		"INFO request completed path=/api/v1/items duration=45ms",
 		"INFO request completed path=/api/v1/items duration=45ms",
 		"INFO request completed path=/api/v1/items duration=45ms",
 		"WARN retrying request",
 		"ERROR request failed code=500",
-		"tail1", "tail2", "tail3", "tail4", "tail5", "tail6", "tail7", "tail8", "tail9", "tail10", "tail11", "tail12", "tail13", "tail14", "tail15", "tail16",
+		"tail1", "tail2", "tail3", "tail4", "tail5", "tail6", "tail7", "tail8", "tail9", "tail10", "tail11", "tail12", "tail13", "tail14", "tail15",
 	}, "\n")
 	out, saved := f.Apply(input, ModeMinimal)
 	if saved < 0 {

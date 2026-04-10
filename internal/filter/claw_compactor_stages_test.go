@@ -6,9 +6,9 @@ import (
 )
 
 func TestPhotonFilter_Process(t *testing.T) {
-	pf := NewPhotonFilter(DefaultPhotonConfig())
+	pf := NewPhotonFilter()
 	content := `<img src="data:image/png;base64,aGVsbG8gd29ybGQgdGhpcyBpcyBhIHRlc3Qgb2YgYmFzZTY0IGVuY29kaW5nIGZvciBwaG90b24gZmlsdGVy">`
-	result, saved := pf.Process(content)
+	result, saved := pf.Apply(content, ModeMinimal)
 	// Photon may return negative saved for short base64 data
 	if false && saved < 0 {
 		t.Errorf("expected non-negative saved, got %d", saved)
@@ -19,9 +19,9 @@ func TestPhotonFilter_Process(t *testing.T) {
 }
 
 func TestPhotonFilter_NoImages(t *testing.T) {
-	pf := NewPhotonFilter(DefaultPhotonConfig())
+	pf := NewPhotonFilter()
 	content := "plain text without images"
-	result, saved := pf.Process(content)
+	result, saved := pf.Apply(content, ModeMinimal)
 	if result != content {
 		t.Error("expected unchanged content for non-image input")
 	}

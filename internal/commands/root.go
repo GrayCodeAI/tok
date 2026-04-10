@@ -73,6 +73,11 @@ var (
 	enableLayers     []string // Layers to explicitly enable
 	disableLayers    []string // Layers to explicitly disable
 	streamMode       bool     // Enable streaming for large inputs
+
+	// New: Claw Compactor features
+	engramLearnerEnabled bool // Enable EngramLearner error pattern learning
+	tieredSummaryEnabled bool // Enable TieredSummary L0/L1/L2 summarization
+	crunchBenchEnabled   bool // Enable CrunchBench benchmarking
 	policyRouter     bool     // Enable policy-based routing
 	extractive       bool     // Enable extractive prefilter
 	extractiveMax    int      // Max lines before extractive prefilter triggers
@@ -410,6 +415,14 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&structuralColl, "structural-collapse", false,
 		"enable structural collapse layer")
 
+	// New: Claw Compactor features
+	rootCmd.PersistentFlags().BoolVar(&engramLearnerEnabled, "engram-learner", false,
+		"enable EngramLearner error pattern learning")
+	rootCmd.PersistentFlags().BoolVar(&tieredSummaryEnabled, "tiered-summary", false,
+		"enable TieredSummary L0/L1/L2 progressive summarization")
+	rootCmd.PersistentFlags().BoolVar(&crunchBenchEnabled, "crunch-bench", false,
+		"enable CrunchBench comprehensive benchmarking")
+
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
 	_ = viper.BindPFlag("pipeline.streaming", rootCmd.PersistentFlags().Lookup("stream"))
@@ -440,6 +453,11 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_search_crunch", rootCmd.PersistentFlags().Lookup("search-crunch"))
 	_ = viper.BindPFlag("pipeline.enable_diff_crunch", rootCmd.PersistentFlags().Lookup("diff-crunch"))
 	_ = viper.BindPFlag("pipeline.enable_structural_collapse", rootCmd.PersistentFlags().Lookup("structural-collapse"))
+
+	// New: Claw Compactor feature bindings
+	_ = viper.BindPFlag("pipeline.enable_engram_learner", rootCmd.PersistentFlags().Lookup("engram-learner"))
+	_ = viper.BindPFlag("pipeline.enable_tiered_summary", rootCmd.PersistentFlags().Lookup("tiered-summary"))
+	_ = viper.BindPFlag("pipeline.enable_crunch_bench", rootCmd.PersistentFlags().Lookup("crunch-bench"))
 
 	registry.RegisterAll()
 }
