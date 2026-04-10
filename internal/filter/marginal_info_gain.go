@@ -38,7 +38,7 @@ func NewMarginalInfoGainFilter() *MarginalInfoGainFilter {
 // Name returns the filter name.
 func (f *MarginalInfoGainFilter) Name() string { return "21_marginal_info_gain" }
 
-// Apply selects lines that maximise marginal information gain within a token budget.
+// Apply selects lines that maximize marginal information gain within a token budget.
 func (f *MarginalInfoGainFilter) Apply(input string, mode Mode) (string, int) {
 	if mode == ModeNone {
 		return input, 0

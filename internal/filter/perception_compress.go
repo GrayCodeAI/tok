@@ -10,12 +10,12 @@ import (
 // arXiv:2504.xxxxx — 2025
 //
 // PerceptionCompressFilter identifies "perceptually redundant" lines: those whose
-// semantic content is already covered by their immediate neighbours.  Removing
+// semantic content is already covered by their immediate neighbors.  Removing
 // them does not change what an LLM would perceive as the meaning of the context.
 //
 // Proxy for perceptual redundancy (training-free):
 //   - Compute term-overlap between line i and its window (i±windowSize)
-//   - If overlap / own_terms ≥ threshold, the line is dominated by neighbours
+//   - If overlap / own_terms ≥ threshold, the line is dominated by neighbors
 //
 // This catches verbose prose, repeated captions, duplicate log prefixes, and
 // transitional boilerplate that carries no new information.
@@ -84,8 +84,8 @@ func (f *PerceptionCompressFilter) Apply(input string, mode Mode) (string, int) 
 			continue
 		}
 
-		// Build neighbour term set from window
-		neighbours := make(map[string]bool)
+		// Build neighbor term set from window
+		neighbors := make(map[string]bool)
 		lo := i - f.windowSize
 		if lo < 0 {
 			lo = 0
@@ -99,14 +99,14 @@ func (f *PerceptionCompressFilter) Apply(input string, mode Mode) (string, int) 
 				continue
 			}
 			for t := range termSets[j] {
-				neighbours[t] = true
+				neighbors[t] = true
 			}
 		}
 
-		// Compute overlap: fraction of own terms already in neighbours
+		// Compute overlap: fraction of own terms already in neighbors
 		covered := 0
 		for t := range own {
-			if neighbours[t] {
+			if neighbors[t] {
 				covered++
 			}
 		}

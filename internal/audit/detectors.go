@@ -87,6 +87,9 @@ func LoadDetectorConfig(configPath string) (DetectorConfig, error) {
 		return cfg, nil
 	}
 	if _, err := os.Stat(configPath); err != nil {
+		if !os.IsNotExist(err) {
+			return cfg, fmt.Errorf("stat audit detectors config: %w", err)
+		}
 		return cfg, nil
 	}
 	var file auditConfigFile

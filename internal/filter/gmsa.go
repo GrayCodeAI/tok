@@ -17,7 +17,7 @@ import (
 //     each cluster to its best representative with a count annotation.
 //  2. Semantic Alignment — after merging, reorder the surviving chunks so that
 //     "anchor" content (errors, headings, key results) floats to the top,
-//     maximising information density in the region most attended by LLMs.
+//     maximizing information density in the region most attended by LLMs.
 //
 // Key insight: repeated paragraph-length explanations of the same concept
 // (common in verbose documentation, long error reports, and agentic outputs)
@@ -74,9 +74,9 @@ func (f *GMSAFilter) Apply(input string, mode Mode) (string, int) {
 }
 
 type textChunk struct {
-	lines     []string
-	termSet   map[string]bool
-	anchor    float64 // structural importance score
+	lines      []string
+	termSet    map[string]bool
+	anchor     float64 // structural importance score
 	suppressed bool
 	annotation string // e.g. "[+2 similar chunks merged]"
 }
