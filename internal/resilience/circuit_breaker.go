@@ -151,11 +151,6 @@ func (cb *CircuitBreaker) canExecute(ctx context.Context) error {
 		}
 	}
 
-	// Check request queue
-	if cb.requestQueue > 0 {
-		// Simplified - could add proper counting
-	}
-
 	// Check context cancellation
 	select {
 	case <-ctx.Done():

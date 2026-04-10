@@ -141,6 +141,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 
 			if watchOutDir != "" {
 				outPath := filepath.Join(watchOutDir, filepath.Base(filePath))
+				// #nosec G703 -- destination is constrained to watchOutDir + basename(filePath).
 				if err := os.WriteFile(outPath, []byte(result), 0600); err != nil {
 					fmt.Fprintf(os.Stderr, "[tokman watch] write error: %v\n", err)
 				}

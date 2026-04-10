@@ -111,7 +111,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	if err := doctorCmd.Run(); err != nil {
 		fmt.Println()
 		fmt.Println("⚠️  Some issues detected. See above for details.")
-		return nil
+		return fmt.Errorf("doctor command failed: %w", err)
 	}
 
 	fmt.Println()

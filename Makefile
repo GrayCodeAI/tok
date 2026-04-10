@@ -12,6 +12,7 @@ LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tokman/internal/commands/share
 
 # Go flags
 GOFLAGS=CGO_ENABLED=0
+GOBIN_DIR=$(shell go env GOPATH)/bin
 
 ## build: Build standard binary
 build:
@@ -89,7 +90,9 @@ test-verbose:
 ## lint: Run linters
 lint:
 	go vet ./...
-	@command -v golangci-lint >/dev/null 2>&1 && golangci-lint run || echo "golangci-lint not installed, skipping"
+	@command -v golangci-lint >/dev/null 2>&1 || (echo "golangci-lint not installed" && exit 1)
+	@mkdir -p .cache/go-build .cache/golangci
+	GOCACHE=$(CURDIR)/.cache/go-build GOLANGCI_LINT_CACHE=$(CURDIR)/.cache/golangci golangci-lint run
 
 ## typecheck: Run type checking
 typecheck:
@@ -126,8 +129,10 @@ clean:
 ## security: Run security scans
 security:
 	@echo "Running security scans..."
-	@command -v gosec >/dev/null 2>&1 && gosec -fmt json -out security-report.json ./... || echo "gosec not installed, skipping"
-	@command -v govulncheck >/dev/null 2>&1 && govulncheck ./... || echo "govulncheck not installed, skipping"
+	@command -v $(GOBIN_DIR)/gosec >/dev/null 2>&1 || (echo "gosec not installed; run: go install github.com/securego/gosec/v2/cmd/gosec@latest" && exit 1)
+	@command -v $(GOBIN_DIR)/govulncheck >/dev/null 2>&1 || (echo "govulncheck not installed; run: go install golang.org/x/vuln/cmd/govulncheck@latest" && exit 1)
+	$(GOBIN_DIR)/gosec -severity high -confidence high -fmt json -out security-report.json ./...
+	$(GOBIN_DIR)/govulncheck ./...
 	@echo "Security scans complete"
 
 ## coverage: Generate and view coverage report

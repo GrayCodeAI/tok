@@ -33,15 +33,17 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 	}
 
 	var content []byte
-	var err error
+	found := false
 	for _, p := range paths {
-		content, err = os.ReadFile(p)
+		b, err := os.ReadFile(p)
 		if err == nil {
+			content = b
+			found = true
 			break
 		}
 	}
 
-	if err != nil {
+	if !found {
 		fmt.Println("No CHANGELOG.md found.")
 		fmt.Println("Visit https://github.com/GrayCodeAI/tokman/releases for release notes.")
 		return nil

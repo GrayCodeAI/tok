@@ -69,8 +69,8 @@ func TestAbs(t *testing.T) {
 
 func TestShortenPath(t *testing.T) {
 	tests := []struct {
-		path   string
-		maxLen int
+		path     string
+		maxLen   int
 		contains string
 	}{
 		{"/short/path", 20, "/short/path"},

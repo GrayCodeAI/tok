@@ -127,7 +127,11 @@ func normalizeTrustPath(filterPath string) (string, error) {
 	}
 	canonical, err := filepath.EvalSymlinks(absPath)
 	if err != nil {
-		return absPath, nil // no symlink to resolve, use absolute
+		if os.IsNotExist(err) {
+			// No symlink to resolve; keep absolute path.
+			return absPath, nil
+		}
+		return "", err
 	}
 	return canonical, nil
 }
