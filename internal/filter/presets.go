@@ -123,6 +123,7 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableTokenQuant = true
 		cfg.EnableTokenRetention = true
 		cfg.EnableACON = true
+		cfg.EnablePlannedLayers = true
 
 	case TierCode:
 		cfg.EnableEntropy = true

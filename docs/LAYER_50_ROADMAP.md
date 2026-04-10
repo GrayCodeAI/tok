@@ -23,6 +23,7 @@ Current implementation status:
 - Implemented layer metadata + tiering in [layer_registry.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/filter/layer_registry.go)
 - Gate framework in [layer_gate.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/filter/layer_gate.go)
 - Pipeline execution hook in [pipeline_gates.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/filter/pipeline_gates.go)
+- Baseline implementations for layers `30..49` added in [planned_layers.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/filter/planned_layers.go) (experimental pack, conservative defaults)
 
 ## Layer Gate Modes
 
@@ -55,4 +56,3 @@ A layer is promoted only if:
 2. M2: Expand planned layers 30-49 with experimental implementations.
 3. M3: Add per-command-family calibrated routing.
 4. M4: Add automatic retirement for low-value layers.
-

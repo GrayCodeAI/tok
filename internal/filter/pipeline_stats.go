@@ -29,6 +29,11 @@ func (s *PipelineStats) String() string {
 		"20_symbolic_compress", "21_phrase_grouping", "22_numerical_quant",
 		"23_dynamic_ratio", "24_hypernym", "25_semantic_cache",
 		"26_scope", "27_kvzip", "28_question_aware", "29_density_adaptive",
+		"30_salience_graph", "31_trace_preserve", "32_ast_diff_focus", "33_unit_test_focus",
+		"34_symbol_table", "35_path_anchor", "36_stacktrace_focus", "37_exit_signal_keep",
+		"38_semantic_dedup", "39_recall_booster", "40_log_cluster", "41_error_window",
+		"42_dependency_focus", "43_symbolic_patch", "44_runtime_anchor", "45_multiturn_merge",
+		"46_context_cache", "47_confidence_gate", "48_loss_guard", "49_repair_pass",
 		"10_session", "10_budget",
 	}
 

@@ -25,6 +25,7 @@ type PipelineCoordinator struct {
 	runtimeQueryIntent string
 	layerRegistry      *LayerRegistry
 	layerGate          *LayerGate
+	plannedLayers      []filterLayer
 
 	// Layer 1: Entropy Filtering
 	entropyFilter *EntropyFilter
@@ -333,6 +334,7 @@ type PipelineConfigWithNestedLayers struct {
 	EnableQualityGuardrail     bool
 	LayerGateMode              string
 	LayerGateAllowExperimental []string
+	EnablePlannedLayers        bool
 
 	// Layer sub-configs (preferred)
 	Layers LayerConfig

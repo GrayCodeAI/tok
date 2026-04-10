@@ -68,6 +68,7 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 
 	// Build layer execution order
 	p.buildLayers()
+	p.initPlannedLayers()
 	p.layerRegistry = NewLayerRegistry()
 	p.layerGate = NewLayerGate(cfg.LayerGateMode, cfg.LayerGateAllowExperimental, p.layerRegistry)
 
