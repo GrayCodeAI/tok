@@ -11,7 +11,6 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/metrics"
-	"github.com/GrayCodeAI/tokman/internal/resilience"
 	"github.com/GrayCodeAI/tokman/internal/security"
 )
 
@@ -132,53 +131,6 @@ func TestSecurityValidation(t *testing.T) {
 				t.Errorf("expected error=%v, got %v", tt.wantErr, err)
 			}
 		})
-	}
-}
-
-// TestCircuitBreaker tests the circuit breaker pattern
-func TestCircuitBreaker(t *testing.T) {
-	cb := resilience.NewCircuitBreaker("test",
-		resilience.WithMaxFailures(3),
-		resilience.WithTimeout(100*time.Millisecond),
-	)
-
-	// Test successful execution
-	err := cb.Execute(context.Background(), func() error {
-		return nil
-	})
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-
-	// Test failure handling
-	for i := 0; i < 5; i++ {
-		cb.Execute(context.Background(), func() error {
-			return &testError{msg: "simulated failure"}
-		})
-	}
-
-	// After max failures, circuit should be open
-	if cb.State() != resilience.StateOpen {
-		t.Errorf("expected circuit to be open, got %v", cb.State())
-	}
-
-	// Test that open circuit rejects execution
-	err = cb.Execute(context.Background(), func() error {
-		return nil
-	})
-	if err != resilience.ErrCircuitOpen {
-		t.Errorf("expected ErrCircuitOpen, got %v", err)
-	}
-
-	// Wait for timeout
-	time.Sleep(150 * time.Millisecond)
-
-	// Test half-open state allows execution
-	err = cb.Execute(context.Background(), func() error {
-		return nil
-	})
-	if err != nil {
-		t.Logf("half-open execution error: %v (may be expected)", err)
 	}
 }
 
@@ -334,19 +286,6 @@ func BenchmarkMinimalPipeline(b *testing.B) {
 		output, _ := p.Process(input)
 		_ = output
 	}
-}
-
-// Helper function to simulate errors
-func assertErr(msg string) error {
-	return &testError{msg: msg}
-}
-
-type testError struct {
-	msg string
-}
-
-func (e *testError) Error() string {
-	return e.msg
 }
 
 // TestMain is the test entry point

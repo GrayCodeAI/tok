@@ -18,11 +18,20 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/utils"
 
 	// CLI commands
+	_ "github.com/GrayCodeAI/tokman/internal/commands/build"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/compression"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/configcmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/container"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/core"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/filtercmd"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/hooks"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/lang"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/linter"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/output"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/pattern"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/pkgmgr"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/session"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/system"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/test"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/vcs"
 )
