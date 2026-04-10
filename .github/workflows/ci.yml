@@ -67,6 +67,13 @@ jobs:
       - name: Run tests with race detector
         run: go test -race -v -coverprofile=coverage.out ./...
 
+      - name: Audit smoke test (JSON contract)
+        run: |
+          go run ./cmd/tokman audit --json --days 1 > audit-smoke.json
+          grep -q '"summary"' audit-smoke.json
+          grep -q '"quality"' audit-smoke.json
+          grep -q '"waste_findings"' audit-smoke.json
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         with:
