@@ -69,6 +69,11 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "28_gmsa", Name: "Group Merge Semantic Align", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "GMSA (arXiv 2025)"},
 		{ID: "29_carl", Name: "Critical Action Filter", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "CARL (arXiv 2025)"},
 		{ID: "30_slim_infer", Name: "SlimInfer Orphan Pruner", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SlimInfer (arXiv 2025)"},
+		{ID: "31_difft_adapt", Name: "Difficulty-Adaptive Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "DiffAdapt (ICLR 2026)"},
+		{ID: "32_epic", Name: "Causal Edge Preservation", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "EPiC (2025)"},
+		{ID: "33_ssdp", Name: "ToT Branch Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SSDP / Chopping Trees (NeurIPSW 2025)"},
+		{ID: "34_agent_ocr", Name: "Agent Turn Density Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR (2026)"},
+		{ID: "35_s2_mad", Name: "Debate Agreement Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "S2-MAD (NAACL 2025)"},
 	}
 	return implemented
 }

@@ -113,6 +113,11 @@ type PipelineCoordinator struct {
 	gmsaFilter          *GMSAFilter
 	carlFilter          *CARLFilter
 	slimInferFilter     *SlimInferFilter
+	diffAdaptFilter     *DiffAdaptFilter
+	epicFilter          *EPiCFilter
+	ssdpFilter          *SSDPFilter
+	agentOCRFilter      *AgentOCRFilter
+	s2madFilter         *S2MADFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
@@ -427,6 +432,13 @@ type PipelineConfigWithNestedLayers struct {
 	EnableGMSA          bool
 	EnableCARL          bool
 	EnableSlimInfer     bool
+
+	// Layers 31-35: adaptive reasoning + trajectory filters
+	EnableDiffAdapt bool
+	EnableEPiC      bool
+	EnableSSDP      bool
+	EnableAgentOCR  bool
+	EnableS2MAD     bool
 
 	// Cache
 	CacheEnabled bool

@@ -40,7 +40,7 @@ func TestSlimInferFilter_DropsOrphanLines(t *testing.T) {
 		"Pool size controls maximum concurrent database connection count.",
 		"Connection timeout disconnects idle database pool connections.",
 		"The database connection pool monitors health and availability.",
-		"ORPHAN: zephyr quokka byzantine xylophone flibbertigibbet.",  // unique vocab
+		"ORPHAN: zephyr quokka byzantine xylophone flibbertigibbet.", // unique vocab
 		"Connection pool exhaustion causes database request failures.",
 		"ERROR: database connection pool limit reached maximum capacity.",
 	}
@@ -87,10 +87,10 @@ func TestSlimInferFilter_AggressiveDropsMore(t *testing.T) {
 		"Core concept: distributed cache invalidation strategy.",
 		"Cache invalidation uses event sourcing pattern for consistency.",
 		"Events are published to message queue on data modification.",
-		"Isolated metric: cache_miss_p99_latency_us_mean_stddev.",  // isolated stat
+		"Isolated metric: cache_miss_p99_latency_us_mean_stddev.", // isolated stat
 		"Consumers update local cache replicas from event stream.",
 		"Stale entries expire based on configured TTL policy.",
-		"Random stat footnote: throughput_baseline_ref_3847291a.",   // isolated
+		"Random stat footnote: throughput_baseline_ref_3847291a.", // isolated
 		"Cache coherence is maintained across all service instances.",
 		"ERROR: cache cluster unreachable network timeout exceeded.",
 	}

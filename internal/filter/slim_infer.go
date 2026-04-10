@@ -13,8 +13,9 @@ import (
 // lines whose terms do not appear in any other line of the output.
 //
 // This is the complement to MarginalInfoGainFilter:
-//   MIG  — drops lines that contribute NO NEW terms to the retained set
-//   Slim — drops lines whose terms are REFERENCED BY NO OTHER line
+//
+//	MIG  — drops lines that contribute NO NEW terms to the retained set
+//	Slim — drops lines whose terms are REFERENCED BY NO OTHER line
 //
 // Together they remove both ends of the information graph:
 //   - Lines that are fully covered by others  (MIG)
@@ -27,8 +28,9 @@ import (
 //  4. Structural lines (errors, headings, first/last) are always kept
 //
 // Threshold:
-//   ModeMinimal:   refScore ≥ 1  (at least one other line shares a term)
-//   ModeAggressive: refScore ≥ 2  (at least two other lines share a term)
+//
+//	ModeMinimal:   refScore ≥ 1  (at least one other line shares a term)
+//	ModeAggressive: refScore ≥ 2  (at least two other lines share a term)
 type SlimInferFilter struct {
 	minLineLen int // lines shorter than this are always kept
 }

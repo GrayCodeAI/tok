@@ -242,6 +242,21 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableSlimInfer {
 		p.slimInferFilter = NewSlimInferFilter()
 	}
+	if cfg.EnableDiffAdapt {
+		p.diffAdaptFilter = NewDiffAdaptFilter()
+	}
+	if cfg.EnableEPiC {
+		p.epicFilter = NewEPiCFilter()
+	}
+	if cfg.EnableSSDP {
+		p.ssdpFilter = NewSSDPFilter()
+	}
+	if cfg.EnableAgentOCR {
+		p.agentOCRFilter = NewAgentOCRFilter()
+	}
+	if cfg.EnableS2MAD {
+		p.s2madFilter = NewS2MADFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -275,5 +290,10 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.gmsaFilter, "28_gmsa"},
 		{p.carlFilter, "29_carl"},
 		{p.slimInferFilter, "30_slim_infer"},
+		{p.diffAdaptFilter, "31_difft_adapt"},
+		{p.epicFilter, "32_epic"},
+		{p.ssdpFilter, "33_ssdp"},
+		{p.agentOCRFilter, "34_agent_ocr"},
+		{p.s2madFilter, "35_s2_mad"},
 	}
 }
