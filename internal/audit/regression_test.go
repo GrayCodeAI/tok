@@ -104,6 +104,15 @@ func TestAuditRegressionFixture(t *testing.T) {
 	if report.Quality.Score <= 0 || report.Quality.Score > 100 {
 		t.Fatalf("quality score out of bounds: %.2f", report.Quality.Score)
 	}
+	if report.BudgetController.RecommendedMode == "" {
+		t.Fatal("expected budget controller recommendation")
+	}
+	if report.AnchorRetention.Grade == "" {
+		t.Fatal("expected anchor retention grade")
+	}
+	if len(report.IntentProfiles) == 0 {
+		t.Fatal("expected intent profiles in report")
+	}
 
 	ids := map[string]bool{}
 	for _, f := range report.WasteFindings {

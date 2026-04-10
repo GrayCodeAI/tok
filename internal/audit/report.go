@@ -23,6 +23,10 @@ type Report struct {
 	Summary          Summary                `json:"summary"`
 	TurnAnalytics    []TurnMetric           `json:"turn_analytics"`
 	CostlyPrompts    []CostlyPrompt         `json:"costly_prompts"`
+	IntentProfiles   []IntentProfile        `json:"intent_profiles"`
+	AgentBudgets     []AgentBudget          `json:"agent_budgets"`
+	BudgetController BudgetControllerReport `json:"budget_controller"`
+	AnchorRetention  AnchorRetentionReport  `json:"anchor_retention"`
 	WasteFindings    []Finding              `json:"waste_findings"`
 	ContextOverhead  []ContextComponent     `json:"context_overhead"`
 	Quality          QualityReport          `json:"quality"`
@@ -113,6 +117,44 @@ type CostlyPrompt struct {
 	EstimatedUS float64 `json:"estimated_cost_usd"`
 }
 
+// IntentProfile summarizes compression quality by inferred task intent.
+type IntentProfile struct {
+	Intent       string  `json:"intent"`
+	Commands     int64   `json:"commands"`
+	Original     int64   `json:"original_tokens"`
+	Saved        int64   `json:"saved_tokens"`
+	ReductionPct float64 `json:"reduction_pct"`
+}
+
+// AgentBudget allocates usage/savings budgets across agents.
+type AgentBudget struct {
+	Agent        string  `json:"agent"`
+	Commands     int64   `json:"commands"`
+	Original     int64   `json:"original_tokens"`
+	Saved        int64   `json:"saved_tokens"`
+	BudgetShare  float64 `json:"budget_share_pct"`
+	ReductionPct float64 `json:"reduction_pct"`
+	EstimatedUS  float64 `json:"estimated_cost_usd"`
+	SavingsUS    float64 `json:"estimated_savings_usd"`
+}
+
+// BudgetControllerReport provides adaptive budget recommendations (LLMLingua/LazyLLM style).
+type BudgetControllerReport struct {
+	CurrentReductionPct float64            `json:"current_reduction_pct"`
+	QualityScore        float64            `json:"quality_score"`
+	RecommendedMode     string             `json:"recommended_mode"`
+	Bands               map[string]float64 `json:"bands"`
+	DecaySchedule       []int              `json:"decay_schedule"`
+}
+
+// AnchorRetentionReport scores how well critical anchors are preserved.
+type AnchorRetentionReport struct {
+	SignalsFound      int64   `json:"signals_found"`
+	SignalDensityPct  float64 `json:"signal_density_pct"`
+	EstimatedKeepRate float64 `json:"estimated_keep_rate_pct"`
+	Grade             string  `json:"grade"`
+}
+
 // Snapshot stores a named point-in-time audit for drift/validation comparisons.
 type Snapshot struct {
 	Name        string    `json:"name"`
@@ -171,6 +213,18 @@ func GenerateWithOptions(tracker *tracking.Tracker, days int, opts GenerateOptio
 	if err != nil {
 		return nil, err
 	}
+	intentProfiles, err := queryIntentProfiles(tracker, window)
+	if err != nil {
+		return nil, err
+	}
+	agentBudgets, err := queryAgentBudgets(tracker, window, summary.Original)
+	if err != nil {
+		return nil, err
+	}
+	anchorRetention, err := queryAnchorRetention(tracker, window, summary.CommandCount)
+	if err != nil {
+		return nil, err
+	}
 	detectorCfg, _ := LoadDetectorConfig(opts.ConfigPath)
 	findings, err := detectWaste(tracker, window, summary, detectorCfg)
 	if err != nil {
@@ -189,6 +243,7 @@ func GenerateWithOptions(tracker *tracking.Tracker, days int, opts GenerateOptio
 		}
 	}
 	fingerprint, _ := DriftFingerprint(opts.ConfigPath)
+	budgetController := buildBudgetController(summary, quality, intentProfiles)
 
 	recs := buildRecommendations(findings, quality, ctxOverhead, policy)
 
@@ -199,6 +254,10 @@ func GenerateWithOptions(tracker *tracking.Tracker, days int, opts GenerateOptio
 		Summary:          summary,
 		TurnAnalytics:    turns,
 		CostlyPrompts:    costly,
+		IntentProfiles:   intentProfiles,
+		AgentBudgets:     agentBudgets,
+		BudgetController: budgetController,
+		AnchorRetention:  anchorRetention,
 		WasteFindings:    findings,
 		ContextOverhead:  ctxOverhead,
 		Quality:          quality,
@@ -361,6 +420,134 @@ func queryCostlyPrompts(tr *tracking.Tracker, window string, limit int) ([]Costl
 	return out, rows.Err()
 }
 
+func queryIntentProfiles(tr *tracking.Tracker, window string) ([]IntentProfile, error) {
+	rows, err := tr.Query(`
+		SELECT command, COALESCE(SUM(original_tokens),0), COALESCE(SUM(saved_tokens),0), COUNT(*)
+		FROM commands
+		WHERE timestamp >= datetime('now', ?)
+		GROUP BY command
+	`, window)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	type agg struct {
+		commands int64
+		original int64
+		saved    int64
+	}
+	byIntent := map[string]*agg{}
+	for rows.Next() {
+		var command string
+		var original, saved, count int64
+		if err := rows.Scan(&command, &original, &saved, &count); err != nil {
+			return nil, err
+		}
+		intent := inferIntent(command)
+		if _, ok := byIntent[intent]; !ok {
+			byIntent[intent] = &agg{}
+		}
+		byIntent[intent].commands += count
+		byIntent[intent].original += original
+		byIntent[intent].saved += saved
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	out := make([]IntentProfile, 0, len(byIntent))
+	for intent, a := range byIntent {
+		item := IntentProfile{
+			Intent:   intent,
+			Commands: a.commands,
+			Original: a.original,
+			Saved:    a.saved,
+		}
+		if a.original > 0 {
+			item.ReductionPct = (float64(a.saved) / float64(a.original)) * 100
+		}
+		out = append(out, item)
+	}
+	sort.Slice(out, func(i, j int) bool {
+		return out[i].Original > out[j].Original
+	})
+	return out, nil
+}
+
+func queryAgentBudgets(tr *tracking.Tracker, window string, totalOriginal int64) ([]AgentBudget, error) {
+	rows, err := tr.Query(`
+		SELECT COALESCE(NULLIF(agent_name,''),'unknown') as agent,
+		       COUNT(*) as commands,
+		       COALESCE(SUM(original_tokens),0) as original_tokens,
+		       COALESCE(SUM(saved_tokens),0) as saved_tokens
+		FROM commands
+		WHERE timestamp >= datetime('now', ?)
+		GROUP BY agent
+		ORDER BY original_tokens DESC
+	`, window)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	out := make([]AgentBudget, 0, 8)
+	for rows.Next() {
+		var a AgentBudget
+		if err := rows.Scan(&a.Agent, &a.Commands, &a.Original, &a.Saved); err != nil {
+			return nil, err
+		}
+		if totalOriginal > 0 {
+			a.BudgetShare = float64(a.Original) / float64(totalOriginal) * 100
+		}
+		if a.Original > 0 {
+			a.ReductionPct = float64(a.Saved) / float64(a.Original) * 100
+		}
+		a.EstimatedUS = tokensToUSD(a.Original)
+		a.SavingsUS = tokensToUSD(a.Saved)
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+func queryAnchorRetention(tr *tracking.Tracker, window string, totalCommands int64) (AnchorRetentionReport, error) {
+	var signals int64
+	err := tr.QueryRow(`
+		SELECT COALESCE(COUNT(*),0) FROM commands
+		WHERE timestamp >= datetime('now', ?)
+		  AND (
+			command LIKE '%error%' OR command LIKE '%fail%' OR command LIKE '%panic%' OR
+			command LIKE '%fix%' OR command LIKE '%todo%' OR command LIKE '%debug%' OR
+			command LIKE '%git diff%' OR command LIKE '%git status%'
+		  )
+	`, window).Scan(&signals)
+	if err != nil {
+		return AnchorRetentionReport{}, err
+	}
+	density := 0.0
+	if totalCommands > 0 {
+		density = float64(signals) / float64(totalCommands) * 100
+	}
+	keepRate := 100 - (density * 0.4)
+	if keepRate < 50 {
+		keepRate = 50
+	}
+	grade := "A"
+	switch {
+	case keepRate >= 90:
+		grade = "A"
+	case keepRate >= 80:
+		grade = "B"
+	case keepRate >= 70:
+		grade = "C"
+	default:
+		grade = "D"
+	}
+	return AnchorRetentionReport{
+		SignalsFound:      signals,
+		SignalDensityPct:  density,
+		EstimatedKeepRate: keepRate,
+		Grade:             grade,
+	}, nil
+}
+
 func detectWaste(tr *tracking.Tracker, window string, summary Summary, cfg DetectorConfig) ([]Finding, error) {
 	findings := make([]Finding, 0, 12)
 	for _, d := range DefaultDetectors() {
@@ -521,6 +708,65 @@ func buildRecommendations(findings []Finding, quality QualityReport, context []C
 	return uniqSorted(recs)
 }
 
+func buildBudgetController(summary Summary, quality QualityReport, intents []IntentProfile) BudgetControllerReport {
+	report := BudgetControllerReport{
+		CurrentReductionPct: summary.ReductionPct,
+		QualityScore:        quality.Score,
+		RecommendedMode:     "balanced",
+		Bands: map[string]float64{
+			"quality_floor":          75,
+			"target_reduction":       60,
+			"hard_reduction_ceiling": 90,
+		},
+	}
+	switch {
+	case quality.Score < 70:
+		report.RecommendedMode = "conservative"
+	case summary.ReductionPct < 45:
+		report.RecommendedMode = "aggressive"
+	}
+	// LazyLLM-style depth decay schedule for 10 depth bands.
+	base := 1000
+	report.DecaySchedule = make([]int, 10)
+	for i := range report.DecaySchedule {
+		factor := 1.0 - (float64(i) * 0.07)
+		if report.RecommendedMode == "conservative" {
+			factor += 0.08
+		}
+		if report.RecommendedMode == "aggressive" {
+			factor -= 0.08
+		}
+		if factor < 0.35 {
+			factor = 0.35
+		}
+		report.DecaySchedule[i] = int(float64(base) * factor)
+	}
+	// Intent weighting (SWE-pruner style): if debug intent dominates, bias to conservative.
+	for _, intent := range intents {
+		if intent.Intent == "debug" && intent.Original > summary.Original/3 {
+			report.RecommendedMode = "conservative"
+			break
+		}
+	}
+	return report
+}
+
+func inferIntent(command string) string {
+	c := strings.ToLower(strings.TrimSpace(command))
+	switch {
+	case strings.HasPrefix(c, "go test"), strings.HasPrefix(c, "pytest"), strings.HasPrefix(c, "jest"), strings.HasPrefix(c, "vitest"):
+		return "test"
+	case strings.HasPrefix(c, "go build"), strings.HasPrefix(c, "npm run build"), strings.HasPrefix(c, "make"), strings.HasPrefix(c, "cargo build"):
+		return "build"
+	case strings.Contains(c, "debug"), strings.Contains(c, "error"), strings.Contains(c, "fail"), strings.Contains(c, "stack"):
+		return "debug"
+	case strings.HasPrefix(c, "git diff"), strings.HasPrefix(c, "git log"), strings.HasPrefix(c, "git show"):
+		return "review"
+	default:
+		return "general"
+	}
+}
+
 // SaveSnapshot writes a named drift-validation snapshot to disk.
 func SaveSnapshot(dir, name string, report *Report) (string, error) {
 	if strings.TrimSpace(name) == "" {
@@ -622,6 +868,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <div class="card"><h2>Summary</h2>
 <p>Commands: {{.Summary.CommandCount}} | Original: {{.Summary.Original}} | Filtered: {{.Summary.Filtered}} | Saved: {{.Summary.Saved}}</p>
 <p>Reduction: {{printf "%.2f" .Summary.ReductionPct}}% | Quality: <span class="badge">{{printf "%.1f" .Quality.Score}} ({{.Quality.Band}})</span></p>
+<p>Budget Mode: <span class="badge">{{.BudgetController.RecommendedMode}}</span> | Anchor Retention: <span class="badge">{{.AnchorRetention.Grade}}</span></p>
 </div>
 <div class="card"><h2>Waste Findings</h2>
 <table><tr><th>ID</th><th>Severity</th><th>Description</th><th>Waste Tokens</th></tr>
@@ -634,6 +881,10 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <div class="card"><h2>Costly Prompts</h2>
 <table><tr><th>Command</th><th>Count</th><th>Original Tokens</th><th>Estimated Cost (USD)</th></tr>
 {{range .CostlyPrompts}}<tr><td>{{.Command}}</td><td>{{.Count}}</td><td>{{.Original}}</td><td>{{printf "%.4f" .EstimatedUS}}</td></tr>{{end}}
+</table></div>
+<div class="card"><h2>Agent Budgets</h2>
+<table><tr><th>Agent</th><th>Share %</th><th>Original</th><th>Saved</th><th>Reduction %</th></tr>
+{{range .AgentBudgets}}<tr><td>{{.Agent}}</td><td>{{printf "%.1f" .BudgetShare}}</td><td>{{.Original}}</td><td>{{.Saved}}</td><td>{{printf "%.1f" .ReductionPct}}</td></tr>{{end}}
 </table></div>
 <div class="card"><h2>Recommendations</h2><ul>{{range .Recommendations}}<li>{{.}}</li>{{end}}</ul></div>
 </body></html>`
