@@ -207,6 +207,26 @@ func (p *PipelineCoordinator) initSemanticFilters(cfg PipelineConfig) {
 		}
 		p.agentMemoryFilter = NewAgentMemoryFilterWithConfig(agentCfg)
 	}
+
+	p.initResearchFilters(cfg)
+}
+
+func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
+	if cfg.EnableMarginalInfoGain {
+		p.marginalInfoGainFilter = NewMarginalInfoGainFilter()
+	}
+	if cfg.EnableNearDedup {
+		p.nearDedupFilter = NewNearDedupFilter()
+	}
+	if cfg.EnableCoTCompress {
+		p.cotCompressFilter = NewCoTCompressFilter()
+	}
+	if cfg.EnableCodingAgentCtx {
+		p.codingAgentCtxFilter = NewCodingAgentContextFilter()
+	}
+	if cfg.EnablePerceptionCompress {
+		p.perceptionCompressFilter = NewPerceptionCompressFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -230,5 +250,10 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.lazyPrunerFilter, "18_lazy_pruner"},
 		{p.semanticAnchorFilter, "19_semantic_anchor"},
 		{p.agentMemoryFilter, "20_agent_memory"},
+		{p.marginalInfoGainFilter, "21_marginal_info_gain"},
+		{p.nearDedupFilter, "22_near_dedup"},
+		{p.cotCompressFilter, "23_cot_compress"},
+		{p.codingAgentCtxFilter, "24_coding_agent_ctx"},
+		{p.perceptionCompressFilter, "25_perception_compress"},
 	}
 }
