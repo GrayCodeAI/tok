@@ -227,6 +227,21 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnablePerceptionCompress {
 		p.perceptionCompressFilter = NewPerceptionCompressFilter()
 	}
+	if cfg.EnableLightThinker {
+		p.lightThinkerFilter = NewLightThinkerFilter()
+	}
+	if cfg.EnableThinkSwitcher {
+		p.thinkSwitcherFilter = NewThinkSwitcherFilter()
+	}
+	if cfg.EnableGMSA {
+		p.gmsaFilter = NewGMSAFilter()
+	}
+	if cfg.EnableCARL {
+		p.carlFilter = NewCARLFilter()
+	}
+	if cfg.EnableSlimInfer {
+		p.slimInferFilter = NewSlimInferFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -255,5 +270,10 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.cotCompressFilter, "23_cot_compress"},
 		{p.codingAgentCtxFilter, "24_coding_agent_ctx"},
 		{p.perceptionCompressFilter, "25_perception_compress"},
+		{p.lightThinkerFilter, "26_lightthinker"},
+		{p.thinkSwitcherFilter, "27_think_switcher"},
+		{p.gmsaFilter, "28_gmsa"},
+		{p.carlFilter, "29_carl"},
+		{p.slimInferFilter, "30_slim_infer"},
 	}
 }

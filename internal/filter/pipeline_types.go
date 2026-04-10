@@ -107,6 +107,13 @@ type PipelineCoordinator struct {
 	codingAgentCtxFilter     *CodingAgentContextFilter
 	perceptionCompressFilter *PerceptionCompressFilter
 
+	// Layers 26-30: 2025/2026 reasoning + agent filters
+	lightThinkerFilter  *LightThinkerFilter
+	thinkSwitcherFilter *ThinkSwitcherFilter
+	gmsaFilter          *GMSAFilter
+	carlFilter          *CARLFilter
+	slimInferFilter     *SlimInferFilter
+
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
 
@@ -413,6 +420,13 @@ type PipelineConfigWithNestedLayers struct {
 	EnableCoTCompress        bool
 	EnableCodingAgentCtx     bool
 	EnablePerceptionCompress bool
+
+	// Layers 26-30: reasoning + agent filters
+	EnableLightThinker  bool
+	EnableThinkSwitcher bool
+	EnableGMSA          bool
+	EnableCARL          bool
+	EnableSlimInfer     bool
 
 	// Cache
 	CacheEnabled bool
