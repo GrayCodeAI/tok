@@ -202,18 +202,19 @@ func (v *Validator) ValidateLayerName(layer string) error {
 // ValidateProfile checks if a compression profile is valid
 func (v *Validator) ValidateProfile(profile string) error {
 	validProfiles := map[string]bool{
-		"surface": true,
-		"trim":    true,
-		"extract": true,
-		"core":    true,
-		"code":    true,
-		"log":     true,
-		"thread":  true,
-		"":        true, // Empty is valid (auto-detect)
+		"surface":  true,
+		"trim":     true,
+		"extract":  true,
+		"core":     true,
+		"adaptive": true,
+		"code":     true,
+		"log":      true,
+		"thread":   true,
+		"":         true, // Empty is valid (auto-detect)
 	}
 
 	if !validProfiles[profile] {
-		return errors.Wrapf(errors.ErrInvalidInput, "invalid profile: %s, must be one of: surface, trim, extract, core, code, log, thread", profile)
+		return errors.Wrapf(errors.ErrInvalidInput, "invalid profile: %s, must be one of: surface, trim, extract, core, adaptive, code, log, thread", profile)
 	}
 
 	return nil

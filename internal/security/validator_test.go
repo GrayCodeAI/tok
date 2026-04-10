@@ -206,6 +206,7 @@ func TestValidateProfile(t *testing.T) {
 		{"trim", false},
 		{"extract", false},
 		{"core", false},
+		{"adaptive", false},
 		{"code", false},
 		{"log", false},
 		{"thread", false},

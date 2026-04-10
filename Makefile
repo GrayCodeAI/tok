@@ -143,6 +143,21 @@ coverage: test-cover
 benchmark:
 	go test -bench=. -benchmem ./...
 
+## benchmark-adaptive: Run adaptive benchmark compare and save report
+benchmark-adaptive:
+	@mkdir -p artifacts
+	go test -run '^$$' -bench BenchmarkPipelineAdaptiveCompare -benchmem ./internal/filter | tee artifacts/benchmark-adaptive.txt
+
+## benchmark-suite: Run scenario benchmark suite and save report
+benchmark-suite:
+	@mkdir -p artifacts
+	go test -run TestBenchmarkSuiteScenarios -v ./internal/filter | tee artifacts/benchmark-suite.txt
+
+## ablation: Run ablation baseline and save report
+ablation:
+	@mkdir -p artifacts
+	go test -run TestLayerAblationBasic -v ./internal/filter | tee artifacts/ablation-baseline.txt
+
 ## deps: Download and verify dependencies
 deps:
 	go mod download

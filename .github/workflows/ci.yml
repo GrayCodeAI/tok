@@ -152,6 +152,39 @@ jobs:
           name: tokman-binary
           path: tokman
 
+  benchmark:
+    name: Benchmark & Ablation
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: true
+
+      - name: Run adaptive benchmark compare
+        run: |
+          mkdir -p artifacts
+          go test -run '^$' -bench BenchmarkPipelineAdaptiveCompare -benchmem ./internal/filter | tee artifacts/benchmark-adaptive.txt
+
+      - name: Run scenario benchmark suite test
+        run: |
+          go test -run TestBenchmarkSuiteScenarios -v ./internal/filter | tee artifacts/benchmark-suite.txt
+
+      - name: Run ablation baseline test
+        run: |
+          go test -run TestLayerAblationBasic -v ./internal/filter | tee artifacts/ablation-baseline.txt
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-reports
+          path: artifacts/
+
   build-multi-platform:
     name: Build (Multi-Platform)
     runs-on: ubuntu-latest
