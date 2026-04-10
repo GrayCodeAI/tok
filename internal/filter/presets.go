@@ -93,6 +93,10 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLatentCollab = true
 		cfg.EnableGraphCoT = true
 		cfg.EnableRoleBudget = true
+		cfg.EnableSWEAdaptive = true
+		cfg.EnableAgentOCRHist = true
+		cfg.EnablePlanBudget = true
+		cfg.EnableLightMem = true
 
 	case TierCore:
 		cfg.EnableEntropy = true
@@ -188,6 +192,10 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLatentCollab = true
 		cfg.EnableGraphCoT = true
 		cfg.EnableRoleBudget = true
+		cfg.EnableSWEAdaptive = true
+		cfg.EnableAgentOCRHist = true
+		cfg.EnablePlanBudget = true
+		cfg.EnableLightMem = true
 	}
 
 	return cfg

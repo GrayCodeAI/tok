@@ -269,6 +269,18 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableRoleBudget {
 		p.roleBudgetFilter = NewRoleBudgetFilter()
 	}
+	if cfg.EnableSWEAdaptive {
+		p.sweAdaptiveLoop = NewSWEAdaptiveLoopFilter()
+	}
+	if cfg.EnableAgentOCRHist {
+		p.agentOCRHistory = NewAgentOCRHistoryFilter()
+	}
+	if cfg.EnablePlanBudget {
+		p.planBudgetFilter = NewPlanBudgetFilter()
+	}
+	if cfg.EnableLightMem {
+		p.lightMemFilter = NewLightMemFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -311,5 +323,9 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.latentCollabFilter, "37_latent_collab"},
 		{p.graphCoTFilter, "38_graph_cot"},
 		{p.roleBudgetFilter, "39_role_budget"},
+		{p.sweAdaptiveLoop, "40_swe_adaptive_loop"},
+		{p.agentOCRHistory, "41_agent_ocr_history"},
+		{p.planBudgetFilter, "42_plan_budget"},
+		{p.lightMemFilter, "43_lightmem"},
 	}
 }

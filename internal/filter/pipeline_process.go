@@ -335,6 +335,30 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.roleBudgetFilter != nil {
 		output = p.processLayer(p.layers[37], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.sweAdaptiveLoop != nil {
+		output = p.processLayer(p.layers[38], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.agentOCRHistory != nil {
+		output = p.processLayer(p.layers[39], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.planBudgetFilter != nil {
+		output = p.processLayer(p.layers[40], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.lightMemFilter != nil {
+		output = p.processLayer(p.layers[41], output, stats)
 	}
 	return output
 }

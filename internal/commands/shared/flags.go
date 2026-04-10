@@ -71,6 +71,10 @@ type AppState struct {
 	LatentCollab     bool
 	GraphCoT         bool
 	RoleBudget       bool
+	SWEAdaptive      bool
+	AgentOCRHistory  bool
+	PlanBudget       bool
+	LightMem         bool
 }
 
 // Version is set at build time.
@@ -138,6 +142,10 @@ type FlagConfig struct {
 	LatentCollab         bool
 	GraphCoT             bool
 	RoleBudget           bool
+	SWEAdaptive          bool
+	AgentOCRHistory      bool
+	PlanBudget           bool
+	LightMem             bool
 }
 
 // Set sets all flag values atomically.
@@ -187,6 +195,10 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.LatentCollab = cfg.LatentCollab
 	s.GraphCoT = cfg.GraphCoT
 	s.RoleBudget = cfg.RoleBudget
+	s.SWEAdaptive = cfg.SWEAdaptive
+	s.AgentOCRHistory = cfg.AgentOCRHistory
+	s.PlanBudget = cfg.PlanBudget
+	s.LightMem = cfg.LightMem
 	s.mu.Unlock()
 }
 
@@ -489,6 +501,38 @@ func (s *AppState) IsRoleBudgetEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_ROLE_BUDGET") == "true"
 }
 
+// IsSWEAdaptiveEnabled returns true if SWE adaptive loop is enabled.
+func (s *AppState) IsSWEAdaptiveEnabled() bool {
+	s.mu.RLock()
+	enabled := s.SWEAdaptive
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_SWE_ADAPTIVE") == "true"
+}
+
+// IsAgentOCRHistoryEnabled returns true if agent OCR history layer is enabled.
+func (s *AppState) IsAgentOCRHistoryEnabled() bool {
+	s.mu.RLock()
+	enabled := s.AgentOCRHistory
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_AGENT_OCR_HISTORY") == "true"
+}
+
+// IsPlanBudgetEnabled returns true if plan-budget layer is enabled.
+func (s *AppState) IsPlanBudgetEnabled() bool {
+	s.mu.RLock()
+	enabled := s.PlanBudget
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_PLAN_BUDGET") == "true"
+}
+
+// IsLightMemEnabled returns true if lightmem layer is enabled.
+func (s *AppState) IsLightMemEnabled() bool {
+	s.mu.RLock()
+	enabled := s.LightMem
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_LIGHTMEM") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -540,6 +584,10 @@ var (
 	LatentCollab         bool
 	GraphCoT             bool
 	RoleBudget           bool
+	SWEAdaptive          bool
+	AgentOCRHistory      bool
+	PlanBudget           bool
+	LightMem             bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -592,6 +640,10 @@ func (s *AppState) syncGlobals() {
 		LatentCollab:         s.LatentCollab,
 		GraphCoT:             s.GraphCoT,
 		RoleBudget:           s.RoleBudget,
+		SWEAdaptive:          s.SWEAdaptive,
+		AgentOCRHistory:      s.AgentOCRHistory,
+		PlanBudget:           s.PlanBudget,
+		LightMem:             s.LightMem,
 	}
 	s.mu.RUnlock()
 
@@ -640,6 +692,10 @@ func (s *AppState) syncGlobals() {
 	LatentCollab = state.LatentCollab
 	GraphCoT = state.GraphCoT
 	RoleBudget = state.RoleBudget
+	SWEAdaptive = state.SWEAdaptive
+	AgentOCRHistory = state.AgentOCRHistory
+	PlanBudget = state.PlanBudget
+	LightMem = state.LightMem
 	globalsMu.Unlock()
 }
 
@@ -693,6 +749,10 @@ func (s *AppState) syncFromGlobals() {
 		LatentCollab:         LatentCollab,
 		GraphCoT:             GraphCoT,
 		RoleBudget:           RoleBudget,
+		SWEAdaptive:          SWEAdaptive,
+		AgentOCRHistory:      AgentOCRHistory,
+		PlanBudget:           PlanBudget,
+		LightMem:             LightMem,
 	}
 	globalsMu.RUnlock()
 
@@ -899,4 +959,28 @@ func IsGraphCoTEnabled() bool {
 func IsRoleBudgetEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsRoleBudgetEnabled()
+}
+
+// IsSWEAdaptiveEnabled returns true if swe-adaptive-loop layer is enabled.
+func IsSWEAdaptiveEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsSWEAdaptiveEnabled()
+}
+
+// IsAgentOCRHistoryEnabled returns true if agent-ocr-history layer is enabled.
+func IsAgentOCRHistoryEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsAgentOCRHistoryEnabled()
+}
+
+// IsPlanBudgetEnabled returns true if plan-budget layer is enabled.
+func IsPlanBudgetEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsPlanBudgetEnabled()
+}
+
+// IsLightMemEnabled returns true if lightmem layer is enabled.
+func IsLightMemEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsLightMemEnabled()
 }

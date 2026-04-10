@@ -86,10 +86,14 @@ var (
 	agentOCR         bool     // Enable AgentOCR layer
 	s2mad            bool     // Enable S2-MAD layer
 	acon             bool     // Enable ACON layer
-	researchPack     bool     // Enable research layer pack (31-39)
+	researchPack     bool     // Enable research layer pack (31-43)
 	latentCollab     bool     // Enable latent collaboration merge layer
 	graphCoT         bool     // Enable graph-CoT compression layer
 	roleBudget       bool     // Enable role-aware budgeting layer
+	sweAdaptive      bool     // Enable SWE adaptive prune loop
+	agentOCRHistory  bool     // Enable AgentOCR history compaction layer
+	planBudget       bool     // Enable plan-and-budget controller layer
+	lightmem         bool     // Enable LightMem-style context reuse layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -153,6 +157,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 				LatentCollab:         latentCollab,
 				GraphCoT:             graphCoT,
 				RoleBudget:           roleBudget,
+				SWEAdaptive:          sweAdaptive,
+				AgentOCRHistory:      agentOCRHistory,
+				PlanBudget:           planBudget,
+				LightMem:             lightmem,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -362,13 +370,21 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
 		"enable ACON adaptive context optimization layer")
 	rootCmd.PersistentFlags().BoolVar(&researchPack, "research-pack", false,
-		"enable research layer pack (31-39): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget")
+		"enable research layer pack (31-43): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem")
 	rootCmd.PersistentFlags().BoolVar(&latentCollab, "latent-collab", false,
 		"enable latent collaboration merge layer")
 	rootCmd.PersistentFlags().BoolVar(&graphCoT, "graph-cot", false,
 		"enable graph chain-of-thought compression layer")
 	rootCmd.PersistentFlags().BoolVar(&roleBudget, "role-budget", false,
 		"enable role-aware budget allocation layer")
+	rootCmd.PersistentFlags().BoolVar(&sweAdaptive, "swe-adaptive-loop", false,
+		"enable SWE adaptive pruning loop layer")
+	rootCmd.PersistentFlags().BoolVar(&agentOCRHistory, "agent-ocr-history", false,
+		"enable AgentOCR history compaction layer")
+	rootCmd.PersistentFlags().BoolVar(&planBudget, "plan-budget", false,
+		"enable dynamic plan-and-budget controller layer")
+	rootCmd.PersistentFlags().BoolVar(&lightmem, "lightmem", false,
+		"enable LightMem context reuse layer")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -390,6 +406,10 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_latent_collab", rootCmd.PersistentFlags().Lookup("latent-collab"))
 	_ = viper.BindPFlag("pipeline.enable_graph_cot", rootCmd.PersistentFlags().Lookup("graph-cot"))
 	_ = viper.BindPFlag("pipeline.enable_role_budget", rootCmd.PersistentFlags().Lookup("role-budget"))
+	_ = viper.BindPFlag("pipeline.enable_swe_adaptive_loop", rootCmd.PersistentFlags().Lookup("swe-adaptive-loop"))
+	_ = viper.BindPFlag("pipeline.enable_agent_ocr_history", rootCmd.PersistentFlags().Lookup("agent-ocr-history"))
+	_ = viper.BindPFlag("pipeline.enable_plan_budget", rootCmd.PersistentFlags().Lookup("plan-budget"))
+	_ = viper.BindPFlag("pipeline.enable_lightmem", rootCmd.PersistentFlags().Lookup("lightmem"))
 
 	registry.RegisterAll()
 }

@@ -115,16 +115,18 @@ func TestAdaptiveProfileEnablesRouterAndExtractive(t *testing.T) {
 		t.Fatal("adaptive profile should set extractive thresholds")
 	}
 	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON ||
-		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget {
-		t.Fatal("adaptive profile should enable research layers 31-39")
+		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget || !cfg.EnableSWEAdaptive ||
+		!cfg.EnableAgentOCRHist || !cfg.EnablePlanBudget || !cfg.EnableLightMem {
+		t.Fatal("adaptive profile should enable research layers 31-43")
 	}
 }
 
-func TestExtractProfileEnablesResearchLayers31To35(t *testing.T) {
+func TestExtractProfileEnablesResearchLayers31To43(t *testing.T) {
 	cfg := ProfileConfig(Profile(TierExtract), ModeMinimal)
 	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON ||
-		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget {
-		t.Fatal("extract profile should enable research layers 31-39")
+		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget || !cfg.EnableSWEAdaptive ||
+		!cfg.EnableAgentOCRHist || !cfg.EnablePlanBudget || !cfg.EnableLightMem {
+		t.Fatal("extract profile should enable research layers 31-43")
 	}
 }
 

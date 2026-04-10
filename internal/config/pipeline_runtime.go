@@ -74,6 +74,10 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		EnableLatentCollab:        c.EnableLatentCollab,
 		EnableGraphCoT:            c.EnableGraphCoT,
 		EnableRoleBudget:          c.EnableRoleBudget,
+		EnableSWEAdaptive:         c.EnableSWEAdaptive,
+		EnableAgentOCRHist:        c.EnableAgentOCRHist,
+		EnablePlanBudget:          c.EnablePlanBudget,
+		EnableLightMem:            c.EnableLightMem,
 	}
 
 	if c.EnableResearchPack {
@@ -86,6 +90,10 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		cfg.EnableLatentCollab = true
 		cfg.EnableGraphCoT = true
 		cfg.EnableRoleBudget = true
+		cfg.EnableSWEAdaptive = true
+		cfg.EnableAgentOCRHist = true
+		cfg.EnablePlanBudget = true
+		cfg.EnableLightMem = true
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {
