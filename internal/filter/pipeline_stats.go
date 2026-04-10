@@ -25,9 +25,9 @@ func (s *PipelineStats) String() string {
 		"neural", "11_compaction", "12_attribution", "13_h2o", "14_attention_sink",
 		"15_meta_token", "16_semantic_chunk", "17_sketch_store", "18_lazy_pruner",
 		"19_semantic_anchor", "20_agent_memory",
-		"21_reasoning_trace", "22_symbolic_compress", "23_phrase_grouping",
-		"24_numerical_quant", "25_dynamic_ratio",
-		"26_hypernym", "27_semantic_cache", "28_scope", "29_kvzip",
+		"20_symbolic_compress", "21_phrase_grouping", "22_numerical_quant",
+		"23_dynamic_ratio", "24_hypernym", "25_semantic_cache",
+		"26_scope", "27_kvzip", "28_question_aware", "29_density_adaptive",
 		"10_session", "10_budget",
 	}
 
