@@ -10,8 +10,8 @@ func TestPlannedLayersInit(t *testing.T) {
 		Mode:                ModeMinimal,
 		EnablePlannedLayers: true,
 	})
-	if len(p.plannedLayers) != 12 {
-		t.Fatalf("planned layers = %d, want 12 canonical layers", len(p.plannedLayers))
+	if len(p.plannedLayers) != 11 {
+		t.Fatalf("planned layers = %d, want 11 curated layers", len(p.plannedLayers))
 	}
 }
 
@@ -22,7 +22,8 @@ func TestPlannedLayerCanonicalID(t *testing.T) {
 		"40_log_cluster":      "30_salience_graph",
 		"46_context_cache":    "30_salience_graph",
 		"43_symbolic_patch":   "32_ast_diff_focus",
-		"49_repair_pass":      "39_recall_booster",
+		"39_recall_booster":   "48_loss_guard",
+		"49_repair_pass":      "48_loss_guard",
 		"47_confidence_gate":  "48_loss_guard",
 		"33_unit_test_focus":  "33_unit_test_focus",
 	}

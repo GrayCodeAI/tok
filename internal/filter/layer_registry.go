@@ -80,20 +80,11 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "33_unit_test_focus", Name: "Unit Test Focus", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Test-aware pruning"},
 		{ID: "34_symbol_table", Name: "Symbol Table Keep", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Code map compression"},
 		{ID: "35_path_anchor", Name: "Path Anchor", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "File-path anchor heuristics"},
-		{ID: "36_stacktrace_focus", Name: "Stacktrace Focus", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Runtime failure compression"},
 		{ID: "37_exit_signal_keep", Name: "Exit Signal Keep", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Outcome-preserving compression"},
-		{ID: "38_semantic_dedup", Name: "Semantic Dedup", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Semantic redundancy removal"},
-		{ID: "39_recall_booster", Name: "Recall Booster", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Recall-constrained pruning"},
-		{ID: "40_log_cluster", Name: "Log Cluster", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Log summarization clustering"},
-		{ID: "41_error_window", Name: "Error Window", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Error-centric windowing"},
 		{ID: "42_dependency_focus", Name: "Dependency Focus", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Dependency-aware context"},
-		{ID: "43_symbolic_patch", Name: "Symbolic Patch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Patch tokenization"},
 		{ID: "44_runtime_anchor", Name: "Runtime Anchor", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Session continuity anchors"},
 		{ID: "45_multiturn_merge", Name: "Multi-turn Merge", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Conversation compression"},
-		{ID: "46_context_cache", Name: "Context Cache", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Cache-aware context reuse"},
-		{ID: "47_confidence_gate", Name: "Confidence Gate", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Uncertainty-guided pruning"},
 		{ID: "48_loss_guard", Name: "Loss Guard", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Faithfulness constraints"},
-		{ID: "49_repair_pass", Name: "Repair Pass", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Context repair"},
 	}
 
 	return append(implemented, planned...)
