@@ -67,6 +67,7 @@ type AppState struct {
 	AgentOCR         bool
 	S2MAD            bool
 	ACON             bool
+	ResearchPack     bool
 }
 
 // Version is set at build time.
@@ -130,6 +131,7 @@ type FlagConfig struct {
 	AgentOCR             bool
 	S2MAD                bool
 	ACON                 bool
+	ResearchPack         bool
 }
 
 // Set sets all flag values atomically.
@@ -175,6 +177,7 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.AgentOCR = cfg.AgentOCR
 	s.S2MAD = cfg.S2MAD
 	s.ACON = cfg.ACON
+	s.ResearchPack = cfg.ResearchPack
 	s.mu.Unlock()
 }
 
@@ -445,6 +448,14 @@ func (s *AppState) IsACONEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_ACON") == "true"
 }
 
+// IsResearchPackEnabled returns true if research pack is enabled.
+func (s *AppState) IsResearchPackEnabled() bool {
+	s.mu.RLock()
+	enabled := s.ResearchPack
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_RESEARCH_PACK") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -492,6 +503,7 @@ var (
 	AgentOCR             bool
 	S2MAD                bool
 	ACON                 bool
+	ResearchPack         bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -540,6 +552,7 @@ func (s *AppState) syncGlobals() {
 		AgentOCR:             s.AgentOCR,
 		S2MAD:                s.S2MAD,
 		ACON:                 s.ACON,
+		ResearchPack:         s.ResearchPack,
 	}
 	s.mu.RUnlock()
 
@@ -584,6 +597,7 @@ func (s *AppState) syncGlobals() {
 	AgentOCR = state.AgentOCR
 	S2MAD = state.S2MAD
 	ACON = state.ACON
+	ResearchPack = state.ResearchPack
 	globalsMu.Unlock()
 }
 
@@ -633,6 +647,7 @@ func (s *AppState) syncFromGlobals() {
 		AgentOCR:             AgentOCR,
 		S2MAD:                S2MAD,
 		ACON:                 ACON,
+		ResearchPack:         ResearchPack,
 	}
 	globalsMu.RUnlock()
 
@@ -815,4 +830,10 @@ func IsS2MADEnabled() bool {
 func IsACONEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsACONEnabled()
+}
+
+// IsResearchPackEnabled returns true if research layer pack is enabled.
+func IsResearchPackEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsResearchPackEnabled()
 }

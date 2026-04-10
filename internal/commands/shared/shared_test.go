@@ -283,6 +283,7 @@ func TestSetFlags(t *testing.T) {
 		StreamMode:          true,
 		EnableLayers:        []string{"entropy"},
 		DisableLayers:       []string{"h2o"},
+		ResearchPack:        true,
 	}
 
 	SetFlags(cfg)
@@ -343,6 +344,9 @@ func TestSetFlags(t *testing.T) {
 	}
 	if len(DisableLayers) != 1 || DisableLayers[0] != "h2o" {
 		t.Errorf("DisableLayers: expected ['h2o'], got %v", DisableLayers)
+	}
+	if !ResearchPack {
+		t.Error("ResearchPack: expected true")
 	}
 }
 
