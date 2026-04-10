@@ -64,6 +64,11 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "23_cot_compress", Name: "Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "TokenSkip (2025)"},
 		{ID: "24_coding_agent_ctx", Name: "Coding Agent Context Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SWE-Pruner (2026)"},
 		{ID: "25_perception_compress", Name: "Perception Compress", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Perception Compressor (2025)"},
+		{ID: "26_lightthinker", Name: "LightThinker Step Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightThinker (EMNLP 2025)"},
+		{ID: "27_think_switcher", Name: "Think Switcher Routing", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "ThinkSwitcher (EMNLP 2025) + Thinkless (NeurIPS 2025)"},
+		{ID: "28_gmsa", Name: "Group Merge Semantic Align", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "GMSA (arXiv 2025)"},
+		{ID: "29_carl", Name: "Critical Action Filter", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "CARL (arXiv 2025)"},
+		{ID: "30_slim_infer", Name: "SlimInfer Orphan Pruner", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SlimInfer (arXiv 2025)"},
 	}
 	return implemented
 }
