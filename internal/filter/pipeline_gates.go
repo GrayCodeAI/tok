@@ -144,6 +144,9 @@ func (p *PipelineCoordinator) finalizeStats(stats *PipelineStats, output string)
 
 // processLayer runs a single filter layer and records its stats.
 func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stats *PipelineStats) string {
+	if p.layerGate != nil && !p.layerGate.Allows(layer.name) {
+		return input
+	}
 	output, saved := layer.filter.Apply(input, p.config.Mode)
 	if p.config.SessionTracking {
 		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: 0}
