@@ -158,6 +158,10 @@ ablation:
 	@mkdir -p artifacts
 	go test -run TestLayerAblationBasic -v ./internal/filter | tee artifacts/ablation-baseline.txt
 
+## eval-adaptive: Run local baseline vs adaptive evaluation report
+eval-adaptive:
+	./scripts/eval_adaptive.sh 5
+
 ## deps: Download and verify dependencies
 deps:
 	go mod download
