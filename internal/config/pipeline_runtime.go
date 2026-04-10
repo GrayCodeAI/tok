@@ -78,6 +78,8 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		EnableAgentOCRHist:        c.EnableAgentOCRHist,
 		EnablePlanBudget:          c.EnablePlanBudget,
 		EnableLightMem:            c.EnableLightMem,
+		EnablePathShorten:         c.EnablePathShorten,
+		EnableJSONSampler:         c.EnableJSONSampler,
 	}
 
 	if c.EnableResearchPack {
@@ -94,6 +96,8 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		cfg.EnableAgentOCRHist = true
 		cfg.EnablePlanBudget = true
 		cfg.EnableLightMem = true
+		cfg.EnablePathShorten = true
+		cfg.EnableJSONSampler = true
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {

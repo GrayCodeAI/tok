@@ -19,11 +19,11 @@ func (f researchTestFilter) Apply(input string, _ Mode) (string, int) {
 	return input + "|" + f.tag, f.saved
 }
 
-func TestProcessResearchLayers_OrderIncludes31To43(t *testing.T) {
-	calls := make([]string, 0, 23)
+func TestProcessResearchLayers_OrderIncludes31To45(t *testing.T) {
+	calls := make([]string, 0, 25)
 	p := &PipelineCoordinator{
 		config: PipelineConfig{Mode: ModeMinimal, SessionTracking: true},
-		layers: make([]filterLayer, 42),
+		layers: make([]filterLayer, 44),
 	}
 
 	// Non-nil pointers gate execution in processResearchLayers.
@@ -50,6 +50,8 @@ func TestProcessResearchLayers_OrderIncludes31To43(t *testing.T) {
 	p.agentOCRHistory = &AgentOCRHistoryFilter{}
 	p.planBudgetFilter = &PlanBudgetFilter{}
 	p.lightMemFilter = &LightMemFilter{}
+	p.pathShortenFilter = &PathShortenFilter{}
+	p.jsonSamplerFilter = &JSONSamplerFilter{}
 
 	names := []string{
 		"21_marginal_info_gain", "22_near_dedup", "23_cot_compress", "24_coding_agent_ctx", "25_perception_compress",
@@ -58,6 +60,7 @@ func TestProcessResearchLayers_OrderIncludes31To43(t *testing.T) {
 		"36_acon",
 		"37_latent_collab", "38_graph_cot", "39_role_budget",
 		"40_swe_adaptive_loop", "41_agent_ocr_history", "42_plan_budget", "43_lightmem",
+		"44_path_shorten", "45_json_sampler",
 	}
 	for i, name := range names {
 		p.layers[19+i] = filterLayer{

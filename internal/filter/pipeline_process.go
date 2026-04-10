@@ -71,6 +71,12 @@ func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *Pipel
 }
 
 func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {
+	// Adaptive router + extractive prefilter.
+	output = p.applyAdaptiveRouting(output, stats)
+	if p.shouldEarlyExit(stats) {
+		return output
+	}
+
 	// TOML Filter
 	if p.tomlFilterWrapper != nil && p.config.EnableTOMLFilter {
 		filtered, saved := p.tomlFilterWrapper.Apply(output, ModeMinimal)
@@ -359,6 +365,18 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.lightMemFilter != nil {
 		output = p.processLayer(p.layers[41], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.pathShortenFilter != nil {
+		output = p.processLayer(p.layers[42], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.jsonSamplerFilter != nil {
+		output = p.processLayer(p.layers[43], output, stats)
 	}
 	return output
 }

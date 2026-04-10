@@ -75,6 +75,8 @@ type AppState struct {
 	AgentOCRHistory  bool
 	PlanBudget       bool
 	LightMem         bool
+	PathShorten      bool
+	JSONSampler      bool
 }
 
 // Version is set at build time.
@@ -146,6 +148,8 @@ type FlagConfig struct {
 	AgentOCRHistory      bool
 	PlanBudget           bool
 	LightMem             bool
+	PathShorten          bool
+	JSONSampler          bool
 }
 
 // Set sets all flag values atomically.
@@ -199,6 +203,8 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.AgentOCRHistory = cfg.AgentOCRHistory
 	s.PlanBudget = cfg.PlanBudget
 	s.LightMem = cfg.LightMem
+	s.PathShorten = cfg.PathShorten
+	s.JSONSampler = cfg.JSONSampler
 	s.mu.Unlock()
 }
 
@@ -533,6 +539,22 @@ func (s *AppState) IsLightMemEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_LIGHTMEM") == "true"
 }
 
+// IsPathShortenEnabled returns true if path-shorten layer is enabled.
+func (s *AppState) IsPathShortenEnabled() bool {
+	s.mu.RLock()
+	enabled := s.PathShorten
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_PATH_SHORTEN") == "true"
+}
+
+// IsJSONSamplerEnabled returns true if json-sampler layer is enabled.
+func (s *AppState) IsJSONSamplerEnabled() bool {
+	s.mu.RLock()
+	enabled := s.JSONSampler
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_JSON_SAMPLER") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -588,6 +610,8 @@ var (
 	AgentOCRHistory      bool
 	PlanBudget           bool
 	LightMem             bool
+	PathShorten          bool
+	JSONSampler          bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -644,6 +668,8 @@ func (s *AppState) syncGlobals() {
 		AgentOCRHistory:      s.AgentOCRHistory,
 		PlanBudget:           s.PlanBudget,
 		LightMem:             s.LightMem,
+		PathShorten:          s.PathShorten,
+		JSONSampler:          s.JSONSampler,
 	}
 	s.mu.RUnlock()
 
@@ -696,6 +722,8 @@ func (s *AppState) syncGlobals() {
 	AgentOCRHistory = state.AgentOCRHistory
 	PlanBudget = state.PlanBudget
 	LightMem = state.LightMem
+	PathShorten = state.PathShorten
+	JSONSampler = state.JSONSampler
 	globalsMu.Unlock()
 }
 
@@ -753,6 +781,8 @@ func (s *AppState) syncFromGlobals() {
 		AgentOCRHistory:      AgentOCRHistory,
 		PlanBudget:           PlanBudget,
 		LightMem:             LightMem,
+		PathShorten:          PathShorten,
+		JSONSampler:          JSONSampler,
 	}
 	globalsMu.RUnlock()
 
@@ -983,4 +1013,16 @@ func IsPlanBudgetEnabled() bool {
 func IsLightMemEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsLightMemEnabled()
+}
+
+// IsPathShortenEnabled returns true if path-shorten layer is enabled.
+func IsPathShortenEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsPathShortenEnabled()
+}
+
+// IsJSONSamplerEnabled returns true if json-sampler layer is enabled.
+func IsJSONSamplerEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsJSONSamplerEnabled()
 }

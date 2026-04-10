@@ -43,6 +43,8 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 		EnableAgentOCRHist:      true,
 		EnablePlanBudget:        true,
 		EnableLightMem:          true,
+		EnablePathShorten:       true,
+		EnableJSONSampler:       true,
 	}
 
 	runtime := cfg.ToFilterPipelineConfig(PipelineRuntimeOptions{
@@ -91,7 +93,8 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 	if !runtime.EnableDiffAdapt || !runtime.EnableEPiC || !runtime.EnableSSDP || !runtime.EnableAgentOCR ||
 		!runtime.EnableS2MAD || !runtime.EnableACON || !runtime.EnableLatentCollab ||
 		!runtime.EnableGraphCoT || !runtime.EnableRoleBudget || !runtime.EnableSWEAdaptive ||
-		!runtime.EnableAgentOCRHist || !runtime.EnablePlanBudget || !runtime.EnableLightMem {
+		!runtime.EnableAgentOCRHist || !runtime.EnablePlanBudget || !runtime.EnableLightMem ||
+		!runtime.EnablePathShorten || !runtime.EnableJSONSampler {
 		t.Fatalf("research layer mapping failed: %+v", runtime)
 	}
 }

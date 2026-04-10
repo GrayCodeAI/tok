@@ -86,7 +86,7 @@ var (
 	agentOCR         bool     // Enable AgentOCR layer
 	s2mad            bool     // Enable S2-MAD layer
 	acon             bool     // Enable ACON layer
-	researchPack     bool     // Enable research layer pack (31-43)
+	researchPack     bool     // Enable research layer pack (31-45)
 	latentCollab     bool     // Enable latent collaboration merge layer
 	graphCoT         bool     // Enable graph-CoT compression layer
 	roleBudget       bool     // Enable role-aware budgeting layer
@@ -94,6 +94,8 @@ var (
 	agentOCRHistory  bool     // Enable AgentOCR history compaction layer
 	planBudget       bool     // Enable plan-and-budget controller layer
 	lightmem         bool     // Enable LightMem-style context reuse layer
+	pathShorten      bool     // Enable path/identifier shortening layer
+	jsonSampler      bool     // Enable JSON sampler layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -161,6 +163,8 @@ output, applies intelligent filtering, and tracks token savings.`,
 				AgentOCRHistory:      agentOCRHistory,
 				PlanBudget:           planBudget,
 				LightMem:             lightmem,
+				PathShorten:          pathShorten,
+				JSONSampler:          jsonSampler,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -370,7 +374,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
 		"enable ACON adaptive context optimization layer")
 	rootCmd.PersistentFlags().BoolVar(&researchPack, "research-pack", false,
-		"enable research layer pack (31-43): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem")
+		"enable research layer pack (31-45): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem, PathShorten, JSONSampler")
 	rootCmd.PersistentFlags().BoolVar(&latentCollab, "latent-collab", false,
 		"enable latent collaboration merge layer")
 	rootCmd.PersistentFlags().BoolVar(&graphCoT, "graph-cot", false,
@@ -385,6 +389,10 @@ func init() {
 		"enable dynamic plan-and-budget controller layer")
 	rootCmd.PersistentFlags().BoolVar(&lightmem, "lightmem", false,
 		"enable LightMem context reuse layer")
+	rootCmd.PersistentFlags().BoolVar(&pathShorten, "path-shorten", false,
+		"enable path/identifier shortening layer")
+	rootCmd.PersistentFlags().BoolVar(&jsonSampler, "json-sampler", false,
+		"enable JSON statistical sampler layer")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -410,6 +418,8 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_agent_ocr_history", rootCmd.PersistentFlags().Lookup("agent-ocr-history"))
 	_ = viper.BindPFlag("pipeline.enable_plan_budget", rootCmd.PersistentFlags().Lookup("plan-budget"))
 	_ = viper.BindPFlag("pipeline.enable_lightmem", rootCmd.PersistentFlags().Lookup("lightmem"))
+	_ = viper.BindPFlag("pipeline.enable_path_shorten", rootCmd.PersistentFlags().Lookup("path-shorten"))
+	_ = viper.BindPFlag("pipeline.enable_json_sampler", rootCmd.PersistentFlags().Lookup("json-sampler"))
 
 	registry.RegisterAll()
 }
