@@ -122,6 +122,10 @@ type PipelineCoordinator struct {
 	latentCollabFilter  *LatentCollabFilter
 	graphCoTFilter      *GraphCoTFilter
 	roleBudgetFilter    *RoleBudgetFilter
+	sweAdaptiveLoop     *SWEAdaptiveLoopFilter
+	agentOCRHistory     *AgentOCRHistoryFilter
+	planBudgetFilter    *PlanBudgetFilter
+	lightMemFilter      *LightMemFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
@@ -437,7 +441,7 @@ type PipelineConfigWithNestedLayers struct {
 	EnableCARL          bool
 	EnableSlimInfer     bool
 
-	// Layers 31-39: adaptive reasoning + trajectory filters
+	// Layers 31-43: adaptive reasoning + trajectory filters
 	EnableDiffAdapt    bool
 	EnableEPiC         bool
 	EnableSSDP         bool
@@ -446,6 +450,10 @@ type PipelineConfigWithNestedLayers struct {
 	EnableLatentCollab bool
 	EnableGraphCoT     bool
 	EnableRoleBudget   bool
+	EnableSWEAdaptive  bool
+	EnableAgentOCRHist bool
+	EnablePlanBudget   bool
+	EnableLightMem     bool
 
 	// Cache
 	CacheEnabled bool

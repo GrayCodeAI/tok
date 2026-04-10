@@ -287,6 +287,10 @@ func TestSetFlags(t *testing.T) {
 		LatentCollab:        true,
 		GraphCoT:            true,
 		RoleBudget:          true,
+		SWEAdaptive:         true,
+		AgentOCRHistory:     true,
+		PlanBudget:          true,
+		LightMem:            true,
 	}
 
 	SetFlags(cfg)
@@ -351,8 +355,8 @@ func TestSetFlags(t *testing.T) {
 	if !ResearchPack {
 		t.Error("ResearchPack: expected true")
 	}
-	if !LatentCollab || !GraphCoT || !RoleBudget {
-		t.Error("expected latent_collab/graph_cot/role_budget flags to be true")
+	if !LatentCollab || !GraphCoT || !RoleBudget || !SWEAdaptive || !AgentOCRHistory || !PlanBudget || !LightMem {
+		t.Error("expected research extension flags to be true")
 	}
 }
 

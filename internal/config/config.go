@@ -151,17 +151,21 @@ type PipelineConfig struct {
 	AgentMemoryMaxEdges  int    `mapstructure:"agent_memory_max_edges"`  // Max edges in knowledge graph
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
-	// Research Layers (31-39)
-	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`   // Difficulty-adaptive pruning
-	EnableEPiC         bool `mapstructure:"enable_epic"`          // Causal-edge preservation
-	EnableSSDP         bool `mapstructure:"enable_ssdp"`          // ToT branch pruning
-	EnableAgentOCR     bool `mapstructure:"enable_agent_ocr"`     // Turn-density compression
-	EnableS2MAD        bool `mapstructure:"enable_s2_mad"`        // Agreement collapse
-	EnableACON         bool `mapstructure:"enable_acon"`          // Adaptive context optimization
-	EnableLatentCollab bool `mapstructure:"enable_latent_collab"` // Latent collaboration merge
-	EnableGraphCoT     bool `mapstructure:"enable_graph_cot"`     // Graph-CoT compression
-	EnableRoleBudget   bool `mapstructure:"enable_role_budget"`   // Role-aware budgeting
-	EnableResearchPack bool `mapstructure:"enable_research_pack"` // One-toggle research bundle
+	// Research Layers (31-43)
+	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`       // Difficulty-adaptive pruning
+	EnableEPiC         bool `mapstructure:"enable_epic"`              // Causal-edge preservation
+	EnableSSDP         bool `mapstructure:"enable_ssdp"`              // ToT branch pruning
+	EnableAgentOCR     bool `mapstructure:"enable_agent_ocr"`         // Turn-density compression
+	EnableS2MAD        bool `mapstructure:"enable_s2_mad"`            // Agreement collapse
+	EnableACON         bool `mapstructure:"enable_acon"`              // Adaptive context optimization
+	EnableLatentCollab bool `mapstructure:"enable_latent_collab"`     // Latent collaboration merge
+	EnableGraphCoT     bool `mapstructure:"enable_graph_cot"`         // Graph-CoT compression
+	EnableRoleBudget   bool `mapstructure:"enable_role_budget"`       // Role-aware budgeting
+	EnableSWEAdaptive  bool `mapstructure:"enable_swe_adaptive_loop"` // SWE adaptive prune loop
+	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"` // AgentOCR history compaction
+	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`       // Plan-and-budget controller
+	EnableLightMem     bool `mapstructure:"enable_lightmem"`          // Lightweight memory reuse
+	EnableResearchPack bool `mapstructure:"enable_research_pack"`     // One-toggle research bundle
 
 	// Perplexity Filter (Layer 2) - Detailed settings
 	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`          // Target compression ratio (default: 0.3)
@@ -409,7 +413,7 @@ func Defaults() *Config {
 			AgentMemoryMaxEdges:  200,       // Max graph edges
 			AgentMemoryExtractFn: "default", // Extraction function
 
-			// Research Layers 31-39 (off by default unless preset/profile enables)
+			// Research Layers 31-43 (off by default unless preset/profile enables)
 			EnableDiffAdapt:    false,
 			EnableEPiC:         false,
 			EnableSSDP:         false,
@@ -419,6 +423,10 @@ func Defaults() *Config {
 			EnableLatentCollab: false,
 			EnableGraphCoT:     false,
 			EnableRoleBudget:   false,
+			EnableSWEAdaptive:  false,
+			EnableAgentOCRHist: false,
+			EnablePlanBudget:   false,
+			EnableLightMem:     false,
 			EnableResearchPack: false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings
@@ -566,7 +574,15 @@ func bindEnvAliases(v *viper.Viper) {
 		"TOKMAN_LATENT_COLLAB":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_latent_collab", val == "true" || val == "1") },
 		"TOKMAN_GRAPH_COT":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_graph_cot", val == "true" || val == "1") },
 		"TOKMAN_ROLE_BUDGET":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_role_budget", val == "true" || val == "1") },
-		"TOKMAN_RESEARCH_PACK":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
+		"TOKMAN_SWE_ADAPTIVE": func(v *viper.Viper, val string) {
+			v.Set("pipeline.enable_swe_adaptive_loop", val == "true" || val == "1")
+		},
+		"TOKMAN_AGENT_OCR_HISTORY": func(v *viper.Viper, val string) {
+			v.Set("pipeline.enable_agent_ocr_history", val == "true" || val == "1")
+		},
+		"TOKMAN_PLAN_BUDGET":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_plan_budget", val == "true" || val == "1") },
+		"TOKMAN_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
+		"TOKMAN_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {
 		if val := os.Getenv(env); val != "" {

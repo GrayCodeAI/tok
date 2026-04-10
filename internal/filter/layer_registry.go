@@ -78,6 +78,10 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "37_latent_collab", Name: "Latent Collaboration Merge", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Latent Collaboration in MAS (2025)"},
 		{ID: "38_graph_cot", Name: "Graph Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Scaling Graph CoT Reasoning (2025)"},
 		{ID: "39_role_budget", Name: "Role-aware Budget Allocation", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Multi-agent role budgeting (inspired)"},
+		{ID: "40_swe_adaptive_loop", Name: "SWE Adaptive Pruning Loop", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SWE-Pruner style iterative controller"},
+		{ID: "41_agent_ocr_history", Name: "AgentOCR History Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR history extension"},
+		{ID: "42_plan_budget", Name: "Plan and Budget Dynamic Control", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Plan and Budget (ICLR 2026)"},
+		{ID: "43_lightmem", Name: "LightMem Context Reuse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightMem (ICLR 2026)"},
 	}
 	return implemented
 }
