@@ -8,33 +8,29 @@ import (
 // PhotonFilter detects and compresses base64-encoded images.
 // Inspired by claw-compactor's Photon stage.
 type PhotonFilter struct {
-	config PhotonConfig
+	threshold1MB int
+	threshold2MB int
 }
 
-// PhotonConfig holds configuration for Photon filter.
-type PhotonConfig struct {
-	Enabled       bool
-	MaxInlineSize int
-	ReplaceWith   string
-}
-
-// DefaultPhotonConfig returns default Photon configuration.
-func DefaultPhotonConfig() PhotonConfig {
-	return PhotonConfig{
-		Enabled:       true,
-		MaxInlineSize: 1024,
-		ReplaceWith:   "[image:%s size=%d]",
+// NewPhotonFilter creates a new Photon filter with default configuration.
+func NewPhotonFilter() *PhotonFilter {
+	return &PhotonFilter{
+		threshold1MB: 1 * 1024 * 1024,
+		threshold2MB: 2 * 1024 * 1024,
 	}
 }
 
-// NewPhotonFilter creates a new Photon filter.
-func NewPhotonFilter(cfg PhotonConfig) *PhotonFilter {
-	return &PhotonFilter{config: cfg}
+// Name returns the filter name for the pipeline.
+func (f *PhotonFilter) Name() string { return "0_photon" }
+
+// Apply implements the Filter interface for Photon image compression.
+func (f *PhotonFilter) Apply(input string, mode Mode) (string, int) {
+	return f.processWithMode(input, mode)
 }
 
-// Process detects and compresses base64 images in content.
-func (pf *PhotonFilter) Process(content string) (string, int) {
-	if !pf.config.Enabled {
+// processWithMode detects and compresses base64 images in content.
+func (f *PhotonFilter) processWithMode(content string, mode Mode) (string, int) {
+	if mode == ModeNone {
 		return content, 0
 	}
 
@@ -70,7 +66,7 @@ func (pf *PhotonFilter) Process(content string) (string, int) {
 				format := strings.TrimPrefix(prefix, "data:image/")
 				format = strings.TrimSuffix(format, ";base64,")
 
-				replacement := fmt.Sprintf(pf.config.ReplaceWith, format, decodedLen)
+				replacement := fmt.Sprintf("[image:%s size=%d]", format, decodedLen)
 				result = result[:idx] + replacement + result[end:]
 				saved += decodedLen/4 - len(replacement)
 			} else {

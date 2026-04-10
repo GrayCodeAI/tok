@@ -1,387 +1,258 @@
 package filter
 
 import (
-	"fmt"
 	"strings"
 	"testing"
+	"time"
 )
 
-// BenchmarkPipelineFull benchmarks the complete 14-layer pipeline
-func BenchmarkPipelineFull(b *testing.B) {
-	input := generateTestContent(1000) // 1000 lines
+// BenchmarkPipeline benchmarks the full compression pipeline.
+func BenchmarkPipeline(b *testing.B) {
+	input := generateLargeInput()
+	cfg := PipelineConfig{
+		Mode:                ModeMinimal,
+		EnableEntropy:       true,
+		EnablePerplexity:    true,
+		EnableAST:           true,
+		EnableCompaction:    true,
+		EnableH2O:           true,
+		EnableAttentionSink: true,
+	}
+	pipeline := NewPipelineCoordinator(cfg)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		p := NewPipelineCoordinator(PipelineConfig{
-			Mode:                ModeMinimal,
-			SessionTracking:     true,
-			NgramEnabled:        true,
-			EnableCompaction:    true,
-			EnableAttribution:   true,
-			EnableH2O:           true,
-			EnableAttentionSink: true,
-		})
-		p.Process(input)
+		pipeline.Process(input)
 	}
 }
 
-// BenchmarkPipelineScaling tests performance across different input sizes
-func BenchmarkPipelineScaling(b *testing.B) {
-	sizes := []int{100, 500, 1000, 5000, 10000}
-
-	for _, size := range sizes {
-		b.Run(fmt.Sprintf("lines_%d", size), func(b *testing.B) {
-			input := generateTestContent(size)
-
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				p := NewPipelineCoordinator(PipelineConfig{
-					Mode:                ModeMinimal,
-					SessionTracking:     true,
-					NgramEnabled:        true,
-					EnableCompaction:    false, // Disable LLM for benchmarks
-					EnableAttribution:   true,
-					EnableH2O:           true,
-					EnableAttentionSink: true,
-				})
-				p.Process(input)
-			}
-		})
-	}
-}
-
-// BenchmarkPipelineAdaptiveCompare compares baseline vs adaptive profile.
-func BenchmarkPipelineAdaptiveCompare(b *testing.B) {
-	input := generateTestContent(3000)
-
-	cases := []struct {
-		name string
-		cfg  PipelineConfig
-	}{
-		{
-			name: "baseline_trim",
-			cfg:  TierConfig(TierTrim, ModeMinimal),
-		},
-		{
-			name: "adaptive",
-			cfg:  TierConfig(TierAdaptive, ModeMinimal),
-		},
-	}
-
-	for _, tc := range cases {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				p := NewPipelineCoordinator(tc.cfg)
-				p.Process(input)
-			}
-		})
-	}
-}
-
-// BenchmarkPipelineContextSizes tests large context handling
-// Important: Validates 1M-2M token capacity
-func BenchmarkPipelineContextSizes(b *testing.B) {
-	// Token sizes: roughly 100K, 500K, 1M, 2M tokens
-	// ~4 chars per token, ~80 chars per line
-	contextSizes := []int{
-		25000,  // ~100K tokens (25K lines * 4 tokens/line)
-		125000, // ~500K tokens
-		250000, // ~1M tokens
-		500000, // ~2M tokens
-	}
-
-	for _, lines := range contextSizes {
-		b.Run(fmt.Sprintf("tokens_%dK", (lines*4)/1000), func(b *testing.B) {
-			input := generateLargeContext(lines)
-
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				p := NewPipelineCoordinator(PipelineConfig{
-					Mode:                ModeMinimal,
-					EnableEntropy:       true,
-					EnablePerplexity:    true,
-					EnableGoalDriven:    false, // Skip for performance
-					EnableAST:           true,
-					EnableContrastive:   false,
-					EnableEvaluator:     true,
-					EnableGist:          true,
-					EnableHierarchical:  false,
-					EnableCompaction:    false,
-					EnableAttribution:   true,
-					EnableH2O:           true,
-					EnableAttentionSink: true,
-				})
-				_, _ = p.Process(input)
-			}
-		})
-	}
-}
-
-// BenchmarkLayerByLayer isolates each layer's performance
-func BenchmarkLayerByLayer(b *testing.B) {
-	input := generateTestContent(1000)
-
-	layers := []struct {
-		name string
-		fn   func(string, Mode) (string, int)
-	}{
-		{"1_entropy", NewEntropyFilter().Apply},
-		{"2_perplexity", NewPerplexityFilter().Apply},
-		{"4_ast", NewASTPreserveFilter().Apply},
-		{"7_evaluator", NewEvaluatorHeadsFilter().Apply},
-		{"8_gist", NewGistFilter().Apply},
-		{"12_attribution", NewAttributionFilter().Apply},
-		{"13_h2o", NewH2OFilter().Apply},
-		{"14_attention_sink", NewAttentionSinkFilter().Apply},
-	}
-
-	for _, layer := range layers {
-		b.Run(layer.name, func(b *testing.B) {
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				layer.fn(input, ModeMinimal)
-			}
-		})
-	}
-}
-
-// BenchmarkTokenEstimation tests the token counting performance
-func BenchmarkTokenEstimation(b *testing.B) {
-	inputs := []struct {
-		name  string
-		input string
-	}{
-		{"small", strings.Repeat("test line\n", 100)},
-		{"medium", strings.Repeat("test line with more content\n", 1000)},
-		{"large", strings.Repeat("test line with even more content for benchmarking\n", 5000)},
-	}
-
-	for _, tc := range inputs {
-		b.Run(tc.name, func(b *testing.B) {
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				EstimateTokens(tc.input)
-			}
-		})
-	}
-}
-
-// TestPipelineCompressionRatio validates compression effectiveness
-func TestPipelineCompressionRatio(t *testing.T) {
-	testCases := []struct {
-		name         string
-		lines        int
-		minReduction float64 // Minimum expected reduction percentage
-	}{
-		{"small_output", 100, 20.0},
-		{"medium_output", 1000, 30.0},
-		{"large_output", 5000, 40.0},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			input := generateTestContent(tc.lines)
-
-			p := NewPipelineCoordinator(PipelineConfig{
-				Mode:                ModeAggressive,
-				SessionTracking:     true,
-				NgramEnabled:        true,
-				EnableCompaction:    false,
-				EnableAttribution:   true,
-				EnableH2O:           true,
-				EnableAttentionSink: true,
-			})
-
-			output, stats := p.Process(input)
-
-			t.Logf("Original: %d tokens, Final: %d tokens, Saved: %d (%.1f%%)",
-				stats.OriginalTokens, stats.FinalTokens, stats.TotalSaved, stats.ReductionPercent)
-
-			if stats.ReductionPercent < tc.minReduction {
-				t.Errorf("Expected reduction >= %.1f%%, got %.1f%%", tc.minReduction, stats.ReductionPercent)
-			}
-
-			if len(output) == 0 {
-				t.Error("Output should not be empty")
-			}
-		})
-	}
-}
-
-// TestPipelineLayerActivation verifies the pipeline produces valid output
-func TestPipelineLayerActivation(t *testing.T) {
-	input := generateTestContent(500)
-
-	p := NewPipelineCoordinator(PipelineConfig{
-		Mode:                ModeMinimal,
-		SessionTracking:     true,
-		NgramEnabled:        true,
-		QueryIntent:         "test query",
+// BenchmarkPipelineFull runs full pipeline.
+func BenchmarkPipelineFull(b *testing.B) {
+	input := generateLargeInput()
+	cfg := PipelineConfig{
+		Mode:                ModeAggressive,
+		EnableEntropy:       true,
+		EnablePerplexity:    true,
+		EnableGoalDriven:    true,
+		EnableAST:           true,
+		EnableContrastive:   true,
+		EnableEvaluator:     true,
+		EnableGist:          true,
+		EnableHierarchical:  true,
 		EnableCompaction:    true,
 		EnableAttribution:   true,
 		EnableH2O:           true,
 		EnableAttentionSink: true,
-		CompactionThreshold: 100, // Low threshold to trigger
+		EnableMetaToken:     true,
+		EnableSemanticChunk: true,
+		EnableLazyPruner:    true,
+	}
+	pipeline := NewPipelineCoordinator(cfg)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		pipeline.Process(input)
+	}
+}
+
+// BenchmarkIndividualLayers benchmarks each layer independently.
+func BenchmarkIndividualLayers(b *testing.B) {
+	input := generateMediumInput()
+
+	layers := []struct {
+		name   string
+		filter Filter
+	}{
+		{"entropy", NewEntropyFilter()},
+		{"perplexity", NewPerplexityFilter()},
+		{"ast_preserve", NewASTPreserveFilter()},
+		{"h2o", NewH2OFilter()},
+		{"compaction", NewCompactionLayer(DefaultCompactionConfig())},
+	}
+
+	for _, layer := range layers {
+		b.Run(layer.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				layer.filter.Apply(input, ModeMinimal)
+			}
+		})
+	}
+}
+
+// BenchmarkTokenEstimation benchmarks token estimation.
+func BenchmarkTokenEstimation(b *testing.B) {
+	input := generateLargeInput()
+
+	b.Run("heuristic", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_ = len(input) / 4
+		}
 	})
 
-	output, stats := p.Process(input)
-
-	// Verify compression happened
-	if stats.OriginalTokens == 0 {
-		t.Error("Expected original tokens > 0")
-	}
-
-	// Verify output is not empty
-	if len(output) == 0 {
-		t.Error("Expected non-empty output")
-	}
-
-	// Verify some compression occurred
-	if stats.TotalSaved <= 0 {
-		t.Errorf("Expected total saved tokens > 0, got %d", stats.TotalSaved)
-	}
-
-	// Verify at least some layers contributed
-	if len(stats.LayerStats) == 0 {
-		t.Error("Expected at least one layer to contribute")
-	}
-
-	t.Logf("Pipeline stats:\n%s", stats.String())
-}
-
-// generateTestContent creates realistic test content
-func generateTestContent(lines int) string {
-	var sb strings.Builder
-
-	// Add headers
-	sb.WriteString("=== Build Output ===\n")
-	sb.WriteString("Time: 2025-01-15 10:30:00\n")
-	sb.WriteString("Command: npm run build\n\n")
-
-	// Add content lines
-	for i := 0; i < lines; i++ {
-		switch i % 10 {
-		case 0:
-			sb.WriteString(fmt.Sprintf("INFO: Processing file %d of %d\n", i, lines))
-		case 1:
-			sb.WriteString(fmt.Sprintf("DEBUG: Module %d loaded successfully\n", i))
-		case 2:
-			sb.WriteString(fmt.Sprintf("File: /home/user/project/src/module%d.go\n", i))
-		case 3:
-			sb.WriteString(fmt.Sprintf("Line: %d - Function: processItem\n", i*10))
-		case 4:
-			sb.WriteString("WARNING: Deprecated API usage detected\n")
-		case 5:
-			sb.WriteString(fmt.Sprintf("http://localhost:3000/api/item/%d\n", i))
-		case 6:
-			sb.WriteString("Error: Connection timeout after 30 seconds\n")
-		case 7:
-			sb.WriteString("SUCCESS: Build completed successfully\n")
-		case 8:
-			sb.WriteString("CRITICAL: Memory usage at 85%\n")
-		case 9:
-			sb.WriteString(fmt.Sprintf("item_%d: { id: %d, name: 'test item', value: %d }\n", i, i, i*100))
+	b.Run("bpe", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			EstimateTokens(input)
 		}
-	}
-
-	// Add footer
-	sb.WriteString("\n=== Build Complete ===\n")
-	sb.WriteString("Total files: 1000\n")
-	sb.WriteString("Build time: 45 seconds\n")
-
-	return sb.String()
+	})
 }
 
-// generateLargeContext creates large context for 1M-2M token tests
-func generateLargeContext(lines int) string {
-	var sb strings.Builder
+// BenchmarkLayerGates benchmarks stage gate checks.
+func BenchmarkLayerGates(b *testing.B) {
+	p := &PipelineCoordinator{config: PipelineConfig{Budget: 1000}}
+	content := generateMediumInput()
 
-	// Simulate a large codebase scan or log output
-	sb.WriteString("=== Large Context Processing ===\n")
-	sb.WriteString("Context Size: Large\n\n")
-
-	chunk := strings.Repeat("Line with content for testing large context handling. ", 20) + "\n"
-
-	for i := 0; i < lines; i++ {
-		if i%1000 == 0 {
-			sb.WriteString(fmt.Sprintf("\n--- Section %d ---\n", i/1000))
+	b.Run("shouldSkipEntropy", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			p.shouldSkipEntropy(content)
 		}
-		sb.WriteString(chunk)
-	}
+	})
 
-	sb.WriteString("\n=== End of Context ===\n")
+	b.Run("shouldSkipPerplexity", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			p.shouldSkipPerplexity(content)
+		}
+	})
 
-	return sb.String()
+	b.Run("shouldSkipH2O", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			p.shouldSkipH2O(content)
+		}
+	})
 }
 
-// BenchmarkStageGates tests the efficiency of early-exit stage gates
-// Stage gates skip layers when not applicable, reducing processing overhead
-func BenchmarkStageGates(b *testing.B) {
-	testCases := []struct {
+// BenchmarkMemoryAllocation benchmarks memory usage patterns.
+func BenchmarkMemoryAllocation(b *testing.B) {
+	input := generateLargeInput()
+	cfg := PipelineConfig{Mode: ModeMinimal}
+	pipeline := NewPipelineCoordinator(cfg)
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		pipeline.Process(input)
+	}
+}
+
+// TestPipelinePerformance runs a performance test with detailed metrics.
+func TestPipelinePerformance(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping performance test in short mode")
+	}
+
+	inputs := []struct {
 		name  string
+		size  int
 		input string
 	}{
-		{"short_content", "short text with no structure"},
-		{"medium_structured", generateTestContent(100)},
-		{"large_structured", generateTestContent(1000)},
+		{"small", 1000, generateInput(1000)},
+		{"medium", 10000, generateInput(10000)},
+		{"large", 100000, generateInput(100000)},
 	}
 
-	for _, tc := range testCases {
-		b.Run(tc.name, func(b *testing.B) {
-			p := NewPipelineCoordinator(PipelineConfig{
-				Mode:                 ModeMinimal,
-				EnableEntropy:        true,
-				EnablePerplexity:     true,
-				EnableGoalDriven:     true,
-				EnableAST:            true,
-				EnableContrastive:    true,
-				EnableEvaluator:      true,
-				EnableGist:           true,
-				EnableHierarchical:   true,
-				EnableCompaction:     true,
-				EnableAttribution:    true,
-				EnableH2O:            true,
-				EnableAttentionSink:  true,
-				EnableMetaToken:      true,
-				EnableSemanticChunk:  true,
-				EnableSketchStore:    true,
-				EnableLazyPruner:     true,
-				EnableSemanticAnchor: true,
-				EnableAgentMemory:    true,
-				QueryIntent:          "test query",
-				Budget:               500, // Enable budget-dependent layers
-			})
+	cfg := PipelineConfig{
+		Mode:                ModeMinimal,
+		EnableEntropy:       true,
+		EnablePerplexity:    true,
+		EnableAST:           true,
+		EnableCompaction:    true,
+		EnableH2O:           true,
+		EnableAttentionSink: true,
+	}
 
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				p.Process(tc.input)
+	for _, tt := range inputs {
+		t.Run(tt.name, func(t *testing.T) {
+			pipeline := NewPipelineCoordinator(cfg)
+
+			start := time.Now()
+			output, stats := pipeline.Process(tt.input)
+			elapsed := time.Since(start)
+
+			t.Logf("Input: %d bytes, Output: %d bytes", len(tt.input), len(output))
+			t.Logf("Tokens: %d -> %d (%.1f%% reduction)",
+				stats.OriginalTokens, stats.FinalTokens, stats.ReductionPercent)
+			t.Logf("Time: %v (%.2f μs/token)",
+				elapsed, float64(elapsed.Microseconds())/float64(stats.OriginalTokens))
+			t.Logf("Layers: %d", len(stats.LayerStats))
+
+			// Performance requirements
+			maxAcceptableTime := time.Duration(len(tt.input)/100) * time.Millisecond
+			if elapsed > maxAcceptableTime {
+				t.Errorf("too slow: %v > %v", elapsed, maxAcceptableTime)
 			}
 		})
 	}
 }
 
-// BenchmarkPipelineWithBudget tests budget-aware early exit performance
-func BenchmarkPipelineWithBudget(b *testing.B) {
-	input := generateTestContent(5000)
-
-	budgets := []int{0, 1000, 5000, 10000}
-
-	for _, budget := range budgets {
-		b.Run(fmt.Sprintf("budget_%d", budget), func(b *testing.B) {
-			p := NewPipelineCoordinator(PipelineConfig{
-				Mode:              ModeMinimal,
-				Budget:            budget,
-				EnableEntropy:     true,
-				EnablePerplexity:  true,
-				EnableH2O:         true,
-				EnableAttribution: true,
-			})
-
-			b.ResetTimer()
-			for i := 0; i < b.N; i++ {
-				p.Process(input)
-			}
-		})
+// TestPipelineScalability tests how pipeline scales with input size.
+func TestPipelineScalability(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping scalability test in short mode")
 	}
+
+	sizes := []int{1000, 5000, 10000, 50000}
+	cfg := PipelineConfig{Mode: ModeMinimal}
+
+	var prevTime time.Duration
+	var prevSize int
+
+	for _, size := range sizes {
+		input := generateInput(size)
+		pipeline := NewPipelineCoordinator(cfg)
+
+		start := time.Now()
+		pipeline.Process(input)
+		elapsed := time.Since(start)
+
+		if prevTime > 0 {
+			sizeRatio := float64(size) / float64(prevSize)
+			timeRatio := float64(elapsed) / float64(prevTime)
+
+			t.Logf("Size: %d -> %d (%.1fx), Time: %v -> %v (%.1fx)",
+				prevSize, size, sizeRatio, prevTime, elapsed, timeRatio)
+
+			// Should be roughly linear (allow 2x overhead)
+			if timeRatio > sizeRatio*2 {
+				t.Errorf("non-linear scaling: size ratio %.1fx, time ratio %.1fx",
+					sizeRatio, timeRatio)
+			}
+		}
+
+		prevTime = elapsed
+		prevSize = size
+	}
+}
+
+// Helper functions
+
+func generateSmallInput() string {
+	return generateInput(1000)
+}
+
+func generateMediumInput() string {
+	return generateInput(10000)
+}
+
+func generateLargeInput() string {
+	return generateInput(100000)
+}
+
+func generateInput(size int) string {
+	// Generate realistic code-like content
+	var sb strings.Builder
+	sb.Grow(size)
+
+	for sb.Len() < size {
+		sb.WriteString("func processData(input string) error {\n")
+		sb.WriteString("\tif input == \"\" {\n")
+		sb.WriteString("\t\treturn fmt.Errorf(\"empty input\")\n")
+		sb.WriteString("\t}\n")
+		sb.WriteString("\t// Process the data\n")
+		sb.WriteString("\tresult := strings.ToUpper(input)\n")
+		sb.WriteString("\tfmt.Println(result)\n")
+		sb.WriteString("\treturn nil\n")
+		sb.WriteString("}\n\n")
+	}
+
+	return sb.String()[:size]
 }

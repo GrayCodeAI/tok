@@ -8,7 +8,28 @@ import (
 )
 
 // shouldEarlyExit returns true if budget is already met (T81).
+// Uses aggressive checking when budget is tight (< 1000 tokens),
+// otherwise checks every 3 layers to reduce overhead.
 func (p *PipelineCoordinator) shouldEarlyExit(stats *PipelineStats) bool {
+	if p.config.Budget <= 0 {
+		return false
+	}
+	// Use aggressive checking when budget is tight
+	if p.config.Budget < 1000 {
+		currentTokens := stats.OriginalTokens - stats.computeTotalSaved()
+		return currentTokens <= p.config.Budget
+	}
+	// Check every 3 layers to reduce overhead (optimization)
+	if len(stats.LayerStats)%3 != 0 {
+		return false
+	}
+	currentTokens := stats.OriginalTokens - stats.computeTotalSaved()
+	return currentTokens <= p.config.Budget
+}
+
+// shouldEarlyExitAggressive returns true if budget is met (checks every layer).
+// Use this when budget is very tight.
+func (p *PipelineCoordinator) shouldEarlyExitAggressive(stats *PipelineStats) bool {
 	if p.config.Budget <= 0 {
 		return false
 	}
@@ -144,19 +165,36 @@ func (p *PipelineCoordinator) finalizeStats(stats *PipelineStats, output string)
 }
 
 // processLayer runs a single filter layer and records its stats.
+// Uses layer cache when available to avoid redundant processing.
 func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stats *PipelineStats) string {
 	if p.layerGate != nil && !p.layerGate.Allows(layer.name) {
 		return input
 	}
+
+	// Check layer cache first (Phase 2 optimization)
+	if p.layerCache != nil {
+		if cached, hit := p.layerCache.Get(layer.name, input, p.config.Mode); hit {
+			stats.LayerStats[layer.name] = LayerStat{
+				TokensSaved: cached.TokensSaved,
+				Duration:    0, // Cache hit = no processing time
+			}
+			stats.runningSaved += cached.TokensSaved
+			return cached.Output
+		}
+	}
+
 	start := time.Now()
 	output, saved := layer.filter.Apply(input, p.config.Mode)
 	dur := time.Since(start).Nanoseconds()
-	if p.config.SessionTracking {
-		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
-	} else {
-		stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
-	}
+
+	stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
 	stats.runningSaved += saved
+
+	// Cache the result for future use
+	if p.layerCache != nil {
+		p.layerCache.Put(layer.name, input, p.config.Mode, output, saved)
+	}
+
 	return output
 }
 

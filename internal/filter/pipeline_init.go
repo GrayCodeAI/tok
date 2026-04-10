@@ -10,6 +10,7 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		config:       cfg,
 		resultCache:  cache.GetGlobalCache(),
 		cacheEnabled: true,
+		layerCache:   GetGlobalLayerCache(), // Initialize layer cache
 	}
 
 	// Set defaults - all layers enabled by default when using zero-config.
@@ -42,6 +43,21 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	p.feedback = NewInterLayerFeedback()
 	p.qualityEstimator = NewQualityEstimator()
 
+	// New: EngramLearner for error pattern learning
+	if cfg.EnableEngramLearner {
+		p.engramLearner = NewEngramLearner()
+	}
+
+	// New: TieredSummary for progressive summarization
+	if cfg.EnableTieredSummary {
+		p.tieredSummary = NewTieredSummaryFilter()
+	}
+
+	// New: CrunchBench for comprehensive benchmarking
+	if cfg.EnableCrunchBench {
+		p.crunchBench = NewCrunchBench()
+	}
+
 	// Build layer execution order
 	p.buildLayers()
 	p.layerRegistry = NewLayerRegistry()
@@ -51,6 +67,16 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 }
 
 func (p *PipelineCoordinator) initCoreFilters(cfg PipelineConfig) {
+	// Layer 0: QuantumLock (KV-cache alignment)
+	if cfg.EnableQuantumLock {
+		p.quantumLockFilter = NewQuantumLockFilter()
+	}
+
+	// Layer 0.5: Photon (image compression)
+	if cfg.EnablePhoton {
+		p.photonFilter = NewPhotonFilter()
+	}
+
 	p.entropyFilter = NewEntropyFilter()
 	p.perplexityFilter = NewPerplexityFilter()
 

@@ -388,3 +388,12 @@ func truncate(s string, maxLen int) string {
 	}
 	return s[:maxLen] + "..."
 }
+
+// generateLargeContext generates large test context
+func generateLargeContext(lines int) string {
+	var sb strings.Builder
+	for i := 0; i < lines; i++ {
+		sb.WriteString(fmt.Sprintf("Line %d: This is test content for benchmarking the compression pipeline.\n", i))
+	}
+	return sb.String()
+}

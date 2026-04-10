@@ -26,6 +26,12 @@ type PipelineCoordinator struct {
 	layerRegistry      *LayerRegistry
 	layerGate          *LayerGate
 
+	// Layer 0: QuantumLock (KV-cache alignment)
+	quantumLockFilter *QuantumLockFilter
+
+	// Layer 0.5: Photon (image compression)
+	photonFilter *PhotonFilter
+
 	// Layer 1: Entropy Filtering
 	entropyFilter *EntropyFilter
 
@@ -141,6 +147,18 @@ type PipelineCoordinator struct {
 	cacheEnabled   bool
 	cacheHitCount  int64
 	cacheMissCount int64
+
+	// Phase 2: Layer result cache for individual filter results
+	layerCache *LayerCache
+
+	// New: EngramLearner for error pattern learning
+	engramLearner *EngramLearner
+
+	// New: TieredSummary for L0/L1/L2 progressive summarization
+	tieredSummary *TieredSummaryFilter
+
+	// New: CrunchBench for benchmarking
+	crunchBench *CrunchBench
 }
 
 // CoreLayersConfig groups Layer 1-9 shared settings.
@@ -294,6 +312,11 @@ type LayerConfig struct {
 	TOMLFilter        bool
 	TOMLFilterCommand string
 	CacheEnabled      bool
+
+	// New: Claw Compactor features
+	EnableEngramLearner  bool // Enable error pattern learning
+	EnableTieredSummary  bool // Enable L0/L1/L2 progressive summarization
+	EnableCrunchBench    bool // Enable comprehensive benchmarking
 }
 
 // PipelineConfigWithNestedLayers is a helper type for the new nested config structure.
@@ -318,8 +341,19 @@ type PipelineConfigWithNestedLayers struct {
 	ExtractiveSignalLines      int
 	EnableQualityGuardrail     bool
 	LayerGateMode              string
+
+	// New: Claw Compactor features
+	EnableEngramLearner        bool // Enable error pattern learning
+	EnableTieredSummary        bool // Enable L0/L1/L2 progressive summarization
+	EnableCrunchBench          bool // Enable comprehensive benchmarking
 	LayerGateAllowExperimental []string
 	EnablePlannedLayers        bool
+
+	// Layer 0: QuantumLock (KV-cache alignment)
+	EnableQuantumLock bool
+
+	// Layer 0.5: Photon (image compression)
+	EnablePhoton bool
 
 	// Layer sub-configs (preferred)
 	Layers LayerConfig

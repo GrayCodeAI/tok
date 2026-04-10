@@ -88,6 +88,11 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "47_search_crunch", Name: "Search Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
 		{ID: "48_diff_crunch", Name: "Diff Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
 		{ID: "49_structural_collapse", Name: "Structural Collapse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+
+		// New: Claw Compactor features (now implemented)
+		{ID: "50_engram_learner", Name: "EngramLearner", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - 14 error pattern classifiers"},
+		{ID: "51_tiered_summary", Name: "TieredSummary", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - L0/L1/L2 progressive summaries"},
+		{ID: "52_crunch_bench", Name: "CrunchBench", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - Multi-dimensional benchmark"},
 	}
 	return implemented
 }
