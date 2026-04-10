@@ -4,7 +4,7 @@
 
 **Token-aware CLI proxy & AI gateway for coding assistants**
 
-*31-layer compression pipeline achieving 60–90% token savings*
+*31-stage core pipeline + experimental extension toward 50+ layers*
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -21,7 +21,7 @@
 
 ## 💡 What is TokMan?
 
-TokMan intercepts CLI commands and applies an intelligent **31-layer compression pipeline** to drastically reduce token usage for AI coding assistants. Built on research from **30+ academic papers**, it achieves **60–90% token reduction** on common development operations.
+TokMan intercepts CLI commands and applies an intelligent **31-stage core compression pipeline** to drastically reduce token usage for AI coding assistants. It also includes an experimental extension pack (layers `30..49`) on the path to **50+ research-backed layers**.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -194,12 +194,12 @@ tokman dashboard  # Launch analytics dashboard
 
 ## 🧠 How It Works
 
-TokMan uses a **31-layer compression pipeline** inspired by cutting-edge research:
+TokMan uses a **31-stage core pipeline** with optional experimental layers inspired by cutting-edge research:
 
 ```
 Input → Content Detection → Pipeline Selection → Compression → Output
          ↓                    ↓                   ↓
-      [JSON, Code,        [Surface, Trim,    [31 layers:
+      [JSON, Code,        [Surface, Trim,    [Core + experimental:
        Logs, etc.]         Extract, Core]     Entropy, H2O,
                                                AST, Gist, etc.]
 ```
@@ -366,12 +366,12 @@ make check          # Run all checks
 - **Tests**: 144 packages with tests
 - **Lines of Code**: ~50,000
 - **Built-in Filters**: 97 TOML filters
-- **Compression Layers**: 31 layers
+- **Compression Layers**: 31-stage core + experimental extension
 - **Platforms**: Linux, macOS, Windows (amd64/arm64)
 
 ## 🗺️ Roadmap
 
-- [x] Core compression pipeline (31 layers)
+- [x] Core compression pipeline (31 stages)
 - [x] TOML filter system
 - [x] Agent integration (Claude, Cursor, Copilot, etc.)
 - [x] Analytics dashboard
@@ -388,7 +388,7 @@ make check          # Run all checks
 | Feature | TokMan | RTK | OMNI | Snip | Token-MCP |
 |---------|--------|-----|------|------|-----------|
 | **Language** | Go | Rust | Rust | Go | TypeScript |
-| **Compression Layers** | **31** | ~15 | Semantic | YAML | Cache |
+| **Compression Layers** | **31 core + exp** | ~15 | Semantic | YAML | Cache |
 | **Token Reduction** | 60-90% | 60-90% | ~90% | 60-90% | 60-90% |
 | **Quality Metrics** | ✅ 6 metrics | ❌ | ❌ | ❌ | ❌ |
 | **Research-Backed** | ✅ 120+ papers | ❌ | ❌ | ❌ | ❌ |
@@ -398,7 +398,7 @@ make check          # Run all checks
 | **Cost Analysis** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Standalone Binary** | ✅ | ✅ | ✅ | ✅ | ❌ |
 
-> TokMan has the deepest compression pipeline (31 layers) and is the only tool with quality metrics and research-backed architecture.
+> TokMan has one of the deepest open compression stacks (31-stage core plus experimental expansion) and is the only tool here with quality metrics and research-backed architecture.
 
 ---
 
@@ -407,7 +407,7 @@ make check          # Run all checks
 <details>
 <summary><b>How does TokMan reduce tokens?</b></summary>
 
-TokMan applies a 31-layer compression pipeline that removes noise, groups similar content, truncates redundancy, and preserves critical information. Each layer is based on published research.
+TokMan applies a layered compression pipeline that removes noise, groups similar content, truncates redundancy, and preserves critical information. Core stages are production-oriented, with additional experimental layers available.
 </details>
 
 <details>

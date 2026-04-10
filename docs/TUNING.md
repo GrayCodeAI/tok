@@ -1,10 +1,10 @@
-# Tokman Configuration Tuning Guide
+# TokMan Configuration Tuning Guide
 
-This guide explains how to tune Tokman's compression pipeline for optimal performance.
+This guide explains how to tune TokMan's compression pipeline for optimal performance.
 
 ## Configuration File
 
-Tokman uses TOML configuration. Default location: `~/.config/tokman/config.toml`
+TokMan uses TOML configuration. Default location: `~/.config/tokman/config.toml`
 
 ```bash
 # Create default config
@@ -14,7 +14,7 @@ tokman config --init
 ## Complete Configuration Example
 
 ```toml
-# Tokman Configuration
+# TokMan Configuration
 
 [tracking]
 enabled = true

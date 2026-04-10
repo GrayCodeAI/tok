@@ -1,6 +1,8 @@
-# Tokman Layer Compression Pipeline (Core + Experimental)
+# TokMan Layer Compression Pipeline (Core + Experimental)
 
-Tokman implements a world-class token reduction system based on 120+ research papers from top institutions worldwide (2023-2026).
+TokMan implements a world-class token reduction system based on 120+ research papers from top institutions worldwide (2023-2026).
+
+This document focuses on foundational layers `1..20`. The production pipeline includes additional core and experimental stages.
 
 ## Architecture Overview
 
@@ -330,7 +332,7 @@ agent_remove_noise = true        # Remove conversational filler
 
 ## Large Context Support
 
-Tokman supports inputs up to **2 million tokens** with streaming processing:
+TokMan supports inputs up to **2 million tokens** with streaming processing:
 
 ```toml
 [pipeline]
