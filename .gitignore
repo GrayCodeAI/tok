@@ -48,6 +48,7 @@ tokman.db
 *.bak
 *.log
 .cache/
+artifacts/
 
 # Build artifacts
 bin/
