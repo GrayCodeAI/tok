@@ -6,8 +6,8 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/core"
 )
 
-// plannedHeuristicFilter provides baseline implementations for planned layers 30-49.
-// They are intentionally conservative and disabled by default.
+// plannedHeuristicFilter provides curated experimental layers.
+// These are intentionally conservative and disabled by default.
 type plannedHeuristicFilter struct {
 	id string
 }
@@ -20,11 +20,10 @@ func (f *plannedHeuristicFilter) Apply(input string, mode Mode) (string, int) {
 	}
 	output := input
 
-	// Alias IDs are consolidated to canonical behaviors to avoid duplicate work.
 	switch plannedLayerCanonicalID(f.id) {
-	case "30_salience_graph", "38_semantic_dedup":
+	case "30_salience_graph":
 		output = dedupLines(output)
-	case "31_trace_preserve", "36_stacktrace_focus", "41_error_window":
+	case "31_trace_preserve":
 		output = keepSignalNeighborhood(output, 2)
 	case "32_ast_diff_focus":
 		output = keepDiffFocused(output)
@@ -36,22 +35,14 @@ func (f *plannedHeuristicFilter) Apply(input string, mode Mode) (string, int) {
 		output = keepMatchingAndContext(output, []string{".go:", ".ts:", ".py:", ".rs:", ".java:", ".rb:"}, 0)
 	case "37_exit_signal_keep":
 		output = keepMatchingAndContext(output, []string{"exit code", "status ", "failed", "success"}, 0)
-	case "39_recall_booster", "49_repair_pass":
-		// Conservative no-op baseline; upgraded versions can perform loss-aware repair.
-	case "40_log_cluster":
-		output = dedupLines(output)
 	case "42_dependency_focus":
 		output = keepMatchingAndContext(output, []string{"import ", "require(", "go.mod", "package.json", "cargo.toml"}, 0)
-	case "43_symbolic_patch":
-		output = keepDiffFocused(output)
 	case "44_runtime_anchor":
 		output = keepHeadTail(output, 25, 25)
 	case "45_multiturn_merge":
 		output = keepMatchingAndContext(output, []string{"user:", "assistant:", "human:", "ai:"}, 1)
-	case "46_context_cache":
-		output = dedupLines(output)
-	case "47_confidence_gate", "48_loss_guard":
-		// Gate placeholders; no-op until confidence models are wired.
+	case "48_loss_guard":
+		output = keepSignalNeighborhood(output, 1)
 	}
 
 	saved := core.EstimateTokens(input) - core.EstimateTokens(output)
@@ -61,8 +52,7 @@ func (f *plannedHeuristicFilter) Apply(input string, mode Mode) (string, int) {
 	return output, saved
 }
 
-// plannedLayerCanonicalID maps overlapping planned layers to a canonical executor.
-// This keeps the registry IDs for tracking while avoiding redundant runtime passes.
+// plannedLayerCanonicalID maps deprecated/merged IDs to curated executors.
 func plannedLayerCanonicalID(id string) string {
 	switch id {
 	case "36_stacktrace_focus", "41_error_window":
@@ -71,9 +61,7 @@ func plannedLayerCanonicalID(id string) string {
 		return "30_salience_graph"
 	case "43_symbolic_patch":
 		return "32_ast_diff_focus"
-	case "49_repair_pass":
-		return "39_recall_booster"
-	case "47_confidence_gate":
+	case "39_recall_booster", "47_confidence_gate", "49_repair_pass":
 		return "48_loss_guard"
 	default:
 		return id
@@ -84,6 +72,7 @@ func (p *PipelineCoordinator) initPlannedLayers() {
 	if !p.config.EnablePlannedLayers {
 		return
 	}
+	// Curated experimental set: merged aliases and removed no-op overlaps.
 	ids := []string{
 		"30_salience_graph",
 		"31_trace_preserve",
@@ -91,20 +80,11 @@ func (p *PipelineCoordinator) initPlannedLayers() {
 		"33_unit_test_focus",
 		"34_symbol_table",
 		"35_path_anchor",
-		"36_stacktrace_focus",
 		"37_exit_signal_keep",
-		"38_semantic_dedup",
-		"39_recall_booster",
-		"40_log_cluster",
-		"41_error_window",
 		"42_dependency_focus",
-		"43_symbolic_patch",
 		"44_runtime_anchor",
 		"45_multiturn_merge",
-		"46_context_cache",
-		"47_confidence_gate",
 		"48_loss_guard",
-		"49_repair_pass",
 	}
 
 	p.plannedLayers = make([]filterLayer, 0, len(ids))
