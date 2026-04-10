@@ -293,6 +293,10 @@ func TestSetFlags(t *testing.T) {
 		LightMem:            true,
 		PathShorten:         true,
 		JSONSampler:         true,
+		LogCrunch:           true,
+		SearchCrunch:        true,
+		DiffCrunch:          true,
+		StructCollapse:      true,
 	}
 
 	SetFlags(cfg)
@@ -357,7 +361,7 @@ func TestSetFlags(t *testing.T) {
 	if !ResearchPack {
 		t.Error("ResearchPack: expected true")
 	}
-	if !LatentCollab || !GraphCoT || !RoleBudget || !SWEAdaptive || !AgentOCRHistory || !PlanBudget || !LightMem || !PathShorten || !JSONSampler {
+	if !LatentCollab || !GraphCoT || !RoleBudget || !SWEAdaptive || !AgentOCRHistory || !PlanBudget || !LightMem || !PathShorten || !JSONSampler || !LogCrunch || !SearchCrunch || !DiffCrunch || !StructCollapse {
 		t.Error("expected research extension flags to be true")
 	}
 }

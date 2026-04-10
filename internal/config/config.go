@@ -151,23 +151,27 @@ type PipelineConfig struct {
 	AgentMemoryMaxEdges  int    `mapstructure:"agent_memory_max_edges"`  // Max edges in knowledge graph
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
-	// Research Layers (31-45)
-	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`       // Difficulty-adaptive pruning
-	EnableEPiC         bool `mapstructure:"enable_epic"`              // Causal-edge preservation
-	EnableSSDP         bool `mapstructure:"enable_ssdp"`              // ToT branch pruning
-	EnableAgentOCR     bool `mapstructure:"enable_agent_ocr"`         // Turn-density compression
-	EnableS2MAD        bool `mapstructure:"enable_s2_mad"`            // Agreement collapse
-	EnableACON         bool `mapstructure:"enable_acon"`              // Adaptive context optimization
-	EnableLatentCollab bool `mapstructure:"enable_latent_collab"`     // Latent collaboration merge
-	EnableGraphCoT     bool `mapstructure:"enable_graph_cot"`         // Graph-CoT compression
-	EnableRoleBudget   bool `mapstructure:"enable_role_budget"`       // Role-aware budgeting
-	EnableSWEAdaptive  bool `mapstructure:"enable_swe_adaptive_loop"` // SWE adaptive prune loop
-	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"` // AgentOCR history compaction
-	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`       // Plan-and-budget controller
-	EnableLightMem     bool `mapstructure:"enable_lightmem"`          // Lightweight memory reuse
-	EnablePathShorten  bool `mapstructure:"enable_path_shorten"`      // Path/identifier shortening
-	EnableJSONSampler  bool `mapstructure:"enable_json_sampler"`      // JSON statistical sampler
-	EnableResearchPack bool `mapstructure:"enable_research_pack"`     // One-toggle research bundle
+	// Research Layers (31-49)
+	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`         // Difficulty-adaptive pruning
+	EnableEPiC         bool `mapstructure:"enable_epic"`                // Causal-edge preservation
+	EnableSSDP         bool `mapstructure:"enable_ssdp"`                // ToT branch pruning
+	EnableAgentOCR     bool `mapstructure:"enable_agent_ocr"`           // Turn-density compression
+	EnableS2MAD        bool `mapstructure:"enable_s2_mad"`              // Agreement collapse
+	EnableACON         bool `mapstructure:"enable_acon"`                // Adaptive context optimization
+	EnableLatentCollab bool `mapstructure:"enable_latent_collab"`       // Latent collaboration merge
+	EnableGraphCoT     bool `mapstructure:"enable_graph_cot"`           // Graph-CoT compression
+	EnableRoleBudget   bool `mapstructure:"enable_role_budget"`         // Role-aware budgeting
+	EnableSWEAdaptive  bool `mapstructure:"enable_swe_adaptive_loop"`   // SWE adaptive prune loop
+	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"`   // AgentOCR history compaction
+	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`         // Plan-and-budget controller
+	EnableLightMem     bool `mapstructure:"enable_lightmem"`            // Lightweight memory reuse
+	EnablePathShorten  bool `mapstructure:"enable_path_shorten"`        // Path/identifier shortening
+	EnableJSONSampler  bool `mapstructure:"enable_json_sampler"`        // JSON statistical sampler
+	EnableLogCrunch    bool `mapstructure:"enable_log_crunch"`          // Log folding stage
+	EnableSearchCrunch bool `mapstructure:"enable_search_crunch"`       // Search result dedup stage
+	EnableDiffCrunch   bool `mapstructure:"enable_diff_crunch"`         // Diff context folding stage
+	EnableStructColl   bool `mapstructure:"enable_structural_collapse"` // Structural boilerplate collapse
+	EnableResearchPack bool `mapstructure:"enable_research_pack"`       // One-toggle research bundle
 
 	// Perplexity Filter (Layer 2) - Detailed settings
 	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`          // Target compression ratio (default: 0.3)
@@ -415,7 +419,7 @@ func Defaults() *Config {
 			AgentMemoryMaxEdges:  200,       // Max graph edges
 			AgentMemoryExtractFn: "default", // Extraction function
 
-			// Research Layers 31-45 (off by default unless preset/profile enables)
+			// Research Layers 31-49 (off by default unless preset/profile enables)
 			EnableDiffAdapt:    false,
 			EnableEPiC:         false,
 			EnableSSDP:         false,
@@ -431,6 +435,10 @@ func Defaults() *Config {
 			EnableLightMem:     false,
 			EnablePathShorten:  false,
 			EnableJSONSampler:  false,
+			EnableLogCrunch:    false,
+			EnableSearchCrunch: false,
+			EnableDiffCrunch:   false,
+			EnableStructColl:   false,
 			EnableResearchPack: false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings
@@ -588,6 +596,12 @@ func bindEnvAliases(v *viper.Viper) {
 		"TOKMAN_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
 		"TOKMAN_PATH_SHORTEN":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_path_shorten", val == "true" || val == "1") },
 		"TOKMAN_JSON_SAMPLER":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_json_sampler", val == "true" || val == "1") },
+		"TOKMAN_LOG_CRUNCH":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_log_crunch", val == "true" || val == "1") },
+		"TOKMAN_SEARCH_CRUNCH": func(v *viper.Viper, val string) { v.Set("pipeline.enable_search_crunch", val == "true" || val == "1") },
+		"TOKMAN_DIFF_CRUNCH":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_diff_crunch", val == "true" || val == "1") },
+		"TOKMAN_STRUCTURAL_COLLAPSE": func(v *viper.Viper, val string) {
+			v.Set("pipeline.enable_structural_collapse", val == "true" || val == "1")
+		},
 		"TOKMAN_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {

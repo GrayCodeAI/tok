@@ -77,6 +77,10 @@ type AppState struct {
 	LightMem         bool
 	PathShorten      bool
 	JSONSampler      bool
+	LogCrunch        bool
+	SearchCrunch     bool
+	DiffCrunch       bool
+	StructCollapse   bool
 }
 
 // Version is set at build time.
@@ -150,6 +154,10 @@ type FlagConfig struct {
 	LightMem             bool
 	PathShorten          bool
 	JSONSampler          bool
+	LogCrunch            bool
+	SearchCrunch         bool
+	DiffCrunch           bool
+	StructCollapse       bool
 }
 
 // Set sets all flag values atomically.
@@ -205,6 +213,10 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.LightMem = cfg.LightMem
 	s.PathShorten = cfg.PathShorten
 	s.JSONSampler = cfg.JSONSampler
+	s.LogCrunch = cfg.LogCrunch
+	s.SearchCrunch = cfg.SearchCrunch
+	s.DiffCrunch = cfg.DiffCrunch
+	s.StructCollapse = cfg.StructCollapse
 	s.mu.Unlock()
 }
 
@@ -555,6 +567,38 @@ func (s *AppState) IsJSONSamplerEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_JSON_SAMPLER") == "true"
 }
 
+// IsLogCrunchEnabled returns true if log-crunch layer is enabled.
+func (s *AppState) IsLogCrunchEnabled() bool {
+	s.mu.RLock()
+	enabled := s.LogCrunch
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_LOG_CRUNCH") == "true"
+}
+
+// IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
+func (s *AppState) IsSearchCrunchEnabled() bool {
+	s.mu.RLock()
+	enabled := s.SearchCrunch
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_SEARCH_CRUNCH") == "true"
+}
+
+// IsDiffCrunchEnabled returns true if diff-crunch layer is enabled.
+func (s *AppState) IsDiffCrunchEnabled() bool {
+	s.mu.RLock()
+	enabled := s.DiffCrunch
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_DIFF_CRUNCH") == "true"
+}
+
+// IsStructCollapseEnabled returns true if structural-collapse layer is enabled.
+func (s *AppState) IsStructCollapseEnabled() bool {
+	s.mu.RLock()
+	enabled := s.StructCollapse
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_STRUCTURAL_COLLAPSE") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -612,6 +656,10 @@ var (
 	LightMem             bool
 	PathShorten          bool
 	JSONSampler          bool
+	LogCrunch            bool
+	SearchCrunch         bool
+	DiffCrunch           bool
+	StructCollapse       bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -670,6 +718,10 @@ func (s *AppState) syncGlobals() {
 		LightMem:             s.LightMem,
 		PathShorten:          s.PathShorten,
 		JSONSampler:          s.JSONSampler,
+		LogCrunch:            s.LogCrunch,
+		SearchCrunch:         s.SearchCrunch,
+		DiffCrunch:           s.DiffCrunch,
+		StructCollapse:       s.StructCollapse,
 	}
 	s.mu.RUnlock()
 
@@ -724,6 +776,10 @@ func (s *AppState) syncGlobals() {
 	LightMem = state.LightMem
 	PathShorten = state.PathShorten
 	JSONSampler = state.JSONSampler
+	LogCrunch = state.LogCrunch
+	SearchCrunch = state.SearchCrunch
+	DiffCrunch = state.DiffCrunch
+	StructCollapse = state.StructCollapse
 	globalsMu.Unlock()
 }
 
@@ -783,6 +839,10 @@ func (s *AppState) syncFromGlobals() {
 		LightMem:             LightMem,
 		PathShorten:          PathShorten,
 		JSONSampler:          JSONSampler,
+		LogCrunch:            LogCrunch,
+		SearchCrunch:         SearchCrunch,
+		DiffCrunch:           DiffCrunch,
+		StructCollapse:       StructCollapse,
 	}
 	globalsMu.RUnlock()
 
@@ -1025,4 +1085,28 @@ func IsPathShortenEnabled() bool {
 func IsJSONSamplerEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsJSONSamplerEnabled()
+}
+
+// IsLogCrunchEnabled returns true if log-crunch layer is enabled.
+func IsLogCrunchEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsLogCrunchEnabled()
+}
+
+// IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
+func IsSearchCrunchEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsSearchCrunchEnabled()
+}
+
+// IsDiffCrunchEnabled returns true if diff-crunch layer is enabled.
+func IsDiffCrunchEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsDiffCrunchEnabled()
+}
+
+// IsStructCollapseEnabled returns true if structural-collapse layer is enabled.
+func IsStructCollapseEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsStructCollapseEnabled()
 }

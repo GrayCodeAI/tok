@@ -377,6 +377,30 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.jsonSamplerFilter != nil {
 		output = p.processLayer(p.layers[43], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.logCrunchFilter != nil {
+		output = p.processLayer(p.layers[44], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.searchCrunchFilter != nil {
+		output = p.processLayer(p.layers[45], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.diffCrunchFilter != nil {
+		output = p.processLayer(p.layers[46], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.structuralCollapse != nil {
+		output = p.processLayer(p.layers[47], output, stats)
 	}
 	return output
 }
