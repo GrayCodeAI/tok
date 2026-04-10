@@ -68,6 +68,9 @@ type AppState struct {
 	S2MAD            bool
 	ACON             bool
 	ResearchPack     bool
+	LatentCollab     bool
+	GraphCoT         bool
+	RoleBudget       bool
 }
 
 // Version is set at build time.
@@ -132,6 +135,9 @@ type FlagConfig struct {
 	S2MAD                bool
 	ACON                 bool
 	ResearchPack         bool
+	LatentCollab         bool
+	GraphCoT             bool
+	RoleBudget           bool
 }
 
 // Set sets all flag values atomically.
@@ -178,6 +184,9 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.S2MAD = cfg.S2MAD
 	s.ACON = cfg.ACON
 	s.ResearchPack = cfg.ResearchPack
+	s.LatentCollab = cfg.LatentCollab
+	s.GraphCoT = cfg.GraphCoT
+	s.RoleBudget = cfg.RoleBudget
 	s.mu.Unlock()
 }
 
@@ -456,6 +465,30 @@ func (s *AppState) IsResearchPackEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_RESEARCH_PACK") == "true"
 }
 
+// IsLatentCollabEnabled returns true if latent collaboration layer is enabled.
+func (s *AppState) IsLatentCollabEnabled() bool {
+	s.mu.RLock()
+	enabled := s.LatentCollab
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_LATENT_COLLAB") == "true"
+}
+
+// IsGraphCoTEnabled returns true if graph-CoT layer is enabled.
+func (s *AppState) IsGraphCoTEnabled() bool {
+	s.mu.RLock()
+	enabled := s.GraphCoT
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_GRAPH_COT") == "true"
+}
+
+// IsRoleBudgetEnabled returns true if role-budget layer is enabled.
+func (s *AppState) IsRoleBudgetEnabled() bool {
+	s.mu.RLock()
+	enabled := s.RoleBudget
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_ROLE_BUDGET") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -504,6 +537,9 @@ var (
 	S2MAD                bool
 	ACON                 bool
 	ResearchPack         bool
+	LatentCollab         bool
+	GraphCoT             bool
+	RoleBudget           bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -553,6 +589,9 @@ func (s *AppState) syncGlobals() {
 		S2MAD:                s.S2MAD,
 		ACON:                 s.ACON,
 		ResearchPack:         s.ResearchPack,
+		LatentCollab:         s.LatentCollab,
+		GraphCoT:             s.GraphCoT,
+		RoleBudget:           s.RoleBudget,
 	}
 	s.mu.RUnlock()
 
@@ -598,6 +637,9 @@ func (s *AppState) syncGlobals() {
 	S2MAD = state.S2MAD
 	ACON = state.ACON
 	ResearchPack = state.ResearchPack
+	LatentCollab = state.LatentCollab
+	GraphCoT = state.GraphCoT
+	RoleBudget = state.RoleBudget
 	globalsMu.Unlock()
 }
 
@@ -648,6 +690,9 @@ func (s *AppState) syncFromGlobals() {
 		S2MAD:                S2MAD,
 		ACON:                 ACON,
 		ResearchPack:         ResearchPack,
+		LatentCollab:         LatentCollab,
+		GraphCoT:             GraphCoT,
+		RoleBudget:           RoleBudget,
 	}
 	globalsMu.RUnlock()
 
@@ -836,4 +881,22 @@ func IsACONEnabled() bool {
 func IsResearchPackEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsResearchPackEnabled()
+}
+
+// IsLatentCollabEnabled returns true if latent-collab layer is enabled.
+func IsLatentCollabEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsLatentCollabEnabled()
+}
+
+// IsGraphCoTEnabled returns true if graph-cot layer is enabled.
+func IsGraphCoTEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsGraphCoTEnabled()
+}
+
+// IsRoleBudgetEnabled returns true if role-budget layer is enabled.
+func IsRoleBudgetEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsRoleBudgetEnabled()
 }

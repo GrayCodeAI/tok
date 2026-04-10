@@ -114,15 +114,17 @@ func TestAdaptiveProfileEnablesRouterAndExtractive(t *testing.T) {
 	if cfg.ExtractiveMaxLines <= 0 || cfg.ExtractiveHeadLines <= 0 || cfg.ExtractiveTailLines <= 0 {
 		t.Fatal("adaptive profile should set extractive thresholds")
 	}
-	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON {
-		t.Fatal("adaptive profile should enable research layers 31-36")
+	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON ||
+		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget {
+		t.Fatal("adaptive profile should enable research layers 31-39")
 	}
 }
 
 func TestExtractProfileEnablesResearchLayers31To35(t *testing.T) {
 	cfg := ProfileConfig(Profile(TierExtract), ModeMinimal)
-	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON {
-		t.Fatal("extract profile should enable research layers 31-36")
+	if !cfg.EnableDiffAdapt || !cfg.EnableEPiC || !cfg.EnableSSDP || !cfg.EnableAgentOCR || !cfg.EnableS2MAD || !cfg.EnableACON ||
+		!cfg.EnableLatentCollab || !cfg.EnableGraphCoT || !cfg.EnableRoleBudget {
+		t.Fatal("extract profile should enable research layers 31-39")
 	}
 }
 

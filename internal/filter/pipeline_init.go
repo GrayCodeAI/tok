@@ -260,6 +260,15 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableACON {
 		p.aconFilter = NewACONFilter()
 	}
+	if cfg.EnableLatentCollab {
+		p.latentCollabFilter = NewLatentCollabFilter()
+	}
+	if cfg.EnableGraphCoT {
+		p.graphCoTFilter = NewGraphCoTFilter()
+	}
+	if cfg.EnableRoleBudget {
+		p.roleBudgetFilter = NewRoleBudgetFilter()
+	}
 }
 
 func (p *PipelineCoordinator) buildLayers() {
@@ -299,5 +308,8 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.agentOCRFilter, "34_agent_ocr"},
 		{p.s2madFilter, "35_s2_mad"},
 		{p.aconFilter, "36_acon"},
+		{p.latentCollabFilter, "37_latent_collab"},
+		{p.graphCoTFilter, "38_graph_cot"},
+		{p.roleBudgetFilter, "39_role_budget"},
 	}
 }

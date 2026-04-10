@@ -90,6 +90,9 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableAgentOCR = true
 		cfg.EnableS2MAD = true
 		cfg.EnableACON = true
+		cfg.EnableLatentCollab = true
+		cfg.EnableGraphCoT = true
+		cfg.EnableRoleBudget = true
 
 	case TierCore:
 		cfg.EnableEntropy = true
@@ -182,6 +185,9 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableAgentOCR = true
 		cfg.EnableS2MAD = true
 		cfg.EnableACON = true
+		cfg.EnableLatentCollab = true
+		cfg.EnableGraphCoT = true
+		cfg.EnableRoleBudget = true
 	}
 
 	return cfg

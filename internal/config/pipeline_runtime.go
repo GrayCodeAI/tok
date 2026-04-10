@@ -71,6 +71,21 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		EnableAgentOCR:            c.EnableAgentOCR,
 		EnableS2MAD:               c.EnableS2MAD,
 		EnableACON:                c.EnableACON,
+		EnableLatentCollab:        c.EnableLatentCollab,
+		EnableGraphCoT:            c.EnableGraphCoT,
+		EnableRoleBudget:          c.EnableRoleBudget,
+	}
+
+	if c.EnableResearchPack {
+		cfg.EnableDiffAdapt = true
+		cfg.EnableEPiC = true
+		cfg.EnableSSDP = true
+		cfg.EnableAgentOCR = true
+		cfg.EnableS2MAD = true
+		cfg.EnableACON = true
+		cfg.EnableLatentCollab = true
+		cfg.EnableGraphCoT = true
+		cfg.EnableRoleBudget = true
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {

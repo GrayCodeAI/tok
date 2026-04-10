@@ -75,6 +75,9 @@ func defaultLayerMeta() []LayerMeta {
 		{ID: "34_agent_ocr", Name: "Agent Turn Density Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR (2026)"},
 		{ID: "35_s2_mad", Name: "Debate Agreement Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "S2-MAD (NAACL 2025)"},
 		{ID: "36_acon", Name: "Adaptive Context Optimization", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "ACON (ICLR 2026)"},
+		{ID: "37_latent_collab", Name: "Latent Collaboration Merge", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Latent Collaboration in MAS (2025)"},
+		{ID: "38_graph_cot", Name: "Graph Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Scaling Graph CoT Reasoning (2025)"},
+		{ID: "39_role_budget", Name: "Role-aware Budget Allocation", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Multi-agent role budgeting (inspired)"},
 	}
 	return implemented
 }

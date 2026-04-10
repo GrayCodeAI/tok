@@ -317,6 +317,24 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.aconFilter != nil {
 		output = p.processLayer(p.layers[34], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.latentCollabFilter != nil {
+		output = p.processLayer(p.layers[35], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.graphCoTFilter != nil {
+		output = p.processLayer(p.layers[36], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.roleBudgetFilter != nil {
+		output = p.processLayer(p.layers[37], output, stats)
 	}
 	return output
 }
