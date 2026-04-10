@@ -10,6 +10,8 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		OriginalTokens: core.EstimateTokens(input),
 		LayerStats:     make(map[string]LayerStat),
 	}
+	p.runtimeQueryIntent = ""
+	p.applyPolicyRouting(input)
 
 	output := input
 
@@ -58,6 +60,19 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 }
 
 func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {
+	// Extractive pre-filter for very large outputs.
+	if p.extractivePrefilter != nil {
+		filtered, saved := p.extractivePrefilter.Apply(output)
+		if saved > 0 {
+			stats.LayerStats["pre_extractive"] = LayerStat{TokensSaved: saved}
+			output = filtered
+			stats.TotalSaved += saved
+			if p.shouldEarlyExit(stats) {
+				return output
+			}
+		}
+	}
+
 	// TOML Filter
 	if p.tomlFilterWrapper != nil && p.config.EnableTOMLFilter {
 		filtered, saved := p.tomlFilterWrapper.Apply(output, ModeMinimal)

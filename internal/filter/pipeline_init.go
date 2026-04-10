@@ -29,7 +29,6 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		cfg.EnableGist = true
 		cfg.EnableHierarchical = true
 	}
-
 	// Core filters (Layers 1-9)
 	p.initCoreFilters(cfg)
 
@@ -44,6 +43,18 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 
 	// NEW filters (TF-IDF, Symbolic, Phrase, Numerical, Dynamic)
 	p.initNewFilters(cfg)
+
+	if cfg.EnablePolicyRouter {
+		p.policyRouter = NewPolicyRouter()
+	}
+	if cfg.EnableExtractivePrefilter {
+		p.extractivePrefilter = NewExtractivePrefilter(ExtractivePrefilterConfig{
+			MaxLines:    cfg.ExtractiveMaxLines,
+			HeadLines:   cfg.ExtractiveHeadLines,
+			TailLines:   cfg.ExtractiveTailLines,
+			SignalLines: cfg.ExtractiveSignalLines,
+		})
+	}
 
 	// Feedback mechanism
 	p.feedback = NewInterLayerFeedback()

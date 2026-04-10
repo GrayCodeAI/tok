@@ -19,6 +19,7 @@ func (s *PipelineStats) String() string {
 	sb.WriteString("║ Layer Breakdown:                                   ║\n")
 
 	layerOrder := []string{
+		"pre_extractive",
 		"pre_tfidf",
 		"1_entropy", "2_perplexity", "3_goal_driven", "4_ast_preserve",
 		"5_contrastive", "6_ngram", "7_evaluator", "8_gist", "9_hierarchical",

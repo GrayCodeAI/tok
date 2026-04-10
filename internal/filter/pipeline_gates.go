@@ -57,7 +57,14 @@ func (p *PipelineCoordinator) shouldSkipPerplexity(content string) bool {
 
 // shouldSkipQueryDependent checks if query-dependent layers apply.
 func (p *PipelineCoordinator) shouldSkipQueryDependent() bool {
-	return p.config.QueryIntent == ""
+	return p.effectiveQueryIntent() == ""
+}
+
+func (p *PipelineCoordinator) effectiveQueryIntent() string {
+	if p.runtimeQueryIntent != "" {
+		return p.runtimeQueryIntent
+	}
+	return p.config.QueryIntent
 }
 
 // shouldSkipNgram checks if N-gram abbreviation would help.
