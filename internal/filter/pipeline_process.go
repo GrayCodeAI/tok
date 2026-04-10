@@ -33,27 +33,6 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output)
 	}
 
-	// NEW layers: Symbolic, Phrase, Numerical, Dynamic
-	output = p.processNewLayers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Phase 2 layers
-	output = p.processPhase2Layers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Planned 30-49 experimental layers (disabled by default).
-	output = p.processPlannedLayers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Recovery layers
-	output = p.processRecoveryLayers(output, stats)
-
 	// Budget enforcement
 	output = p.processBudgetLayer(output, stats)
 

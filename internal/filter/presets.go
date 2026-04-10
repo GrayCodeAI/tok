@@ -14,8 +14,8 @@ const (
 	// Tier 3: Extract — pulls out the essence
 	TierExtract Tier = "extract" // 24 layers, 70-90% reduction
 
-	// Tier 4: Core — bare minimum, maximum compression
-	TierCore Tier = "core" // All 37 layers, 90%+ reduction
+	// Tier 4: Core — practical high-impact 20-layer runtime profile
+	TierCore Tier = "core" // 20 layers, quality-first compression
 
 	// Tier C: Code — code-aware, preserves syntax structure
 	TierCode Tier = "code" // 8 layers, 50-70% reduction
@@ -105,25 +105,25 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLazyPruner = true
 		cfg.EnableSemanticAnchor = true
 		cfg.EnableAgentMemory = true
-		cfg.EnableQuestionAware = true
-		cfg.EnableDensityAdaptive = true
-		cfg.EnableSymbolicCompress = true
-		cfg.EnablePhraseGrouping = true
-		cfg.EnableNumericalQuant = true
-		cfg.EnableDynamicRatio = true
-		cfg.EnableHypernym = true
-		cfg.EnableSemanticCache = true
-		cfg.EnableScope = true
-		cfg.EnableSmallKV = true
-		cfg.EnableKVzip = true
-		cfg.EnableSWEzze = true
-		cfg.EnableMixedDim = true
-		cfg.EnableBEAVER = true
-		cfg.EnablePoC = true
-		cfg.EnableTokenQuant = true
-		cfg.EnableTokenRetention = true
-		cfg.EnableACON = true
-		cfg.EnablePlannedLayers = true
+		cfg.EnableQuestionAware = false
+		cfg.EnableDensityAdaptive = false
+		cfg.EnableSymbolicCompress = false
+		cfg.EnablePhraseGrouping = false
+		cfg.EnableNumericalQuant = false
+		cfg.EnableDynamicRatio = false
+		cfg.EnableHypernym = false
+		cfg.EnableSemanticCache = false
+		cfg.EnableScope = false
+		cfg.EnableSmallKV = false
+		cfg.EnableKVzip = false
+		cfg.EnableSWEzze = false
+		cfg.EnableMixedDim = false
+		cfg.EnableBEAVER = false
+		cfg.EnablePoC = false
+		cfg.EnableTokenQuant = false
+		cfg.EnableTokenRetention = false
+		cfg.EnableACON = false
+		cfg.EnablePlannedLayers = false
 
 	case TierCode:
 		cfg.EnableEntropy = true

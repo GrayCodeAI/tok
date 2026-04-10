@@ -10,8 +10,8 @@ func TestPlannedLayersInit(t *testing.T) {
 		Mode:                ModeMinimal,
 		EnablePlannedLayers: true,
 	})
-	if len(p.plannedLayers) != 11 {
-		t.Fatalf("planned layers = %d, want 11 curated layers", len(p.plannedLayers))
+	if len(p.plannedLayers) != 0 {
+		t.Fatalf("planned layers = %d, want 0 in strict 20-layer runtime profile", len(p.plannedLayers))
 	}
 }
 
@@ -52,7 +52,7 @@ func TestPlannedLayersProcess(t *testing.T) {
 
 func TestCorePresetEnablesPlannedLayers(t *testing.T) {
 	cfg := TierConfig(TierCore, ModeMinimal)
-	if !cfg.EnablePlannedLayers {
-		t.Fatal("core preset should enable planned layers")
+	if cfg.EnablePlannedLayers {
+		t.Fatal("core preset should not enable planned layers in strict 20-layer profile")
 	}
 }
