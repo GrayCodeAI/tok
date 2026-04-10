@@ -338,7 +338,7 @@ type PipelineConfigWithNestedLayers struct {
 	SemanticChunkMinSize   int
 	SemanticChunkThreshold float64
 
-	// Layer 17: Sketch Store
+	// Layer 17: Semantic Cache
 	EnableSketchStore bool
 	SketchBudgetRatio float64
 	SketchMaxSize     int

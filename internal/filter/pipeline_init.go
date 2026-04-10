@@ -226,7 +226,7 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.attentionSinkFilter, "14_attention_sink"},
 		{p.metaTokenFilter, "15_meta_token"},
 		{p.semanticChunkFilter, "16_semantic_chunk"},
-		{p.sketchStoreFilter, "17_sketch_store"},
+		{p.sketchStoreFilter, "17_semantic_cache"},
 		{p.lazyPrunerFilter, "18_lazy_pruner"},
 		{p.semanticAnchorFilter, "19_semantic_anchor"},
 		{p.agentMemoryFilter, "20_agent_memory"},
