@@ -71,7 +71,7 @@ type ExecutionResult struct {
 
 ### `internal/filter/`
 
-31-layer compression pipeline.
+31-stage core compression pipeline with experimental extension.
 
 #### Filter Types
 

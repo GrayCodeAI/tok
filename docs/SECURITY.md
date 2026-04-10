@@ -5,7 +5,7 @@
 
 ## Overview
 
-This document outlines security best practices for operating TokMan (Tokman) in production environments.
+This document outlines security best practices for operating TokMan in production environments.
 
 ## Authentication
 

@@ -1,13 +1,14 @@
 # AGENTS.md -- `internal/filter/` Package Guide
 
 > **Purpose:** This document catalogs every non-test `.go` file in the `internal/filter`
-> package. The package implements a 20-layer compression pipeline that reduces LLM
+> package. The package implements a layered compression pipeline (31-stage core with
+> experimental extension toward 50+) that reduces LLM
 > context while preserving semantic meaning. All files live in a single Go package
 > (`package filter`) because they share core types (`PipelineState`, `Mode`,
 > `ContentType`, etc.) and tightly-coupled interfaces.
 
-> **Subdirectory convention:** The `layers/` subdirectory exists as a placeholder for
-> future extraction of less-coupled compression layers. Currently it is empty.
+> **Subdirectory convention:** this directory currently keeps all active layer
+> implementations in the parent package for tight coordination.
 
 ---
 
@@ -18,7 +19,7 @@ plugs into this core.
 
 | File | Description |
 |------|-------------|
-| `pipeline.go` | Main pipeline engine that chains 20 compression layers, manages execution order, and produces the final compressed output. |
+| `pipeline_process.go` | Main pipeline execution engine that applies ordered compression layers and produces the final output. |
 | `manager.go` | High-level lifecycle manager -- loads/saves pipeline configurations, handles SHA-256 cache keys, and coordinates preset selection. |
 | `router.go` | Content router that detects content type (JSON, code, logs, etc.) and selects the optimal compression strategy. |
 | `pipeline_state.go` | Immutable snapshot of pipeline processing state (layer results, token counts, cache keys) used for thread-safe, cacheable, debuggable data flow. |
@@ -26,9 +27,9 @@ plugs into this core.
 
 ---
 
-## 2. Compression Layers (L1--L20)
+## 2. Compression Layers (Foundational L1--L20)
 
-Each file implements one or more layers of the 20-layer compression pipeline. Most are
+Each file implements one or more foundational layers. Most are
 backed by published research (cited in file comments).
 
 | File | Layer(s) | Description |

@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-TokMan is a token-aware CLI proxy written in Go. It intercepts CLI commands and applies a 31-layer compression pipeline to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves 60-90% token reduction on common development operations.
+TokMan is a token-aware CLI proxy written in Go. It intercepts CLI commands and applies a 31-stage core compression pipeline (with experimental extension toward 50+ layers) to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves 60-90% token reduction on common development operations.
 
 **Module:** `github.com/GrayCodeAI/tokman`
 **Go Version:** 1.21+ (1.26+ for planned SIMD support)
@@ -17,7 +17,7 @@ tokman/
 ├── cmd/tokman/main.go          # Entry point
 ├── internal/
 │   ├── commands/               # CLI command definitions
-│   ├── filter/                 # 31-layer compression pipeline
+│   ├── filter/                 # Core + experimental compression pipeline
 │   ├── config/                 # Configuration loading
 │   ├── core/                   # Command runner, token estimation
 │   ├── tracking/               # Command tracking & analytics
@@ -117,7 +117,7 @@ if shared.UltraCompact { ... }
 
 ## Filter Pipeline (`internal/filter/`)
 
-The 31-layer compression pipeline is the core of TokMan. The `PipelineCoordinator` in `pipeline.go` orchestrates all layers with early-exit support and stage gates.
+The 31-stage core pipeline is central to TokMan. The `PipelineCoordinator` orchestrates layers with early-exit support and stage gates.
 
 ### Layer Architecture
 
@@ -325,7 +325,7 @@ make check          # fmt + vet + typecheck + lint + test
 | `cmd/tokman/main.go` | Entry point |
 | `internal/commands/root.go` | Root command, flags, fallback handler |
 | `internal/commands/shared/shared.go` | Global state, helper functions |
-| `internal/filter/pipeline.go` | 31-layer pipeline coordinator |
+| `internal/filter/pipeline_process.go` | Core pipeline execution |
 | `internal/filter/filter.go` | Filter types and modes |
 | `internal/config/config.go` | Configuration loading |
 | `internal/core/runner.go` | Command execution |
