@@ -300,6 +300,7 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.ExtractiveHeadLines = GetExtractiveHead()
 	cfg.ExtractiveTailLines = GetExtractiveTail()
 	cfg.ExtractiveSignalLines = GetExtractiveSignal()
+	cfg.EnableQualityGuardrail = IsQualityGuardrailEnabled()
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
 

@@ -23,14 +23,22 @@ func (r *PolicyRouter) Route(input, explicitIntent string) PolicyRoute {
 
 	text := strings.ToLower(input)
 	switch {
-	case containsAny(text, "panic:", "traceback", "exception", "error:", "fatal:", "failed"):
+	case containsAny(text, "panic:", "traceback", "exception"):
 		return PolicyRoute{QueryIntent: "debug", Class: "failure"}
+	case containsAny(text, "vulnerability", "cve-", "security", "gosec", "govulncheck", "audit"):
+		return PolicyRoute{QueryIntent: "review", Class: "security"}
 	case containsAny(text, "test", "assert", "pytest", "jest", "go test", "vitest"):
 		return PolicyRoute{QueryIntent: "test", Class: "test"}
+	case containsAny(text, "build", "compile", "linker", "bundl", "transpil", "webpack", "tsc"):
+		return PolicyRoute{QueryIntent: "build", Class: "build"}
+	case containsAny(text, "error:", "fatal:", "failed"):
+		return PolicyRoute{QueryIntent: "debug", Class: "failure"}
 	case containsAny(text, "diff --git", "@@", "changed files", "pull request"):
 		return PolicyRoute{QueryIntent: "review", Class: "diff"}
 	case containsAny(text, "deploy", "kubectl", "helm", "terraform apply", "rollout"):
 		return PolicyRoute{QueryIntent: "deploy", Class: "ops"}
+	case containsAny(text, "grep ", "rg ", "find ", "search ", "where is", "locate "):
+		return PolicyRoute{QueryIntent: "search", Class: "search"}
 	default:
 		return PolicyRoute{QueryIntent: "", Class: "generic"}
 	}

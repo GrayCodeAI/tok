@@ -55,6 +55,9 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 			SignalLines: cfg.ExtractiveSignalLines,
 		})
 	}
+	if cfg.EnableQualityGuardrail {
+		p.qualityGuardrail = NewQualityGuardrail()
+	}
 
 	// Feedback mechanism
 	p.feedback = NewInterLayerFeedback()

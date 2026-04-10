@@ -63,6 +63,7 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		ExtractiveHeadLines:       c.ExtractiveHeadLines,
 		ExtractiveTailLines:       c.ExtractiveTailLines,
 		ExtractiveSignalLines:     c.ExtractiveSignalLines,
+		EnableQualityGuardrail:    c.EnableQualityGuardrail,
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {

@@ -87,6 +87,7 @@ type PipelineConfig struct {
 	ExtractiveHeadLines    int  `mapstructure:"extractive_head_lines"`       // Head lines to preserve
 	ExtractiveTailLines    int  `mapstructure:"extractive_tail_lines"`       // Tail lines to preserve
 	ExtractiveSignalLines  int  `mapstructure:"extractive_signal_lines"`     // Signal lines to preserve
+	EnableQualityGuardrail bool `mapstructure:"enable_quality_guardrail"`    // Auto-fallback on quality risk
 
 	// LLM Compaction (Layer 11) - Semantic compression
 	EnableCompaction        bool   `mapstructure:"enable_compaction"`         // Enable LLM-based compaction
@@ -334,6 +335,7 @@ func Defaults() *Config {
 			ExtractiveHeadLines:    80,
 			ExtractiveTailLines:    60,
 			ExtractiveSignalLines:  120,
+			EnableQualityGuardrail: false,
 
 			// Layer 11: Compaction (enabled by default for automatic chat compression)
 			EnableCompaction:        true,
