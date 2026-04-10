@@ -32,29 +32,8 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	// Core filters (Layers 1-9)
 	p.initCoreFilters(cfg)
 
-	// Neural layer (optional)
-	p.initNeuralLayer(cfg)
-
 	// Semantic filters (Layers 11-20)
 	p.initSemanticFilters(cfg)
-
-	// Adaptive filters (T12, T17)
-	p.initAdaptiveFilters(cfg)
-
-	// NEW filters (TF-IDF, Symbolic, Phrase, Numerical, Dynamic)
-	p.initNewFilters(cfg)
-
-	if cfg.EnablePolicyRouter {
-		p.policyRouter = NewPolicyRouter()
-	}
-	if cfg.EnableExtractivePrefilter {
-		p.extractivePrefilter = NewExtractivePrefilter(ExtractivePrefilterConfig{
-			MaxLines:    cfg.ExtractiveMaxLines,
-			HeadLines:   cfg.ExtractiveHeadLines,
-			TailLines:   cfg.ExtractiveTailLines,
-			SignalLines: cfg.ExtractiveSignalLines,
-		})
-	}
 	if cfg.EnableQualityGuardrail {
 		p.qualityGuardrail = NewQualityGuardrail()
 	}
@@ -62,9 +41,6 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	// Feedback mechanism
 	p.feedback = NewInterLayerFeedback()
 	p.qualityEstimator = NewQualityEstimator()
-
-	// Phase 2 filters
-	p.initPhase2Filters(cfg)
 
 	// Build layer execution order
 	p.buildLayers()
@@ -101,17 +77,6 @@ func (p *PipelineCoordinator) initCoreFilters(cfg PipelineConfig) {
 	}
 	if cfg.SessionTracking {
 		p.sessionTracker = NewSessionTracker()
-	}
-}
-
-func (p *PipelineCoordinator) initNeuralLayer(cfg PipelineConfig) {
-	if cfg.LLMEnabled {
-		p.llmFilter = NewLLMAwareFilter(LLMAwareConfig{
-			Threshold:      2000,
-			Enabled:        true,
-			CacheEnabled:   true,
-			PromptTemplate: cfg.PromptTemplate,
-		})
 	}
 }
 
@@ -244,112 +209,6 @@ func (p *PipelineCoordinator) initSemanticFilters(cfg PipelineConfig) {
 	}
 }
 
-func (p *PipelineCoordinator) initAdaptiveFilters(cfg PipelineConfig) {
-	if cfg.EnableQuestionAware && cfg.QueryIntent != "" {
-		p.questionAwareFilter = NewQuestionAwareFilter(cfg.QueryIntent)
-		if cfg.QuestionAwareThreshold > 0 {
-			p.questionAwareFilter.config.RelevanceThreshold = cfg.QuestionAwareThreshold
-		}
-	}
-
-	if cfg.EnableDensityAdaptive {
-		p.densityAdaptiveFilter = NewDensityAdaptiveFilter()
-		if cfg.DensityTargetRatio > 0 {
-			p.densityAdaptiveFilter.config.TargetRatio = cfg.DensityTargetRatio
-		}
-		if cfg.DensityThreshold > 0 {
-			p.densityAdaptiveFilter.config.DensityThreshold = cfg.DensityThreshold
-		}
-	}
-}
-
-func (p *PipelineCoordinator) initNewFilters(cfg PipelineConfig) {
-	if cfg.EnableTFIDF {
-		tfidfCfg := DefaultTFIDFConfig()
-		if cfg.TFIDFThreshold > 0 {
-			tfidfCfg.Threshold = cfg.TFIDFThreshold
-		}
-		p.tfidfFilter = NewTFIDFFilterWithConfig(tfidfCfg)
-	}
-
-	if cfg.EnableSymbolicCompress {
-		p.symbolicCompressFilter = NewSymbolicCompressFilter()
-	}
-
-	if cfg.EnablePhraseGrouping {
-		p.phraseGroupingFilter = NewPhraseGroupingFilter()
-	}
-
-	if cfg.EnableNumericalQuant {
-		numCfg := DefaultNumericalConfig()
-		if cfg.DecimalPlaces > 0 {
-			numCfg.DecimalPlaces = cfg.DecimalPlaces
-		}
-		p.numericalQuantizer = NewNumericalQuantizer()
-		p.numericalQuantizer.config = numCfg
-	}
-
-	if cfg.EnableDynamicRatio {
-		dynCfg := DefaultDynamicRatioConfig()
-		if cfg.DynamicRatioBase > 0 {
-			dynCfg.BaseBudgetRatio = cfg.DynamicRatioBase
-		}
-		p.dynamicRatioFilter = NewDynamicRatioFilter()
-		p.dynamicRatioFilter.config = dynCfg
-	}
-}
-
-func (p *PipelineCoordinator) initPhase2Filters(cfg PipelineConfig) {
-	if cfg.EnableHypernym {
-		p.hypernymCompressor = NewHypernymCompressor()
-	}
-
-	if cfg.EnableSemanticCache {
-		p.semanticCacheFilter = NewSemanticCacheFilter()
-	}
-
-	if cfg.EnableScope {
-		p.scopeFilter = NewScopeFilter()
-	}
-
-	if cfg.EnableSmallKV {
-		p.smallKVCompensator = NewSmallKVCompensator()
-	}
-
-	if cfg.EnableKVzip {
-		p.kvzipFilter = NewKVzipFilter()
-	}
-
-	// 2026 Research Layers
-	if cfg.EnableSWEzze {
-		p.swezzeFilter = NewSWEzzeFilter()
-	}
-
-	if cfg.EnableMixedDim {
-		p.mixedDimFilter = NewMixedDimFilter()
-	}
-
-	if cfg.EnableBEAVER {
-		p.beaverFilter = NewBEAVERFilter()
-	}
-
-	if cfg.EnablePoC {
-		p.pocFilter = NewPoCFilter()
-	}
-
-	if cfg.EnableTokenQuant {
-		p.tokenQuantFilter = NewTokenQuantFilter()
-	}
-
-	if cfg.EnableTokenRetention {
-		p.tokenRetentionFilter = NewTokenRetentionFilter()
-	}
-
-	if cfg.EnableACON {
-		p.aconFilter = NewACONFilter()
-	}
-}
-
 func (p *PipelineCoordinator) buildLayers() {
 	p.layers = []filterLayer{
 		{p.entropyFilter, "1_entropy"},
@@ -361,7 +220,6 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.evaluatorHeadsFilter, "7_evaluator"},
 		{p.gistFilter, "8_gist"},
 		{p.hierarchicalSummaryFilter, "9_hierarchical"},
-		{p.llmFilter, "10_neural"},
 		{p.compactionLayer, "11_compaction"},
 		{p.attributionFilter, "12_attribution"},
 		{p.h2oFilter, "13_h2o"},
@@ -372,12 +230,5 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.lazyPrunerFilter, "18_lazy_pruner"},
 		{p.semanticAnchorFilter, "19_semantic_anchor"},
 		{p.agentMemoryFilter, "20_agent_memory"},
-		{p.swezzeFilter, "21_swezze"},
-		{p.mixedDimFilter, "22_mixed_dim"},
-		{p.beaverFilter, "23_beaver"},
-		{p.pocFilter, "24_poc"},
-		{p.tokenQuantFilter, "25_token_quant"},
-		{p.tokenRetentionFilter, "26_token_retention"},
-		{p.aconFilter, "27_acon"},
 	}
 }

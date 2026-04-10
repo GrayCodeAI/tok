@@ -231,18 +231,12 @@ func (m *PipelineManager) syncCoordinatorForRequest(mode Mode, query string) {
 	if query == "" {
 		m.coordinator.goalDrivenFilter = nil
 		m.coordinator.contrastiveFilter = nil
-		if m.coordinator.questionAwareFilter != nil {
-			m.coordinator.questionAwareFilter.SetQuery("")
-		}
 		m.coordinator.buildLayers()
 		return
 	}
 
 	m.coordinator.goalDrivenFilter = NewGoalDrivenFilter(query)
 	m.coordinator.contrastiveFilter = NewContrastiveFilter(query)
-	if m.coordinator.questionAwareFilter != nil {
-		m.coordinator.questionAwareFilter.SetQuery(query)
-	}
 	m.coordinator.buildLayers()
 }
 

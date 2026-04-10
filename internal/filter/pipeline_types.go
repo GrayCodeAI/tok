@@ -25,7 +25,6 @@ type PipelineCoordinator struct {
 	runtimeQueryIntent string
 	layerRegistry      *LayerRegistry
 	layerGate          *LayerGate
-	plannedLayers      []filterLayer
 
 	// Layer 1: Entropy Filtering
 	entropyFilter *EntropyFilter
@@ -58,9 +57,6 @@ type PipelineCoordinator struct {
 	budgetEnforcer *BudgetEnforcer
 	sessionTracker *SessionTracker
 
-	// Optional: Neural Layer (when LLM enabled)
-	llmFilter *LLMAwareFilter
-
 	// Layer 11: Compaction Layer (Semantic compression)
 	compactionLayer *CompactionLayer
 
@@ -91,27 +87,6 @@ type PipelineCoordinator struct {
 	// Layer 20: Agent Memory Mode (Focus-inspired)
 	agentMemoryFilter *AgentMemoryFilter
 
-	// Question-Aware Filter (LongLLMLingua-style)
-	questionAwareFilter *QuestionAwareFilter
-
-	// Density-Adaptive Filter (DAST-style)
-	densityAdaptiveFilter *DensityAdaptiveFilter
-
-	// NEW: TF-IDF Coarse Filter (DSPC, Sep 2025)
-	tfidfFilter *TFIDFFilter
-
-	// NEW: Symbolic Instruction Compression (MetaGlyph, Jan 2026)
-	symbolicCompressFilter *SymbolicCompressFilter
-
-	// NEW: Phrase Grouping Filter (CompactPrompt, 2025)
-	phraseGroupingFilter *PhraseGroupingFilter
-
-	// NEW: Numerical Quantization (CompactPrompt, 2025)
-	numericalQuantizer *NumericalQuantizer
-
-	// NEW: Dynamic Compression Ratio (PruneSID, Mar 2026)
-	dynamicRatioFilter *DynamicRatioFilter
-
 	// NEW: Inter-Layer Feedback Mechanism
 	feedback *InterLayerFeedback
 
@@ -122,34 +97,11 @@ type PipelineCoordinator struct {
 	tomlFilterWrapper Filter
 	tomlFilterName    string
 
-	// Optional routing/compression pre-stage
-	policyRouter        *PolicyRouter
-	extractivePrefilter *ExtractivePrefilter
-	qualityGuardrail    *QualityGuardrail
-
-	// 2026 Research layers
-	hypernymCompressor *HypernymCompressor
-
-	// Phase 2: SemantiCache Clustered Merging (Mar 2026)
-	semanticCacheFilter *SemanticCacheFilter
-
-	// Phase 2: SCOPE Prefill/Decode Separation (ACL 2025)
-	scopeFilter *ScopeFilter
+	// Optional guardrail
+	qualityGuardrail *QualityGuardrail
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator
-
-	// Phase 2: KVzip Query-Agnostic Reconstruction (2025)
-	kvzipFilter *KVzipFilter
-
-	// 2026 Research Layers
-	swezzeFilter         *SWEzzeFilter         // SWEzze: Code Distillation (arXiv:2603.28119)
-	mixedDimFilter       *MixedDimFilter       // MixedDimKV: Beyond Token Eviction (arXiv:2603.20616)
-	beaverFilter         *BEAVERFilter         // BEAVER: Structure-Aware Selection (arXiv:2603.19635)
-	pocFilter            *PoCFilter            // PoC: Performance-oriented Compression (arXiv:2603.19733)
-	tokenQuantFilter     *TokenQuantFilter     // TurboQuant: Token Quantization (Google, 2026)
-	tokenRetentionFilter *TokenRetentionFilter // Token Retention (Yale/JPMorgan, 2026)
-	aconFilter           *ACONFilter           // ACON: Context Compression (ICLR 2026)
 
 	// Phase 2: Pipeline result cache for repeated inputs
 	resultCache    *cache.FingerprintCache

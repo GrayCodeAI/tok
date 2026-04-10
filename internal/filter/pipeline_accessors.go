@@ -12,11 +12,6 @@ func (p *PipelineCoordinator) GetTOMLFilterName() string {
 	return p.tomlFilterName
 }
 
-// GetTFIDFFilter returns the TF-IDF filter
-func (c *PipelineCoordinator) GetTFIDFFilter() *TFIDFFilter {
-	return c.tfidfFilter
-}
-
 // GetEntropyFilter returns the entropy filter
 func (c *PipelineCoordinator) GetEntropyFilter() *EntropyFilter {
 	return c.entropyFilter

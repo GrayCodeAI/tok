@@ -10,12 +10,10 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		OriginalTokens: core.EstimateTokens(input),
 		LayerStats:     make(map[string]LayerStat),
 	}
-	p.runtimeQueryIntent = ""
-	p.applyPolicyRouting(input)
 
 	output := input
 
-	// Pre-filters: TOML and TF-IDF
+	// Pre-filters: TOML
 	output = p.processPreFilters(output, stats)
 	if p.shouldEarlyExit(stats) {
 		return output, p.finalizeStats(stats, output)
@@ -67,19 +65,6 @@ func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *Pipel
 }
 
 func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {
-	// Extractive pre-filter for very large outputs.
-	if p.extractivePrefilter != nil && (p.layerGate == nil || p.layerGate.Allows("pre_extractive")) {
-		filtered, saved := p.extractivePrefilter.Apply(output)
-		if saved > 0 {
-			stats.LayerStats["pre_extractive"] = LayerStat{TokensSaved: saved}
-			output = filtered
-			stats.TotalSaved += saved
-			if p.shouldEarlyExit(stats) {
-				return output
-			}
-		}
-	}
-
 	// TOML Filter
 	if p.tomlFilterWrapper != nil && p.config.EnableTOMLFilter {
 		filtered, saved := p.tomlFilterWrapper.Apply(output, ModeMinimal)
@@ -93,10 +78,6 @@ func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineSt
 		}
 	}
 
-	// TF-IDF Coarse Pre-filter
-	if p.tfidfFilter != nil {
-		output = p.processLayer(filterLayer{p.tfidfFilter, "pre_tfidf"}, output, stats)
-	}
 	return output
 }
 
@@ -164,158 +145,75 @@ func (p *PipelineCoordinator) processCoreLayers(output string, stats *PipelineSt
 		}
 	}
 
-	if p.llmFilter != nil {
-		output = p.processLayer(p.layers[9], output, stats)
-	}
 	return output
 }
 
 func (p *PipelineCoordinator) processSemanticLayers(output string, stats *PipelineStats) string {
 	if p.compactionLayer != nil && !p.shouldSkipCompaction(output) {
-		output = p.processLayer(p.layers[10], output, stats)
+		output = p.processLayer(p.layers[9], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.attributionFilter != nil {
-		output = p.processLayer(p.layers[11], output, stats)
+		output = p.processLayer(p.layers[10], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.h2oFilter != nil && !p.shouldSkipH2O(output) {
-		output = p.processLayer(p.layers[12], output, stats)
+		output = p.processLayer(p.layers[11], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.attentionSinkFilter != nil && !p.shouldSkipAttentionSink(output) {
-		output = p.processLayer(p.layers[13], output, stats)
+		output = p.processLayer(p.layers[12], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.metaTokenFilter != nil && !p.shouldSkipMetaToken(output) {
-		output = p.processLayer(p.layers[14], output, stats)
+		output = p.processLayer(p.layers[13], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.semanticChunkFilter != nil && !p.shouldSkipSemanticChunk(output) {
-		output = p.processLayer(p.layers[15], output, stats)
+		output = p.processLayer(p.layers[14], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.sketchStoreFilter != nil && !p.shouldSkipBudgetDependent() {
-		output = p.processLayer(p.layers[16], output, stats)
+		output = p.processLayer(p.layers[15], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.lazyPrunerFilter != nil && !p.shouldSkipBudgetDependent() {
-		output = p.processLayer(p.layers[17], output, stats)
+		output = p.processLayer(p.layers[16], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.semanticAnchorFilter != nil {
-		output = p.processLayer(p.layers[18], output, stats)
+		output = p.processLayer(p.layers[17], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
 
 	if p.agentMemoryFilter != nil {
-		output = p.processLayer(p.layers[19], output, stats)
-	}
-	return output
-}
-
-func (p *PipelineCoordinator) processNewLayers(output string, stats *PipelineStats) string {
-	if p.symbolicCompressFilter != nil {
-		output = p.processLayer(filterLayer{p.symbolicCompressFilter, "20_symbolic_compress"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.phraseGroupingFilter != nil {
-		output = p.processLayer(filterLayer{p.phraseGroupingFilter, "21_phrase_grouping"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.numericalQuantizer != nil {
-		output = p.processLayer(filterLayer{p.numericalQuantizer, "22_numerical_quant"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.dynamicRatioFilter != nil {
-		output = p.processLayer(filterLayer{p.dynamicRatioFilter, "23_dynamic_ratio"}, output, stats)
-	}
-	return output
-}
-
-func (p *PipelineCoordinator) processPhase2Layers(output string, stats *PipelineStats) string {
-	if p.hypernymCompressor != nil {
-		output = p.processLayer(filterLayer{p.hypernymCompressor, "24_hypernym"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.semanticCacheFilter != nil {
-		output = p.processLayer(filterLayer{p.semanticCacheFilter, "25_semantic_cache"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.scopeFilter != nil {
-		output = p.processLayer(filterLayer{p.scopeFilter, "26_scope"}, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.kvzipFilter != nil {
-		output = p.processLayer(filterLayer{p.kvzipFilter, "27_kvzip"}, output, stats)
-	}
-	return output
-}
-
-func (p *PipelineCoordinator) processRecoveryLayers(output string, stats *PipelineStats) string {
-	if p.questionAwareFilter != nil && !p.shouldSkipQueryDependent() {
-		output = p.processLayer(filterLayer{p.questionAwareFilter, "28_question_aware"}, output, stats)
-	}
-
-	if p.densityAdaptiveFilter != nil && !p.shouldSkipSemanticChunk(output) {
-		output = p.processLayer(filterLayer{p.densityAdaptiveFilter, "29_density_adaptive"}, output, stats)
-	}
-	return output
-}
-
-func (p *PipelineCoordinator) processPlannedLayers(output string, stats *PipelineStats) string {
-	if len(p.plannedLayers) == 0 {
-		return output
-	}
-	for _, layer := range p.plannedLayers {
-		output = p.processLayer(layer, output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
+		output = p.processLayer(p.layers[18], output, stats)
 	}
 	return output
 }
