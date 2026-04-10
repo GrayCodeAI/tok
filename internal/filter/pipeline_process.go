@@ -80,7 +80,7 @@ func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *Pipel
 
 func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {
 	// Extractive pre-filter for very large outputs.
-	if p.extractivePrefilter != nil {
+	if p.extractivePrefilter != nil && (p.layerGate == nil || p.layerGate.Allows("pre_extractive")) {
 		filtered, saved := p.extractivePrefilter.Apply(output)
 		if saved > 0 {
 			stats.LayerStats["pre_extractive"] = LayerStat{TokensSaved: saved}

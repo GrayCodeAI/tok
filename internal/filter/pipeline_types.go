@@ -23,6 +23,8 @@ type PipelineCoordinator struct {
 	layers []filterLayer
 
 	runtimeQueryIntent string
+	layerRegistry      *LayerRegistry
+	layerGate          *LayerGate
 
 	// Layer 1: Entropy Filtering
 	entropyFilter *EntropyFilter
@@ -312,23 +314,25 @@ type LayerConfig struct {
 // Use this gradually: migrate from flat fields to nested Layers config over time.
 type PipelineConfigWithNestedLayers struct {
 	// Core fields
-	Mode                      Mode
-	QueryIntent               string
-	Budget                    int
-	LLMEnabled                bool
-	SessionTracking           bool
-	NgramEnabled              bool
-	MultiFileEnabled          bool
-	PromptTemplate            string
-	EnableTOMLFilter          bool
-	TOMLFilterCommand         string
-	EnablePolicyRouter        bool
-	EnableExtractivePrefilter bool
-	ExtractiveMaxLines        int
-	ExtractiveHeadLines       int
-	ExtractiveTailLines       int
-	ExtractiveSignalLines     int
-	EnableQualityGuardrail    bool
+	Mode                       Mode
+	QueryIntent                string
+	Budget                     int
+	LLMEnabled                 bool
+	SessionTracking            bool
+	NgramEnabled               bool
+	MultiFileEnabled           bool
+	PromptTemplate             string
+	EnableTOMLFilter           bool
+	TOMLFilterCommand          string
+	EnablePolicyRouter         bool
+	EnableExtractivePrefilter  bool
+	ExtractiveMaxLines         int
+	ExtractiveHeadLines        int
+	ExtractiveTailLines        int
+	ExtractiveSignalLines      int
+	EnableQualityGuardrail     bool
+	LayerGateMode              string
+	LayerGateAllowExperimental []string
 
 	// Layer sub-configs (preferred)
 	Layers LayerConfig
