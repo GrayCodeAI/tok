@@ -281,6 +281,36 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 	}
 	if p.slimInferFilter != nil {
 		output = p.processLayer(p.layers[28], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.diffAdaptFilter != nil {
+		output = p.processLayer(p.layers[29], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.epicFilter != nil {
+		output = p.processLayer(p.layers[30], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.ssdpFilter != nil {
+		output = p.processLayer(p.layers[31], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.agentOCRFilter != nil {
+		output = p.processLayer(p.layers[32], output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
+	}
+	if p.s2madFilter != nil {
+		output = p.processLayer(p.layers[33], output, stats)
 	}
 	return output
 }

@@ -29,10 +29,10 @@ import (
 //	test_output — keep FAIL/PASS summary + failing assertions
 //	compile_log — keep error/warning lines, collapse repeated warnings
 type CodingAgentContextFilter struct {
-	headLines   int     // lines to keep at head of file reads
-	tailLines   int     // lines to keep at tail of bash output
-	maxResults  int     // max search results per file path
-	baseRatio   float64 // baseline keep ratio for unlabeled output
+	headLines  int     // lines to keep at head of file reads
+	tailLines  int     // lines to keep at tail of bash output
+	maxResults int     // max search results per file path
+	baseRatio  float64 // baseline keep ratio for unlabeled output
 }
 
 // NewCodingAgentContextFilter creates a self-adaptive coding agent context filter.
@@ -362,4 +362,3 @@ func extractFilePath(line string) string {
 	}
 	return ""
 }
-

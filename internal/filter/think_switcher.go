@@ -7,20 +7,22 @@ import (
 )
 
 // Papers:
-//   "ThinkSwitcher: When to Think Hard, When to Think Fast" — EMNLP 2025
-//   "Thinkless: LLM Learns When to Think" — NeurIPS 2025 (VainF/Thinkless)
+//
+//	"ThinkSwitcher: When to Think Hard, When to Think Fast" — EMNLP 2025
+//	"Thinkless: LLM Learns When to Think" — NeurIPS 2025 (VainF/Thinkless)
 //
 // ThinkSwitcherFilter is a meta-routing filter: it measures the "reasoning
 // density" of an output (fraction of lines that look like deliberate
 // reasoning) and routes to the appropriate compression level.
 //
 // Three paths:
-//   fast   — reasoning density < fastThreshold: no reasoning detected,
-//             pass through unchanged (avoids wasted CPU on direct answers)
-//   light  — fastThreshold ≤ density < heavyThreshold: some reasoning,
-//             compress to 50% of reasoning lines keeping key sentences
-//   heavy  — density ≥ heavyThreshold: heavy reasoning present,
-//             collapse to a one-line summary per reasoning block
+//
+//	fast   — reasoning density < fastThreshold: no reasoning detected,
+//	          pass through unchanged (avoids wasted CPU on direct answers)
+//	light  — fastThreshold ≤ density < heavyThreshold: some reasoning,
+//	          compress to 50% of reasoning lines keeping key sentences
+//	heavy  — density ≥ heavyThreshold: heavy reasoning present,
+//	          collapse to a one-line summary per reasoning block
 //
 // Key insight from ThinkSwitcher: the majority of LLM outputs need no CoT
 // compression at all. Running compression unconditionally wastes resources
@@ -254,4 +256,3 @@ func tsLineScore(line string, freq map[string]int) float64 {
 	}
 	return score / float64(len(terms))
 }
-

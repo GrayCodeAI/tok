@@ -13,10 +13,11 @@ import (
 // agent output sequences and drops the non-critical ones.
 //
 // Criticality is defined as: did this action cause an observable state change?
-//   Critical:     error output, file writes/deletes, test failures, non-empty diffs,
-//                 non-zero exit codes, assertion failures, CRUD operations
-//   Non-critical: empty results, successful no-ops, pure info queries,
-//                 repeated identical results, health checks
+//
+//	Critical:     error output, file writes/deletes, test failures, non-empty diffs,
+//	              non-zero exit codes, assertion failures, CRUD operations
+//	Non-critical: empty results, successful no-ops, pure info queries,
+//	              repeated identical results, health checks
 //
 // CARL's key insight (from RL perspective): in a long agent trajectory, most
 // actions are "maintenance" (checking state, listing files, echoing info) and
@@ -85,7 +86,7 @@ func (f *CARLFilter) Apply(input string, mode Mode) (string, int) {
 
 	suppress := make(map[int]bool)
 	for _, e := range entries {
-		score := f.criticalityScore(lines[e.start:e.end+1])
+		score := f.criticalityScore(lines[e.start : e.end+1])
 		if score < critThreshold {
 			for i := e.start; i <= e.end; i++ {
 				suppress[i] = true
