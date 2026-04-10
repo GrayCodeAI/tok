@@ -65,6 +65,11 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		ExtractiveSignalLines:     c.ExtractiveSignalLines,
 		EnableQualityGuardrail:    c.EnableQualityGuardrail,
 		EnablePlannedLayers:       c.EnablePlannedLayers,
+		EnableDiffAdapt:           c.EnableDiffAdapt,
+		EnableEPiC:                c.EnableEPiC,
+		EnableSSDP:                c.EnableSSDP,
+		EnableAgentOCR:            c.EnableAgentOCR,
+		EnableS2MAD:               c.EnableS2MAD,
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {
