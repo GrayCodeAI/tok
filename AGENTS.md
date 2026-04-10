@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-TokMan is a token-aware CLI proxy written in Go. It intercepts CLI commands and applies a 31-stage core compression pipeline (with experimental extension toward 50+ layers) to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves 60-90% token reduction on common development operations.
+TokMan is a token-aware CLI proxy written in Go. It intercepts CLI commands and applies a practical 20-layer compression pipeline to reduce token usage for AI coding assistants. Built on research from 120+ papers, it achieves 60-90% token reduction on common development operations.
 
 **Module:** `github.com/GrayCodeAI/tokman`
 **Go Version:** 1.21+ (1.26+ for planned SIMD support)
@@ -117,7 +117,7 @@ if shared.UltraCompact { ... }
 
 ## Filter Pipeline (`internal/filter/`)
 
-The 31-stage core pipeline is central to TokMan. The `PipelineCoordinator` orchestrates layers with early-exit support and stage gates.
+The practical 20-layer pipeline is central to TokMan. The `PipelineCoordinator` orchestrates layers with early-exit support and stage gates.
 
 ### Layer Architecture
 

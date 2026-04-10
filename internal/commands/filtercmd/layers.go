@@ -36,12 +36,6 @@ Layer 17: Sketch Store (KVReviver, Dec 2025)
 Layer 18: Lazy Pruner (LazyLLM, July 2024)
 Layer 19: Semantic Anchor (Attention Gradient Detection)
 Layer 20: Agent Memory (Knowledge Graph Extraction)
-Layer 21: Question-Aware (LongLLMLingua-style relevance)
-Layer 22: Density-Adaptive (DAST-style allocation)
-Layer 23: Hypernym Compression
-Layer 24: SemantiCache
-Layer 25: SCOPE Filter
-Layer 26: SmallKV/ZipKV
 
 Use --verbose for detailed algorithm explanations.
 `,
@@ -107,18 +101,6 @@ func runLayers(cmd *cobra.Command, args []string) {
 			"Identifies and preserves semantic anchors using attention gradient analysis."},
 		{20, "Agent Memory", "Knowledge Graph Extraction", "Graph",
 			"Extracts knowledge graphs from context for efficient agent memory management."},
-		{21, "Question-Aware", "LongLLMLingua-style", "Query",
-			"Query-dependent relevance scoring that aligns compression with user intent."},
-		{22, "Density-Adaptive", "DAST-style", "Adaptive",
-			"Dynamically allocates compression budget based on information density of content regions."},
-		{23, "Hypernym", "WordNet/Hypernym", "Semantic",
-			"Replaces specific terms with hypernyms for lossy but semantic-preserving compression."},
-		{24, "SemantiCache", "Semantic Caching", "Cache",
-			"Caches semantically similar outputs to avoid redundant processing of repeated queries."},
-		{25, "SCOPE", "SCOPE Framework", "Structured",
-			"Structured compression that preserves output-exposure patterns for code understanding."},
-		{26, "SmallKV/ZipKV", "KV Compression", "Memory",
-			"Advanced KV cache compression combining multiple strategies for maximum memory savings."},
 	}
 
 	for _, l := range layers {

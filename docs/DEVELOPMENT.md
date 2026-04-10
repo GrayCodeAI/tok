@@ -28,7 +28,7 @@ tokman/
 ├── cmd/tokman/              # Entry point
 ├── internal/                # Private packages
 │   ├── commands/            # CLI commands (Cobra)
-│   ├── filter/              # Compression pipeline (31-stage core + experimental extension)
+│   ├── filter/              # Practical 20-layer compression pipeline
 │   ├── core/                # Core functionality
 │   ├── config/              # Configuration
 │   ├── tracking/            # SQLite tracking
