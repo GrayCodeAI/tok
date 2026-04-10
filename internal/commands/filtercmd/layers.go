@@ -11,8 +11,8 @@ import (
 
 var layersCmd = &cobra.Command{
 	Use:   "layers",
-	Short: "Show the 26-layer compression pipeline architecture",
-	Long: `Display information about Tokman's 26-layer compression pipeline.
+	Short: "Show TokMan compression layer architecture",
+	Long: `Display information about TokMan's compression layer architecture.
 
 Each layer is based on cutting-edge research from 2023-2026:
 
@@ -57,7 +57,7 @@ func runLayers(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 
 	fmt.Println("╔═══════════════════════════════════════════════════════════════════════╗")
-	fmt.Println("║           TOKMAN 26-LAYER COMPRESSION PIPELINE                       ║")
+	fmt.Println("║            TOKMAN LAYERED COMPRESSION PIPELINE                       ║")
 	fmt.Println("╠═══════════════════════════════════════════════════════════════════════╣")
 
 	layers := []struct {
