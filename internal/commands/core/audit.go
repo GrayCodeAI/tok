@@ -141,6 +141,8 @@ func printAuditReport(r *audit.Report) {
 	fmt.Printf("Saved Tokens: %d\n", r.Summary.Saved)
 	fmt.Printf("Reduction: %.2f%%\n", r.Summary.ReductionPct)
 	fmt.Printf("Quality: %.1f (%s)\n", r.Quality.Score, r.Quality.Band)
+	fmt.Printf("Budget Controller: %s\n", r.BudgetController.RecommendedMode)
+	fmt.Printf("Anchor Retention: %s (keep-rate %.1f%%)\n", r.AnchorRetention.Grade, r.AnchorRetention.EstimatedKeepRate)
 	if r.DriftFingerprint != "" {
 		fmt.Printf("Drift Fingerprint: %s\n", r.DriftFingerprint[:16])
 	}
@@ -184,6 +186,28 @@ func printAuditReport(r *audit.Report) {
 	} else {
 		for _, cp := range r.CostlyPrompts {
 			fmt.Printf("%s | count=%d original=%d est=$%.4f\n", cp.Command, cp.Count, cp.Original, cp.EstimatedUS)
+		}
+	}
+	fmt.Println()
+
+	fmt.Println("Intent Profiles")
+	fmt.Println("---------------")
+	if len(r.IntentProfiles) == 0 {
+		fmt.Println("No intent profile data yet.")
+	} else {
+		for _, ip := range r.IntentProfiles {
+			fmt.Printf("%s | commands=%d reduction=%.1f%%\n", ip.Intent, ip.Commands, ip.ReductionPct)
+		}
+	}
+	fmt.Println()
+
+	fmt.Println("Agent Budgets")
+	fmt.Println("-------------")
+	if len(r.AgentBudgets) == 0 {
+		fmt.Println("No agent budget data yet.")
+	} else {
+		for _, a := range r.AgentBudgets {
+			fmt.Printf("%s | share=%.1f%% reduction=%.1f%% cost=$%.4f\n", a.Agent, a.BudgetShare, a.ReductionPct, a.EstimatedUS)
 		}
 	}
 	fmt.Println()
