@@ -73,7 +73,7 @@ func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineSt
 
 	// TF-IDF Coarse Pre-filter
 	if p.tfidfFilter != nil {
-		output = p.processLayer(filterLayer{p.tfidfFilter, "0_tfidf"}, output, stats)
+		output = p.processLayer(filterLayer{p.tfidfFilter, "pre_tfidf"}, output, stats)
 	}
 	return output
 }
