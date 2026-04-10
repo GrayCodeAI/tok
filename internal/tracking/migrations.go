@@ -1,7 +1,7 @@
 package tracking
 
 // SchemaVersion is the current database schema version.
-const SchemaVersion = 4
+const SchemaVersion = 5
 
 // CreateCommandsTable creates the main commands table.
 const CreateCommandsTable = `
@@ -360,6 +360,26 @@ CREATE INDEX IF NOT EXISTS idx_sync_logs_device ON sync_logs(device_id);
 CREATE INDEX IF NOT EXISTS idx_sync_logs_timestamp ON sync_logs(timestamp DESC);
 `
 
+// CreateCheckpointEventsTable stores runtime checkpoint trigger events.
+const CreateCheckpointEventsTable = `
+CREATE TABLE IF NOT EXISTS checkpoint_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    command_id INTEGER NOT NULL,
+    session_id TEXT,
+    trigger TEXT NOT NULL,
+    reason TEXT,
+    fill_pct REAL NOT NULL DEFAULT 0.0,
+    quality_score REAL NOT NULL DEFAULT 0.0,
+    cooldown_sec INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (command_id) REFERENCES commands(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkpoint_events_created ON checkpoint_events(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_events_trigger ON checkpoint_events(trigger);
+CREATE INDEX IF NOT EXISTS idx_checkpoint_events_session ON checkpoint_events(session_id);
+`
+
 // Migrations contains all migration statements in order.
 var Migrations = []string{
 	CreateCommandsTable,
@@ -380,6 +400,7 @@ var Migrations = []string{
 	CreateConfigVersionsTable,
 	CreateDevicesTable,
 	CreateSyncLogsTable,
+	CreateCheckpointEventsTable,
 }
 
 // MigrationHistory tracks applied migrations.

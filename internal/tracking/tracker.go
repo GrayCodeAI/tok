@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -338,6 +339,13 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		record.ID = id
 	}
 
+	// Record checkpoint trigger telemetry for this command.
+	if record.ID > 0 {
+		if err := t.autoRecordCheckpointEvents(record); err != nil {
+			slog.Warn("tracking checkpoint telemetry failed", "error", err)
+		}
+	}
+
 	// Run cleanup after recording (throttled - at most once per minute)
 	if !t.closed.Load() {
 		select {
@@ -347,6 +355,244 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 	}
 
 	return nil
+}
+
+func (t *Tracker) autoRecordCheckpointEvents(record *CommandRecord) error {
+	if record == nil {
+		return nil
+	}
+	triggers := evaluateCheckpointTriggers(record)
+	if len(triggers) == 0 {
+		return nil
+	}
+	sessionID := strings.TrimSpace(record.SessionID)
+	if sessionID == "" {
+		sessionID = "global"
+	}
+	fillPct := estimateFillPercent(record.OriginalTokens, record.ModelName)
+	quality := estimateQualityScore(record)
+
+	for _, trigger := range triggers {
+		allowed, cooldownSec, err := t.checkTriggerCooldown(sessionID, trigger, 10*time.Minute)
+		if err != nil {
+			return err
+		}
+		if !allowed {
+			continue
+		}
+		ev := CheckpointEventRecord{
+			CommandID:   record.ID,
+			SessionID:   sessionID,
+			Trigger:     trigger,
+			Reason:      checkpointReason(trigger),
+			FillPct:     fillPct,
+			Quality:     quality,
+			CooldownSec: cooldownSec,
+		}
+		if err := t.RecordCheckpointEvent(&ev); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t *Tracker) checkTriggerCooldown(sessionID, trigger string, cooldown time.Duration) (bool, int, error) {
+	var lastEpoch int64
+	err := t.db.QueryRow(
+		`SELECT COALESCE(CAST(strftime('%s', created_at) AS INTEGER), 0) FROM checkpoint_events
+		 WHERE session_id = ? AND trigger = ?
+		 ORDER BY created_at DESC LIMIT 1`,
+		sessionID, trigger,
+	).Scan(&lastEpoch)
+	if err != nil && err != sql.ErrNoRows {
+		return false, 0, err
+	}
+	if lastEpoch <= 0 {
+		return true, int(cooldown.Seconds()), nil
+	}
+	last := time.Unix(lastEpoch, 0)
+	if time.Since(last) < cooldown {
+		return false, int(cooldown.Seconds()), nil
+	}
+	return true, int(cooldown.Seconds()), nil
+}
+
+func evaluateCheckpointTriggers(record *CommandRecord) []string {
+	out := make([]string, 0, 6)
+	if record.OriginalTokens >= 20_000 {
+		out = append(out, "progressive-20")
+	}
+	if record.OriginalTokens >= 50_000 {
+		out = append(out, "progressive-50")
+	}
+	if record.OriginalTokens >= 100_000 {
+		out = append(out, "progressive-100")
+	}
+	q := estimateQualityScore(record)
+	if q < 80 {
+		out = append(out, "quality-80")
+	}
+	if q < 70 {
+		out = append(out, "quality-70")
+	}
+	if isMilestoneCommand(record.Command, record.ContextRelatedFiles) {
+		out = append(out, "milestone-edit-batch")
+	}
+	return dedupeStrings(out)
+}
+
+func isMilestoneCommand(command string, relatedFiles int) bool {
+	c := strings.ToLower(strings.TrimSpace(command))
+	if relatedFiles >= 3 {
+		return true
+	}
+	return strings.HasPrefix(c, "git commit") ||
+		strings.HasPrefix(c, "git push") ||
+		strings.HasPrefix(c, "git merge")
+}
+
+func estimateFillPercent(originalTokens int, model string) float64 {
+	window := 200000.0
+	m := strings.ToLower(model)
+	switch {
+	case strings.Contains(m, "gpt-5.4"):
+		window = 1100000
+	case strings.Contains(m, "gpt-4.1"), strings.Contains(m, "sonnet"), strings.Contains(m, "opus"), strings.Contains(m, "gemini-2.5-pro"):
+		window = 1000000
+	case strings.Contains(m, "haiku"), strings.Contains(m, "o3"), strings.Contains(m, "o4"):
+		window = 200000
+	}
+	fill := (float64(originalTokens) / window) * 100
+	return math.Max(0, math.Min(100, fill))
+}
+
+func estimateQualityScore(record *CommandRecord) float64 {
+	reduction := 0.0
+	if record.OriginalTokens > 0 {
+		reduction = float64(record.SavedTokens) / float64(record.OriginalTokens) * 100
+	}
+	parseBoost := 0.0
+	if record.ParseSuccess {
+		parseBoost = 30
+	}
+	score := reduction*0.7 + parseBoost
+	if score > 100 {
+		score = 100
+	}
+	if score < 0 {
+		score = 0
+	}
+	return score
+}
+
+func checkpointReason(trigger string) string {
+	switch trigger {
+	case "progressive-20":
+		return "session crossed 20k-token band"
+	case "progressive-50":
+		return "session crossed 50k-token band"
+	case "progressive-100":
+		return "session crossed 100k-token band"
+	case "quality-80":
+		return "quality proxy dropped below 80"
+	case "quality-70":
+		return "quality proxy dropped below 70"
+	case "milestone-edit-batch":
+		return "edit/milestone command batch detected"
+	default:
+		return "trigger condition matched"
+	}
+}
+
+func dedupeStrings(in []string) []string {
+	if len(in) == 0 {
+		return in
+	}
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, item := range in {
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	return out
+}
+
+// RecordCheckpointEvent persists a checkpoint trigger event.
+func (t *Tracker) RecordCheckpointEvent(event *CheckpointEventRecord) error {
+	if event == nil {
+		return nil
+	}
+	_, err := t.db.Exec(
+		`INSERT INTO checkpoint_events
+		 (command_id, session_id, trigger, reason, fill_pct, quality_score, cooldown_sec)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		event.CommandID,
+		event.SessionID,
+		event.Trigger,
+		event.Reason,
+		event.FillPct,
+		event.Quality,
+		event.CooldownSec,
+	)
+	return err
+}
+
+// GetCheckpointTelemetry returns trigger event telemetry for the last N days.
+func (t *Tracker) GetCheckpointTelemetry(days int) (*CheckpointTelemetry, error) {
+	if days <= 0 {
+		days = 7
+	}
+	telemetry := &CheckpointTelemetry{
+		Days:      days,
+		ByTrigger: map[string]int64{},
+	}
+	window := fmt.Sprintf("-%d day", days)
+
+	if err := t.db.QueryRow(
+		"SELECT COALESCE(COUNT(*),0) FROM checkpoint_events WHERE created_at >= datetime('now', ?)",
+		window,
+	).Scan(&telemetry.TotalEvents); err != nil {
+		return nil, err
+	}
+
+	rows, err := t.db.Query(
+		`SELECT trigger, COALESCE(COUNT(*),0) FROM checkpoint_events
+		 WHERE created_at >= datetime('now', ?)
+		 GROUP BY trigger ORDER BY COUNT(*) DESC`,
+		window,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var trig string
+		var count int64
+		if err := rows.Scan(&trig, &count); err != nil {
+			return nil, err
+		}
+		telemetry.ByTrigger[trig] = count
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	var last CheckpointEventRecord
+	var lastEpoch int64
+	err = t.db.QueryRow(
+		`SELECT id, command_id, COALESCE(session_id,''), trigger, COALESCE(reason,''),
+		        COALESCE(fill_pct,0), COALESCE(quality_score,0), COALESCE(cooldown_sec,0),
+				COALESCE(CAST(strftime('%s', created_at) AS INTEGER), 0)
+		   FROM checkpoint_events ORDER BY created_at DESC LIMIT 1`,
+	).Scan(&last.ID, &last.CommandID, &last.SessionID, &last.Trigger, &last.Reason, &last.FillPct, &last.Quality, &last.CooldownSec, &lastEpoch)
+	if err == nil {
+		last.CreatedAt = time.Unix(lastEpoch, 0).UTC()
+		telemetry.LastEvent = &last
+	}
+	return telemetry, nil
 }
 
 // LayerStatRecord holds per-layer statistics for database recording.

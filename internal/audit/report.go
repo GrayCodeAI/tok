@@ -1,6 +1,8 @@
 package audit
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -17,7 +19,10 @@ import (
 type Report struct {
 	GeneratedAt      time.Time              `json:"generated_at"`
 	Days             int                    `json:"days"`
+	DriftFingerprint string                 `json:"drift_fingerprint"`
 	Summary          Summary                `json:"summary"`
+	TurnAnalytics    []TurnMetric           `json:"turn_analytics"`
+	CostlyPrompts    []CostlyPrompt         `json:"costly_prompts"`
 	WasteFindings    []Finding              `json:"waste_findings"`
 	ContextOverhead  []ContextComponent     `json:"context_overhead"`
 	Quality          QualityReport          `json:"quality"`
@@ -88,11 +93,32 @@ type LayerSummary struct {
 	CallCount  int64   `json:"call_count"`
 }
 
+// TurnMetric is per-command turn-level analytics.
+type TurnMetric struct {
+	ID          int64     `json:"id"`
+	Command     string    `json:"command"`
+	Timestamp   time.Time `json:"timestamp"`
+	Original    int64     `json:"original_tokens"`
+	Saved       int64     `json:"saved_tokens"`
+	Reduction   float64   `json:"reduction_pct"`
+	EstimatedUS float64   `json:"estimated_cost_usd"`
+}
+
+// CostlyPrompt captures the highest-cost command prompts.
+type CostlyPrompt struct {
+	Command     string  `json:"command"`
+	Count       int64   `json:"count"`
+	Original    int64   `json:"original_tokens"`
+	Saved       int64   `json:"saved_tokens"`
+	EstimatedUS float64 `json:"estimated_cost_usd"`
+}
+
 // Snapshot stores a named point-in-time audit for drift/validation comparisons.
 type Snapshot struct {
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	Report    Report    `json:"report"`
+	Name        string    `json:"name"`
+	CreatedAt   time.Time `json:"created_at"`
+	Fingerprint string    `json:"fingerprint"`
+	Report      Report    `json:"report"`
 }
 
 // CompareReport shows the deltas between two snapshots.
@@ -104,11 +130,22 @@ type CompareReport struct {
 	DeltaReductionPct  float64   `json:"delta_reduction_pct"`
 	DeltaQualityScore  float64   `json:"delta_quality_score"`
 	DeltaParseFailures int64     `json:"delta_parse_failures"`
+	DriftChanged       bool      `json:"drift_changed"`
 	Verdict            string    `json:"verdict"`
+}
+
+// GenerateOptions controls optional audit behavior.
+type GenerateOptions struct {
+	ConfigPath string
 }
 
 // Generate builds the audit report for the last N days.
 func Generate(tracker *tracking.Tracker, days int) (*Report, error) {
+	return GenerateWithOptions(tracker, days, GenerateOptions{})
+}
+
+// GenerateWithOptions builds the audit report with additional runtime options.
+func GenerateWithOptions(tracker *tracking.Tracker, days int, opts GenerateOptions) (*Report, error) {
 	if days <= 0 {
 		days = 30
 	}
@@ -126,20 +163,42 @@ func Generate(tracker *tracking.Tracker, days int) (*Report, error) {
 	if err != nil {
 		return nil, err
 	}
-	findings, err := detectWaste(tracker, window, summary)
+	turns, err := queryTurnAnalytics(tracker, window, 50)
+	if err != nil {
+		return nil, err
+	}
+	costly, err := queryCostlyPrompts(tracker, window, 10)
+	if err != nil {
+		return nil, err
+	}
+	detectorCfg, _ := LoadDetectorConfig(opts.ConfigPath)
+	findings, err := detectWaste(tracker, window, summary, detectorCfg)
 	if err != nil {
 		return nil, err
 	}
 
 	quality := scoreQuality(summary, ctxOverhead)
 	policy := buildCheckpointPolicy(tracker, window, quality)
+	telemetry, telErr := tracker.GetCheckpointTelemetry(days)
+	if telErr == nil && telemetry != nil {
+		if policy.ObservedBands == nil {
+			policy.ObservedBands = map[string]int64{}
+		}
+		for k, v := range telemetry.ByTrigger {
+			policy.ObservedBands["event_"+k] = v
+		}
+	}
+	fingerprint, _ := DriftFingerprint(opts.ConfigPath)
 
 	recs := buildRecommendations(findings, quality, ctxOverhead, policy)
 
 	return &Report{
 		GeneratedAt:      time.Now().UTC(),
 		Days:             days,
+		DriftFingerprint: fingerprint,
 		Summary:          summary,
+		TurnAnalytics:    turns,
+		CostlyPrompts:    costly,
 		WasteFindings:    findings,
 		ContextOverhead:  ctxOverhead,
 		Quality:          quality,
@@ -240,135 +299,85 @@ func queryTopLayers(tr *tracking.Tracker, window string) ([]LayerSummary, error)
 	return out, nil
 }
 
-func detectWaste(tr *tracking.Tracker, window string, summary Summary) ([]Finding, error) {
-	findings := make([]Finding, 0, 8)
-
-	var emptyCount, emptyWaste int64
-	err := tr.QueryRow(`
-		SELECT
-			COALESCE(COUNT(*), 0),
-			COALESCE(SUM(filtered_tokens), 0)
+func queryTurnAnalytics(tr *tracking.Tracker, window string, limit int) ([]TurnMetric, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	rows, err := tr.Query(`
+		SELECT id, command, COALESCE(original_tokens,0), COALESCE(saved_tokens,0),
+		       COALESCE(CAST(strftime('%s', timestamp) AS INTEGER), 0)
 		FROM commands
 		WHERE timestamp >= datetime('now', ?)
-		  AND original_tokens >= 5000
-		  AND filtered_tokens >= CAST(original_tokens * 0.95 AS INTEGER)
-	`, window).Scan(&emptyCount, &emptyWaste)
+		ORDER BY timestamp DESC
+		LIMIT ?
+	`, window, limit)
 	if err != nil {
-		return nil, fmt.Errorf("detect empty runs: %w", err)
+		return nil, err
 	}
-	if emptyCount > 0 {
-		findings = append(findings, Finding{
-			ID:              "empty_runs",
-			Severity:        severityForRatio(float64(emptyCount), float64(max(summary.CommandCount, 1))),
-			Description:     fmt.Sprintf("%d high-input runs produced near-zero compression output", emptyCount),
-			EstimatedWaste:  emptyWaste,
-			EstimatedWasteD: tokensToUSD(emptyWaste),
-			Recommendation:  "Enable stricter checkpoint/compaction triggers for long sessions and idle outputs.",
-		})
+	defer rows.Close()
+	out := make([]TurnMetric, 0, limit)
+	for rows.Next() {
+		var tm TurnMetric
+		var epoch int64
+		if err := rows.Scan(&tm.ID, &tm.Command, &tm.Original, &tm.Saved, &epoch); err != nil {
+			return nil, err
+		}
+		if tm.Original > 0 {
+			tm.Reduction = (float64(tm.Saved) / float64(tm.Original)) * 100
+		}
+		tm.EstimatedUS = tokensToUSD(tm.Original)
+		tm.Timestamp = time.Unix(epoch, 0).UTC()
+		out = append(out, tm)
 	}
+	return out, rows.Err()
+}
 
-	if summary.ParseFailures > 0 {
-		findings = append(findings, Finding{
-			ID:              "parse_failures",
-			Severity:        severityForRatio(float64(summary.ParseFailures), float64(max(summary.CommandCount, 1))),
-			Description:     fmt.Sprintf("%d parse failures reduced optimizer reliability", summary.ParseFailures),
-			EstimatedWaste:  summary.ParseFailures * 1000,
-			EstimatedWasteD: tokensToUSD(summary.ParseFailures * 1000),
-			Recommendation:  "Harden parser fallback paths for high-frequency command families.",
-		})
+func queryCostlyPrompts(tr *tracking.Tracker, window string, limit int) ([]CostlyPrompt, error) {
+	if limit <= 0 {
+		limit = 10
 	}
-
 	rows, err := tr.Query(`
-		SELECT
-			command,
-			COUNT(*) as call_count,
-			COALESCE(SUM(original_tokens), 0) as original_tokens,
-			COALESCE(SUM(saved_tokens), 0) as saved_tokens
+		SELECT command, COUNT(*) as cnt,
+		       COALESCE(SUM(original_tokens),0), COALESCE(SUM(saved_tokens),0)
 		FROM commands
 		WHERE timestamp >= datetime('now', ?)
 		GROUP BY command
-		HAVING original_tokens >= 2000
-		ORDER BY (CAST(saved_tokens AS REAL) / NULLIF(original_tokens, 0)) ASC, original_tokens DESC
-		LIMIT 5
-	`, window)
+		ORDER BY SUM(original_tokens) DESC
+		LIMIT ?
+	`, window, limit)
 	if err != nil {
-		return nil, fmt.Errorf("detect low-efficiency commands: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
-
+	out := make([]CostlyPrompt, 0, limit)
 	for rows.Next() {
-		var cmd string
-		var calls, original, saved int64
-		if err := rows.Scan(&cmd, &calls, &original, &saved); err != nil {
+		var cp CostlyPrompt
+		if err := rows.Scan(&cp.Command, &cp.Count, &cp.Original, &cp.Saved); err != nil {
 			return nil, err
 		}
-		reduction := 0.0
-		if original > 0 {
-			reduction = float64(saved) / float64(original)
-		}
-		if reduction < 0.15 {
-			waste := int64(float64(original)*0.50) - saved
-			if waste < 0 {
-				waste = 0
-			}
-			findings = append(findings, Finding{
-				ID:              "low_efficiency_" + safeID(cmd),
-				Severity:        "medium",
-				Description:     fmt.Sprintf("Command '%s' is under-optimized (%.1f%% reduction over %d calls)", cmd, reduction*100, calls),
-				EstimatedWaste:  waste,
-				EstimatedWasteD: tokensToUSD(waste),
-				Recommendation:  fmt.Sprintf("Tune layer profile or TOML filter for '%s'.", cmd),
-			})
-		}
+		cp.EstimatedUS = tokensToUSD(cp.Original)
+		out = append(out, cp)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
+	return out, rows.Err()
+}
 
-	modelRows, err := tr.Query(`
-		SELECT
-			COALESCE(model_name, ''),
-			COUNT(*) as call_count,
-			COALESCE(SUM(original_tokens), 0) as original_tokens,
-			COALESCE(SUM(saved_tokens), 0) as saved_tokens
-		FROM commands
-		WHERE timestamp >= datetime('now', ?)
-		  AND model_name IS NOT NULL
-		  AND model_name != ''
-		  AND (command GLOB 'ls*' OR command GLOB 'pwd*' OR command GLOB 'git status*' OR command GLOB 'wc*')
-		GROUP BY model_name
-		HAVING call_count >= 3
-	`, window)
-	if err != nil {
-		return nil, fmt.Errorf("detect model routing: %w", err)
-	}
-	defer modelRows.Close()
-	for modelRows.Next() {
-		var model string
-		var calls, original, saved int64
-		if err := modelRows.Scan(&model, &calls, &original, &saved); err != nil {
-			return nil, err
+func detectWaste(tr *tracking.Tracker, window string, summary Summary, cfg DetectorConfig) ([]Finding, error) {
+	findings := make([]Finding, 0, 12)
+	for _, d := range DefaultDetectors() {
+		if !cfg.Enabled(d.ID()) {
+			continue
 		}
-		m := strings.ToLower(model)
-		if strings.Contains(m, "opus") || strings.Contains(m, "gpt-5") || strings.Contains(m, "sonnet") {
-			waste := int64(float64(original)*0.3) - saved
-			if waste < 0 {
-				waste = 0
+		items, err := d.Run(tr, window, summary)
+		if err != nil {
+			return nil, fmt.Errorf("detector %s: %w", d.ID(), err)
+		}
+		for _, item := range items {
+			if !cfg.AllowedSeverity(d.ID(), item.Severity) {
+				continue
 			}
-			findings = append(findings, Finding{
-				ID:              "model_routing",
-				Severity:        "medium",
-				Description:     fmt.Sprintf("High-tier model '%s' used for low-complexity command workflows (%d calls)", model, calls),
-				EstimatedWaste:  waste,
-				EstimatedWasteD: tokensToUSD(waste),
-				Recommendation:  "Route repetitive/low-complexity flows to lower-cost model profiles.",
-			})
+			findings = append(findings, item)
 		}
 	}
-	if err := modelRows.Err(); err != nil {
-		return nil, err
-	}
-
 	sort.Slice(findings, func(i, j int) bool {
 		if findings[i].Severity == findings[j].Severity {
 			return findings[i].EstimatedWaste > findings[j].EstimatedWaste
@@ -520,7 +529,12 @@ func SaveSnapshot(dir, name string, report *Report) (string, error) {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return "", err
 	}
-	s := Snapshot{Name: safeID(name), CreatedAt: time.Now().UTC(), Report: *report}
+	s := Snapshot{
+		Name:        safeID(name),
+		CreatedAt:   time.Now().UTC(),
+		Fingerprint: report.DriftFingerprint,
+		Report:      *report,
+	}
 	b, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return "", err
@@ -551,12 +565,16 @@ func Compare(base, candidate *Snapshot) CompareReport {
 	deltaReduction := candidate.Report.Summary.ReductionPct - base.Report.Summary.ReductionPct
 	deltaQuality := candidate.Report.Quality.Score - base.Report.Quality.Score
 	deltaParseFailures := candidate.Report.Summary.ParseFailures - base.Report.Summary.ParseFailures
+	driftChanged := base.Fingerprint != candidate.Fingerprint
 
 	verdict := "neutral"
 	if deltaReduction >= 3 && deltaQuality >= 0 && deltaParseFailures <= 0 {
 		verdict = "improved"
 	} else if deltaReduction < -2 || deltaQuality < -3 || deltaParseFailures > 0 {
 		verdict = "regressed"
+	}
+	if driftChanged && verdict == "neutral" {
+		verdict = "changed"
 	}
 
 	return CompareReport{
@@ -567,8 +585,23 @@ func Compare(base, candidate *Snapshot) CompareReport {
 		DeltaReductionPct:  deltaReduction,
 		DeltaQualityScore:  deltaQuality,
 		DeltaParseFailures: deltaParseFailures,
+		DriftChanged:       driftChanged,
 		Verdict:            verdict,
 	}
+}
+
+// DriftFingerprint returns a stable fingerprint of the active config.
+func DriftFingerprint(configPath string) (string, error) {
+	if strings.TrimSpace(configPath) == "" {
+		return "", nil
+	}
+	raw, err := os.ReadFile(configPath)
+	if err != nil {
+		return "", err
+	}
+	normalized := strings.TrimSpace(string(raw))
+	sum := sha256.Sum256([]byte(normalized))
+	return hex.EncodeToString(sum[:]), nil
 }
 
 // RenderHTML writes a lightweight dashboard HTML report.
@@ -597,6 +630,10 @@ table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px so
 <div class="card"><h2>Top Layers</h2>
 <table><tr><th>Layer</th><th>Total Saved</th><th>Avg Saved</th><th>Calls</th></tr>
 {{range .TopLayers}}<tr><td>{{.LayerName}}</td><td>{{.TotalSaved}}</td><td>{{printf "%.1f" .AvgSaved}}</td><td>{{.CallCount}}</td></tr>{{end}}
+</table></div>
+<div class="card"><h2>Costly Prompts</h2>
+<table><tr><th>Command</th><th>Count</th><th>Original Tokens</th><th>Estimated Cost (USD)</th></tr>
+{{range .CostlyPrompts}}<tr><td>{{.Command}}</td><td>{{.Count}}</td><td>{{.Original}}</td><td>{{printf "%.4f" .EstimatedUS}}</td></tr>{{end}}
 </table></div>
 <div class="card"><h2>Recommendations</h2><ul>{{range .Recommendations}}<li>{{.}}</li>{{end}}</ul></div>
 </body></html>`
