@@ -86,7 +86,10 @@ var (
 	agentOCR         bool     // Enable AgentOCR layer
 	s2mad            bool     // Enable S2-MAD layer
 	acon             bool     // Enable ACON layer
-	researchPack     bool     // Enable research layer pack (31-36)
+	researchPack     bool     // Enable research layer pack (31-39)
+	latentCollab     bool     // Enable latent collaboration merge layer
+	graphCoT         bool     // Enable graph-CoT compression layer
+	roleBudget       bool     // Enable role-aware budgeting layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -147,6 +150,9 @@ output, applies intelligent filtering, and tracks token savings.`,
 				S2MAD:                s2mad,
 				ACON:                 acon,
 				ResearchPack:         researchPack,
+				LatentCollab:         latentCollab,
+				GraphCoT:             graphCoT,
+				RoleBudget:           roleBudget,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -356,7 +362,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
 		"enable ACON adaptive context optimization layer")
 	rootCmd.PersistentFlags().BoolVar(&researchPack, "research-pack", false,
-		"enable research layer pack (31-36): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON")
+		"enable research layer pack (31-39): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget")
+	rootCmd.PersistentFlags().BoolVar(&latentCollab, "latent-collab", false,
+		"enable latent collaboration merge layer")
+	rootCmd.PersistentFlags().BoolVar(&graphCoT, "graph-cot", false,
+		"enable graph chain-of-thought compression layer")
+	rootCmd.PersistentFlags().BoolVar(&roleBudget, "role-budget", false,
+		"enable role-aware budget allocation layer")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -375,6 +387,9 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_s2_mad", rootCmd.PersistentFlags().Lookup("s2-mad"))
 	_ = viper.BindPFlag("pipeline.enable_acon", rootCmd.PersistentFlags().Lookup("acon"))
 	_ = viper.BindPFlag("pipeline.enable_research_pack", rootCmd.PersistentFlags().Lookup("research-pack"))
+	_ = viper.BindPFlag("pipeline.enable_latent_collab", rootCmd.PersistentFlags().Lookup("latent-collab"))
+	_ = viper.BindPFlag("pipeline.enable_graph_cot", rootCmd.PersistentFlags().Lookup("graph-cot"))
+	_ = viper.BindPFlag("pipeline.enable_role_budget", rootCmd.PersistentFlags().Lookup("role-budget"))
 
 	registry.RegisterAll()
 }

@@ -307,6 +307,9 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.EnableAgentOCR = IsAgentOCREnabled()
 	cfg.EnableS2MAD = IsS2MADEnabled()
 	cfg.EnableACON = IsACONEnabled()
+	cfg.EnableLatentCollab = IsLatentCollabEnabled()
+	cfg.EnableGraphCoT = IsGraphCoTEnabled()
+	cfg.EnableRoleBudget = IsRoleBudgetEnabled()
 	if IsResearchPackEnabled() {
 		cfg.EnableDiffAdapt = true
 		cfg.EnableEPiC = true
@@ -314,6 +317,9 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		cfg.EnableAgentOCR = true
 		cfg.EnableS2MAD = true
 		cfg.EnableACON = true
+		cfg.EnableLatentCollab = true
+		cfg.EnableGraphCoT = true
+		cfg.EnableRoleBudget = true
 	}
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
