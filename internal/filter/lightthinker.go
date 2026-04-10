@@ -17,7 +17,7 @@ import (
 // informative sentence — a sketch of each reasoning step.
 //
 // Algorithm:
-//  1. Segment input into reasoning steps (numbered/labelled sequences)
+//  1. Segment input into reasoning steps (numbered/labeled sequences)
 //  2. For each step with ≥ minStepLines, extract the "key sentence":
 //     the line with the highest unique-term density relative to the step
 //  3. Replace the step body with: step header + key sentence + stub
@@ -26,9 +26,9 @@ import (
 // Key insight: keeping one sentence per step (the conclusion/observation)
 // preserves the logical trajectory while cutting 60-80% of step content.
 type LightThinkerFilter struct {
-	stepHeaderRe  *regexp.Regexp
-	ordinalRe     *regexp.Regexp
-	minStepLines  int // minimum body lines before compressing a step
+	stepHeaderRe *regexp.Regexp
+	ordinalRe    *regexp.Regexp
+	minStepLines int // minimum body lines before compressing a step
 }
 
 // NewLightThinkerFilter creates a new LightThinker step-level compressor.

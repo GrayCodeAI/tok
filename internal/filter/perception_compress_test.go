@@ -63,7 +63,7 @@ func TestPerceptionCompressFilter_PreservesDistinctLines(t *testing.T) {
 	lines := []string{
 		"The server starts listening on port 8080.",
 		"Database migration completed successfully.",
-		"Worker pool initialised with 4 threads.",
+		"Worker pool initialized with 4 threads.",
 		"Cache warm-up finished loading 1200 entries.",
 		"Health check endpoint registered at slash health.",
 		"TLS certificate loaded from slash etc slash certs.",
