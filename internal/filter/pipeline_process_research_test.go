@@ -19,11 +19,11 @@ func (f researchTestFilter) Apply(input string, _ Mode) (string, int) {
 	return input + "|" + f.tag, f.saved
 }
 
-func TestProcessResearchLayers_OrderIncludes31To35(t *testing.T) {
-	calls := make([]string, 0, 15)
+func TestProcessResearchLayers_OrderIncludes31To36(t *testing.T) {
+	calls := make([]string, 0, 16)
 	p := &PipelineCoordinator{
 		config: PipelineConfig{Mode: ModeMinimal, SessionTracking: true},
-		layers: make([]filterLayer, 34),
+		layers: make([]filterLayer, 35),
 	}
 
 	// Non-nil pointers gate execution in processResearchLayers.
@@ -42,11 +42,13 @@ func TestProcessResearchLayers_OrderIncludes31To35(t *testing.T) {
 	p.ssdpFilter = &SSDPFilter{}
 	p.agentOCRFilter = &AgentOCRFilter{}
 	p.s2madFilter = &S2MADFilter{}
+	p.aconFilter = &ACONFilter{}
 
 	names := []string{
 		"21_marginal_info_gain", "22_near_dedup", "23_cot_compress", "24_coding_agent_ctx", "25_perception_compress",
 		"26_lightthinker", "27_think_switcher", "28_gmsa", "29_carl", "30_slim_infer",
 		"31_difft_adapt", "32_epic", "33_ssdp", "34_agent_ocr", "35_s2_mad",
+		"36_acon",
 	}
 	for i, name := range names {
 		p.layers[19+i] = filterLayer{

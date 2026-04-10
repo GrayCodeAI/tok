@@ -70,6 +70,7 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		EnableSSDP:                c.EnableSSDP,
 		EnableAgentOCR:            c.EnableAgentOCR,
 		EnableS2MAD:               c.EnableS2MAD,
+		EnableACON:                c.EnableACON,
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {

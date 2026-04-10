@@ -306,6 +306,7 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.EnableSSDP = IsSSDPEnabled()
 	cfg.EnableAgentOCR = IsAgentOCREnabled()
 	cfg.EnableS2MAD = IsS2MADEnabled()
+	cfg.EnableACON = IsACONEnabled()
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
 

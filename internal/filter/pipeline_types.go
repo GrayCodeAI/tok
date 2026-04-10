@@ -118,6 +118,7 @@ type PipelineCoordinator struct {
 	ssdpFilter          *SSDPFilter
 	agentOCRFilter      *AgentOCRFilter
 	s2madFilter         *S2MADFilter
+	aconFilter          *ACONFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
 	smallKVCompensator *SmallKVCompensator

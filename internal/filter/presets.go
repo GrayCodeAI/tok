@@ -89,6 +89,7 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableSSDP = true
 		cfg.EnableAgentOCR = true
 		cfg.EnableS2MAD = true
+		cfg.EnableACON = true
 
 	case TierCore:
 		cfg.EnableEntropy = true
@@ -180,6 +181,7 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableSSDP = true
 		cfg.EnableAgentOCR = true
 		cfg.EnableS2MAD = true
+		cfg.EnableACON = true
 	}
 
 	return cfg

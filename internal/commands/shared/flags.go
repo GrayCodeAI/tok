@@ -66,6 +66,7 @@ type AppState struct {
 	SSDP             bool
 	AgentOCR         bool
 	S2MAD            bool
+	ACON             bool
 }
 
 // Version is set at build time.
@@ -128,6 +129,7 @@ type FlagConfig struct {
 	SSDP                 bool
 	AgentOCR             bool
 	S2MAD                bool
+	ACON                 bool
 }
 
 // Set sets all flag values atomically.
@@ -172,6 +174,7 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.SSDP = cfg.SSDP
 	s.AgentOCR = cfg.AgentOCR
 	s.S2MAD = cfg.S2MAD
+	s.ACON = cfg.ACON
 	s.mu.Unlock()
 }
 
@@ -434,6 +437,14 @@ func (s *AppState) IsS2MADEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_S2_MAD") == "true"
 }
 
+// IsACONEnabled returns true if ACON layer is enabled.
+func (s *AppState) IsACONEnabled() bool {
+	s.mu.RLock()
+	enabled := s.ACON
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_ACON") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -480,6 +491,7 @@ var (
 	SSDP                 bool
 	AgentOCR             bool
 	S2MAD                bool
+	ACON                 bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -527,6 +539,7 @@ func (s *AppState) syncGlobals() {
 		SSDP:                 s.SSDP,
 		AgentOCR:             s.AgentOCR,
 		S2MAD:                s.S2MAD,
+		ACON:                 s.ACON,
 	}
 	s.mu.RUnlock()
 
@@ -570,6 +583,7 @@ func (s *AppState) syncGlobals() {
 	SSDP = state.SSDP
 	AgentOCR = state.AgentOCR
 	S2MAD = state.S2MAD
+	ACON = state.ACON
 	globalsMu.Unlock()
 }
 
@@ -618,6 +632,7 @@ func (s *AppState) syncFromGlobals() {
 		SSDP:                 SSDP,
 		AgentOCR:             AgentOCR,
 		S2MAD:                S2MAD,
+		ACON:                 ACON,
 	}
 	globalsMu.RUnlock()
 
@@ -794,4 +809,10 @@ func IsAgentOCREnabled() bool {
 func IsS2MADEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsS2MADEnabled()
+}
+
+// IsACONEnabled returns true if ACON layer is enabled.
+func IsACONEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsACONEnabled()
 }
