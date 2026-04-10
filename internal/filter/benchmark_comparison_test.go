@@ -220,7 +220,7 @@ The solution achieves 60-90% token reduction through 26 research-backed layers.`
     Finished dev [unoptimized + debuginfo] target(s) in 45.67s`,
 }
 
-// BenchmarkPipeline_NewVsOld compares old (minimal layers) vs new (full 26-layer) pipeline
+// BenchmarkPipeline_NewVsOld compares old (minimal layers) vs new (full pipeline) profile.
 // across 10 iterations for each input type.
 func BenchmarkPipeline_NewVsOld(b *testing.B) {
 	iterations := 10
@@ -243,7 +243,7 @@ func BenchmarkPipeline_NewVsOld(b *testing.B) {
 			oldSaved[i] = saved
 		}
 
-		// NEW: Full 26-layer pipeline with BPE tokenization
+		// NEW: Full pipeline profile with BPE tokenization
 		newTimes := make([]time.Duration, iterations)
 		newSaved := make([]int, iterations)
 		for i := 0; i < iterations; i++ {

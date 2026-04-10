@@ -14,7 +14,7 @@ type filterLayer struct {
 	name   string
 }
 
-// PipelineCoordinator orchestrates the 26-layer compression pipeline.
+// PipelineCoordinator orchestrates the practical 20-layer compression pipeline.
 // Research-based: Combines the best techniques from 120+ research papers worldwide
 // to achieve maximum token reduction for CLI/Agent output.
 type PipelineCoordinator struct {

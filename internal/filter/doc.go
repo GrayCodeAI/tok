@@ -1,4 +1,4 @@
-// Package filter implements the 31-layer token compression pipeline.
+// Package filter implements the practical 20-layer token compression pipeline.
 //
 // # Organization
 //
@@ -20,7 +20,8 @@
 //
 //	Context-aware compression for conversations and complex output.
 //
-// Layer 21-27: Research Filters (swezze.go, mixed_dim.go, beaver.go, etc.)
+// Additional research filters exist in the repository but are not part of the
+// default practical 20-layer runtime profile.
 //
 //	Latest research from arXiv 2025-2026.
 //
@@ -38,7 +39,7 @@
 //
 // # Usage
 //
-// For full 31-layer pipeline:
+// For the practical 20-layer pipeline:
 //
 //	cfg := filter.PipelineConfig{EnableEntropy: true, ...}
 //	pipeline := filter.NewPipelineCoordinator(cfg)

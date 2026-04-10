@@ -93,7 +93,7 @@ TokMan uses a **thin delegator** pattern with Claude Code's `PreToolUse` hook:
 |--------|-------------|
 | **Binary Size** | ~12MB (dynamic) |
 | **Startup Time** | ~15ms |
-| **Registry** | 31 patterns (regex) |
+| **Registry** | 20 core patterns (regex) |
 | **Hook Size** | 45 lines |
 | **Rewrite Logic** | In binary (registry.go) |
 | **Compound Commands** | &&, ||, ;, \|, & |

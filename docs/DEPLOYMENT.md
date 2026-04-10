@@ -357,7 +357,7 @@ brews:
       owner: GrayCodeAI
       name: homebrew-tokman
     homepage: "https://github.com/GrayCodeAI/tokman"
-    description: "Token-aware CLI proxy with 31-stage core compression pipeline"
+    description: "Token-aware CLI proxy with practical 20-layer compression pipeline"
     license: "MIT"
     test: |
       system "#{bin}/tokman", "--version"

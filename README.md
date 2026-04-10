@@ -4,7 +4,7 @@
 
 **Token-aware CLI proxy & AI gateway for coding assistants**
 
-*31-stage core pipeline + experimental extension toward 50+ layers*
+*Practical 20-layer pipeline focused on real-world compression quality*
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -21,7 +21,7 @@
 
 ## 💡 What is TokMan?
 
-TokMan intercepts CLI commands and applies an intelligent **31-stage core compression pipeline** to drastically reduce token usage for AI coding assistants. It also includes an experimental extension pack (layers `30..49`) on the path to **50+ research-backed layers**.
+TokMan intercepts CLI commands and applies an intelligent **20-layer compression pipeline** to drastically reduce token usage for AI coding assistants with practical, high-impact defaults.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
@@ -49,7 +49,7 @@ TokMan intercepts CLI commands and applies an intelligent **31-stage core compre
 <td width="50%">
 
 ### 🎯 Intelligence
-- **31 compression layers** from academic research
+- **20 practical compression layers** from academic research
 - **Content-aware** filtering (code, logs, JSON, etc.)
 - **Context preservation** - keeps what matters
 - **Semantic understanding** of command output
@@ -194,12 +194,12 @@ tokman dashboard  # Launch analytics dashboard
 
 ## 🧠 How It Works
 
-TokMan uses a **31-stage core pipeline** with optional experimental layers inspired by cutting-edge research:
+TokMan uses a **20-layer pipeline** inspired by cutting-edge research:
 
 ```
 Input → Content Detection → Pipeline Selection → Compression → Output
          ↓                    ↓                   ↓
-      [JSON, Code,        [Surface, Trim,    [Core + experimental:
+      [JSON, Code,        [Surface, Trim,    [20 layers:
        Logs, etc.]         Extract, Core]     Entropy, H2O,
                                                AST, Gist, etc.]
 ```
@@ -211,7 +211,7 @@ Input → Content Detection → Pipeline Selection → Compression → Output
 | 🟢 **Surface** | 3 | 30-50% | Quick cleanup, preserve everything |
 | 🟡 **Trim** | 12 | 50-70% | Balanced compression |
 | 🟠 **Extract** | 24 | 70-90% | Aggressive, preserve essence |
-| 🔴 **Core** | 31 | 90%+ | Maximum compression |
+| 🔴 **Core** | 20 | 90%+ | Maximum practical compression |
 
 ### Specialized Profiles
 
@@ -281,7 +281,7 @@ TokMan has built-in filters for **97+ development tools**:
 ├─────────────────────────────────────────────────────────────┤
 │  🎯 Command Router  →  📊 Content Detector  →  ⚙️  Pipeline  │
 ├─────────────────────────────────────────────────────────────┤
-│                    31 Compression Layers                     │
+│                    20 Compression Layers                     │
 │  ├─ Entropy Filtering        ├─ H2O (Heavy-Hitter Oracle)  │
 │  ├─ Perplexity Pruning       ├─ Attention Sink             │
 │  ├─ AST Preservation         ├─ Meta-Token Compression     │
@@ -366,12 +366,12 @@ make check          # Run all checks
 - **Tests**: 144 packages with tests
 - **Lines of Code**: ~50,000
 - **Built-in Filters**: 97 TOML filters
-- **Compression Layers**: 31-stage core + experimental extension
+- **Compression Layers**: 20
 - **Platforms**: Linux, macOS, Windows (amd64/arm64)
 
 ## 🗺️ Roadmap
 
-- [x] Core compression pipeline (31 stages)
+- [x] Core compression pipeline (20 layers)
 - [x] TOML filter system
 - [x] Agent integration (Claude, Cursor, Copilot, etc.)
 - [x] Analytics dashboard
@@ -388,7 +388,7 @@ make check          # Run all checks
 | Feature | TokMan | RTK | OMNI | Snip | Token-MCP |
 |---------|--------|-----|------|------|-----------|
 | **Language** | Go | Rust | Rust | Go | TypeScript |
-| **Compression Layers** | **31 core + exp** | ~15 | Semantic | YAML | Cache |
+| **Compression Layers** | **20 practical** | ~15 | Semantic | YAML | Cache |
 | **Token Reduction** | 60-90% | 60-90% | ~90% | 60-90% | 60-90% |
 | **Quality Metrics** | ✅ 6 metrics | ❌ | ❌ | ❌ | ❌ |
 | **Research-Backed** | ✅ 120+ papers | ❌ | ❌ | ❌ | ❌ |
@@ -398,7 +398,7 @@ make check          # Run all checks
 | **Cost Analysis** | ✅ | ❌ | ❌ | ❌ | ❌ |
 | **Standalone Binary** | ✅ | ✅ | ✅ | ✅ | ❌ |
 
-> TokMan has one of the deepest open compression stacks (31-stage core plus experimental expansion) and is the only tool here with quality metrics and research-backed architecture.
+> TokMan focuses on a practical 20-layer stack tuned for real-world usefulness and quality retention.
 
 ---
 
@@ -443,7 +443,7 @@ TokMan processes everything locally. No data is sent externally. Telemetry is op
 <details>
 <summary><b>How does it compare to RTK?</b></summary>
 
-RTK is a Rust-based competitor with ~15 filtering strategies. TokMan has 31 research-backed layers, quality metrics, multi-file intelligence, and cost analysis that RTK lacks.
+RTK is a Rust-based competitor with ~15 filtering strategies. TokMan has a practical 20-layer stack, quality metrics, multi-file intelligence, and cost analysis that RTK lacks.
 </details>
 
 <details>
