@@ -301,6 +301,11 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	cfg.ExtractiveTailLines = GetExtractiveTail()
 	cfg.ExtractiveSignalLines = GetExtractiveSignal()
 	cfg.EnableQualityGuardrail = IsQualityGuardrailEnabled()
+	cfg.EnableDiffAdapt = IsDiffAdaptEnabled()
+	cfg.EnableEPiC = IsEPiCEnabled()
+	cfg.EnableSSDP = IsSSDPEnabled()
+	cfg.EnableAgentOCR = IsAgentOCREnabled()
+	cfg.EnableS2MAD = IsS2MADEnabled()
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
 

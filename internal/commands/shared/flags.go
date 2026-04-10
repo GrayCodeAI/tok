@@ -61,6 +61,11 @@ type AppState struct {
 	ExtractiveTail   int
 	ExtractiveSignal int
 	QualityGuardrail bool
+	DiffAdapt        bool
+	EPiC             bool
+	SSDP             bool
+	AgentOCR         bool
+	S2MAD            bool
 }
 
 // Version is set at build time.
@@ -118,6 +123,11 @@ type FlagConfig struct {
 	ExtractiveTail       int
 	ExtractiveSignal     int
 	QualityGuardrail     bool
+	DiffAdapt            bool
+	EPiC                 bool
+	SSDP                 bool
+	AgentOCR             bool
+	S2MAD                bool
 }
 
 // Set sets all flag values atomically.
@@ -157,6 +167,11 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.ExtractiveTail = cfg.ExtractiveTail
 	s.ExtractiveSignal = cfg.ExtractiveSignal
 	s.QualityGuardrail = cfg.QualityGuardrail
+	s.DiffAdapt = cfg.DiffAdapt
+	s.EPiC = cfg.EPiC
+	s.SSDP = cfg.SSDP
+	s.AgentOCR = cfg.AgentOCR
+	s.S2MAD = cfg.S2MAD
 	s.mu.Unlock()
 }
 
@@ -379,6 +394,46 @@ func (s *AppState) IsQualityGuardrailEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_QUALITY_GUARDRAIL") == "true"
 }
 
+// IsDiffAdaptEnabled returns true if DiffAdapt layer is enabled.
+func (s *AppState) IsDiffAdaptEnabled() bool {
+	s.mu.RLock()
+	enabled := s.DiffAdapt
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_DIFF_ADAPT") == "true"
+}
+
+// IsEPiCEnabled returns true if EPiC layer is enabled.
+func (s *AppState) IsEPiCEnabled() bool {
+	s.mu.RLock()
+	enabled := s.EPiC
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_EPIC") == "true"
+}
+
+// IsSSDPEnabled returns true if SSDP layer is enabled.
+func (s *AppState) IsSSDPEnabled() bool {
+	s.mu.RLock()
+	enabled := s.SSDP
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_SSDP") == "true"
+}
+
+// IsAgentOCREnabled returns true if AgentOCR layer is enabled.
+func (s *AppState) IsAgentOCREnabled() bool {
+	s.mu.RLock()
+	enabled := s.AgentOCR
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_AGENT_OCR") == "true"
+}
+
+// IsS2MADEnabled returns true if S2-MAD layer is enabled.
+func (s *AppState) IsS2MADEnabled() bool {
+	s.mu.RLock()
+	enabled := s.S2MAD
+	s.mu.RUnlock()
+	return enabled || os.Getenv("TOKMAN_S2_MAD") == "true"
+}
+
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
 
@@ -420,6 +475,11 @@ var (
 	ExtractiveTail       int
 	ExtractiveSignal     int
 	QualityGuardrail     bool
+	DiffAdapt            bool
+	EPiC                 bool
+	SSDP                 bool
+	AgentOCR             bool
+	S2MAD                bool
 )
 
 // syncGlobals copies AppState fields to package-level globals.
@@ -462,6 +522,11 @@ func (s *AppState) syncGlobals() {
 		ExtractiveTail:       s.ExtractiveTail,
 		ExtractiveSignal:     s.ExtractiveSignal,
 		QualityGuardrail:     s.QualityGuardrail,
+		DiffAdapt:            s.DiffAdapt,
+		EPiC:                 s.EPiC,
+		SSDP:                 s.SSDP,
+		AgentOCR:             s.AgentOCR,
+		S2MAD:                s.S2MAD,
 	}
 	s.mu.RUnlock()
 
@@ -500,6 +565,11 @@ func (s *AppState) syncGlobals() {
 	ExtractiveTail = state.ExtractiveTail
 	ExtractiveSignal = state.ExtractiveSignal
 	QualityGuardrail = state.QualityGuardrail
+	DiffAdapt = state.DiffAdapt
+	EPiC = state.EPiC
+	SSDP = state.SSDP
+	AgentOCR = state.AgentOCR
+	S2MAD = state.S2MAD
 	globalsMu.Unlock()
 }
 
@@ -543,6 +613,11 @@ func (s *AppState) syncFromGlobals() {
 		ExtractiveTail:       ExtractiveTail,
 		ExtractiveSignal:     ExtractiveSignal,
 		QualityGuardrail:     QualityGuardrail,
+		DiffAdapt:            DiffAdapt,
+		EPiC:                 EPiC,
+		SSDP:                 SSDP,
+		AgentOCR:             AgentOCR,
+		S2MAD:                S2MAD,
 	}
 	globalsMu.RUnlock()
 
@@ -689,4 +764,34 @@ func GetExtractiveSignal() int {
 func IsQualityGuardrailEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsQualityGuardrailEnabled()
+}
+
+// IsDiffAdaptEnabled returns true if DiffAdapt layer is enabled.
+func IsDiffAdaptEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsDiffAdaptEnabled()
+}
+
+// IsEPiCEnabled returns true if EPiC layer is enabled.
+func IsEPiCEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsEPiCEnabled()
+}
+
+// IsSSDPEnabled returns true if SSDP layer is enabled.
+func IsSSDPEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsSSDPEnabled()
+}
+
+// IsAgentOCREnabled returns true if AgentOCR layer is enabled.
+func IsAgentOCREnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsAgentOCREnabled()
+}
+
+// IsS2MADEnabled returns true if S2-MAD layer is enabled.
+func IsS2MADEnabled() bool {
+	globalState.syncFromGlobals()
+	return globalState.IsS2MADEnabled()
 }

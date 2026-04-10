@@ -80,6 +80,11 @@ var (
 	extractiveTail   int      // Tail lines to preserve
 	extractiveSignal int      // Signal lines to preserve
 	qualityGuardrail bool     // Enable quality guardrail auto-fallback
+	diffAdapt        bool     // Enable DiffAdapt layer
+	epic             bool     // Enable EPiC layer
+	ssdp             bool     // Enable SSDP layer
+	agentOCR         bool     // Enable AgentOCR layer
+	s2mad            bool     // Enable S2-MAD layer
 )
 
 // rootCmd represents the base command when called without any subcommands.
@@ -133,6 +138,11 @@ output, applies intelligent filtering, and tracks token savings.`,
 				ExtractiveTail:       extractiveTail,
 				ExtractiveSignal:     extractiveSignal,
 				QualityGuardrail:     qualityGuardrail,
+				DiffAdapt:            diffAdapt,
+				EPiC:                 epic,
+				SSDP:                 ssdp,
+				AgentOCR:             agentOCR,
+				S2MAD:                s2mad,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -329,6 +339,16 @@ func init() {
 		"signal lines to preserve in extractive prefilter")
 	rootCmd.PersistentFlags().BoolVar(&qualityGuardrail, "quality-guardrail", false,
 		"enable quality guardrail with safe fallback when critical context is lost")
+	rootCmd.PersistentFlags().BoolVar(&diffAdapt, "diff-adapt", false,
+		"enable DiffAdapt difficulty-adaptive compression layer")
+	rootCmd.PersistentFlags().BoolVar(&epic, "epic", false,
+		"enable EPiC causal-edge preservation layer")
+	rootCmd.PersistentFlags().BoolVar(&ssdp, "ssdp", false,
+		"enable SSDP tree-of-thought branch pruning layer")
+	rootCmd.PersistentFlags().BoolVar(&agentOCR, "agent-ocr", false,
+		"enable AgentOCR multi-turn content-density compression layer")
+	rootCmd.PersistentFlags().BoolVar(&s2mad, "s2-mad", false,
+		"enable S2-MAD agreement-collapse layer for debate traces")
 
 	_ = viper.BindPFlag("layers.enable", rootCmd.PersistentFlags().Lookup("enable-layer"))
 	_ = viper.BindPFlag("layers.disable", rootCmd.PersistentFlags().Lookup("disable-layer"))
@@ -340,6 +360,11 @@ func init() {
 	_ = viper.BindPFlag("pipeline.extractive_tail_lines", rootCmd.PersistentFlags().Lookup("extractive-tail-lines"))
 	_ = viper.BindPFlag("pipeline.extractive_signal_lines", rootCmd.PersistentFlags().Lookup("extractive-signal-lines"))
 	_ = viper.BindPFlag("pipeline.enable_quality_guardrail", rootCmd.PersistentFlags().Lookup("quality-guardrail"))
+	_ = viper.BindPFlag("pipeline.enable_difft_adapt", rootCmd.PersistentFlags().Lookup("diff-adapt"))
+	_ = viper.BindPFlag("pipeline.enable_epic", rootCmd.PersistentFlags().Lookup("epic"))
+	_ = viper.BindPFlag("pipeline.enable_ssdp", rootCmd.PersistentFlags().Lookup("ssdp"))
+	_ = viper.BindPFlag("pipeline.enable_agent_ocr", rootCmd.PersistentFlags().Lookup("agent-ocr"))
+	_ = viper.BindPFlag("pipeline.enable_s2_mad", rootCmd.PersistentFlags().Lookup("s2-mad"))
 
 	registry.RegisterAll()
 }

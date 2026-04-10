@@ -84,6 +84,11 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableHypernym = true
 		cfg.EnableSemanticCache = true
 		cfg.EnableKVzip = true
+		cfg.EnableDiffAdapt = true
+		cfg.EnableEPiC = true
+		cfg.EnableSSDP = true
+		cfg.EnableAgentOCR = true
+		cfg.EnableS2MAD = true
 
 	case TierCore:
 		cfg.EnableEntropy = true
@@ -170,6 +175,11 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.ExtractiveHeadLines = 80
 		cfg.ExtractiveTailLines = 60
 		cfg.ExtractiveSignalLines = 120
+		cfg.EnableDiffAdapt = true
+		cfg.EnableEPiC = true
+		cfg.EnableSSDP = true
+		cfg.EnableAgentOCR = true
+		cfg.EnableS2MAD = true
 	}
 
 	return cfg
