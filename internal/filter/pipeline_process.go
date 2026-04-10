@@ -41,6 +41,15 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 
 	// Phase 2 layers
 	output = p.processPhase2Layers(output, stats)
+	if p.shouldEarlyExit(stats) {
+		return output, p.finalizeStats(stats, output)
+	}
+
+	// Planned 30-49 experimental layers (disabled by default).
+	output = p.processPlannedLayers(output, stats)
+	if p.shouldEarlyExit(stats) {
+		return output, p.finalizeStats(stats, output)
+	}
 
 	// Recovery layers
 	output = p.processRecoveryLayers(output, stats)
@@ -315,6 +324,19 @@ func (p *PipelineCoordinator) processRecoveryLayers(output string, stats *Pipeli
 
 	if p.densityAdaptiveFilter != nil && !p.shouldSkipSemanticChunk(output) {
 		output = p.processLayer(filterLayer{p.densityAdaptiveFilter, "29_density_adaptive"}, output, stats)
+	}
+	return output
+}
+
+func (p *PipelineCoordinator) processPlannedLayers(output string, stats *PipelineStats) string {
+	if len(p.plannedLayers) == 0 {
+		return output
+	}
+	for _, layer := range p.plannedLayers {
+		output = p.processLayer(layer, output, stats)
+		if p.shouldEarlyExit(stats) {
+			return output
+		}
 	}
 	return output
 }

@@ -64,6 +64,7 @@ func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filt
 		ExtractiveTailLines:       c.ExtractiveTailLines,
 		ExtractiveSignalLines:     c.ExtractiveSignalLines,
 		EnableQualityGuardrail:    c.EnableQualityGuardrail,
+		EnablePlannedLayers:       c.EnablePlannedLayers,
 	}
 
 	if c.DefaultBudget > 0 && c.LazyBudgetRatio > 0 {
