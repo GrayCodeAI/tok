@@ -526,3 +526,18 @@ type LayerStat struct {
 	TokensSaved int
 	Duration    int64
 }
+
+// AddLayerStatSafe adds a layer stat in a thread-safe manner.
+// This method is safe for concurrent use.
+func (s *PipelineStats) AddLayerStatSafe(name string, stat LayerStat) {
+	if s.LayerStats == nil {
+		s.LayerStats = make(map[string]LayerStat)
+	}
+	s.LayerStats[name] = stat
+	s.runningSaved += stat.TokensSaved
+}
+
+// RunningSavedSafe returns the running saved count safely.
+func (s *PipelineStats) RunningSavedSafe() int {
+	return s.runningSaved
+}

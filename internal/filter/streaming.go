@@ -8,7 +8,6 @@ import (
 )
 
 // StreamingThreshold is the token count at which streaming mode activates.
-const StreamingThreshold = 500000
 
 // ChunkSize is the target size for each chunk in streaming mode.
 const ChunkSize = 100000 // 100K tokens per chunk
