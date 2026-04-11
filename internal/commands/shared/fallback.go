@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
@@ -161,7 +162,9 @@ func (h *FallbackHandler) recordCommand(command, originalOutput, filteredOutput 
 		Provider:       os.Getenv("TOKMAN_PROVIDER"),
 		ModelFamily:    utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
 	}
-	_ = h.tracker.Record(record)
+	if err := h.tracker.Record(record); err != nil {
+		slog.Warn("failed to record command", "error", err, "command", command)
+	}
 }
 
 func (h *FallbackHandler) executeCommand(args []string) (string, int, error) {
@@ -197,16 +200,21 @@ func (h *FallbackHandler) saveTee(args []string, output string) string {
 	}
 
 	timestamp := time.Now().Unix()
-	slug := strings.ReplaceAll(strings.Join(args, "_"), "/", "_")
-	slug = strings.ReplaceAll(slug, "\x00", "")
-	slug = strings.ReplaceAll(slug, "\n", "_")
-	slug = strings.ReplaceAll(slug, "\r", "_")
-	slug = strings.ReplaceAll(slug, "\t", "_")
-	if len(slug) > 50 {
-		slug = slug[:50]
-	}
-	filename := fmt.Sprintf("%d_%s.log", timestamp, slug)
+
+	// Use hash-based filename to prevent path traversal attacks
+	// This avoids any user-controlled characters in the filename
+	argsHash := hashArgs(args)
+	filename := fmt.Sprintf("%d_%s.log", timestamp, argsHash)
+
+	// Ensure the filename is safe (no path separators, no traversal)
+	filename = sanitizeFilename(filename)
+
 	path := filepath.Join(h.teeDir, filename)
+
+	// Final safety check: ensure path is within teeDir
+	if !isPathSafe(path, h.teeDir) {
+		return ""
+	}
 
 	if err := os.WriteFile(path, []byte(output), 0600); err != nil {
 		return ""
@@ -215,6 +223,43 @@ func (h *FallbackHandler) saveTee(args []string, output string) string {
 	h.rotateTeeFiles()
 
 	return path
+}
+
+// hashArgs creates a short hash of arguments for safe filenames
+func hashArgs(args []string) string {
+	if len(args) == 0 {
+		return "empty"
+	}
+	// Use a simple hash of the first argument
+	h := 0
+	for i, c := range args[0] {
+		if i > 20 {
+			break
+		}
+		h = 31*h + int(c)
+	}
+	return fmt.Sprintf("%08x", h&0xFFFFFFFF)
+}
+
+// sanitizeFilename removes any potentially dangerous characters from filename
+func sanitizeFilename(name string) string {
+	// Remove any path separators and null bytes
+	name = strings.ReplaceAll(name, "/", "_")
+	name = strings.ReplaceAll(name, "\\", "_")
+	name = strings.ReplaceAll(name, "\x00", "")
+	name = strings.ReplaceAll(name, "..", "_")
+	return name
+}
+
+// isPathSafe checks if the resulting path is within the allowed directory
+func isPathSafe(path, allowedDir string) bool {
+	// Clean and resolve both paths
+	cleanPath := filepath.Clean(path)
+	cleanDir := filepath.Clean(allowedDir)
+
+	// Check if path starts with allowedDir
+	return strings.HasPrefix(cleanPath, cleanDir+string(filepath.Separator)) ||
+		cleanPath == cleanDir
 }
 
 func (h *FallbackHandler) rotateTeeFiles() {

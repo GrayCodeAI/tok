@@ -75,9 +75,18 @@ func (sp *StreamingProcessor) ProcessStream(input string) (string, *PipelineStat
 	// Join results
 	finalOutput := strings.Join(results, "\n")
 
-	// Calculate final reduction
+	// Calculate final reduction with overflow protection
 	if totalStats.OriginalTokens > 0 {
+		if totalStats.TotalSaved < 0 {
+			totalStats.TotalSaved = 0
+		}
 		totalStats.ReductionPercent = float64(totalStats.TotalSaved) / float64(totalStats.OriginalTokens) * 100
+		// Clamp to valid range
+		if totalStats.ReductionPercent < 0 {
+			totalStats.ReductionPercent = 0
+		} else if totalStats.ReductionPercent > 100 {
+			totalStats.ReductionPercent = 100
+		}
 	}
 
 	return finalOutput, totalStats

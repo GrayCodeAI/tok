@@ -4,7 +4,11 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sync"
 )
+
+// loggerMu protects global logger state
+var loggerMu sync.RWMutex
 
 // Logger is the global logger instance.
 var Logger *slog.Logger
@@ -24,6 +28,9 @@ const (
 
 // InitLogger initializes the global logger.
 func InitLogger(logPath string, level LogLevel) error {
+	loggerMu.Lock()
+	defer loggerMu.Unlock()
+
 	// Ensure directory exists
 	if err := os.MkdirAll(filepath.Dir(logPath), 0700); err != nil {
 		return err
@@ -64,8 +71,62 @@ func InitLogger(logPath string, level LogLevel) error {
 
 // Warn logs a warning message.
 func Warn(msg string, args ...any) {
-	if Logger == nil {
+	loggerMu.RLock()
+	logger := Logger
+	loggerMu.RUnlock()
+
+	if logger == nil {
 		return
 	}
-	Logger.Warn(msg, args...)
+	logger.Warn(msg, args...)
+}
+
+// Info logs an info message.
+func Info(msg string, args ...any) {
+	loggerMu.RLock()
+	logger := Logger
+	loggerMu.RUnlock()
+
+	if logger == nil {
+		return
+	}
+	logger.Info(msg, args...)
+}
+
+// Debug logs a debug message.
+func Debug(msg string, args ...any) {
+	loggerMu.RLock()
+	logger := Logger
+	loggerMu.RUnlock()
+
+	if logger == nil {
+		return
+	}
+	logger.Debug(msg, args...)
+}
+
+// Error logs an error message.
+func Error(msg string, args ...any) {
+	loggerMu.RLock()
+	logger := Logger
+	loggerMu.RUnlock()
+
+	if logger == nil {
+		return
+	}
+	logger.Error(msg, args...)
+}
+
+// CloseLogger closes the log file and resets the logger.
+func CloseLogger() error {
+	loggerMu.Lock()
+	defer loggerMu.Unlock()
+
+	if logFile != nil {
+		err := logFile.Close()
+		logFile = nil
+		Logger = nil
+		return err
+	}
+	return nil
 }

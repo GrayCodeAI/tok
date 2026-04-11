@@ -5,9 +5,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -18,23 +21,141 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/security"
 )
 
+// RateLimiter implements token bucket rate limiting per IP
+type RateLimiter struct {
+	mu              sync.RWMutex
+	clients         map[string]*clientLimiter
+	limit           float64       // tokens per second
+	burst           int           // bucket capacity
+	cleanupInterval time.Duration // read-only after creation
+}
+
+type clientLimiter struct {
+	tokens     float64
+	lastUpdate time.Time
+	mu         sync.Mutex
+}
+
+// NewRateLimiter creates a new rate limiter
+func NewRateLimiter(limit float64, burst int) *RateLimiter {
+	rl := &RateLimiter{
+		clients:         make(map[string]*clientLimiter),
+		limit:           limit,
+		burst:           burst,
+		cleanupInterval: 5 * time.Minute,
+	}
+	go rl.cleanupLoop()
+	return rl
+}
+
+// Allow checks if request from clientIP is allowed
+func (rl *RateLimiter) Allow(clientIP string) bool {
+	rl.mu.RLock()
+	cl, exists := rl.clients[clientIP]
+	rl.mu.RUnlock()
+
+	if !exists {
+		rl.mu.Lock()
+		cl = &clientLimiter{
+			tokens:     float64(rl.burst) - 1,
+			lastUpdate: time.Now(),
+		}
+		rl.clients[clientIP] = cl
+		rl.mu.Unlock()
+		return true
+	}
+
+	cl.mu.Lock()
+	defer cl.mu.Unlock()
+
+	// Add tokens based on time elapsed
+	now := time.Now()
+	elapsed := now.Sub(cl.lastUpdate).Seconds()
+	cl.tokens += elapsed * rl.limit
+	if cl.tokens > float64(rl.burst) {
+		cl.tokens = float64(rl.burst)
+	}
+	cl.lastUpdate = now
+
+	// Check if request can be allowed
+	if cl.tokens >= 1 {
+		cl.tokens--
+		return true
+	}
+	return false
+}
+
+// cleanupLoop removes stale entries periodically
+func (rl *RateLimiter) cleanupLoop() {
+	ticker := time.NewTicker(rl.cleanupInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		rl.cleanup()
+	}
+}
+
+// cleanup removes clients that haven't made requests recently
+func (rl *RateLimiter) cleanup() {
+	rl.mu.Lock()
+	defer rl.mu.Unlock()
+
+	cutoff := time.Now().Add(-10 * time.Minute)
+	for ip, cl := range rl.clients {
+		cl.mu.Lock()
+		lastUpdate := cl.lastUpdate
+		cl.mu.Unlock()
+
+		if lastUpdate.Before(cutoff) {
+			delete(rl.clients, ip)
+		}
+	}
+}
+
+// getClientIP extracts client IP from request
+func getClientIP(r *http.Request) string {
+	// Check X-Forwarded-For header
+	xff := r.Header.Get("X-Forwarded-For")
+	if xff != "" {
+		ips := strings.Split(xff, ",")
+		if len(ips) > 0 {
+			return strings.TrimSpace(ips[0])
+		}
+	}
+
+	// Check X-Real-Ip header
+	xri := r.Header.Get("X-Real-Ip")
+	if xri != "" {
+		return xri
+	}
+
+	// Fall back to RemoteAddr
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return host
+}
+
 // Server represents the HTTP API server
 type Server struct {
-	cfg      *config.Config
-	server   *http.Server
-	metrics  *metrics.Metrics
-	health   *health.Checker
-	validate *security.Validator
-	version  string
+	cfg          *config.Config
+	server       *http.Server
+	metrics      *metrics.Metrics
+	health       *health.Checker
+	validate     *security.Validator
+	version      string
+	rateLimiter  *RateLimiter
 }
 
 // New creates a new server instance
 func New(cfg *config.Config, version string) *Server {
 	s := &Server{
-		cfg:      cfg,
-		version:  version,
-		metrics:  metrics.Get(),
-		validate: security.NewValidator(),
+		cfg:          cfg,
+		version:      version,
+		metrics:      metrics.Get(),
+		validate:     security.NewValidator(),
+		rateLimiter:  NewRateLimiter(10, 100), // 10 req/sec, burst of 100
 	}
 
 	return s
@@ -57,8 +178,8 @@ func (s *Server) Start(addr string) error {
 	mux.HandleFunc("/api/v1/stats", s.handleGetStats())
 	mux.HandleFunc("/api/v1/openapi.json", s.handleOpenAPI())
 
-	// Middleware
-	handler := s.loggingMiddleware(s.recoveryMiddleware(mux))
+	// Middleware chain: logging -> rate limiting -> recovery
+	handler := s.loggingMiddleware(s.rateLimitMiddleware(s.recoveryMiddleware(mux)))
 
 	s.server = &http.Server{
 		Addr:         addr,
@@ -125,6 +246,24 @@ func (s *Server) recoveryMiddleware(next http.Handler) http.Handler {
 				s.writeError(w, http.StatusInternalServerError, "internal", fmt.Sprintf("%v", err))
 			}
 		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *Server) rateLimitMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip rate limiting for health endpoints
+		if r.URL.Path == "/health" || r.URL.Path == "/health/live" || r.URL.Path == "/health/ready" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		clientIP := getClientIP(r)
+		if !s.rateLimiter.Allow(clientIP) {
+			w.Header().Set("Retry-After", "60")
+			s.writeError(w, http.StatusTooManyRequests, "ERR_RATE_LIMIT", "rate limit exceeded, please retry later")
+			return
+		}
 		next.ServeHTTP(w, r)
 	})
 }
