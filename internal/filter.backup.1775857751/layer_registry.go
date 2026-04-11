@@ -1,0 +1,98 @@
+package filter
+
+// LayerTier describes maturity/activation tier for a layer.
+type LayerTier string
+
+const (
+	LayerTierStable       LayerTier = "stable"
+	LayerTierExperimental LayerTier = "experimental"
+	LayerTierRecovery     LayerTier = "recovery"
+	LayerTierPlanned      LayerTier = "planned"
+)
+
+// LayerMeta documents a layer and its research provenance.
+type LayerMeta struct {
+	ID       string
+	Name     string
+	Tier     LayerTier
+	Status   string // implemented | planned
+	PaperRef string
+}
+
+// LayerRegistry stores metadata for all known layers.
+type LayerRegistry struct {
+	layers map[string]LayerMeta
+}
+
+func NewLayerRegistry() *LayerRegistry {
+	r := &LayerRegistry{layers: make(map[string]LayerMeta, 64)}
+	for _, m := range defaultLayerMeta() {
+		r.layers[m.ID] = m
+	}
+	return r
+}
+
+func (r *LayerRegistry) Get(id string) (LayerMeta, bool) {
+	m, ok := r.layers[id]
+	return m, ok
+}
+
+func defaultLayerMeta() []LayerMeta {
+	implemented := []LayerMeta{
+		{ID: "1_entropy", Name: "Entropy Filtering", Tier: LayerTierStable, Status: "implemented", PaperRef: "Selective Context (2023)"},
+		{ID: "2_perplexity", Name: "Perplexity Pruning", Tier: LayerTierStable, Status: "implemented", PaperRef: "LLMLingua (2023)"},
+		{ID: "3_goal_driven", Name: "Goal Driven Selection", Tier: LayerTierStable, Status: "implemented", PaperRef: "SWE-Pruner (2026)"},
+		{ID: "4_ast_preserve", Name: "AST Preservation", Tier: LayerTierStable, Status: "implemented", PaperRef: "LongCodeZip"},
+		{ID: "5_contrastive", Name: "Contrastive Ranking", Tier: LayerTierStable, Status: "implemented", PaperRef: "LongLLMLingua"},
+		{ID: "6_ngram", Name: "N-gram Abbreviation", Tier: LayerTierStable, Status: "implemented", PaperRef: "CompactPrompt"},
+		{ID: "7_evaluator", Name: "Evaluator Heads", Tier: LayerTierStable, Status: "implemented", PaperRef: "EHPC"},
+		{ID: "8_gist", Name: "Gist Compression", Tier: LayerTierStable, Status: "implemented", PaperRef: "Gist Tokens"},
+		{ID: "9_hierarchical", Name: "Hierarchical Summary", Tier: LayerTierStable, Status: "implemented", PaperRef: "AutoCompressor"},
+		{ID: "10_budget", Name: "Budget Enforcement", Tier: LayerTierStable, Status: "implemented", PaperRef: "Practical budget control"},
+		{ID: "11_compaction", Name: "Compaction", Tier: LayerTierStable, Status: "implemented", PaperRef: "MemGPT"},
+		{ID: "12_attribution", Name: "Attribution Filter", Tier: LayerTierStable, Status: "implemented", PaperRef: "ProCut"},
+		{ID: "13_h2o", Name: "H2O Filter", Tier: LayerTierStable, Status: "implemented", PaperRef: "H2O"},
+		{ID: "14_attention_sink", Name: "Attention Sink", Tier: LayerTierStable, Status: "implemented", PaperRef: "StreamingLLM"},
+		{ID: "15_meta_token", Name: "Meta Token", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Meta Token (2025)"},
+		{ID: "16_semantic_chunk", Name: "Semantic Chunk", Tier: LayerTierStable, Status: "implemented", PaperRef: "ChunkKV-like"},
+		{ID: "17_semantic_cache", Name: "Semantic Cache", Tier: LayerTierStable, Status: "implemented", PaperRef: "Semantic cache + KVReviver-style storage"},
+		{ID: "18_lazy_pruner", Name: "Lazy Pruner", Tier: LayerTierStable, Status: "implemented", PaperRef: "LazyLLM"},
+		{ID: "19_semantic_anchor", Name: "Semantic Anchor", Tier: LayerTierStable, Status: "implemented", PaperRef: "SAC"},
+		{ID: "20_agent_memory", Name: "Agent Memory", Tier: LayerTierStable, Status: "implemented", PaperRef: "Focus-inspired"},
+		{ID: "21_marginal_info_gain", Name: "Marginal Information Gain", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "COMI (2026)"},
+		{ID: "22_near_dedup", Name: "Near-Duplicate Collapse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "DART (EMNLP 2025)"},
+		{ID: "23_cot_compress", Name: "Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "TokenSkip (2025)"},
+		{ID: "24_coding_agent_ctx", Name: "Coding Agent Context Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SWE-Pruner (2026)"},
+		{ID: "25_perception_compress", Name: "Perception Compress", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Perception Compressor (2025)"},
+		{ID: "26_lightthinker", Name: "LightThinker Step Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightThinker (EMNLP 2025)"},
+		{ID: "27_think_switcher", Name: "Think Switcher Routing", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "ThinkSwitcher (EMNLP 2025) + Thinkless (NeurIPS 2025)"},
+		{ID: "28_gmsa", Name: "Group Merge Semantic Align", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "GMSA (arXiv 2025)"},
+		{ID: "29_carl", Name: "Critical Action Filter", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "CARL (arXiv 2025)"},
+		{ID: "30_slim_infer", Name: "SlimInfer Orphan Pruner", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SlimInfer (arXiv 2025)"},
+		{ID: "31_difft_adapt", Name: "Difficulty-Adaptive Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "DiffAdapt (ICLR 2026)"},
+		{ID: "32_epic", Name: "Causal Edge Preservation", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "EPiC (2025)"},
+		{ID: "33_ssdp", Name: "ToT Branch Pruning", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SSDP / Chopping Trees (NeurIPSW 2025)"},
+		{ID: "34_agent_ocr", Name: "Agent Turn Density Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR (2026)"},
+		{ID: "35_s2_mad", Name: "Debate Agreement Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "S2-MAD (NAACL 2025)"},
+		{ID: "36_acon", Name: "Adaptive Context Optimization", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "ACON (ICLR 2026)"},
+		{ID: "37_latent_collab", Name: "Latent Collaboration Merge", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Latent Collaboration in MAS (2025)"},
+		{ID: "38_graph_cot", Name: "Graph Chain-of-Thought Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Scaling Graph CoT Reasoning (2025)"},
+		{ID: "39_role_budget", Name: "Role-aware Budget Allocation", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Multi-agent role budgeting (inspired)"},
+		{ID: "40_swe_adaptive_loop", Name: "SWE Adaptive Pruning Loop", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "SWE-Pruner style iterative controller"},
+		{ID: "41_agent_ocr_history", Name: "AgentOCR History Compression", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "AgentOCR history extension"},
+		{ID: "42_plan_budget", Name: "Plan and Budget Dynamic Control", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Plan and Budget (ICLR 2026)"},
+		{ID: "43_lightmem", Name: "LightMem Context Reuse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "LightMem (ICLR 2026)"},
+		{ID: "44_path_shorten", Name: "Path and Identifier Shortener", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Photon-like path shortening"},
+		{ID: "45_json_sampler", Name: "JSON Statistical Sampler", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Ionizer-like JSON sampling"},
+		{ID: "46_log_crunch", Name: "Log Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "47_search_crunch", Name: "Search Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "48_diff_crunch", Name: "Diff Crunch", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+		{ID: "49_structural_collapse", Name: "Structural Collapse", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw stage parity"},
+
+		// New: Claw Compactor features (now implemented)
+		{ID: "50_engram_learner", Name: "EngramLearner", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - 14 error pattern classifiers"},
+		{ID: "51_tiered_summary", Name: "TieredSummary", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - L0/L1/L2 progressive summaries"},
+		{ID: "52_crunch_bench", Name: "CrunchBench", Tier: LayerTierExperimental, Status: "implemented", PaperRef: "Claw Compactor - Multi-dimensional benchmark"},
+	}
+	return implemented
+}
