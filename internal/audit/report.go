@@ -181,11 +181,6 @@ type GenerateOptions struct {
 	ConfigPath string
 }
 
-// Generate builds the audit report for the last N days.
-func Generate(tracker *tracking.Tracker, days int) (*Report, error) {
-	return GenerateWithOptions(tracker, days, GenerateOptions{})
-}
-
 // GenerateWithOptions builds the audit report with additional runtime options.
 func GenerateWithOptions(tracker *tracking.Tracker, days int, opts GenerateOptions) (*Report, error) {
 	if days <= 0 {
