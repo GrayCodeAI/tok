@@ -49,7 +49,7 @@ func runBundleInstallCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "bundle_install", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

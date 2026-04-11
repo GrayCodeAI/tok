@@ -85,7 +85,7 @@ func TestGenerateWithTrackerData(t *testing.T) {
 		t.Fatalf("record layer stats: %v", err)
 	}
 
-	report, err := Generate(tr, 30)
+	report, err := GenerateWithOptions(tr, 30, GenerateOptions{})
 	if err != nil {
 		t.Fatalf("generate: %v", err)
 	}

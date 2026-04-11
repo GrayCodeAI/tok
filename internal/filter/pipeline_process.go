@@ -59,13 +59,13 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		return input, &PipelineStats{
 			OriginalTokens: core.EstimateTokens(input),
 			FinalTokens:    core.EstimateTokens(input),
-			LayerStats:     make(map[string]LayerStat),
+			LayerStats:     make(map[string]LayerStat, 50),
 		}
 	}
 
 	stats := &PipelineStats{
 		OriginalTokens: core.EstimateTokens(input),
-		LayerStats:     make(map[string]LayerStat),
+		LayerStats:     make(map[string]LayerStat, 50),
 	}
 
 	output := input

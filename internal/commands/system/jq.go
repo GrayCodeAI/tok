@@ -50,7 +50,7 @@ func runJq(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "jq", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

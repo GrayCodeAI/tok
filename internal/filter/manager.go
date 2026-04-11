@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"container/list"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -10,19 +11,12 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/GrayCodeAI/tokman/internal/config"
 )
 
-// CommandContext provides metadata about the command being executed.
-// Used for intelligent filtering decisions.
-type CommandContext struct {
-	Command    string // "git", "npm", "cargo", etc.
-	Subcommand string // "status", "test", "build"
-	ExitCode   int    // Non-zero = likely has errors
-	Intent     string // "debug", "review", "deploy", "search"
-	IsTest     bool   // Test output detection
-	IsBuild    bool   // Build output detection
-	IsError    bool   // Error output detection
-}
+// CommandContext is now imported from config package to avoid duplication.
+// Use config.CommandContext instead of defining it here.
 
 // PipelineManager handles resilient large-context processing.
 // Supports streaming for inputs up to 2M tokens with automatic
@@ -97,7 +91,7 @@ type ProcessResult struct {
 
 // Process processes input with full resilience and large context support.
 // For inputs > StreamThreshold, uses streaming chunk processing.
-func (m *PipelineManager) Process(input string, mode Mode, ctx CommandContext) (*ProcessResult, error) {
+func (m *PipelineManager) Process(input string, mode Mode, ctx config.CommandContext) (*ProcessResult, error) {
 	result := &ProcessResult{
 		LayerStats: make(map[string]LayerStat),
 	}
@@ -150,7 +144,7 @@ func (m *PipelineManager) Process(input string, mode Mode, ctx CommandContext) (
 }
 
 // processSingle processes input in a single pass
-func (m *PipelineManager) processSingle(input string, mode Mode, ctx CommandContext, result *ProcessResult) (*ProcessResult, error) {
+func (m *PipelineManager) processSingle(input string, mode Mode, ctx config.CommandContext, result *ProcessResult) (*ProcessResult, error) {
 	// Set query intent and process under write lock to prevent races on
 	// coordinator.config between concurrent goroutines.
 	m.mu.Lock()
@@ -241,7 +235,7 @@ func (m *PipelineManager) syncCoordinatorForRequest(mode Mode, query string) {
 }
 
 // processStreaming processes large input in chunks
-func (m *PipelineManager) processStreaming(input string, mode Mode, ctx CommandContext, result *ProcessResult) (*ProcessResult, error) {
+func (m *PipelineManager) processStreaming(input string, mode Mode, ctx config.CommandContext, result *ProcessResult) (*ProcessResult, error) {
 	m.mu.RLock()
 	chunkSize := m.config.ChunkSize
 	failSafeMode := m.config.FailSafeMode
@@ -341,7 +335,7 @@ func (m *PipelineManager) chunkInput(input string, maxTokens int) []string {
 }
 
 // validateOutput checks if output is valid
-func (m *PipelineManager) validateOutput(output, original string, ctx CommandContext) bool {
+func (m *PipelineManager) validateOutput(output, original string, ctx config.CommandContext) bool {
 	// Check for empty output when original was not empty
 	if output == "" && original != "" {
 		return false
@@ -415,12 +409,25 @@ func (m *PipelineManager) checkStructure(s string) bool {
 }
 
 // saveTee saves raw output to a file for recovery
-func (m *PipelineManager) saveTee(input string, ctx CommandContext, reason string) string {
+func (m *PipelineManager) saveTee(input string, ctx config.CommandContext, reason string) string {
+	// Validate input size (limit to 10MB)
+	if len(input) > 10*1024*1024 {
+		fmt.Fprintf(os.Stderr, "warning: tee input too large, skipping\n")
+		return ""
+	}
+
 	timestamp := time.Now().Format("20060102-150405")
 	// Sanitize command to prevent path traversal in filename
 	safeCommand := strings.NewReplacer("/", "_", "\\", "_", "..", "_", " ", "_").Replace(ctx.Command)
 	filename := fmt.Sprintf("tokman-tee-%s-%s-%s.txt", timestamp, safeCommand, reason)
 	path := filepath.Join(m.teeDir, filename)
+
+	// Validate the resolved path is within tee directory
+	absPath, err := filepath.Abs(path)
+	if err != nil || !strings.HasPrefix(absPath, m.teeDir) {
+		fmt.Fprintf(os.Stderr, "warning: invalid tee path, skipping\n")
+		return ""
+	}
 
 	data := struct {
 		Timestamp  time.Time
@@ -428,7 +435,7 @@ func (m *PipelineManager) saveTee(input string, ctx CommandContext, reason strin
 		Subcommand string
 		Reason     string
 		Input      string
-		Context    CommandContext
+		Context    config.CommandContext
 	}{
 		Timestamp:  time.Now(),
 		Command:    ctx.Command,
@@ -451,7 +458,7 @@ func (m *PipelineManager) saveTee(input string, ctx CommandContext, reason strin
 }
 
 // cacheKey generates a cache key for the input
-func (m *PipelineManager) cacheKey(input string, mode Mode, ctx CommandContext) string {
+func (m *PipelineManager) cacheKey(input string, mode Mode, ctx config.CommandContext) string {
 	m.mu.RLock()
 	budget := m.coordinator.config.Budget
 	m.mu.RUnlock()
@@ -466,11 +473,17 @@ func (m *PipelineManager) cacheKey(input string, mode Mode, ctx CommandContext) 
 	)
 }
 
-// CompressionCache provides caching for compression results
+// CompressionCache provides caching for compression results with O(1) eviction
 type CompressionCache struct {
 	maxSize int
-	entries map[string]*CachedResult
+	entries map[string]*cacheEntry
+	order   *list.List
 	mu      sync.RWMutex
+}
+
+type cacheEntry struct {
+	result   *CachedResult
+	element  *list.Element
 }
 
 // CachedResult represents a cached compression result
@@ -484,7 +497,8 @@ type CachedResult struct {
 func NewCompressionCache(maxSize int) *CompressionCache {
 	return &CompressionCache{
 		maxSize: maxSize,
-		entries: make(map[string]*CachedResult),
+		entries: make(map[string]*cacheEntry),
+		order:   list.New(),
 	}
 }
 
@@ -494,10 +508,13 @@ func (c *CompressionCache) Get(key string) (*CachedResult, bool) {
 	defer c.mu.RUnlock()
 
 	entry, ok := c.entries[key]
-	return entry, ok
+	if !ok {
+		return nil, false
+	}
+	return entry.result, ok
 }
 
-// Set stores a result in cache
+// Set stores a result in cache with O(1) eviction
 func (c *CompressionCache) Set(key string, result *CachedResult) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -507,22 +524,23 @@ func (c *CompressionCache) Set(key string, result *CachedResult) {
 		c.evictOldest()
 	}
 
-	c.entries[key] = result
+	element := c.order.PushBack(key)
+	c.entries[key] = &cacheEntry{
+		result:  result,
+		element: element,
+	}
 }
 
-// evictOldest removes the oldest cache entry
+// evictOldest removes the oldest cache entry in O(1)
 func (c *CompressionCache) evictOldest() {
-	var oldestKey string
-	var oldestTime time.Time
-
-	for k, v := range c.entries {
-		if oldestKey == "" || v.CachedAt.Before(oldestTime) {
-			oldestKey = k
-			oldestTime = v.CachedAt
-		}
+	front := c.order.Front()
+	if front == nil {
+		return
 	}
-
-	delete(c.entries, oldestKey)
+	
+	key := front.Value.(string)
+	c.order.Remove(front)
+	delete(c.entries, key)
 }
 
 // Size returns the number of cached entries
@@ -536,7 +554,7 @@ func (c *CompressionCache) Size() int {
 // NOTE: Sets the coordinator budget and calls Process sequentially.
 // In TokMan's CLI context, each invocation is isolated per process,
 // so concurrent budget races are not a practical concern.
-func (m *PipelineManager) ProcessWithBudget(input string, mode Mode, budget int, ctx CommandContext) (*ProcessResult, error) {
+func (m *PipelineManager) ProcessWithBudget(input string, mode Mode, budget int, ctx config.CommandContext) (*ProcessResult, error) {
 	m.mu.Lock()
 	m.coordinator.config.Budget = budget
 	if m.coordinator.budgetEnforcer == nil {
@@ -550,7 +568,7 @@ func (m *PipelineManager) ProcessWithBudget(input string, mode Mode, budget int,
 }
 
 // ProcessWithQuery processes with query-aware compression
-func (m *PipelineManager) ProcessWithQuery(input string, mode Mode, query string, ctx CommandContext) (*ProcessResult, error) {
+func (m *PipelineManager) ProcessWithQuery(input string, mode Mode, query string, ctx config.CommandContext) (*ProcessResult, error) {
 	m.mu.Lock()
 	ctx.Intent = query
 	m.syncCoordinatorForRequest(mode, query)

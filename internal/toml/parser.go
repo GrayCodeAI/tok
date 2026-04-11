@@ -52,9 +52,7 @@ type TOMLFilter struct {
 }
 
 // Parser handles parsing TOML filter files
-type Parser struct {
-	filtersDir string
-}
+type Parser struct{}
 
 // NewParser creates a new TOML filter parser
 func NewParser() *Parser {

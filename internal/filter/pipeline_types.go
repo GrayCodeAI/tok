@@ -105,7 +105,6 @@ type PipelineCoordinator struct {
 
 	// TOML Filter Integration (declarative filters)
 	tomlFilterWrapper Filter
-	tomlFilterName    string
 
 	// Optional guardrail
 	qualityGuardrail *QualityGuardrail
@@ -147,10 +146,8 @@ type PipelineCoordinator struct {
 	smallKVCompensator *SmallKVCompensator
 
 	// Phase 2: Pipeline result cache for repeated inputs
-	resultCache    *cache.FingerprintCache
-	cacheEnabled   bool
-	cacheHitCount  int64
-	cacheMissCount int64
+	resultCache  *cache.FingerprintCache
+	cacheEnabled bool
 
 	// Phase 2: Layer result cache for individual filter results
 	layerCache *LayerCache
@@ -251,12 +248,14 @@ type AgentMemoryLayerConfig struct {
 }
 
 // QuestionAwareLayerConfig groups T12 settings.
+// NOTE: Currently unused - reserved for future implementation.
 type QuestionAwareLayerConfig struct {
 	Enabled   bool
 	Threshold float64
 }
 
 // DensityAdaptiveLayerConfig groups T17 settings.
+// NOTE: Currently unused - reserved for future implementation.
 type DensityAdaptiveLayerConfig struct {
 	Enabled     bool
 	TargetRatio float64
@@ -270,12 +269,14 @@ type TFIDFLayerConfig struct {
 }
 
 // NumericalQuantLayerConfig groups numerical quantization settings.
+// NOTE: Currently unused - reserved for future implementation.
 type NumericalQuantLayerConfig struct {
 	Enabled       bool
 	DecimalPlaces int
 }
 
 // DynamicRatioLayerConfig groups dynamic compression ratio settings.
+// NOTE: Currently unused - reserved for future implementation.
 type DynamicRatioLayerConfig struct {
 	Enabled bool
 	Base    float64

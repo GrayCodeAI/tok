@@ -59,31 +59,10 @@ func FastCountBytes(data string, target byte) int {
 	return count
 }
 
-// FastLower ASCII lowercase conversion (SIMD-friendly)
+// FastLower ASCII lowercase conversion (optimized)
+// Note: Uses strings.ToLower which is already heavily optimized in Go stdlib
 func FastLower(s string) string {
-	if len(s) == 0 {
-		return ""
-	}
-	
-	b := []byte(s)
-	n := len(b)
-	
-	// Process 8 bytes at a time
-	for i := 0; i < n-7; i += 8 {
-		for j := 0; j < 8; j++ {
-			if b[i+j] >= 'A' && b[i+j] <= 'Z' {
-				b[i+j] += 'a' - 'A'
-			}
-		}
-	}
-	
-	// Remaining bytes
-	for i := (n / 8) * 8; i < n; i++ {
-		if b[i] >= 'A' && b[i] <= 'Z' {
-			b[i] += 'a' - 'A'
-		}
-	}
-	return string(b)
+	return strings.ToLower(s)
 }
 
 // FastEqual compares strings with early exit

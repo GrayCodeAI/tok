@@ -53,5 +53,12 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 
 	srv := server.New(cfg, shared.Version)
-	return srv.Run(context.Background(), addr)
+	
+	// Use command context for graceful shutdown on signal
+	ctx := cmd.Context()
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	
+	return srv.Run(ctx, addr)
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func TestRateLimiter_Allow(t *testing.T) {
-	rl := NewRateLimiter(10, 5) // 10 req/sec, burst of 5
+	rl := NewRateLimiter(10, 5, 10000) // 10 req/sec, burst of 5
 
 	clientIP := "192.168.1.1"
 
@@ -34,7 +34,7 @@ func TestRateLimiter_Allow(t *testing.T) {
 }
 
 func TestRateLimiter_TokenRefill(t *testing.T) {
-	rl := NewRateLimiter(100, 1) // 100 req/sec, burst of 1
+	rl := NewRateLimiter(100, 1, 10000) // 100 req/sec, burst of 1
 
 	clientIP := "192.168.1.1"
 
@@ -58,7 +58,7 @@ func TestRateLimiter_TokenRefill(t *testing.T) {
 }
 
 func TestRateLimiter_Cleanup(t *testing.T) {
-	rl := NewRateLimiter(10, 100)
+	rl := NewRateLimiter(10, 100, 10000)
 
 	clientIP := "192.168.1.1"
 
@@ -102,10 +102,10 @@ func TestGetClientIP(t *testing.T) {
 		expected   string
 	}{
 		{
-			name:       "X-Forwarded-For",
+			name:       "X-Forwarded-For ignored for security",
 			remoteAddr: "192.168.1.1:1234",
 			headers:    map[string]string{"X-Forwarded-For": "10.0.0.1, 10.0.0.2"},
-			expected:   "10.0.0.1",
+			expected:   "192.168.1.1", // Uses RemoteAddr, not X-Forwarded-For
 		},
 		{
 			name:       "X-Real-Ip",
@@ -146,7 +146,7 @@ func TestGetClientIP(t *testing.T) {
 func TestRateLimitMiddleware(t *testing.T) {
 	cfg := &config.Config{}
 	s := New(cfg, "test")
-	s.rateLimiter = NewRateLimiter(1, 1) // Very strict: 1 req/sec, burst 1
+	s.rateLimiter = NewRateLimiter(1, 1, 10000) // Very strict: 1 req/sec, burst 1
 
 	// Create handler that returns success
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -186,7 +186,7 @@ func TestRateLimitMiddleware(t *testing.T) {
 func TestRateLimitMiddleware_DifferentClients(t *testing.T) {
 	cfg := &config.Config{}
 	s := New(cfg, "test")
-	s.rateLimiter = NewRateLimiter(1, 1)
+	s.rateLimiter = NewRateLimiter(1, 1, 10000)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -215,7 +215,7 @@ func TestRateLimitMiddleware_DifferentClients(t *testing.T) {
 func TestRateLimitMiddleware_Headers(t *testing.T) {
 	cfg := &config.Config{}
 	s := New(cfg, "test")
-	s.rateLimiter = NewRateLimiter(1, 1)
+	s.rateLimiter = NewRateLimiter(1, 1, 10000)
 
 	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
@@ -241,7 +241,7 @@ func TestRateLimitMiddleware_Headers(t *testing.T) {
 }
 
 func BenchmarkRateLimiter_Allow(b *testing.B) {
-	rl := NewRateLimiter(1000, 1000)
+	rl := NewRateLimiter(1000, 1000, 10000)
 	clientIP := "192.168.1.1"
 
 	b.ResetTimer()
@@ -251,7 +251,7 @@ func BenchmarkRateLimiter_Allow(b *testing.B) {
 }
 
 func BenchmarkRateLimiter_Parallel(b *testing.B) {
-	rl := NewRateLimiter(10000, 1000)
+	rl := NewRateLimiter(10000, 1000, 10000)
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {

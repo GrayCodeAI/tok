@@ -5,7 +5,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/cache"
 	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/simd"
 )
@@ -15,12 +14,6 @@ var (
 	cachedTokenFrequencies map[string]float64
 	tokenFrequenciesOnce   sync.Once
 )
-
-// frequencyCacheEntry stores cached frequency tables (Phase 2 optimization)
-type frequencyCacheEntry struct {
-	freq  map[string]int
-	total int
-}
 
 // Paper: "Selective Context" — Li et al., Mila, 2023
 // https://arxiv.org/abs/2310.06201
@@ -48,10 +41,6 @@ type EntropyFilter struct {
 	// Threshold for entropy-based pruning
 	entropyThreshold float64
 
-	// LRU cache for frequency tables (Phase 2 optimization)
-	freqCache    *cache.FingerprintCache
-	cacheEnabled bool
-
 	// Mutex for thread-safety on mutable dynamic frequency fields
 	mu sync.Mutex
 }
@@ -72,8 +61,6 @@ func NewEntropyFilterWithThreshold(threshold float64) *EntropyFilter {
 		dynamicFreq:      make(map[string]int),
 		zipfExponent:     1.07, // Standard Zipf exponent for English
 		useDynamicEst:    true, // Enable by default
-		// LRU cache for frequency tables
-		cacheEnabled: true, // Phase 2: Enable caching
 	}
 }
 

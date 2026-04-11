@@ -94,7 +94,7 @@ func runNpmTest(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(output, "npm_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

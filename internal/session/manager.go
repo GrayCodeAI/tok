@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -136,8 +137,12 @@ func (sm *SessionManager) CreateSession(agent, projectPath string) (*Session, er
 	sm.sessions[session.ID] = session
 	sm.activeSession = session.ID
 
-	// Call session_start hooks
-	go sm.executeHooks(context.Background(), HookSessionStart, session, nil)
+	// Call session_start hooks with timeout to prevent goroutine leaks
+	hookCtx, hookCancel := context.WithTimeout(context.Background(), 30*time.Second)
+	go func() {
+		defer hookCancel()
+		sm.executeHooks(hookCtx, HookSessionStart, session, nil)
+	}()
 
 	slog.Info("Created new session", "id", session.ID[:8], "agent", agent)
 	return session, nil
@@ -242,27 +247,27 @@ func (sm *SessionManager) PreCompact(ctx context.Context, maxTokens int) (string
 	return summary, nil
 }
 
-// buildContextSummary creates an optimized summary of session context
+// buildContextSummary creates an optimized session context summary
 func (sm *SessionManager) buildContextSummary(session *Session, maxTokens int) string {
-	var summary string
+	var sb strings.Builder
 
 	// Add session header
-	summary += fmt.Sprintf("# Session Context\n")
-	summary += fmt.Sprintf("Agent: %s\n", session.Agent)
-	summary += fmt.Sprintf("Project: %s\n", session.ProjectPath)
-	summary += fmt.Sprintf("Turns: %d | Tokens: %d\n\n", session.Metadata.TotalTurns, session.Metadata.TotalTokens)
+	sb.WriteString("# Session Context\n")
+	sb.WriteString(fmt.Sprintf("Agent: %s\n", session.Agent))
+	sb.WriteString(fmt.Sprintf("Project: %s\n", session.ProjectPath))
+	sb.WriteString(fmt.Sprintf("Turns: %d | Tokens: %d\n\n", session.Metadata.TotalTurns, session.Metadata.TotalTokens))
 
 	// Add state information
 	if session.State.Focus != "" {
-		summary += fmt.Sprintf("**Current Focus:** %s\n\n", session.State.Focus)
+		sb.WriteString(fmt.Sprintf("**Current Focus:** %s\n\n", session.State.Focus))
 	}
 	if session.State.NextAction != "" {
-		summary += fmt.Sprintf("**Next Action:** %s\n\n", session.State.NextAction)
+		sb.WriteString(fmt.Sprintf("**Next Action:** %s\n\n", session.State.NextAction))
 	}
 
 	// Add recent context blocks (most recent first, within token budget)
 	tokenCount := 0
-	summary += "## Recent Activity\n\n"
+	sb.WriteString("## Recent Activity\n\n")
 
 	for i := len(session.ContextBlocks) - 1; i >= 0; i-- {
 		block := session.ContextBlocks[i]
@@ -270,15 +275,15 @@ func (sm *SessionManager) buildContextSummary(session *Session, maxTokens int) s
 			break
 		}
 
-		summary += fmt.Sprintf("**%s** (%s)\n%s\n\n",
+		sb.WriteString(fmt.Sprintf("**%s** (%s)\n%s\n\n",
 			block.Type,
 			block.Timestamp.Format("15:04:05"),
-			block.Content)
+			block.Content))
 
 		tokenCount += block.Tokens
 	}
 
-	return summary
+	return sb.String()
 }
 
 // CreateSnapshot creates a snapshot of the current session

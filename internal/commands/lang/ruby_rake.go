@@ -27,7 +27,7 @@ func runRakeCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "rake", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

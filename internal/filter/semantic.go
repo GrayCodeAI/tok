@@ -191,15 +191,6 @@ func (f *SemanticFilter) isSegmentBoundaryStreaming(line, prevLine string) bool 
 	return false
 }
 
-// isSegmentBoundary is the legacy method for backward compatibility with tests
-func (f *SemanticFilter) isSegmentBoundary(line string, lines []string, idx int) bool {
-	prevLine := ""
-	if idx > 0 {
-		prevLine = lines[idx-1]
-	}
-	return f.isSegmentBoundaryStreaming(line, prevLine)
-}
-
 // scoreSegment calculates information density for a segment
 // Higher score = more important to keep
 func (f *SemanticFilter) scoreSegment(segment string) float64 {

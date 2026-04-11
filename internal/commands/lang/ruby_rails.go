@@ -47,7 +47,7 @@ func runRailsTestCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "rails_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -144,7 +144,7 @@ func runRailsDbMigrateCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "rails_db_migrate", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

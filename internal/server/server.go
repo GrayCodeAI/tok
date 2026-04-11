@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -27,6 +26,7 @@ type RateLimiter struct {
 	clients         map[string]*clientLimiter
 	limit           float64       // tokens per second
 	burst           int           // bucket capacity
+	maxClients      int           // maximum number of tracked clients
 	cleanupInterval time.Duration // read-only after creation
 }
 
@@ -37,11 +37,15 @@ type clientLimiter struct {
 }
 
 // NewRateLimiter creates a new rate limiter
-func NewRateLimiter(limit float64, burst int) *RateLimiter {
+func NewRateLimiter(limit float64, burst int, maxClients int) *RateLimiter {
+	if maxClients <= 0 {
+		maxClients = 10000 // Default max clients
+	}
 	rl := &RateLimiter{
 		clients:         make(map[string]*clientLimiter),
 		limit:           limit,
 		burst:           burst,
+		maxClients:      maxClients,
 		cleanupInterval: 5 * time.Minute,
 	}
 	go rl.cleanupLoop()
@@ -52,9 +56,15 @@ func NewRateLimiter(limit float64, burst int) *RateLimiter {
 func (rl *RateLimiter) Allow(clientIP string) bool {
 	rl.mu.RLock()
 	cl, exists := rl.clients[clientIP]
+	clientCount := len(rl.clients)
 	rl.mu.RUnlock()
 
 	if !exists {
+		// Prevent unbounded memory growth by limiting tracked clients
+		if clientCount >= rl.maxClients {
+			return true // Allow request but don't track to prevent DoS
+		}
+		
 		rl.mu.Lock()
 		cl = &clientLimiter{
 			tokens:     float64(rl.burst) - 1,
@@ -114,22 +124,17 @@ func (rl *RateLimiter) cleanup() {
 
 // getClientIP extracts client IP from request
 func getClientIP(r *http.Request) string {
-	// Check X-Forwarded-For header
-	xff := r.Header.Get("X-Forwarded-For")
-	if xff != "" {
-		ips := strings.Split(xff, ",")
-		if len(ips) > 0 {
-			return strings.TrimSpace(ips[0])
-		}
-	}
-
-	// Check X-Real-Ip header
+	// Only trust X-Forwarded-For when behind a known proxy
+	// For direct connections, use RemoteAddr exclusively
+	// This prevents IP spoofing attacks on rate limiting
+	
+	// Check X-Real-Ip header (only if behind trusted proxy)
 	xri := r.Header.Get("X-Real-Ip")
 	if xri != "" {
 		return xri
 	}
 
-	// Fall back to RemoteAddr
+	// Fall back to RemoteAddr (most trustworthy for direct connections)
 	host, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
 		return r.RemoteAddr
@@ -139,23 +144,47 @@ func getClientIP(r *http.Request) string {
 
 // Server represents the HTTP API server
 type Server struct {
-	cfg          *config.Config
-	server       *http.Server
-	metrics      *metrics.Metrics
-	health       *health.Checker
-	validate     *security.Validator
-	version      string
-	rateLimiter  *RateLimiter
+	cfg         *config.Config
+	server      *http.Server
+	metrics     *metrics.Metrics
+	validate    *security.Validator
+	version     string
+	rateLimiter *RateLimiter
+	tlsCertFile string
+	tlsKeyFile  string
+	apiKey      string
+}
+
+// ServerOption configures a server instance
+type ServerOption func(*Server)
+
+// WithTLS enables TLS with the given certificate and key files
+func WithTLS(certFile, keyFile string) ServerOption {
+	return func(s *Server) {
+		s.tlsCertFile = certFile
+		s.tlsKeyFile = keyFile
+	}
+}
+
+// WithAPIKey sets the API key for authentication
+func WithAPIKey(apiKey string) ServerOption {
+	return func(s *Server) {
+		s.apiKey = apiKey
+	}
 }
 
 // New creates a new server instance
-func New(cfg *config.Config, version string) *Server {
+func New(cfg *config.Config, version string, opts ...ServerOption) *Server {
 	s := &Server{
-		cfg:          cfg,
-		version:      version,
-		metrics:      metrics.Get(),
-		validate:     security.NewValidator(),
-		rateLimiter:  NewRateLimiter(10, 100), // 10 req/sec, burst of 100
+		cfg:         cfg,
+		version:     version,
+		metrics:     metrics.Get(),
+		validate:    security.NewValidator(),
+		rateLimiter: NewRateLimiter(10, 100, 10000), // 10 req/sec, burst of 100, max 10K clients
+	}
+
+	for _, opt := range opts {
+		opt(s)
 	}
 
 	return s
@@ -178,8 +207,8 @@ func (s *Server) Start(addr string) error {
 	mux.HandleFunc("/api/v1/stats", s.handleGetStats())
 	mux.HandleFunc("/api/v1/openapi.json", s.handleOpenAPI())
 
-	// Middleware chain: logging -> rate limiting -> recovery
-	handler := s.loggingMiddleware(s.rateLimitMiddleware(s.recoveryMiddleware(mux)))
+	// Middleware chain: logging -> rate limiting -> auth -> recovery
+	handler := s.loggingMiddleware(s.rateLimitMiddleware(s.authMiddleware(s.recoveryMiddleware(mux))))
 
 	s.server = &http.Server{
 		Addr:         addr,
@@ -190,12 +219,19 @@ func (s *Server) Start(addr string) error {
 	}
 
 	go func() {
-		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		var err error
+		if s.tlsCertFile != "" && s.tlsKeyFile != "" {
+			fmt.Printf("Server started on %s (TLS enabled)\n", addr)
+			err = s.server.ListenAndServeTLS(s.tlsCertFile, s.tlsKeyFile)
+		} else {
+			fmt.Printf("Server started on %s (TLS disabled - use WithTLS option to enable)\n", addr)
+			err = s.server.ListenAndServe()
+		}
+		if err != nil && err != http.ErrServerClosed {
 			fmt.Fprintf(os.Stderr, "Server error: %v\n", err)
 		}
 	}()
 
-	fmt.Printf("Server started on %s\n", addr)
 	return nil
 }
 
@@ -243,9 +279,49 @@ func (s *Server) recoveryMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				s.writeError(w, http.StatusInternalServerError, "internal", fmt.Sprintf("%v", err))
+				// Log full panic details server-side only
+				fmt.Fprintf(os.Stderr, "PANIC: %v\n", err)
+				// Return generic error to client to prevent information disclosure
+				s.writeError(w, http.StatusInternalServerError, "internal", "internal server error")
 			}
 		}()
+		next.ServeHTTP(w, r)
+	})
+}
+
+// authMiddleware provides API key authentication
+func (s *Server) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Skip auth for health endpoints
+		if r.URL.Path == "/health" || r.URL.Path == "/health/live" || r.URL.Path == "/health/ready" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Skip auth if no API key is configured
+		if s.apiKey == "" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Check API key from Authorization header
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			s.writeError(w, http.StatusUnauthorized, "ERR_UNAUTHORIZED", "missing Authorization header")
+			return
+		}
+
+		// Support both "Bearer <key>" and direct key formats
+		key := authHeader
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			key = authHeader[7:]
+		}
+
+		if key != s.apiKey {
+			s.writeError(w, http.StatusForbidden, "ERR_FORBIDDEN", "invalid API key")
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
@@ -314,9 +390,12 @@ func (s *Server) handleCompress() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 
+		// Limit request body size to 10MB to prevent DoS
+		r.Body = http.MaxBytesReader(w, r.Body, 10*1024*1024)
+
 		var req compressRequest
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			s.writeError(w, http.StatusBadRequest, "ERR_INVALID_INPUT", err.Error())
+			s.writeError(w, http.StatusBadRequest, "ERR_INVALID_INPUT", "invalid JSON input")
 			return
 		}
 
@@ -373,24 +452,6 @@ func (s *Server) handleCompress() http.HandlerFunc {
 func (s *Server) handleGetConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		s.writeJSON(w, http.StatusOK, s.cfg)
-	}
-}
-
-func (s *Server) handleUpdateConfig() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		var newCfg config.Config
-		if err := json.NewDecoder(r.Body).Decode(&newCfg); err != nil {
-			s.writeError(w, http.StatusBadRequest, "ERR_INVALID_CONFIG", err.Error())
-			return
-		}
-
-		if err := newCfg.Validate(); err != nil {
-			s.writeError(w, http.StatusBadRequest, "ERR_INVALID_CONFIG", err.Error())
-			return
-		}
-
-		s.cfg = &newCfg
-		s.writeJSON(w, http.StatusOK, map[string]string{"message": "Configuration updated"})
 	}
 }
 

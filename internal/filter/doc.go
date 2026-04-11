@@ -1,52 +1,29 @@
-// Package filter implements the practical 20-layer token compression pipeline.
+// Package filter provides the core token compression pipeline for TokMan.
 //
-// # Organization
+// The filter package implements a multi-layer compression architecture
+// inspired by 120+ research papers from top institutions. It processes
+// CLI output through a series of filter layers to reduce token usage
+// in LLM interactions while preserving semantic meaning.
 //
-// This package contains 85 source files organized by concern:
+// # Pipeline Architecture
 //
-// Core Pipeline (pipeline_*.go, manager.go)
+// The main entry point is PipelineCoordinator, which orchestrates up to
+// 50+ compression layers organized into logical groups:
 //
-//	Pipeline coordinator, config types, layer initialization, and execution.
-//
-// Filter Interface (filter.go)
-//
-//	Shared types: Mode, Filter, Engine, Language detection.
-//
-// Layer 1-10: Core Compression (entropy.go, perplexity.go, goal_driven.go, etc.)
-//
-//	Research-backed token reduction from 120+ papers.
-//
-// Layer 11-20: Semantic Filters (compaction.go, attribution.go, h2o.go, etc.)
-//
-//	Context-aware compression for conversations and complex output.
-//
-// Additional research filters exist in the repository but are not part of the
-// default practical 20-layer runtime profile.
-//
-//	Latest research from arXiv 2025-2026.
-//
-// Adaptive Layers (adaptive.go, density_adaptive.go, dynamic_ratio.go, etc.)
-//
-//	Self-tuning compression based on content characteristics.
-//
-// Utility Filters (ansi.go, noise.go, dedup.go, brace_depth.go, etc.)
-//
-//	Formatting, deduplication, and structural filters.
-//
-// Infrastructure (lru_cache.go, semantic_cache.go, streaming.go, session.go, etc.)
-//
-//	Caching, streaming, session management for pipeline support.
+//   - Core Layers (1-9): Entropy, Perplexity, AST preservation, etc.
+//   - Semantic Layers (11-20): Compaction, H2O, Attention Sink, etc.
+//   - Research Layers (21-49): Advanced techniques like DiffAdapt, EPiC, etc.
 //
 // # Usage
 //
-// For the practical 20-layer pipeline:
+// Create a coordinator with configuration and process text:
 //
-//	cfg := filter.PipelineConfig{EnableEntropy: true, ...}
-//	pipeline := filter.NewPipelineCoordinator(cfg)
-//	output, stats := pipeline.Process(input)
+//	pipeline := filter.NewPipelineCoordinator(config)
+//	output, stats := pipeline.Process(inputText)
+//	fmt.Printf("Saved %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
 //
-// For lightweight filtering (ANSI, comments, imports):
+// # Filter Engine
 //
-//	engine := filter.NewEngine(filter.ModeMinimal)
-//	output, saved := engine.Process(input)
+// For lightweight post-processing, the Engine type provides a simpler
+// filter chain for tasks like ANSI stripping and comment removal.
 package filter

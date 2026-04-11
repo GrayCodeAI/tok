@@ -42,7 +42,6 @@ type ASTPreserveFilter struct {
 	inString     bool
 	stringChar   byte
 	inComment    bool
-	commentStart int
 
 	// Preserve settings
 	preserveImports bool

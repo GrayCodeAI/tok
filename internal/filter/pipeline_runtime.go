@@ -1,10 +1,10 @@
-package config
+package filter
 
-import "github.com/GrayCodeAI/tokman/internal/filter"
+import "github.com/GrayCodeAI/tokman/internal/config"
 
 // PipelineRuntimeOptions carries per-request overrides for the runtime pipeline.
 type PipelineRuntimeOptions struct {
-	Mode        filter.Mode
+	Mode        Mode
 	QueryIntent string
 	Budget      int
 	LLMEnabled  bool
@@ -13,8 +13,8 @@ type PipelineRuntimeOptions struct {
 // ToFilterPipelineConfig converts user-facing config into the runtime pipeline config.
 // Some fields are best-effort mappings because the public config and runtime pipeline
 // have diverged over time; centralizing that mapping keeps behavior consistent.
-func (c PipelineConfig) ToFilterPipelineConfig(opts PipelineRuntimeOptions) filter.PipelineConfig {
-	cfg := filter.PipelineConfig{
+func ToFilterPipelineConfig(c config.PipelineConfig, opts PipelineRuntimeOptions) PipelineConfig {
+	cfg := PipelineConfig{
 		Mode:                      opts.Mode,
 		QueryIntent:               opts.QueryIntent,
 		Budget:                    opts.Budget,

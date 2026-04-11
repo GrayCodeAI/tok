@@ -69,7 +69,7 @@ func runMavenBuild(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "maven_build", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -160,7 +160,7 @@ func runMavenTest(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "maven_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

@@ -70,7 +70,7 @@ func runMixCompile(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mix_compile", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -137,7 +137,7 @@ func runMixTest(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mix_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -289,7 +289,7 @@ func runMixPassthrough(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mix", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

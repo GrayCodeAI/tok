@@ -14,7 +14,6 @@ import (
 var (
 	patternMinConfidence float64
 	patternMaxResults    int
-	patternType          string
 )
 
 func init() {
