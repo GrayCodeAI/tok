@@ -1,19 +1,11 @@
 package cache
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"sync"
 	"time"
 )
 
 var globalCache *FingerprintCache
-
-type Cache struct{}
-
-func New() *Cache {
-	return &Cache{}
-}
 
 func GetGlobalCache() *FingerprintCache {
 	if globalCache == nil {
@@ -85,6 +77,4 @@ func (c *LRUCache) Set(key string, value interface{}) {
 	c.order = append(c.order, key)
 }
 
-func ComputeFingerprint(data string) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(data)))
-}
+
