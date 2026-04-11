@@ -130,14 +130,6 @@ func filterLog(output string) string {
 	return strings.Join(lines, "\n")
 }
 
-func truncateLogLine(line string, width int) string {
-	runes := []rune(line)
-	if len(runes) > width {
-		return string(runes[:width-3]) + "..."
-	}
-	return line
-}
-
 func runGitShow(args []string, verboseLevel int) (string, string, error) {
 	for _, arg := range args {
 		if strings.Contains(arg, ":") && !strings.HasPrefix(arg, "-") {
