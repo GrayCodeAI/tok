@@ -157,9 +157,24 @@ func (s *PipelineStats) computeTotalSaved() int {
 // finalizeStats computes final pipeline statistics.
 func (p *PipelineCoordinator) finalizeStats(stats *PipelineStats, output string) *PipelineStats {
 	stats.FinalTokens = core.EstimateTokens(output)
-	stats.TotalSaved = stats.OriginalTokens - stats.FinalTokens
+
+	// Safely calculate TotalSaved with overflow protection
+	if stats.OriginalTokens >= stats.FinalTokens {
+		stats.TotalSaved = stats.OriginalTokens - stats.FinalTokens
+	} else {
+		// If filtering somehow increased tokens, report 0 savings
+		stats.TotalSaved = 0
+	}
+
+	// Safely calculate ReductionPercent with bounds checking
 	if stats.OriginalTokens > 0 {
 		stats.ReductionPercent = float64(stats.TotalSaved) / float64(stats.OriginalTokens) * 100
+		// Clamp to valid range [0, 100]
+		if stats.ReductionPercent < 0 {
+			stats.ReductionPercent = 0
+		} else if stats.ReductionPercent > 100 {
+			stats.ReductionPercent = 100
+		}
 	}
 	return stats
 }
@@ -167,6 +182,14 @@ func (p *PipelineCoordinator) finalizeStats(stats *PipelineStats, output string)
 // processLayer runs a single filter layer and records its stats.
 // Uses layer cache when available to avoid redundant processing.
 func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stats *PipelineStats) string {
+	// Defensive nil checks
+	if p == nil || stats == nil {
+		return input
+	}
+	if layer.filter == nil {
+		return input
+	}
+
 	if p.layerGate != nil && !p.layerGate.Allows(layer.name) {
 		return input
 	}

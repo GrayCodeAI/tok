@@ -284,9 +284,22 @@ func (m *PipelineManager) processStreaming(input string, mode Mode, ctx CommandC
 	// Combine chunks
 	result.Output = strings.Join(processedChunks, "\n\n--- Chunk Boundary ---\n\n")
 	result.FinalTokens = EstimateTokens(result.Output)
-	result.SavedTokens = result.OriginalTokens - result.FinalTokens
+
+	// Safely calculate saved tokens with overflow protection
+	if result.OriginalTokens >= result.FinalTokens {
+		result.SavedTokens = result.OriginalTokens - result.FinalTokens
+	} else {
+		result.SavedTokens = 0
+	}
+
 	if result.OriginalTokens > 0 {
 		result.ReductionPercent = float64(result.SavedTokens) / float64(result.OriginalTokens) * 100
+		// Clamp to valid range [0, 100]
+		if result.ReductionPercent < 0 {
+			result.ReductionPercent = 0
+		} else if result.ReductionPercent > 100 {
+			result.ReductionPercent = 100
+		}
 	}
 
 	return result, nil

@@ -54,6 +54,15 @@ import "github.com/GrayCodeAI/tokman/internal/core"
 //
 // Research: Combines techniques from 120+ papers for optimal compression
 func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
+	// Defensive: handle nil coordinator
+	if p == nil {
+		return input, &PipelineStats{
+			OriginalTokens: core.EstimateTokens(input),
+			FinalTokens:    core.EstimateTokens(input),
+			LayerStats:     make(map[string]LayerStat),
+		}
+	}
+
 	stats := &PipelineStats{
 		OriginalTokens: core.EstimateTokens(input),
 		LayerStats:     make(map[string]LayerStat),
