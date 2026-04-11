@@ -82,7 +82,7 @@ func runCargo(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(output, "cargo_"+subcommand, err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

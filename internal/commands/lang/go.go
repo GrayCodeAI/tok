@@ -70,7 +70,7 @@ func runGoTestCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "go_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -99,7 +99,7 @@ func runGoBuildCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "go_build", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

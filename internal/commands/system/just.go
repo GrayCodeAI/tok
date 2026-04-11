@@ -65,7 +65,7 @@ func runJustRecipe(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "just", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

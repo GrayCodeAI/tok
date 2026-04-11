@@ -366,8 +366,6 @@ func (f *MultiFileFilter) tokenize(content string) map[string]bool {
 type deduplicatedFile struct {
 	name    string
 	content string
-	shared  []string // Content shared with other files
-	unique  []string // Content unique to this file
 	imports []string
 	exports []string
 }

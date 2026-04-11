@@ -18,8 +18,6 @@ var searchPrefixPattern = regexp.MustCompile(`^\s*\d+[\.|\)]\s+`)
 
 type searchResult struct {
 	rank    int
-	title   string
-	url     string
 	snippet string
 	hash    uint64
 }

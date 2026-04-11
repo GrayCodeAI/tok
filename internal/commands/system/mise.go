@@ -68,7 +68,7 @@ func runMiseInstall(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mise_install", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -249,7 +249,7 @@ func runMisePassthrough(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mise", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

@@ -70,7 +70,7 @@ func runGradleBuild(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "gradle_build", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 
@@ -150,7 +150,7 @@ func runGradleTest(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "gradle_test", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

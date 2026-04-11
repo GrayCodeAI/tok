@@ -1,13 +1,13 @@
-package config
+package filter
 
 import (
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/GrayCodeAI/tokman/internal/config"
 )
 
 func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
-	cfg := PipelineConfig{
+	cfg := config.PipelineConfig{
 		EnableEntropy:           true,
 		EnableNgram:             true,
 		EnableCompaction:        true,
@@ -51,15 +51,15 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 		EnableStructColl:        true,
 	}
 
-	runtime := cfg.ToFilterPipelineConfig(PipelineRuntimeOptions{
-		Mode:        filter.ModeAggressive,
+	runtime := ToFilterPipelineConfig(cfg, PipelineRuntimeOptions{
+		Mode:        ModeAggressive,
 		QueryIntent: "debug",
 		Budget:      1500,
 		LLMEnabled:  true,
 	})
 
-	if runtime.Mode != filter.ModeAggressive {
-		t.Fatalf("Mode = %q, want %q", runtime.Mode, filter.ModeAggressive)
+	if runtime.Mode != ModeAggressive {
+		t.Fatalf("Mode = %q, want %q", runtime.Mode, ModeAggressive)
 	}
 	if runtime.QueryIntent != "debug" {
 		t.Fatalf("QueryIntent = %q, want debug", runtime.QueryIntent)

@@ -496,13 +496,11 @@ func (c *CompactionLayer) enrichWithLLM(snapshot *StateSnapshot, turns []Turn, o
 	// Build prompt for LLM
 	prompt := c.buildCompactionPrompt(snapshot, turns)
 
-	req := llm.SummaryRequest{
+	resp, err := c.summarizer.SummarizeWithRequest(llm.SummaryRequest{
 		Content:   prompt,
 		MaxTokens: c.config.MaxSummaryTokens,
 		Intent:    "general",
-	}
-
-	resp, err := c.summarizer.Summarize(req)
+	})
 	if err != nil {
 		utils.Warn("compaction: LLM summarization failed", "error", err)
 		return

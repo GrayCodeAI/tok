@@ -1,58 +1,91 @@
+// Package memory provides memory management functionality (stub implementation).
+// NOTE: This is a stub package. The full implementation was removed as dead code.
+// These stub functions maintain API compatibility.
 package memory
 
 import "time"
 
-type Memory struct{}
-
-func New() *Memory {
-	return &Memory{}
-}
-
+// MemoryItem represents an item in the memory store (stub).
 type MemoryItem struct {
-	Category  string
 	Content   string
+	Category  string
 	Tags      []string
 	CreatedAt time.Time
 }
 
-type MemoryStore struct{}
+// MemoryStore provides memory storage (stub).
+type MemoryStore struct {
+	Path      string
+	Data      map[string]interface{}
+	Tasks     []string
+	Findings  []string
+	Decisions []string
+	Items     []MemoryItem
+}
 
+// NewMemoryStore creates a new memory store (stub).
 func NewMemoryStore(path string) *MemoryStore {
-	return &MemoryStore{}
+	return &MemoryStore{
+		Path:      path,
+		Data:      make(map[string]interface{}),
+		Tasks:     []string{},
+		Findings:  []string{},
+		Decisions: []string{},
+		Items:     []MemoryItem{},
+	}
 }
 
-func (m *MemoryStore) Get(key string) (string, bool) {
-	return "", false
+// AddTask adds a task to the memory store (stub).
+func (m *MemoryStore) AddTask(task string, tags ...string) string {
+	m.Tasks = append(m.Tasks, task)
+	return ""
 }
 
-func (m *MemoryStore) Set(key, value string) error {
-	return nil
+// AddFinding adds a finding to the memory store (stub).
+func (m *MemoryStore) AddFinding(finding string, tags ...string) string {
+	m.Findings = append(m.Findings, finding)
+	return ""
 }
 
-func (m *MemoryStore) AddTask(content string, tags ...string) string {
-	return "task-1"
+// AddDecision adds a decision to the memory store (stub).
+func (m *MemoryStore) AddDecision(decision string, tags ...string) string {
+	m.Decisions = append(m.Decisions, decision)
+	return ""
 }
 
-func (m *MemoryStore) AddFinding(content string, tags ...string) string {
-	return "finding-1"
+// AddFact adds a fact to the memory store (stub).
+func (m *MemoryStore) AddFact(fact string, tags ...string) string {
+	return ""
 }
 
-func (m *MemoryStore) AddDecision(content string, tags ...string) string {
-	return "decision-1"
+// Query queries the memory store (stub).
+func (m *MemoryStore) Query(query string, tags ...string) []MemoryItem {
+	return m.Items
 }
 
-func (m *MemoryStore) AddFact(content string, tags ...string) string {
-	return "fact-1"
+// Stats returns memory statistics (stub).
+func (m *MemoryStore) Stats() map[string]interface{} {
+	return map[string]interface{}{
+		"tasks":     len(m.Tasks),
+		"findings":  len(m.Findings),
+		"decisions": len(m.Decisions),
+	}
 }
 
-func (m *MemoryStore) Query(category string, tags ...string) []MemoryItem {
-	return nil
+// Clear clears the memory store (stub).
+func (m *MemoryStore) Clear() {
+	m.Tasks = []string{}
+	m.Findings = []string{}
+	m.Decisions = []string{}
+	m.Items = []MemoryItem{}
 }
 
-func (m *MemoryStore) Stats() map[string]int {
-	return map[string]int{}
+// Analyze analyzes memory usage (stub).
+func Analyze() (string, error) {
+	return "", nil
 }
 
-func (m *MemoryStore) Clear() error {
+// Optimize optimizes memory usage (stub).
+func Optimize() error {
 	return nil
 }

@@ -632,12 +632,13 @@ func LoadFromFile(path string) (*Config, error) {
 
 // Save writes the configuration to a TOML file.
 func (c *Config) Save(path string) (retErr error) {
-	// Ensure directory exists
+	// Ensure directory exists with secure permissions
 	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return err
 	}
 
-	f, err := os.Create(path)
+	// Create file with restrictive permissions (owner read/write only)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return err
 	}

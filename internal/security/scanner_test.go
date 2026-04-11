@@ -28,7 +28,7 @@ func TestScanner_Scan(t *testing.T) {
 		},
 		{
 			name:          "Slack Token",
-			content:       "xoxb-EXAMPLE-TOKEN-NOT-REAL",
+			content:       "xoxb-FAKEFAKEFAKE-FAKEFAKEFAKEFA-fakefakefakefakefakefake",
 			expectFinding: true,
 			severityCheck: SeverityCritical,
 		},

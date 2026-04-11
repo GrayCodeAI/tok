@@ -66,7 +66,7 @@ func runMakeTarget(args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "make", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

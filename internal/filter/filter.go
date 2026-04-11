@@ -15,8 +15,6 @@ const (
 	ModeAggressive Mode = "aggressive"
 )
 
-var allModes = []Mode{ModeNone, ModeMinimal, ModeAggressive}
-
 // Language represents a programming language for filtering
 type Language string
 
@@ -145,18 +143,6 @@ func (e *Engine) Process(input string) (string, int) {
 	}
 
 	return output, totalSaved
-}
-
-// ModeNone = raw passthrough
-func (e *Engine) ProcessWithLang(input string, lang string) (string, int) {
-	// Language-specific processing can be added here
-	return e.Process(input)
-}
-
-// DetectLanguageFromInput detects language from input content.
-// Delegates to DetectLanguage and wraps the result as a Language.
-func DetectLanguageFromInput(input string) Language {
-	return Language(DetectLanguage(input))
 }
 
 // SetMode changes the filter mode.
@@ -312,7 +298,13 @@ func DetectLanguage(output string) string {
 	return bestLang
 }
 
-// estimateTokens is an alias for EstimateTokens (backward compatibility for internal use).
+// estimateTokens is an alias for EstimateTokens (used internally by filter layers).
 func estimateTokens(text string) int {
-	return EstimateTokens(text)
+	return core.EstimateTokens(text)
+}
+
+// DetectLanguageFromInput detects language from input content.
+// Delegates to DetectLanguage and wraps the result as a Language.
+func DetectLanguageFromInput(input string) Language {
+	return Language(DetectLanguage(input))
 }

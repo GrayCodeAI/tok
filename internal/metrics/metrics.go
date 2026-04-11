@@ -3,15 +3,12 @@ package metrics
 
 import (
 	"context"
-	"sync"
 	"sync/atomic"
 	"time"
 )
 
 // Metrics holds all metrics for TokMan
 type Metrics struct {
-	mu sync.RWMutex
-
 	// Counters
 	commandsProcessed atomic.Int64
 	commandsFailed    atomic.Int64
@@ -20,9 +17,9 @@ type Metrics struct {
 	cacheHits         atomic.Int64
 	cacheMisses       atomic.Int64
 
-	// Histograms (simplified implementation)
-	compressionDurations []time.Duration
-	durationIndex        atomic.Int64
+	// Duration tracking with atomic operations (no mutex needed)
+	compressionDurationSum atomic.Int64 // Total duration in milliseconds
+	compressionCount       atomic.Int64 // Count for average calculation
 
 	// Current state
 	activeConnections atomic.Int64
@@ -75,17 +72,10 @@ func (m *Metrics) RecordCacheMiss() {
 	m.cacheMisses.Add(1)
 }
 
-// RecordCompressionDuration records compression duration
+// RecordCompressionDuration records compression duration using atomic operations
 func (m *Metrics) RecordCompressionDuration(d time.Duration) {
-	idx := m.durationIndex.Add(1) - 1
-	slot := int(idx % 1000)
-
-	m.mu.Lock()
-	if len(m.compressionDurations) == 0 {
-		m.compressionDurations = make([]time.Duration, 1000)
-	}
-	m.compressionDurations[slot] = d
-	m.mu.Unlock()
+	m.compressionDurationSum.Add(d.Milliseconds())
+	m.compressionCount.Add(1)
 }
 
 // IncActiveConnections increments active connections
@@ -161,27 +151,13 @@ func (m *Metrics) calculateCacheHitRate() float64 {
 }
 
 func (m *Metrics) calculateAverageDuration() float64 {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
-	if len(m.compressionDurations) == 0 {
-		return 0
-	}
-
-	var total time.Duration
-	count := 0
-	for _, d := range m.compressionDurations {
-		if d > 0 {
-			total += d
-			count++
-		}
-	}
-
+	count := m.compressionCount.Load()
 	if count == 0 {
 		return 0
 	}
-
-	return float64(total.Milliseconds()) / float64(count)
+	
+	total := m.compressionDurationSum.Load()
+	return float64(total) / float64(count)
 }
 
 // Reset resets all metrics
@@ -198,26 +174,23 @@ func (m *Metrics) Reset() {
 	m.lastReset = time.Now()
 }
 
-// GetMetrics returns a context-aware metrics getter
+// GetMetrics returns the global metrics instance (context parameter retained for API compatibility).
 func GetMetrics(ctx context.Context) *Metrics {
 	return global
 }
 
-// Record functions with context
-
-// RecordCommandProcessedWithContext records a processed command with context
+// RecordCommandProcessedWithContext records a processed command (context retained for API compatibility).
 func RecordCommandProcessedWithContext(ctx context.Context) {
-	GetMetrics(ctx).RecordCommandProcessed()
+	global.RecordCommandProcessed()
 }
 
-// RecordCompressionWithContext records compression with context
+// RecordCompressionWithContext records compression with context (context retained for API compatibility).
 func RecordCompressionWithContext(ctx context.Context, duration time.Duration, inputTokens, outputTokens int64) {
-	m := GetMetrics(ctx)
-	m.RecordCompressionRun()
-	m.RecordCompressionDuration(duration)
+	global.RecordCompressionRun()
+	global.RecordCompressionDuration(duration)
 }
 
-// RecordErrorWithContext records an error with context
+// RecordErrorWithContext records an error with context (context retained for API compatibility).
 func RecordErrorWithContext(ctx context.Context) {
-	GetMetrics(ctx).RecordCompressionError()
+	global.RecordCompressionError()
 }

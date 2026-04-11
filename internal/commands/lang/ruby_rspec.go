@@ -30,7 +30,7 @@ func runRspecCmd(args []string) error {
 	// Add tee hint on failure
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "rspec", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

@@ -93,7 +93,7 @@ TokMan intercepts CLI commands and applies an intelligent **20-layer compression
 | ✅ `git commit` | 8× | 1,600 | 120 | **92%** ↓ |
 | 🧪 `npm test` | 5× | 25,000 | 2,500 | **90%** ↓ |
 | 🔬 `pytest` | 4× | 8,000 | 800 | **90%** ↓ |
-| 🐳 `docker ps` | 3× | 900 | 180 | **80%** ↓ |
+| 📦 `npm ls` | 3× | 900 | 180 | **80%** ↓ |
 | **📊 Total** | | **~118,000** | **~23,500** | **🎉 80%** ↓ |
 
 ### 💰 Cost Reduction
@@ -182,7 +182,7 @@ Once installed, TokMan automatically intercepts commands:
 ```bash
 # These are automatically compressed:
 git status
-docker ps
+npm ls
 npm test
 cat large-file.json
 

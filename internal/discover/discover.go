@@ -1,36 +1,19 @@
+// Package discover provides command discovery functionality (stub implementation).
+// NOTE: This is a stub package. The full implementation was removed as dead code.
+// These stub functions maintain API compatibility.
 package discover
 
-import (
-	"strings"
-)
-
-type Discover struct{}
-
-func New() *Discover {
-	return &Discover{}
+// RewriteCommand rewrites a command using tokman equivalents (stub).
+func RewriteCommand(cmd string, opts interface{}) (string, bool) {
+	return cmd, false
 }
 
-var (
-	prefixedCommands = []string{"git", "go", "npm", "npx", "cargo", "docker", "kubectl", "pytest", "jest", "make", "cmake", "gradle", "mvn", "dotnet", "mix", "ruby", "bundle", "rake", "psql", "aws", "terraform", "helm", "ansible"}
-)
+// DetectCommand detects if a command is known (stub).
+func DetectCommand(cmd string) bool {
+	return false
+}
 
-func RewriteCommand(cmd string, args []string) (string, bool) {
-	cmd = strings.TrimSpace(cmd)
-	if cmd == "" {
-		return cmd, false
-	}
-
-	parts := strings.Fields(cmd)
-	if len(parts) == 0 {
-		return cmd, false
-	}
-
-	base := parts[0]
-	for _, p := range prefixedCommands {
-		if base == p {
-			return "tokman " + cmd, true
-		}
-	}
-
-	return cmd, false
+// KnownCommands returns list of known commands (stub).
+func KnownCommands() []string {
+	return []string{}
 }

@@ -5,22 +5,61 @@ import (
 	"fmt"
 	"os"
 	"time"
-
-	"github.com/GrayCodeAI/tokman/pkg/client"
 )
+
+// RemoteConfig holds remote client configuration.
+type RemoteConfig struct {
+	CompressionAddr string
+	AnalyticsAddr   string
+	Timeout         time.Duration
+}
+
+// RemoteClient is a stub for the remote client (functionality removed).
+type RemoteClient struct{}
+
+// CompressionClient is a stub for compression operations.
+type CompressionClient struct{}
+
+// Compress performs compression (stub - returns input unchanged).
+func (c *CompressionClient) Compress(ctx context.Context, input, mode string, budget int) (*CompressionResult, error) {
+	return &CompressionResult{
+		Output:           input,
+		OriginalTokens:   len(input) / 4,
+		CompressedTokens: len(input) / 4,
+		SavingsPercent:   0,
+	}, nil
+}
+
+// Compression returns a compression client (stub).
+func (c *RemoteClient) Compression() *CompressionClient {
+	return &CompressionClient{}
+}
+
+// CompressionResult holds compression results.
+type CompressionResult struct {
+	Output           string
+	OriginalTokens   int
+	CompressedTokens int
+	SavingsPercent   float64
+}
+
+// NewRemoteClient creates a new remote client (stub - returns nil).
+func NewRemoteClient(cfg *RemoteConfig) (*RemoteClient, error) {
+	return nil, fmt.Errorf("remote mode not implemented")
+}
 
 // Remote executor for gRPC-based compression and analytics.
 // This is used when --remote flag is enabled to offload processing
 // to TokMan microservices.
 
 var (
-	globalRemoteClient *client.Client
+	globalRemoteClient *RemoteClient
 	remoteClientErr    error
 )
 
 // GetRemoteClient returns the global gRPC client (lazy initialization).
 // Returns nil if remote mode is not enabled or connection failed.
-func GetRemoteClient() *client.Client {
+func GetRemoteClient() *RemoteClient {
 	if !IsRemoteMode() {
 		return nil
 	}
@@ -29,7 +68,7 @@ func GetRemoteClient() *client.Client {
 		return globalRemoteClient
 	}
 
-	cfg := &client.Config{
+	cfg := &RemoteConfig{
 		CompressionAddr: GetCompressionAddr(),
 		AnalyticsAddr:   GetAnalyticsAddr(),
 		Timeout:         time.Duration(GetRemoteTimeout()) * time.Second,
@@ -43,7 +82,7 @@ func GetRemoteClient() *client.Client {
 		cfg.AnalyticsAddr = "localhost:50053"
 	}
 
-	globalRemoteClient, remoteClientErr = client.New(cfg)
+	globalRemoteClient, remoteClientErr = NewRemoteClient(cfg)
 	if remoteClientErr != nil {
 		if IsVerbose() {
 			fmt.Fprintf(stderrWriter(), "[remote] failed to connect: %v\n", remoteClientErr)

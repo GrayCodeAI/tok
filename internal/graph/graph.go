@@ -1,37 +1,48 @@
+// Package graph provides graph analysis functionality (stub implementation).
+// NOTE: This is a stub package. The full implementation was removed as dead code.
+// These stub functions maintain API compatibility.
 package graph
 
-type Graph struct{}
+import "fmt"
 
-func New() *Graph {
-	return &Graph{}
+// ProjectGraph represents a project graph (stub).
+type ProjectGraph struct {
+	Path string
 }
 
-type GraphStats map[string]any
-
-func NewProjectGraph(root string) *Graph {
-	return &Graph{}
+// NewProjectGraph creates a new project graph (stub).
+func NewProjectGraph(path string) *ProjectGraph {
+	return &ProjectGraph{Path: path}
 }
 
-func FormatGraphStats(stats GraphStats) string {
-	return "Graph: 0 nodes, 0 edges"
-}
-
-func (g *Graph) Analyze(root string) error {
+// Analyze analyzes code structure (stub).
+func (g *ProjectGraph) Analyze(depth string) error {
 	return nil
 }
 
-func (g *Graph) AnalyzeWithDepth(root string, depth int) error {
-	return nil
+// Stats returns graph statistics (stub).
+func (g *ProjectGraph) Stats() map[string]interface{} {
+	return map[string]interface{}{
+		"by_language": map[string]int{},
+	}
 }
 
-func (g *Graph) Stats() GraphStats {
-	return GraphStats{"nodes": 0, "edges": 0}
+// FindRelatedFiles finds related files (stub).
+func (g *ProjectGraph) FindRelatedFiles(file string, count int) []string {
+	return []string{}
 }
 
-func (g *Graph) FindRelatedFiles(file string, max int) []string {
-	return nil
+// ImpactAnalysis performs impact analysis (stub).
+func (g *ProjectGraph) ImpactAnalysis(file string) string {
+	return ""
 }
 
-func (g *Graph) ImpactAnalysis(file string) []string {
-	return nil
+// FormatGraphStats formats graph statistics (stub).
+func FormatGraphStats(stats map[string]interface{}) string {
+	return fmt.Sprintf("%v", stats)
+}
+
+// Visualize creates a visualization (stub).
+func Visualize(path string) (string, error) {
+	return "", nil
 }

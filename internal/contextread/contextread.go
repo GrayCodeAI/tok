@@ -1,79 +1,48 @@
+// Package contextread provides context reading capabilities (stub implementation).
+// NOTE: This is a stub package. The full implementation was removed as dead code.
+// These stub functions return empty/zero values to maintain API compatibility.
 package contextread
 
 import "strings"
 
-type Reader struct{}
-
-func New() *Reader {
-	return &Reader{}
-}
-
-type TrackedPattern struct {
-	Kind    string
-	Pattern string
-}
-
-func TrackedCommandPatternsForKind(kind string) []TrackedPattern {
-	return nil
-}
-
-func TrackedCommandPatterns() []TrackedPattern {
-	var patterns []TrackedPattern
-	for _, kind := range []string{"read", "write", "edit", "search"} {
-		patterns = append(patterns, TrackedPattern{
-			Kind:    kind,
-			Pattern: ".*",
-		})
-	}
-	return patterns
-}
-
-func (r *Reader) Analyze(content string) string {
-	return content
-}
-
-func (r *Reader) ExtractContext(content string, maxTokens int) string {
-	if len(content) > maxTokens*4 {
-		return content[:maxTokens*4]
-	}
-	return content
-}
-
-func ContainsCodeBlocks(s string) bool {
-	return strings.Contains(s, "```") || strings.Contains(s, "````")
-}
-
+// Options defines context reading options.
 type Options struct {
-	MaxTokens         int
-	Format            string
-	Level             string
-	Mode              string
-	MaxLines          int
-	LineNumbers       bool
-	StartLine         int
-	EndLine           int
-	SaveSnapshot      bool
-	RelatedFiles      []string
+	Mode            string
+	Level           string
+	MaxLines        int
+	MaxTokens       int
+	LineNumbers     bool
+	StartLine       int
+	EndLine         int
+	SaveSnapshot    bool
 	RelatedFilesCount int
 }
 
-func Build(file string, content string, format string, opts Options) (string, int, int, error) {
-	return content, len(content), len(content) / 4, nil
+// TrackedCommandPatternsForKind returns tracked command patterns for a kind (stub).
+func TrackedCommandPatternsForKind(kind string) []string {
+	return nil
 }
 
-func Describe(content string, format string, mode string, opts Options) string {
+// TrackedCommandPatterns returns all tracked command patterns (stub).
+func TrackedCommandPatterns() []string {
+	return nil
+}
+
+// Build builds context for a file (stub - returns input unchanged).
+func Build(path, content, lang string, opts Options) (string, int, int, error) {
+	return content, len(content) / 4, len(content) / 4, nil
+}
+
+// Analyze analyzes content for context (stub - returns input unchanged).
+func Analyze(content string) string {
 	return content
 }
 
-type ReadMeta struct {
-	Kind          string
-	RequestedMode string
-	ResolvedMode  string
-	Target        string
-	RelatedFiles  []string
-	Bundle        string
-}
-
-func NewReadMeta() *ReadMeta {
-	return &ReadMeta{}
+// Describe describes a file (stub - returns filename).
+func Describe(path string) string {
+	parts := strings.Split(path, "/")
+	if len(parts) > 0 {
+		return parts[len(parts)-1]
+	}
+	return path
 }

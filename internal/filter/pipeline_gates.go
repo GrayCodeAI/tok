@@ -27,16 +27,6 @@ func (p *PipelineCoordinator) shouldEarlyExit(stats *PipelineStats) bool {
 	return currentTokens <= p.config.Budget
 }
 
-// shouldEarlyExitAggressive returns true if budget is met (checks every layer).
-// Use this when budget is very tight.
-func (p *PipelineCoordinator) shouldEarlyExitAggressive(stats *PipelineStats) bool {
-	if p.config.Budget <= 0 {
-		return false
-	}
-	currentTokens := stats.OriginalTokens - stats.computeTotalSaved()
-	return currentTokens <= p.config.Budget
-}
-
 // shouldSkipEntropy checks if entropy filtering would help.
 func (p *PipelineCoordinator) shouldSkipEntropy(content string) bool {
 	if len(content) < 50 {

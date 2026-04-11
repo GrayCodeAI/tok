@@ -80,14 +80,12 @@ func runGraph(cmd *cobra.Command, args []string) error {
 
 	if graphImpact != "" {
 		affected := g.ImpactAnalysis(graphImpact)
-		if len(affected) == 0 {
+		if affected == "" {
 			fmt.Printf("No files affected by changes to %s\n", graphImpact)
 			return nil
 		}
 		fmt.Printf("Files affected by changes to %s:\n", graphImpact)
-		for _, f := range affected {
-			fmt.Printf("  %s\n", f)
-		}
+		fmt.Printf("  %s\n", affected)
 		return nil
 	}
 

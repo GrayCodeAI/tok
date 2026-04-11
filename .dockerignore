@@ -1,7 +1,0 @@
-# Task #143: Docker build context optimization.
-.git
-*.md
-*.test
-testdata/
-.github/
-docs/

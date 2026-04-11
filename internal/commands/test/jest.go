@@ -48,7 +48,7 @@ func runJest(cmd *cobra.Command, args []string) error {
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "jest", err); hint != "" {
-			filtered += "\n" + hint
+			filtered = filtered + "\n" + hint
 		}
 	}
 

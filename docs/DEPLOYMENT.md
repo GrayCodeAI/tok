@@ -7,8 +7,7 @@ TokMan can be deployed in several ways depending on your use case:
 1. **Single User** - Local installation on developer machine
 2. **Team** - Shared configuration with individual installations
 3. **CI/CD** - Automated pipeline integration
-4. **Docker** - Containerized deployment
-5. **Enterprise** - Managed deployment across organization
+4. **Enterprise** - Managed deployment across organization
 
 ---
 
@@ -211,85 +210,6 @@ if command -v tokman &> /dev/null; then
         exit 1
     fi
 fi
-```
-
----
-
-## Docker Deployment
-
-### Dockerfile
-
-```dockerfile
-# Multi-stage build
-FROM golang:1.24-alpine AS builder
-
-WORKDIR /app
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /tokman ./cmd/tokman
-
-# Runtime image
-FROM alpine:3.19
-
-RUN apk --no-cache add git bash
-
-COPY --from=builder /tokman /usr/local/bin/tokman
-
-# Create default config
-RUN mkdir -p /root/.config/tokman
-COPY config/default.toml /root/.config/tokman/config.toml
-
-ENTRYPOINT ["tokman"]
-CMD ["--help"]
-```
-
-### Docker Compose
-
-```yaml
-# docker-compose.yml
-version: '3.8'
-
-services:
-  tokman:
-    build: .
-    volumes:
-      - ./:/workspace
-      - tokman-data:/root/.local/share/tokman
-      - tokman-config:/root/.config/tokman
-    working_dir: /workspace
-    environment:
-      - TOKMAN_MODE=minimal
-      - TOKMAN_BUDGET=2000
-
-  tokman-dashboard:
-    build: .
-    command: ["dashboard", "--port", "8080"]
-    ports:
-      - "8080:8080"
-    volumes:
-      - tokman-data:/root/.local/share/tokman
-
-volumes:
-  tokman-data:
-  tokman-config:
-```
-
-### Docker Usage
-
-```bash
-# Build image
-docker build -t tokman .
-
-# Run command
-docker run --rm -v $(pwd):/workspace tokman git status
-
-# Interactive shell
-docker run --rm -it -v $(pwd):/workspace tokman /bin/sh
-
-# Dashboard
-docker run -d -p 8080:8080 tokman dashboard --port 8080
 ```
 
 ---
