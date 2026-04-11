@@ -8,14 +8,14 @@ import (
 )
 
 // shouldEarlyExit returns true if budget is already met (T81).
-// Uses aggressive checking when budget is tight (< TightBudgetThreshold tokens),
+// Uses aggressive checking when budget is tight (< 1000 tokens),
 // otherwise checks every 3 layers to reduce overhead.
 func (p *PipelineCoordinator) shouldEarlyExit(stats *PipelineStats) bool {
 	if p.config.Budget <= 0 {
 		return false
 	}
 	// Use aggressive checking when budget is tight
-	if p.config.Budget < TightBudgetThreshold {
+	if p.config.Budget < 1000 {
 		currentTokens := stats.OriginalTokens - stats.computeTotalSaved()
 		return currentTokens <= p.config.Budget
 	}
@@ -187,8 +187,8 @@ func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stat
 	output, saved := layer.filter.Apply(input, p.config.Mode)
 	dur := time.Since(start).Nanoseconds()
 
-	stats.AddLayerStatSafe(layer.name, LayerStat{TokensSaved: saved, Duration: dur})
-	// stats.runningSaved updated via AddLayerStatSafe
+	stats.LayerStats[layer.name] = LayerStat{TokensSaved: saved, Duration: dur}
+	stats.runningSaved += saved
 
 	// Cache the result for future use
 	if p.layerCache != nil {
