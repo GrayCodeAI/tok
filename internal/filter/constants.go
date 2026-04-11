@@ -40,21 +40,3 @@ const (
 	TokensPerCharHeuristic  = 0.25  // 1 token per 4 chars
 	MinTokenEstimate        = 1     // Minimum token count
 )
-
-// Mode represents the compression mode.
-type Mode string
-
-const (
-	ModeNone       Mode = "none"
-	ModeMinimal    Mode = "minimal"
-	ModeAggressive Mode = "aggressive"
-)
-
-// IsValid checks if the mode is valid.
-func (m Mode) IsValid() bool {
-	switch m {
-	case ModeNone, ModeMinimal, ModeAggressive:
-		return true
-	}
-	return false
-}
