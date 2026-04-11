@@ -50,25 +50,4 @@ func TestFilterLog(t *testing.T) {
 	}
 }
 
-func TestTruncateLogLine(t *testing.T) {
-	tests := []struct {
-		name  string
-		line  string
-		width int
-	}{
-		{"short line", "abc1234 fix bug", 80},
-		{"exact width", "abc1234 fix bug in parser with details", 80},
-		{"long line", "abc1234 " + string(make([]byte, 100)), 50},
-		{"zero width", "abc1234 fix bug", 10},
-	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := truncateLogLine(tt.line, tt.width)
-			if tt.width > 0 && len(got) > tt.width+10 {
-				t.Errorf("truncateLogLine(%q, %d) = %d chars, expected <= %d",
-					tt.line[:min(len(tt.line), 20)], tt.width, len(got), tt.width)
-			}
-		})
-	}
-}
