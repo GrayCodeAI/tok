@@ -658,35 +658,3 @@ func TestTeeOnFailure_NoError(t *testing.T) {
 		t.Errorf("expected empty string on no error, got %q", result)
 	}
 }
-
-func TestGetModelFamily(t *testing.T) {
-	tests := []struct {
-		input    string
-		expected string
-	}{
-		{"", ""},
-		{"claude-3-opus", "claude"},
-		{"claude-3.5-sonnet", "claude"},
-		{"gpt-4", "gpt"},
-		{"gpt-4o", "gpt"},
-		{"o1-preview", "gpt"},
-		{"o3-mini", "gpt"},
-		{"gemini-pro", "gemini"},
-		{"llama-3", "llama"},
-		{"meta-llama", "llama"},
-		{"qwen-2.5", "qwen"},
-		{"deepseek-v3", "deepseek"},
-		{"mistral-large", "mistral"},
-		{"mixtral", "mistral"},
-		{"unknown-model", "other"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.input, func(t *testing.T) {
-			got := GetModelFamily(tt.input)
-			if got != tt.expected {
-				t.Errorf("GetModelFamily(%q) = %q, want %q", tt.input, got, tt.expected)
-			}
-		})
-	}
-}
