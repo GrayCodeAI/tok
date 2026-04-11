@@ -1,10 +1,6 @@
 package filter
 
-import (
-	"sync"
-
-	"github.com/GrayCodeAI/tokman/internal/cache"
-)
+import "github.com/GrayCodeAI/tokman/internal/cache"
 
 // Pipeline defines the interface for compression pipelines.
 // This allows mock testing and future pipeline implementations.
@@ -523,33 +519,10 @@ type PipelineStats struct {
 	LayerStats       map[string]LayerStat
 	runningSaved     int
 	CacheHit         bool
-	
-	// Thread-safety fields
-	mu sync.RWMutex
 }
 
 // LayerStat holds statistics for a single layer
 type LayerStat struct {
 	TokensSaved int
 	Duration    int64
-}
-
-// RunningSavedSafe returns the running saved count safely.
-func (s *PipelineStats) RunningSavedSafe() int {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return s.runningSaved
-}
-
-
-// AddLayerStatSafe adds a layer stat in a thread-safe manner.
-func (s *PipelineStats) AddLayerStatSafe(name string, stat LayerStat) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	
-	if s.LayerStats == nil {
-		s.LayerStats = make(map[string]LayerStat)
-	}
-	s.LayerStats[name] = stat
-	s.runningSaved += stat.TokensSaved
 }
