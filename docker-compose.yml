@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  # API Gateway - HTTP entry point
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - COMPRESSION_SERVICE_ADDR=compression-service:50051
+      - ANALYTICS_SERVICE_ADDR=analytics-service:50052
+      - SECURITY_SERVICE_ADDR=security-service:50053
+      - CONFIG_SERVICE_ADDR=config-service:50054
+    depends_on:
+      - compression-service
+      - security-service
+    networks:
+      - tokman-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Compression Service - Core compression pipeline
+  compression-service:
+    build:
+      context: .
+      dockerfile: services/compression-service/Dockerfile
+    ports:
+      - "50051:50051"
+    environment:
+      - PORT=50051
+      - CACHE_SIZE=1000
+      - MAX_WORKERS=10
+    networks:
+      - tokman-network
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50051"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Analytics Service - Tracking and metrics
+  analytics-service:
+    build:
+      context: .
+      dockerfile: services/analytics-service/Dockerfile
+    ports:
+      - "50052:50052"
+    environment:
+      - PORT=50052
+      - DATABASE_PATH=/data/analytics.db
+    volumes:
+      - analytics-data:/data
+    networks:
+      - tokman-network
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50052"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Security Service - Scanning and validation
+  security-service:
+    build:
+      context: .
+      dockerfile: services/security-service/Dockerfile
+    ports:
+      - "50053:50053"
+    environment:
+      - PORT=50053
+      - SCAN_TIMEOUT=30s
+    networks:
+      - tokman-network
+    deploy:
+      replicas: 2
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50053"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Config Service - Configuration management
+  config-service:
+    build:
+      context: .
+      dockerfile: services/config-service/Dockerfile
+    ports:
+      - "50054:50054"
+    environment:
+      - PORT=50054
+      - CONFIG_PATH=/config
+    volumes:
+      - ./config:/config:ro
+    networks:
+      - tokman-network
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=:50054"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus - Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - tokman-network
+
+  # Grafana - Metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - tokman-network
+    depends_on:
+      - prometheus
+
+volumes:
+  analytics-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  tokman-network:
+    driver: bridge

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package tokman.common;
+
+option go_package = "github.com/GrayCodeAI/tokman/services/shared/proto/common";
+
+// CompressionMode defines the compression aggressiveness
+enum CompressionMode {
+  MODE_UNSPECIFIED = 0;
+  MODE_NONE = 1;
+  MODE_MINIMAL = 2;
+  MODE_AGGRESSIVE = 3;
+}
+
+// PipelinePreset defines preset configurations
+enum PipelinePreset {
+  PRESET_UNSPECIFIED = 0;
+  PRESET_FAST = 1;
+  PRESET_BALANCED = 2;
+  PRESET_FULL = 3;
+}
+
+// Health status
+enum HealthStatus {
+  HEALTH_UNSPECIFIED = 0;
+  HEALTH_HEALTHY = 1;
+  HEALTH_DEGRADED = 2;
+  HEALTH_UNHEALTHY = 3;
+}
+
+// Empty request/response
+message Empty {}
+
+// Health check request
+message HealthRequest {
+  string service = 1;
+}
+
+// Health check response
+message HealthResponse {
+  HealthStatus status = 1;
+  string message = 2;
+  int64 timestamp = 3;
+}
+
+// Pagination
+message Pagination {
+  int32 page = 1;
+  int32 page_size = 2;
+  int32 total = 3;
+}
+
+// Error details
+message ErrorDetails {
+  string code = 1;
+  string message = 2;
+  map<string, string> metadata = 3;
+}
