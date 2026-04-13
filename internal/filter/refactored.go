@@ -100,38 +100,128 @@ type SemanticFilters struct {
 // NewSemanticFilters creates semantic filter set
 func NewSemanticFilters(cfg PipelineConfig) *SemanticFilters {
 	s := &SemanticFilters{}
-	
+
 	if cfg.EnableCompaction {
-		s.compaction = NewCompactionLayer(DefaultCompactionConfig())
+		compactionCfg := CompactionConfig{
+			Enabled:             true,
+			ThresholdTokens:     cfg.CompactionThreshold,
+			PreserveRecentTurns: cfg.CompactionPreserveTurns,
+			MaxSummaryTokens:    cfg.CompactionMaxTokens,
+			StateSnapshotFormat: cfg.CompactionStateSnapshot,
+			AutoDetect:          cfg.CompactionAutoDetect,
+			CacheEnabled:        true,
+		}
+		if compactionCfg.ThresholdTokens == 0 {
+			compactionCfg.ThresholdTokens = 2000
+		}
+		if compactionCfg.PreserveRecentTurns == 0 {
+			compactionCfg.PreserveRecentTurns = 5
+		}
+		if compactionCfg.MaxSummaryTokens == 0 {
+			compactionCfg.MaxSummaryTokens = 500
+		}
+		s.compaction = NewCompactionLayer(compactionCfg)
 	}
+
 	if cfg.EnableAttribution {
-		s.attribution = NewAttributionFilter(DefaultAttributionConfig())
+		s.attribution = NewAttributionFilter()
+		if cfg.AttributionThreshold > 0 {
+			s.attribution.config.ImportanceThreshold = cfg.AttributionThreshold
+		}
 	}
+
 	if cfg.EnableH2O {
-		s.h2o = NewH2OFilter(DefaultH2OConfig())
+		s.h2o = NewH2OFilter()
+		if cfg.H2OSinkSize > 0 {
+			s.h2o.config.SinkSize = cfg.H2OSinkSize
+		}
+		if cfg.H2ORecentSize > 0 {
+			s.h2o.config.RecentSize = cfg.H2ORecentSize
+		}
+		if cfg.H2OHeavyHitterSize > 0 {
+			s.h2o.config.HeavyHitterSize = cfg.H2OHeavyHitterSize
+		}
 	}
+
 	if cfg.EnableAttentionSink {
-		s.attentionSink = NewAttentionSinkFilter(DefaultSinkConfig())
+		s.attentionSink = NewAdaptiveAttentionSinkFilter(50)
+		if cfg.AttentionSinkCount > 0 {
+			s.attentionSink.config.SinkTokenCount = cfg.AttentionSinkCount
+		}
+		if cfg.AttentionRecentCount > 0 {
+			s.attentionSink.config.RecentTokenCount = cfg.AttentionRecentCount
+		}
 	}
+
 	if cfg.EnableMetaToken {
-		s.metaToken = NewMetaTokenFilter(DefaultMetaTokenConfig())
+		metaCfg := DefaultMetaTokenConfig()
+		if cfg.MetaTokenWindow > 0 {
+			metaCfg.WindowSize = cfg.MetaTokenWindow
+		}
+		if cfg.MetaTokenMinSize > 0 {
+			metaCfg.MinPattern = cfg.MetaTokenMinSize
+		}
+		s.metaToken = NewMetaTokenFilterWithConfig(metaCfg)
 	}
+
 	if cfg.EnableSemanticChunk {
-		s.semanticChunk = NewSemanticChunkFilter(DefaultSemanticChunkConfig())
+		semanticCfg := DefaultSemanticChunkConfig()
+		if cfg.SemanticChunkMinSize > 0 {
+			semanticCfg.MinChunkSize = cfg.SemanticChunkMinSize
+		}
+		if cfg.SemanticChunkThreshold > 0 {
+			semanticCfg.ImportanceThreshold = cfg.SemanticChunkThreshold
+		}
+		s.semanticChunk = NewSemanticChunkFilterWithConfig(semanticCfg)
 	}
+
 	if cfg.EnableSketchStore {
-		s.sketchStore = NewSketchStoreFilter(DefaultSketchStoreConfig())
+		sketchCfg := DefaultSketchStoreConfig()
+		if cfg.SketchBudgetRatio > 0 {
+			sketchCfg.BudgetRatio = cfg.SketchBudgetRatio
+		}
+		if cfg.SketchMaxSize > 0 {
+			sketchCfg.MaxSketchSize = cfg.SketchMaxSize
+		}
+		if cfg.SketchHeavyHitter > 0 {
+			sketchCfg.HeavyHitterRatio = cfg.SketchHeavyHitter
+		}
+		s.sketchStore = NewSketchStoreFilterWithConfig(sketchCfg)
 	}
+
 	if cfg.EnableLazyPruner {
-		s.lazyPruner = NewLazyPrunerFilter(DefaultLazyPrunerConfig())
+		lazyCfg := DefaultLazyPrunerConfig()
+		if cfg.LazyBaseBudget > 0 {
+			lazyCfg.BaseBudget = cfg.LazyBaseBudget
+		}
+		if cfg.LazyDecayRate > 0 {
+			lazyCfg.DecayRate = cfg.LazyDecayRate
+		}
+		if cfg.LazyRevivalBudget > 0 {
+			lazyCfg.RevivalBudget = cfg.LazyRevivalBudget
+		}
+		s.lazyPruner = NewLazyPrunerFilterWithConfig(lazyCfg)
 	}
+
 	if cfg.EnableSemanticAnchor {
-		s.semanticAnchor = NewSemanticAnchorFilter(DefaultSemanticAnchorConfig())
+		anchorCfg := DefaultSemanticAnchorConfig()
+		if cfg.SemanticAnchorRatio > 0 {
+			anchorCfg.AnchorRatio = cfg.SemanticAnchorRatio
+		}
+		if cfg.SemanticAnchorSpacing > 0 {
+			anchorCfg.MinAnchorSpacing = cfg.SemanticAnchorSpacing
+		}
+		s.semanticAnchor = NewSemanticAnchorFilterWithConfig(anchorCfg)
 	}
+
 	if cfg.EnableAgentMemory {
-		s.agentMemory = NewAgentMemoryFilter(DefaultAgentMemoryConfig())
+		memCfg := DefaultAgentMemoryConfig()
+		if cfg.AgentConsolidationMax > 0 {
+			memCfg.KnowledgeMaxSize = cfg.AgentConsolidationMax
+		}
+		s.agentMemory = NewAgentMemoryFilterWithConfig(memCfg)
 	}
-	
+
 	return s
 }
 
@@ -199,7 +289,7 @@ func NewRefactoredCoordinator(cfg PipelineConfig) *RefactoredCoordinator {
 		config:   cfg,
 		core:     NewCoreFilters(cfg),
 		semantic: NewSemanticFilters(cfg),
-		budget:   NewBudgetEnforcer(),
+		budget:   NewBudgetEnforcer(0), // Initialize with unlimited budget, will be set during processing
 		cache:    GetGlobalLayerCache(),
 	}
 }
