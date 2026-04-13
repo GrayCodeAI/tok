@@ -17,6 +17,7 @@ import (
 
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/GrayCodeAI/tokman/internal/retry"
 	"github.com/GrayCodeAI/tokman/internal/utils"
 )
 
@@ -315,36 +316,44 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
-	result, err := t.db.ExecContext(ctx, query,
-		record.Command,
-		record.OriginalOutput,
-		record.FilteredOutput,
-		record.OriginalTokens,
-		record.FilteredTokens,
-		record.SavedTokens,
-		record.ProjectPath,
-		record.SessionID,
-		record.ExecTimeMs,
-		record.ParseSuccess,
-		record.AgentName,
-		record.ModelName,
-		record.Provider,
-		record.ModelFamily,
-		record.ContextKind,
-		record.ContextMode,
-		record.ContextResolvedMode,
-		record.ContextTarget,
-		record.ContextRelatedFiles,
-		record.ContextBundle,
-	)
+	// Use retry logic for database operations
+	err := retry.Do(ctx, retry.DefaultConfig(), func() error {
+		result, err := t.db.ExecContext(ctx, query,
+			record.Command,
+			record.OriginalOutput,
+			record.FilteredOutput,
+			record.OriginalTokens,
+			record.FilteredTokens,
+			record.SavedTokens,
+			record.ProjectPath,
+			record.SessionID,
+			record.ExecTimeMs,
+			record.ParseSuccess,
+			record.AgentName,
+			record.ModelName,
+			record.Provider,
+			record.ModelFamily,
+			record.ContextKind,
+			record.ContextMode,
+			record.ContextResolvedMode,
+			record.ContextTarget,
+			record.ContextRelatedFiles,
+			record.ContextBundle,
+		)
+		if err != nil {
+			return err
+		}
+
+		id, err := result.LastInsertId()
+		if err == nil {
+			record.ID = id
+		}
+		return nil
+	})
+	
 	if err != nil {
 		slog.Error("failed to record command", "error", err, "command", record.Command)
 		return fmt.Errorf("failed to record command: %w", err)
-	}
-
-	id, err := result.LastInsertId()
-	if err == nil {
-		record.ID = id
 	}
 
 	// Record checkpoint trigger telemetry for this command.
