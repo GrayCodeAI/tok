@@ -72,10 +72,10 @@ type AppState struct {
 	LightMem         bool
 	PathShorten      bool
 	JSONSampler      bool
-	LogCrunch        bool
+	ContextCrunch    bool // Enable ContextCrunch (merged LogCrunch + DiffCrunch)
 	SearchCrunch     bool
-	DiffCrunch       bool
 	StructCollapse   bool
+	AdaptiveLearning bool // Enable AdaptiveLearning (merged EngramLearner + TieredSummary)
 }
 
 // Version is set at build time.

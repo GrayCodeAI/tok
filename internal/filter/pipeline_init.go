@@ -43,14 +43,9 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	p.feedback = NewInterLayerFeedback()
 	p.qualityEstimator = NewQualityEstimator()
 
-	// New: EngramLearner for error pattern learning
-	if cfg.EnableEngramLearner {
-		p.engramLearner = NewEngramLearner()
-	}
-
-	// New: TieredSummary for progressive summarization
-	if cfg.EnableTieredSummary {
-		p.tieredSummary = NewTieredSummaryFilter()
+	// Layer 50: AdaptiveLearning (merged EngramLearner + TieredSummary)
+	if cfg.EnableAdaptiveLearning {
+		p.adaptiveLearning = NewAdaptiveLearningFilter()
 	}
 
 	// New: CrunchBench for comprehensive benchmarking
@@ -313,14 +308,11 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 	if cfg.EnableJSONSampler {
 		p.jsonSamplerFilter = NewJSONSamplerFilter()
 	}
-	if cfg.EnableLogCrunch {
-		p.logCrunchFilter = NewLogCrunchFilter()
+	if cfg.EnableContextCrunch {
+		p.contextCrunchFilter = NewContextCrunchFilter()
 	}
 	if cfg.EnableSearchCrunch {
 		p.searchCrunchFilter = NewSearchCrunchFilter()
-	}
-	if cfg.EnableDiffCrunch {
-		p.diffCrunchFilter = NewDiffCrunchFilter()
 	}
 	if cfg.EnableStructColl {
 		p.structuralCollapse = NewStructuralCollapseFilter()
@@ -373,9 +365,8 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.lightMemFilter, "43_lightmem"},
 		{p.pathShortenFilter, "44_path_shorten"},
 		{p.jsonSamplerFilter, "45_json_sampler"},
-		{p.logCrunchFilter, "46_log_crunch"},
+		{p.contextCrunchFilter, "46_context_crunch"},
 		{p.searchCrunchFilter, "47_search_crunch"},
-		{p.diffCrunchFilter, "48_diff_crunch"},
-		{p.structuralCollapse, "49_structural_collapse"},
+		{p.structuralCollapse, "48_structural_collapse"},
 	}
 }

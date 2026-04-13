@@ -354,12 +354,12 @@ func (s *AppState) IsJSONSamplerEnabled() bool {
 	return enabled || os.Getenv("TOKMAN_JSON_SAMPLER") == "true"
 }
 
-// IsLogCrunchEnabled returns true if log-crunch layer is enabled.
-func (s *AppState) IsLogCrunchEnabled() bool {
+// IsContextCrunchEnabled returns true if context-crunch layer is enabled.
+func (s *AppState) IsContextCrunchEnabled() bool {
 	s.mu.RLock()
-	enabled := s.LogCrunch
+	enabled := s.ContextCrunch
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_LOG_CRUNCH") == "true"
+	return enabled || os.Getenv("TOKMAN_CONTEXT_CRUNCH") == "true"
 }
 
 // IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
@@ -368,14 +368,6 @@ func (s *AppState) IsSearchCrunchEnabled() bool {
 	enabled := s.SearchCrunch
 	s.mu.RUnlock()
 	return enabled || os.Getenv("TOKMAN_SEARCH_CRUNCH") == "true"
-}
-
-// IsDiffCrunchEnabled returns true if diff-crunch layer is enabled.
-func (s *AppState) IsDiffCrunchEnabled() bool {
-	s.mu.RLock()
-	enabled := s.DiffCrunch
-	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_DIFF_CRUNCH") == "true"
 }
 
 // IsStructCollapseEnabled returns true if structural-collapse layer is enabled.

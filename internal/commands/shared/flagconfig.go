@@ -51,10 +51,10 @@ type FlagConfig struct {
 	LightMem             bool
 	PathShorten          bool
 	JSONSampler          bool
-	LogCrunch            bool
+	ContextCrunch        bool // Enable ContextCrunch (merged LogCrunch + DiffCrunch)
 	SearchCrunch         bool
-	DiffCrunch           bool
 	StructCollapse       bool
+	AdaptiveLearning     bool // Enable AdaptiveLearning (merged EngramLearner + TieredSummary)
 }
 
 // Set sets all flag values atomically.
@@ -110,10 +110,10 @@ func (s *AppState) Set(cfg FlagConfig) {
 	s.LightMem = cfg.LightMem
 	s.PathShorten = cfg.PathShorten
 	s.JSONSampler = cfg.JSONSampler
-	s.LogCrunch = cfg.LogCrunch
+	s.ContextCrunch = cfg.ContextCrunch
 	s.SearchCrunch = cfg.SearchCrunch
-	s.DiffCrunch = cfg.DiffCrunch
 	s.StructCollapse = cfg.StructCollapse
+	s.AdaptiveLearning = cfg.AdaptiveLearning
 	s.mu.Unlock()
 }
 

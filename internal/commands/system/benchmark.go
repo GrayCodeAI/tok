@@ -56,9 +56,8 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	cfg.EnableLightMem = true
 	cfg.EnablePathShorten = true
 	cfg.EnableJSONSampler = true
-	cfg.EnableLogCrunch = true
+	cfg.EnableContextCrunch = true
 	cfg.EnableSearchCrunch = true
-	cfg.EnableDiffCrunch = true
 	cfg.EnableStructColl = true
 
 	input := syntheticBenchmarkInput(benchLines)

@@ -80,9 +80,8 @@ func ToFilterPipelineConfig(c config.PipelineConfig, opts PipelineRuntimeOptions
 		EnableLightMem:            c.EnableLightMem,
 		EnablePathShorten:         c.EnablePathShorten,
 		EnableJSONSampler:         c.EnableJSONSampler,
-		EnableLogCrunch:           c.EnableLogCrunch,
+		EnableContextCrunch:       c.EnableContextCrunch,
 		EnableSearchCrunch:        c.EnableSearchCrunch,
-		EnableDiffCrunch:          c.EnableDiffCrunch,
 		EnableStructColl:          c.EnableStructColl,
 	}
 
@@ -102,9 +101,8 @@ func ToFilterPipelineConfig(c config.PipelineConfig, opts PipelineRuntimeOptions
 		cfg.EnableLightMem = true
 		cfg.EnablePathShorten = true
 		cfg.EnableJSONSampler = true
-		cfg.EnableLogCrunch = true
+		cfg.EnableContextCrunch = true
 		cfg.EnableSearchCrunch = true
-		cfg.EnableDiffCrunch = true
 		cfg.EnableStructColl = true
 	}
 

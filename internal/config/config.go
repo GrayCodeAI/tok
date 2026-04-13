@@ -165,12 +165,11 @@ type PipelineConfig struct {
 	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"`   // AgentOCR history compaction
 	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`         // Plan-and-budget controller
 	EnableLightMem     bool `mapstructure:"enable_lightmem"`            // Lightweight memory reuse
-	EnablePathShorten  bool `mapstructure:"enable_path_shorten"`        // Path/identifier shortening
-	EnableJSONSampler  bool `mapstructure:"enable_json_sampler"`        // JSON statistical sampler
-	EnableLogCrunch    bool `mapstructure:"enable_log_crunch"`          // Log folding stage
-	EnableSearchCrunch bool `mapstructure:"enable_search_crunch"`       // Search result dedup stage
-	EnableDiffCrunch   bool `mapstructure:"enable_diff_crunch"`         // Diff context folding stage
-	EnableStructColl   bool `mapstructure:"enable_structural_collapse"` // Structural boilerplate collapse
+	EnablePathShorten   bool `mapstructure:"enable_path_shorten"`        // Path/identifier shortening
+	EnableJSONSampler   bool `mapstructure:"enable_json_sampler"`        // JSON statistical sampler
+	EnableContextCrunch bool `mapstructure:"enable_context_crunch"`      // Context crunch (merged log + diff folding)
+	EnableSearchCrunch  bool `mapstructure:"enable_search_crunch"`       // Search result dedup stage
+	EnableStructColl    bool `mapstructure:"enable_structural_collapse"` // Structural boilerplate collapse
 	EnableResearchPack bool `mapstructure:"enable_research_pack"`       // One-toggle research bundle
 
 	// Perplexity Filter (Layer 2) - Detailed settings
@@ -434,11 +433,10 @@ func Defaults() *Config {
 			EnablePlanBudget:   false,
 			EnableLightMem:     false,
 			EnablePathShorten:  false,
-			EnableJSONSampler:  false,
-			EnableLogCrunch:    false,
-			EnableSearchCrunch: false,
-			EnableDiffCrunch:   false,
-			EnableStructColl:   false,
+			EnableJSONSampler:   false,
+			EnableContextCrunch: false,
+			EnableSearchCrunch:  false,
+			EnableStructColl:    false,
 			EnableResearchPack: false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings

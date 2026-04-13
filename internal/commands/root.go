@@ -75,9 +75,8 @@ var (
 	streamMode       bool     // Enable streaming for large inputs
 
 	// New: Claw Compactor features
-	engramLearnerEnabled bool // Enable EngramLearner error pattern learning
-	tieredSummaryEnabled bool // Enable TieredSummary L0/L1/L2 summarization
-	crunchBenchEnabled   bool // Enable CrunchBench benchmarking
+	adaptiveLearningEnabled bool // Enable AdaptiveLearning (merged EngramLearner + TieredSummary)
+	crunchBenchEnabled      bool // Enable CrunchBench benchmarking
 	policyRouter     bool     // Enable policy-based routing
 	extractive       bool     // Enable extractive prefilter
 	extractiveMax    int      // Max lines before extractive prefilter triggers
@@ -101,9 +100,8 @@ var (
 	lightmem         bool     // Enable LightMem-style context reuse layer
 	pathShorten      bool     // Enable path/identifier shortening layer
 	jsonSampler      bool     // Enable JSON sampler layer
-	logCrunch        bool     // Enable log crunch layer
+	contextCrunch    bool     // Enable context crunch layer (merged LogCrunch + DiffCrunch)
 	searchCrunch     bool     // Enable search crunch layer
-	diffCrunch       bool     // Enable diff crunch layer
 	structuralColl   bool     // Enable structural collapse layer
 )
 
@@ -174,10 +172,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 				LightMem:             lightmem,
 				PathShorten:          pathShorten,
 				JSONSampler:          jsonSampler,
-				LogCrunch:            logCrunch,
+				ContextCrunch:        contextCrunch,
 				SearchCrunch:         searchCrunch,
-				DiffCrunch:           diffCrunch,
 				StructCollapse:       structuralColl,
+				AdaptiveLearning:     adaptiveLearningEnabled,
 			})
 			shared.SetConfigFile(cfgFile)
 
@@ -387,7 +385,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&acon, "acon", false,
 		"enable ACON adaptive context optimization layer")
 	rootCmd.PersistentFlags().BoolVar(&researchPack, "research-pack", false,
-		"enable research layer pack (31-49): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem, PathShorten, JSONSampler, LogCrunch, SearchCrunch, DiffCrunch, StructuralCollapse")
+		"enable research layer pack (31-49): DiffAdapt, EPiC, SSDP, AgentOCR, S2-MAD, ACON, LatentCollab, GraphCoT, RoleBudget, SWEAdaptiveLoop, AgentOCRHistory, PlanBudget, LightMem, PathShorten, JSONSampler, ContextCrunch, SearchCrunch, StructuralCollapse")
 	rootCmd.PersistentFlags().BoolVar(&latentCollab, "latent-collab", false,
 		"enable latent collaboration merge layer")
 	rootCmd.PersistentFlags().BoolVar(&graphCoT, "graph-cot", false,
@@ -406,20 +404,16 @@ func init() {
 		"enable path/identifier shortening layer")
 	rootCmd.PersistentFlags().BoolVar(&jsonSampler, "json-sampler", false,
 		"enable JSON statistical sampler layer")
-	rootCmd.PersistentFlags().BoolVar(&logCrunch, "log-crunch", false,
-		"enable log crunch folding layer")
+	rootCmd.PersistentFlags().BoolVar(&contextCrunch, "context-crunch", false,
+		"enable context crunch layer (merged log + diff folding)")
 	rootCmd.PersistentFlags().BoolVar(&searchCrunch, "search-crunch", false,
 		"enable search results crunch layer")
-	rootCmd.PersistentFlags().BoolVar(&diffCrunch, "diff-crunch", false,
-		"enable diff context crunch layer")
 	rootCmd.PersistentFlags().BoolVar(&structuralColl, "structural-collapse", false,
 		"enable structural collapse layer")
 
 	// New: Claw Compactor features
-	rootCmd.PersistentFlags().BoolVar(&engramLearnerEnabled, "engram-learner", false,
-		"enable EngramLearner error pattern learning")
-	rootCmd.PersistentFlags().BoolVar(&tieredSummaryEnabled, "tiered-summary", false,
-		"enable TieredSummary L0/L1/L2 progressive summarization")
+	rootCmd.PersistentFlags().BoolVar(&adaptiveLearningEnabled, "adaptive-learning", false,
+		"enable AdaptiveLearning (merged EngramLearner + TieredSummary)")
 	rootCmd.PersistentFlags().BoolVar(&crunchBenchEnabled, "crunch-bench", false,
 		"enable CrunchBench comprehensive benchmarking")
 
@@ -449,14 +443,12 @@ func init() {
 	_ = viper.BindPFlag("pipeline.enable_lightmem", rootCmd.PersistentFlags().Lookup("lightmem"))
 	_ = viper.BindPFlag("pipeline.enable_path_shorten", rootCmd.PersistentFlags().Lookup("path-shorten"))
 	_ = viper.BindPFlag("pipeline.enable_json_sampler", rootCmd.PersistentFlags().Lookup("json-sampler"))
-	_ = viper.BindPFlag("pipeline.enable_log_crunch", rootCmd.PersistentFlags().Lookup("log-crunch"))
+	_ = viper.BindPFlag("pipeline.enable_context_crunch", rootCmd.PersistentFlags().Lookup("context-crunch"))
 	_ = viper.BindPFlag("pipeline.enable_search_crunch", rootCmd.PersistentFlags().Lookup("search-crunch"))
-	_ = viper.BindPFlag("pipeline.enable_diff_crunch", rootCmd.PersistentFlags().Lookup("diff-crunch"))
 	_ = viper.BindPFlag("pipeline.enable_structural_collapse", rootCmd.PersistentFlags().Lookup("structural-collapse"))
 
 	// New: Claw Compactor feature bindings
-	_ = viper.BindPFlag("pipeline.enable_engram_learner", rootCmd.PersistentFlags().Lookup("engram-learner"))
-	_ = viper.BindPFlag("pipeline.enable_tiered_summary", rootCmd.PersistentFlags().Lookup("tiered-summary"))
+	_ = viper.BindPFlag("pipeline.enable_adaptive_learning", rootCmd.PersistentFlags().Lookup("adaptive-learning"))
 	_ = viper.BindPFlag("pipeline.enable_crunch_bench", rootCmd.PersistentFlags().Lookup("crunch-bench"))
 
 	registry.RegisterAll()

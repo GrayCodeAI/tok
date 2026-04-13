@@ -76,14 +76,9 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		return output, p.finalizeStats(stats, output)
 	}
 
-	// EngramLearner: Analyze patterns and learn from content
-	if p.engramLearner != nil && p.config.EnableEngramLearner {
-		output = p.processLayer(filterLayer{p.engramLearner, "50_engram_learner"}, output, stats)
-	}
-
-	// TieredSummary: Generate progressive summaries for large content
-	if p.tieredSummary != nil && p.config.EnableTieredSummary && len(output) > 1000 {
-		output = p.processLayer(filterLayer{p.tieredSummary, "51_tiered_summary"}, output, stats)
+	// Layer 50: AdaptiveLearning (merged EngramLearner + TieredSummary)
+	if p.adaptiveLearning != nil && p.config.EnableAdaptiveLearning && len(output) > 1000 {
+		output = p.processLayer(filterLayer{p.adaptiveLearning, "50_adaptive_learning"}, output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output, p.finalizeStats(stats, output)
 		}
@@ -451,7 +446,7 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 			return output
 		}
 	}
-	if p.logCrunchFilter != nil {
+	if p.contextCrunchFilter != nil {
 		output = p.processLayer(p.layers[44], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
@@ -463,14 +458,8 @@ func (p *PipelineCoordinator) processResearchLayers(output string, stats *Pipeli
 			return output
 		}
 	}
-	if p.diffCrunchFilter != nil {
-		output = p.processLayer(p.layers[46], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
 	if p.structuralCollapse != nil {
-		output = p.processLayer(p.layers[47], output, stats)
+		output = p.processLayer(p.layers[46], output, stats)
 	}
 	return output
 }
