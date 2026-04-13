@@ -502,6 +502,10 @@ type PipelineConfigWithNestedLayers struct {
 	// Cache
 	CacheEnabled bool
 	CacheMaxSize int
+
+	// Tier-based configuration (new)
+	EnableTiers  bool         // Enable tier-based automatic layer selection
+	EnabledTiers []AutoTier   // Explicit list of tiers to enable (if empty, auto-select)
 }
 
 // PipelineConfig is an alias for the full config type with backward-compatible flat fields.
