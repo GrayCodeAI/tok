@@ -50,10 +50,10 @@ var poolOnce sync.Once
 func GetDefaultPool() *CoordinatorPool {
 	poolOnce.Do(func() {
 		defaultPool = NewCoordinatorPool(PipelineConfig{
-			Mode:           ModeMinimal,
-			EnableEntropy:  true,
-			EnableAST:      true,
-			EnableBudget:   true,
+			Mode:          ModeMinimal,
+			EnableEntropy: true,
+			EnableAST:     true,
+			Budget:        1000, // Enable budget enforcer with 1000 token limit
 		})
 	})
 	return defaultPool
