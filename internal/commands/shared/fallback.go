@@ -13,9 +13,11 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/core"
 	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/GrayCodeAI/tokman/internal/ratelimit"
 	"github.com/GrayCodeAI/tokman/internal/toml"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/GrayCodeAI/tokman/internal/validation"
 )
 
 // Fallback handler for TOML-based command filtering.
@@ -72,6 +74,18 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 		return "", false, nil
 	}
 
+	// Validate input
+	if err := validation.ValidateCommandArgs(args); err != nil {
+		return "", false, fmt.Errorf("invalid command: %w", err)
+	}
+
+	// Check rate limit
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := ratelimit.WaitGlobal(ctx); err != nil {
+		return "", false, fmt.Errorf("rate limit exceeded: %w", err)
+	}
+
 	command := strings.Join(args, " ")
 
 	filename, filterName, config := h.registry.FindMatchingFilter(command)
@@ -86,6 +100,12 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 	start := time.Now()
 	output, exitCode, err := h.executeCommand(args)
 	execTime := time.Since(start)
+	
+	// Validate output size
+	if err := validation.ValidateInputSize(output); err != nil {
+		return output, true, fmt.Errorf("output too large: %w", err)
+	}
+	
 	filtered := output
 	if output != "" {
 		filtered = h.applyPipeline(output, config)
