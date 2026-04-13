@@ -137,9 +137,8 @@ type PipelineCoordinator struct {
 	lightMemFilter      *LightMemFilter
 	pathShortenFilter   *PathShortenFilter
 	jsonSamplerFilter   *JSONSamplerFilter
-	logCrunchFilter     *LogCrunchFilter
+	contextCrunchFilter *ContextCrunchFilter // Merged LogCrunch + DiffCrunch
 	searchCrunchFilter  *SearchCrunchFilter
-	diffCrunchFilter    *DiffCrunchFilter
 	structuralCollapse  *StructuralCollapseFilter
 
 	// Phase 2: SmallKV Model Compensation (2025)
@@ -152,11 +151,8 @@ type PipelineCoordinator struct {
 	// Phase 2: Layer result cache for individual filter results
 	layerCache *LayerCache
 
-	// New: EngramLearner for error pattern learning
-	engramLearner *EngramLearner
-
-	// New: TieredSummary for L0/L1/L2 progressive summarization
-	tieredSummary *TieredSummaryFilter
+	// Layer 50: AdaptiveLearning (merged EngramLearner + TieredSummary)
+	adaptiveLearning *AdaptiveLearningFilter
 
 	// New: CrunchBench for benchmarking
 	crunchBench *CrunchBench
@@ -319,9 +315,8 @@ type LayerConfig struct {
 	CacheEnabled      bool
 
 	// New: Claw Compactor features
-	EnableEngramLearner  bool // Enable error pattern learning
-	EnableTieredSummary  bool // Enable L0/L1/L2 progressive summarization
-	EnableCrunchBench    bool // Enable comprehensive benchmarking
+	EnableAdaptiveLearning bool // Enable adaptive learning (merged EngramLearner + TieredSummary)
+	EnableCrunchBench      bool // Enable comprehensive benchmarking
 }
 
 // PipelineConfigWithNestedLayers is a helper type for the new nested config structure.
@@ -348,8 +343,7 @@ type PipelineConfigWithNestedLayers struct {
 	LayerGateMode              string
 
 	// New: Claw Compactor features
-	EnableEngramLearner        bool // Enable error pattern learning
-	EnableTieredSummary        bool // Enable L0/L1/L2 progressive summarization
+	EnableAdaptiveLearning     bool // Enable adaptive learning (merged EngramLearner + TieredSummary)
 	EnableCrunchBench          bool // Enable comprehensive benchmarking
 	LayerGateAllowExperimental []string
 	EnablePlannedLayers        bool
@@ -499,12 +493,11 @@ type PipelineConfigWithNestedLayers struct {
 	EnableAgentOCRHist bool
 	EnablePlanBudget   bool
 	EnableLightMem     bool
-	EnablePathShorten  bool
-	EnableJSONSampler  bool
-	EnableLogCrunch    bool
-	EnableSearchCrunch bool
-	EnableDiffCrunch   bool
-	EnableStructColl   bool
+	EnablePathShorten   bool
+	EnableJSONSampler   bool
+	EnableContextCrunch bool // Merged LogCrunch + DiffCrunch
+	EnableSearchCrunch  bool
+	EnableStructColl    bool
 
 	// Cache
 	CacheEnabled bool

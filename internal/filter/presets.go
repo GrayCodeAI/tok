@@ -99,9 +99,8 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLightMem = true
 		cfg.EnablePathShorten = true
 		cfg.EnableJSONSampler = true
-		cfg.EnableLogCrunch = true
+		cfg.EnableContextCrunch = true
 		cfg.EnableSearchCrunch = true
-		cfg.EnableDiffCrunch = true
 		cfg.EnableStructColl = true
 
 	case TierCore:
@@ -204,9 +203,8 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 		cfg.EnableLightMem = true
 		cfg.EnablePathShorten = true
 		cfg.EnableJSONSampler = true
-		cfg.EnableLogCrunch = true
+		cfg.EnableContextCrunch = true
 		cfg.EnableSearchCrunch = true
-		cfg.EnableDiffCrunch = true
 		cfg.EnableStructColl = true
 	}
 

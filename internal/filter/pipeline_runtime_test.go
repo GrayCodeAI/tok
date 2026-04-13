@@ -45,9 +45,8 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 		EnableLightMem:          true,
 		EnablePathShorten:       true,
 		EnableJSONSampler:       true,
-		EnableLogCrunch:         true,
+		EnableContextCrunch:     true,
 		EnableSearchCrunch:      true,
-		EnableDiffCrunch:        true,
 		EnableStructColl:        true,
 	}
 
@@ -98,8 +97,8 @@ func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {
 		!runtime.EnableS2MAD || !runtime.EnableACON || !runtime.EnableLatentCollab ||
 		!runtime.EnableGraphCoT || !runtime.EnableRoleBudget || !runtime.EnableSWEAdaptive ||
 		!runtime.EnableAgentOCRHist || !runtime.EnablePlanBudget || !runtime.EnableLightMem ||
-		!runtime.EnablePathShorten || !runtime.EnableJSONSampler || !runtime.EnableLogCrunch ||
-		!runtime.EnableSearchCrunch || !runtime.EnableDiffCrunch || !runtime.EnableStructColl {
+		!runtime.EnablePathShorten || !runtime.EnableJSONSampler || !runtime.EnableContextCrunch ||
+		!runtime.EnableSearchCrunch || !runtime.EnableStructColl {
 		t.Fatalf("research layer mapping failed: %+v", runtime)
 	}
 }

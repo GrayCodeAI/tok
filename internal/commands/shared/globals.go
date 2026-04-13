@@ -59,9 +59,8 @@ var (
 	LightMem             bool
 	PathShorten          bool
 	JSONSampler          bool
-	LogCrunch            bool
+	ContextCrunch        bool
 	SearchCrunch         bool
-	DiffCrunch           bool
 	StructCollapse       bool
 )
 
@@ -121,9 +120,8 @@ func (s *AppState) syncGlobals() {
 		LightMem:             s.LightMem,
 		PathShorten:          s.PathShorten,
 		JSONSampler:          s.JSONSampler,
-		LogCrunch:            s.LogCrunch,
+		ContextCrunch:        s.ContextCrunch,
 		SearchCrunch:         s.SearchCrunch,
-		DiffCrunch:           s.DiffCrunch,
 		StructCollapse:       s.StructCollapse,
 	}
 	s.mu.RUnlock()
@@ -179,9 +177,8 @@ func (s *AppState) syncGlobals() {
 	LightMem = state.LightMem
 	PathShorten = state.PathShorten
 	JSONSampler = state.JSONSampler
-	LogCrunch = state.LogCrunch
+	ContextCrunch = state.ContextCrunch
 	SearchCrunch = state.SearchCrunch
-	DiffCrunch = state.DiffCrunch
 	StructCollapse = state.StructCollapse
 	globalsMu.Unlock()
 }
@@ -242,9 +239,8 @@ func (s *AppState) syncFromGlobals() {
 		LightMem:             LightMem,
 		PathShorten:          PathShorten,
 		JSONSampler:          JSONSampler,
-		LogCrunch:            LogCrunch,
+		ContextCrunch:        ContextCrunch,
 		SearchCrunch:         SearchCrunch,
-		DiffCrunch:           DiffCrunch,
 		StructCollapse:       StructCollapse,
 	}
 	globalsMu.RUnlock()
@@ -490,22 +486,16 @@ func IsJSONSamplerEnabled() bool {
 	return globalState.IsJSONSamplerEnabled()
 }
 
-// IsLogCrunchEnabled returns true if log-crunch layer is enabled.
-func IsLogCrunchEnabled() bool {
+// IsContextCrunchEnabled returns true if context-crunch layer is enabled.
+func IsContextCrunchEnabled() bool {
 	globalState.syncFromGlobals()
-	return globalState.IsLogCrunchEnabled()
+	return globalState.IsContextCrunchEnabled()
 }
 
 // IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
 func IsSearchCrunchEnabled() bool {
 	globalState.syncFromGlobals()
 	return globalState.IsSearchCrunchEnabled()
-}
-
-// IsDiffCrunchEnabled returns true if diff-crunch layer is enabled.
-func IsDiffCrunchEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsDiffCrunchEnabled()
 }
 
 // IsStructCollapseEnabled returns true if structural-collapse layer is enabled.
