@@ -13,13 +13,17 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 		layerCache:   GetGlobalLayerCache(), // Initialize layer cache
 	}
 
-	// Set defaults - all layers enabled by default when using zero-config.
+	// Apply tier-based defaults if no explicit layers are enabled
+	p.applyTierDefaults(&cfg)
+
+	// Set legacy defaults - all layers enabled by default when using zero-config.
 	allDisabled := !cfg.EnableEntropy && !cfg.EnablePerplexity && !cfg.EnableGoalDriven &&
 		!cfg.EnableAST && !cfg.EnableContrastive && !cfg.EnableEvaluator &&
 		!cfg.EnableGist && !cfg.EnableHierarchical
 	hasExplicitSettings := cfg.Budget > 0 || cfg.QueryIntent != "" || cfg.LLMEnabled ||
 		cfg.NgramEnabled || cfg.MultiFileEnabled || cfg.SessionTracking ||
-		cfg.EnableCompaction || cfg.EnableAttribution || cfg.EnableH2O || cfg.EnableAttentionSink
+		cfg.EnableCompaction || cfg.EnableAttribution || cfg.EnableH2O || cfg.EnableAttentionSink ||
+		cfg.EnableAdaptiveLearning || cfg.EnableContextCrunch
 	if allDisabled && !hasExplicitSettings {
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
@@ -369,4 +373,36 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.searchCrunchFilter, "47_search_crunch"},
 		{p.structuralCollapse, "48_structural_collapse"},
 	}
+}
+
+// applyTierDefaults applies tier-based layer enablement if UseTiers is set.
+// This allows automatic tier selection based on content characteristics.
+func (p *PipelineCoordinator) applyTierDefaults(cfg *PipelineConfig) {
+	// Check if tier-based configuration should be applied
+	if !cfg.EnableTiers {
+		return
+	}
+
+	// If specific tiers are requested, enable them
+	if len(cfg.EnabledTiers) > 0 {
+		*cfg = BuildConfigFromTiers(cfg.EnabledTiers, *cfg)
+		return
+	}
+
+	// Auto-select tiers based on mode and budget
+	var tiers []AutoTier
+	switch cfg.Mode {
+	case ModeMinimal:
+		tiers = QuickTierEnable("minimal")
+	case ModeAggressive:
+		if cfg.Budget > 0 && cfg.Budget < 2000 {
+			tiers = QuickTierEnable("maximum")
+		} else {
+			tiers = QuickTierEnable("aggressive")
+		}
+	default:
+		tiers = QuickTierEnable("standard")
+	}
+
+	*cfg = BuildConfigFromTiers(tiers, *cfg)
 }

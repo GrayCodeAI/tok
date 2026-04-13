@@ -226,3 +226,41 @@ func (ct ContentType) String() string {
 		return "unknown"
 	}
 }
+
+// RecommendedConfigWithTiers returns optimal configuration using tier-based enablement.
+// This is the recommended way to configure the pipeline for automatic tier selection.
+func (a *AdaptiveLayerSelector) RecommendedConfigWithTiers(ct ContentType, mode Mode, inputLen int, queryIntent string) PipelineConfig {
+	// Get tier recommendations
+	rec := RecommendTiers(ct, inputLen, queryIntent)
+
+	// Start with base config
+	baseConfig := PipelineConfig{
+		Mode:            mode,
+		Budget:          4000,
+		SessionTracking: false,
+		NgramEnabled:    true,
+	}
+
+	// Build config from recommended tiers
+	return BuildConfigFromTiers(rec.Tiers, baseConfig)
+}
+
+// QuickTierEnable returns a simple tier selection for common use cases.
+func QuickTierEnable(useCase string) []AutoTier {
+	switch useCase {
+	case "minimal":
+		// Fastest processing, basic compression
+		return []AutoTier{AutoTierPre, AutoTierCore}
+	case "standard":
+		// Default processing, good balance
+		return []AutoTier{AutoTierPre, AutoTierCore, AutoTierSemantic}
+	case "aggressive":
+		// Maximum compression for large inputs
+		return []AutoTier{AutoTierPre, AutoTierCore, AutoTierSemantic, AutoTierAdvanced}
+	case "maximum":
+		// All tiers including experimental
+		return []AutoTier{AutoTierPre, AutoTierCore, AutoTierSemantic, AutoTierAdvanced, AutoTierSpecialized}
+	default:
+		return []AutoTier{AutoTierPre, AutoTierCore, AutoTierSemantic}
+	}
+}
