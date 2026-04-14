@@ -34,6 +34,7 @@ import (
 	_ "github.com/GrayCodeAI/tokman/internal/commands/system"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/test"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/vcs"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/web"
 )
 
 var (
@@ -70,39 +71,39 @@ var (
 	reversibleEnabled bool
 
 	// Custom layer configuration (Task 5: Layer enable/disable)
-	enableLayers     []string // Layers to explicitly enable
-	disableLayers    []string // Layers to explicitly disable
-	streamMode       bool     // Enable streaming for large inputs
+	enableLayers  []string // Layers to explicitly enable
+	disableLayers []string // Layers to explicitly disable
+	streamMode    bool     // Enable streaming for large inputs
 
 	// New: Claw Compactor features
 	adaptiveLearningEnabled bool // Enable AdaptiveLearning (merged EngramLearner + TieredSummary)
 	crunchBenchEnabled      bool // Enable CrunchBench benchmarking
-	policyRouter     bool     // Enable policy-based routing
-	extractive       bool     // Enable extractive prefilter
-	extractiveMax    int      // Max lines before extractive prefilter triggers
-	extractiveHead   int      // Head lines to preserve
-	extractiveTail   int      // Tail lines to preserve
-	extractiveSignal int      // Signal lines to preserve
-	qualityGuardrail bool     // Enable quality guardrail auto-fallback
-	diffAdapt        bool     // Enable DiffAdapt layer
-	epic             bool     // Enable EPiC layer
-	ssdp             bool     // Enable SSDP layer
-	agentOCR         bool     // Enable AgentOCR layer
-	s2mad            bool     // Enable S2-MAD layer
-	acon             bool     // Enable ACON layer
-	researchPack     bool     // Enable research layer pack (31-49)
-	latentCollab     bool     // Enable latent collaboration merge layer
-	graphCoT         bool     // Enable graph-CoT compression layer
-	roleBudget       bool     // Enable role-aware budgeting layer
-	sweAdaptive      bool     // Enable SWE adaptive prune loop
-	agentOCRHistory  bool     // Enable AgentOCR history compaction layer
-	planBudget       bool     // Enable plan-and-budget controller layer
-	lightmem         bool     // Enable LightMem-style context reuse layer
-	pathShorten      bool     // Enable path/identifier shortening layer
-	jsonSampler      bool     // Enable JSON sampler layer
-	contextCrunch    bool     // Enable context crunch layer (merged LogCrunch + DiffCrunch)
-	searchCrunch     bool     // Enable search crunch layer
-	structuralColl   bool     // Enable structural collapse layer
+	policyRouter            bool // Enable policy-based routing
+	extractive              bool // Enable extractive prefilter
+	extractiveMax           int  // Max lines before extractive prefilter triggers
+	extractiveHead          int  // Head lines to preserve
+	extractiveTail          int  // Tail lines to preserve
+	extractiveSignal        int  // Signal lines to preserve
+	qualityGuardrail        bool // Enable quality guardrail auto-fallback
+	diffAdapt               bool // Enable DiffAdapt layer
+	epic                    bool // Enable EPiC layer
+	ssdp                    bool // Enable SSDP layer
+	agentOCR                bool // Enable AgentOCR layer
+	s2mad                   bool // Enable S2-MAD layer
+	acon                    bool // Enable ACON layer
+	researchPack            bool // Enable research layer pack (31-49)
+	latentCollab            bool // Enable latent collaboration merge layer
+	graphCoT                bool // Enable graph-CoT compression layer
+	roleBudget              bool // Enable role-aware budgeting layer
+	sweAdaptive             bool // Enable SWE adaptive prune loop
+	agentOCRHistory         bool // Enable AgentOCR history compaction layer
+	planBudget              bool // Enable plan-and-budget controller layer
+	lightmem                bool // Enable LightMem-style context reuse layer
+	pathShorten             bool // Enable path/identifier shortening layer
+	jsonSampler             bool // Enable JSON sampler layer
+	contextCrunch           bool // Enable context crunch layer (merged LogCrunch + DiffCrunch)
+	searchCrunch            bool // Enable search crunch layer
+	structuralColl          bool // Enable structural collapse layer
 )
 
 // rootCmd represents the base command when called without any subcommands.

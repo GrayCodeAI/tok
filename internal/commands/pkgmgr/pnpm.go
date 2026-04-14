@@ -74,6 +74,8 @@ func filterPnpmOutput(output string, args []string) string {
 		return filterPnpmOutdated(output)
 	case "install", "add", "update":
 		return filterPnpmInstall(output)
+	case "typecheck":
+		return filterPnpmTypecheck(output)
 	default:
 		return output
 	}
@@ -210,5 +212,74 @@ func filterPnpmInstall(output string) string {
 	if len(result) == 1 {
 		return "✅ Install complete"
 	}
+	return strings.Join(result, "\n")
+}
+
+func filterPnpmTypecheck(output string) string {
+	lines := strings.Split(output, "\n")
+	var errors []string
+	var warnings []string
+	var summary string
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		// Capture error lines with file paths
+		if strings.Contains(line, "error TS") || strings.Contains(line, ": error ") {
+			errors = append(errors, line)
+			continue
+		}
+
+		// Capture warning lines
+		if strings.Contains(line, ": warning ") || strings.Contains(line, "warning TS") {
+			warnings = append(warnings, line)
+			continue
+		}
+
+		// Capture summary line
+		if strings.Contains(line, "Found") && (strings.Contains(line, "error") || strings.Contains(line, "warning")) {
+			summary = trimmed
+		}
+	}
+
+	var result []string
+	result = append(result, "🔍 TypeScript Type Check:")
+
+	if len(errors) > 0 {
+		result = append(result, "")
+		result = append(result, fmt.Sprintf("   ❌ %d error(s):", len(errors)))
+		for i, err := range errors {
+			if i >= 10 {
+				result = append(result, fmt.Sprintf("   ... +%d more errors", len(errors)-10))
+				break
+			}
+			result = append(result, fmt.Sprintf("   • %s", shared.TruncateLine(err, 80)))
+		}
+	}
+
+	if len(warnings) > 0 {
+		result = append(result, "")
+		result = append(result, fmt.Sprintf("   ⚠️  %d warning(s):", len(warnings)))
+		for i, warn := range warnings {
+			if i >= 5 {
+				result = append(result, fmt.Sprintf("   ... +%d more warnings", len(warnings)-5))
+				break
+			}
+			result = append(result, fmt.Sprintf("   • %s", shared.TruncateLine(warn, 80)))
+		}
+	}
+
+	if summary != "" {
+		result = append(result, "")
+		result = append(result, fmt.Sprintf("   📊 %s", summary))
+	}
+
+	if len(errors) == 0 && len(warnings) == 0 {
+		result = append(result, "   ✅ No type errors found")
+	}
+
 	return strings.Join(result, "\n")
 }
