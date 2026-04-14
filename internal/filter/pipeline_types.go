@@ -109,34 +109,10 @@ type PipelineCoordinator struct {
 	// Optional guardrail
 	qualityGuardrail *QualityGuardrail
 
-	// Layers 21-25: 2026 Research filters
-	marginalInfoGainFilter   *MarginalInfoGainFilter
-	nearDedupFilter          *NearDedupFilter
-	cotCompressFilter        *CoTCompressFilter
-	codingAgentCtxFilter     *CodingAgentContextFilter
-	perceptionCompressFilter *PerceptionCompressFilter
-
-	// Layers 26-30: 2025/2026 reasoning + agent filters
-	lightThinkerFilter  *LightThinkerFilter
-	thinkSwitcherFilter *ThinkSwitcherFilter
-	gmsaFilter          *GMSAFilter
-	carlFilter          *CARLFilter
-	slimInferFilter     *SlimInferFilter
-	diffAdaptFilter     *DiffAdaptFilter
-	epicFilter          *EPiCFilter
-	ssdpFilter          *SSDPFilter
-	agentOCRFilter      *AgentOCRFilter
-	s2madFilter         *S2MADFilter
-	aconFilter          *ACONFilter
-	latentCollabFilter  *LatentCollabFilter
-	graphCoTFilter      *GraphCoTFilter
-	roleBudgetFilter    *RoleBudgetFilter
-	sweAdaptiveLoop     *SWEAdaptiveLoopFilter
-	agentOCRHistory     *AgentOCRHistoryFilter
-	planBudgetFilter    *PlanBudgetFilter
-	lightMemFilter      *LightMemFilter
-	pathShortenFilter   *PathShortenFilter
-	jsonSamplerFilter   *JSONSamplerFilter
+	// Unified L14-L16: Consolidated experimental filters
+	edgeCaseFilter      *EdgeCaseFilter      // L14: merges L21-L25
+	reasoningFilter     *ReasoningFilter     // L15: merges L26-L30
+	advancedFilter      *AdvancedFilter      // L16: merges L31-L45
 	contextCrunchFilter *ContextCrunchFilter // Merged LogCrunch + DiffCrunch
 	searchCrunchFilter  *SearchCrunchFilter
 	structuralCollapse  *StructuralCollapseFilter
@@ -498,6 +474,11 @@ type PipelineConfigWithNestedLayers struct {
 	EnableContextCrunch bool // Merged LogCrunch + DiffCrunch
 	EnableSearchCrunch  bool
 	EnableStructColl    bool
+
+	// Unified experimental layers (L14-L16)
+	EnableEdgeCase  bool // L14: merges L21-L25
+	EnableReasoning bool // L15: merges L26-L30
+	EnableAdvanced  bool // L16: merges L31-L45
 
 	// Cache
 	CacheEnabled bool
