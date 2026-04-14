@@ -16,7 +16,7 @@ type CoreFilters struct {
 // NewCoreFilters creates core filter set
 func NewCoreFilters(cfg PipelineConfig) *CoreFilters {
 	c := &CoreFilters{}
-	
+
 	if cfg.EnableEntropy {
 		c.entropy = NewEntropyFilter()
 	}
@@ -44,14 +44,14 @@ func NewCoreFilters(cfg PipelineConfig) *CoreFilters {
 	if cfg.EnableHierarchical {
 		c.hierarchical = NewHierarchicalSummaryFilter()
 	}
-	
+
 	return c
 }
 
 // Apply applies all core filters
 func (c *CoreFilters) Apply(input string, mode Mode, stats *PipelineStats) string {
 	output := input
-	
+
 	if c.entropy != nil {
 		output = applyFilter(c.entropy, output, mode, stats)
 	}
@@ -79,22 +79,22 @@ func (c *CoreFilters) Apply(input string, mode Mode, stats *PipelineStats) strin
 	if c.hierarchical != nil {
 		output = applyFilter(c.hierarchical, output, mode, stats)
 	}
-	
+
 	return output
 }
 
 // SemanticFilters manages layers 11-20
 type SemanticFilters struct {
-	compaction    *CompactionLayer
-	attribution   *AttributionFilter
-	h2o           *H2OFilter
-	attentionSink *AttentionSinkFilter
-	metaToken     *MetaTokenFilter
-	semanticChunk *SemanticChunkFilter
-	sketchStore   *SketchStoreFilter
-	lazyPruner    *LazyPrunerFilter
+	compaction     *CompactionLayer
+	attribution    *AttributionFilter
+	h2o            *H2OFilter
+	attentionSink  *AttentionSinkFilter
+	metaToken      *MetaTokenFilter
+	semanticChunk  *SemanticChunkFilter
+	sketchStore    *SketchStoreFilter
+	lazyPruner     *LazyPrunerFilter
 	semanticAnchor *SemanticAnchorFilter
-	agentMemory   *AgentMemoryFilter
+	agentMemory    *AgentMemoryFilter
 }
 
 // NewSemanticFilters creates semantic filter set
@@ -228,7 +228,7 @@ func NewSemanticFilters(cfg PipelineConfig) *SemanticFilters {
 // Apply applies all semantic filters
 func (s *SemanticFilters) Apply(input string, mode Mode, stats *PipelineStats) string {
 	output := input
-	
+
 	if s.compaction != nil {
 		output = applyFilter(s.compaction, output, mode, stats)
 	}
@@ -259,7 +259,7 @@ func (s *SemanticFilters) Apply(input string, mode Mode, stats *PipelineStats) s
 	if s.agentMemory != nil {
 		output = applyFilter(s.agentMemory, output, mode, stats)
 	}
-	
+
 	return output
 }
 
@@ -300,23 +300,23 @@ func (r *RefactoredCoordinator) Process(input string) (string, *PipelineStats) {
 		OriginalTokens: EstimateTokens(input),
 		LayerStats:     make(map[string]LayerStat),
 	}
-	
+
 	output := input
-	
+
 	// Core filters (1-9)
 	output = r.core.Apply(output, r.config.Mode, stats)
-	
+
 	// Budget enforcement (10)
 	if r.config.Budget > 0 {
 		r.budget.SetBudget(r.config.Budget)
 		output = applyFilter(r.budget, output, r.config.Mode, stats)
 	}
-	
+
 	// Semantic filters (11-20)
 	output = r.semantic.Apply(output, r.config.Mode, stats)
-	
+
 	stats.FinalTokens = EstimateTokens(output)
 	stats.TotalSaved = stats.OriginalTokens - stats.FinalTokens
-	
+
 	return output, stats
 }

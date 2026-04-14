@@ -39,9 +39,9 @@ type ASTPreserveFilter struct {
 	parenDepth   int
 
 	// String/comment tracking
-	inString     bool
-	stringChar   byte
-	inComment    bool
+	inString   bool
+	stringChar byte
+	inComment  bool
 
 	// Preserve settings
 	preserveImports bool

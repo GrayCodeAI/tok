@@ -27,18 +27,18 @@ type QueryCache struct {
 
 // CacheEntry represents a cached query result
 type CacheEntry struct {
-	Key             string    `json:"key"`
-	Command         string    `json:"command"`
-	Args            string    `json:"args"`
-	WorkingDir      string    `json:"working_dir"`
-	FileHashes      string    `json:"file_hashes"`
-	FilteredOutput  string    `json:"filtered_output"`
-	OriginalTokens  int       `json:"original_tokens"`
-	FilteredTokens  int       `json:"filtered_tokens"`
-	CompressionRatio float64  `json:"compression_ratio"`
-	CreatedAt       time.Time `json:"created_at"`
-	AccessedAt      time.Time `json:"accessed_at"`
-	HitCount        int       `json:"hit_count"`
+	Key              string    `json:"key"`
+	Command          string    `json:"command"`
+	Args             string    `json:"args"`
+	WorkingDir       string    `json:"working_dir"`
+	FileHashes       string    `json:"file_hashes"`
+	FilteredOutput   string    `json:"filtered_output"`
+	OriginalTokens   int       `json:"original_tokens"`
+	FilteredTokens   int       `json:"filtered_tokens"`
+	CompressionRatio float64   `json:"compression_ratio"`
+	CreatedAt        time.Time `json:"created_at"`
+	AccessedAt       time.Time `json:"accessed_at"`
+	HitCount         int       `json:"hit_count"`
 }
 
 // CacheStats holds cache statistics
@@ -120,19 +120,19 @@ func (c *QueryCache) migrate() error {
 // GenerateKey creates a cache key from command context
 func GenerateKey(command string, args []string, workingDir string, fileHashes map[string]string) string {
 	h := sha256.New()
-	
+
 	// Hash command
 	h.Write([]byte(command))
 	h.Write([]byte("\x00"))
-	
+
 	// Hash args
 	h.Write([]byte(strings.Join(args, "\x00")))
 	h.Write([]byte("\x00"))
-	
+
 	// Hash working directory
 	h.Write([]byte(workingDir))
 	h.Write([]byte("\x00"))
-	
+
 	// Hash file hashes (sorted for consistency)
 	if len(fileHashes) > 0 {
 		keys := make([]string, 0, len(fileHashes))
@@ -154,7 +154,7 @@ func GenerateKey(command string, args []string, workingDir string, fileHashes ma
 			h.Write([]byte("\x00"))
 		}
 	}
-	
+
 	return hex.EncodeToString(h.Sum(nil))
 }
 
@@ -341,7 +341,7 @@ func (c *QueryCache) Stats() (*CacheStats, error) {
 
 	stats.TotalHits = totalHits
 	stats.TotalMisses = stats.TotalEntries // Approximate
-	
+
 	if stats.TotalHits+stats.TotalMisses > 0 {
 		stats.HitRate = float64(stats.TotalHits) / float64(stats.TotalHits+stats.TotalMisses)
 	}

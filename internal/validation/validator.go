@@ -7,10 +7,10 @@ import (
 )
 
 const (
-	MaxInputSize    = 10 * 1024 * 1024 // 10MB
-	MaxCommandArgs  = 1000
-	MaxPathLength   = 4096
-	MaxConfigSize   = 1 * 1024 * 1024 // 1MB
+	MaxInputSize   = 10 * 1024 * 1024 // 10MB
+	MaxCommandArgs = 1000
+	MaxPathLength  = 4096
+	MaxConfigSize  = 1 * 1024 * 1024 // 1MB
 )
 
 // ValidateInputSize checks input size limits
@@ -39,21 +39,21 @@ func SanitizePath(path string) (string, error) {
 	if path == "" {
 		return "", fmt.Errorf("empty path")
 	}
-	
+
 	// Clean and resolve path
 	cleaned := filepath.Clean(path)
-	
+
 	// Check for path traversal
 	if strings.Contains(cleaned, "..") {
 		return "", fmt.Errorf("path traversal detected: %s", path)
 	}
-	
+
 	// Convert to absolute path
 	abs, err := filepath.Abs(cleaned)
 	if err != nil {
 		return "", fmt.Errorf("invalid path: %w", err)
 	}
-	
+
 	return abs, nil
 }
 
@@ -63,12 +63,12 @@ func ValidateConfigPath(path string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// Ensure path is within allowed directories
 	homeDir := filepath.Clean(filepath.Join(sanitized, "..", ".."))
 	if !strings.HasPrefix(sanitized, homeDir) {
 		return fmt.Errorf("config path outside allowed directory")
 	}
-	
+
 	return nil
 }

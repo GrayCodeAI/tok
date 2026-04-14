@@ -7,14 +7,14 @@ import "strings"
 
 // Options defines context reading options.
 type Options struct {
-	Mode            string
-	Level           string
-	MaxLines        int
-	MaxTokens       int
-	LineNumbers     bool
-	StartLine       int
-	EndLine         int
-	SaveSnapshot    bool
+	Mode              string
+	Level             string
+	MaxLines          int
+	MaxTokens         int
+	LineNumbers       bool
+	StartLine         int
+	EndLine           int
+	SaveSnapshot      bool
 	RelatedFilesCount int
 }
 

@@ -52,11 +52,11 @@ type Cache interface {
 
 // LRUCache implements a true LRU cache with O(1) operations
 type LRUCache struct {
-	mu      sync.Mutex
-	cap     int
-	ttl     time.Duration
-	cache   map[string]*cacheEntry
-	order   *list.List
+	mu    sync.Mutex
+	cap   int
+	ttl   time.Duration
+	cache map[string]*cacheEntry
+	order *list.List
 }
 
 type cacheEntry struct {
@@ -78,28 +78,28 @@ func NewLRUCache(capacity int, ttl time.Duration) *LRUCache {
 func (c *LRUCache) Get(key string) (interface{}, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	entry, ok := c.cache[key]
 	if !ok {
 		return nil, false
 	}
-	
+
 	// Check TTL
 	if time.Now().After(entry.expiresAt) {
 		c.removeEntry(entry)
 		return nil, false
 	}
-	
+
 	// Move to front (true LRU promotion)
 	c.order.MoveToBack(entry.element)
-	
+
 	return entry.value, true
 }
 
 func (c *LRUCache) Set(key string, value interface{}) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	// Update existing key
 	if entry, ok := c.cache[key]; ok {
 		entry.value = value
@@ -107,12 +107,12 @@ func (c *LRUCache) Set(key string, value interface{}) {
 		c.order.MoveToBack(entry.element)
 		return
 	}
-	
+
 	// Evict if at capacity
 	if len(c.cache) >= c.cap {
 		c.evictOldest()
 	}
-	
+
 	// Add new entry
 	element := c.order.PushBack(key)
 	entry := &cacheEntry{
@@ -127,7 +127,7 @@ func (c *LRUCache) Set(key string, value interface{}) {
 func (c *LRUCache) Delete(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if entry, ok := c.cache[key]; ok {
 		c.removeEntry(entry)
 	}
@@ -144,7 +144,7 @@ func (c *LRUCache) evictOldest() {
 	if front == nil {
 		return
 	}
-	
+
 	key := front.Value.(string)
 	if entry, ok := c.cache[key]; ok {
 		c.removeEntry(entry)
@@ -155,5 +155,3 @@ func (c *LRUCache) removeEntry(entry *cacheEntry) {
 	c.order.Remove(entry.element)
 	delete(c.cache, entry.key)
 }
-
-

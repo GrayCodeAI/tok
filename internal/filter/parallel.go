@@ -17,16 +17,16 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 	if len(filters) == 0 {
 		return input, 0
 	}
-	
+
 	// Single filter: run directly (avoid goroutine overhead)
 	if len(filters) == 1 {
 		return filters[0].filter.Apply(input, mode)
 	}
-	
+
 	// Parallel execution for multiple filters
 	results := make([]ParallelFilterResult, len(filters))
 	var wg sync.WaitGroup
-	
+
 	// Run filters in parallel
 	for i, layer := range filters {
 		wg.Add(1)
@@ -39,16 +39,16 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 			}
 		}(i, layer)
 	}
-	
+
 	wg.Wait()
-	
+
 	// Combine results: use output from last filter
 	// (This is a simplified combination - real implementation would be smarter)
 	totalSaved := 0
 	for _, r := range results {
 		totalSaved += r.Saved
 	}
-	
+
 	// Return best result (most savings)
 	bestResult := results[0]
 	for _, r := range results {
@@ -56,7 +56,7 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 			bestResult = r
 		}
 	}
-	
+
 	return bestResult.Output, totalSaved
 }
 
@@ -65,13 +65,13 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 func ExecuteFiltersSequential(filters []filterLayer, input string, mode Mode) (string, int) {
 	output := input
 	totalSaved := 0
-	
+
 	for _, layer := range filters {
 		newOutput, saved := layer.filter.Apply(output, mode)
 		output = newOutput
 		totalSaved += saved
 	}
-	
+
 	return output, totalSaved
 }
 
@@ -81,27 +81,27 @@ func ShouldUseParallel(filters []filterLayer, inputSize int) bool {
 	// - Multiple filters (2+)
 	// - Large inputs (>1KB)
 	// - Independent filters
-	
+
 	if len(filters) < 2 {
 		return false
 	}
-	
+
 	if inputSize < 1024 {
 		return false // Overhead not worth it for small inputs
 	}
-	
+
 	// Check if we have enough CPU cores
 	// runtime.NumCPU() >= 2
-	
+
 	return true
 }
 
 // ParallelPipelineStats holds stats from parallel execution
 type ParallelPipelineStats struct {
-	mu          sync.Mutex
-	LayerStats  map[string]LayerStat
-	TotalSaved  int
-	ParallelTime int64
+	mu             sync.Mutex
+	LayerStats     map[string]LayerStat
+	TotalSaved     int
+	ParallelTime   int64
 	SequentialTime int64
 }
 

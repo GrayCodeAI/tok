@@ -152,25 +152,25 @@ type PipelineConfig struct {
 	AgentMemoryExtractFn string `mapstructure:"agent_memory_extract_fn"` // Extraction function type
 
 	// Research Layers (31-49)
-	EnableDiffAdapt    bool `mapstructure:"enable_difft_adapt"`         // Difficulty-adaptive pruning
-	EnableEPiC         bool `mapstructure:"enable_epic"`                // Causal-edge preservation
-	EnableSSDP         bool `mapstructure:"enable_ssdp"`                // ToT branch pruning
-	EnableAgentOCR     bool `mapstructure:"enable_agent_ocr"`           // Turn-density compression
-	EnableS2MAD        bool `mapstructure:"enable_s2_mad"`              // Agreement collapse
-	EnableACON         bool `mapstructure:"enable_acon"`                // Adaptive context optimization
-	EnableLatentCollab bool `mapstructure:"enable_latent_collab"`       // Latent collaboration merge
-	EnableGraphCoT     bool `mapstructure:"enable_graph_cot"`           // Graph-CoT compression
-	EnableRoleBudget   bool `mapstructure:"enable_role_budget"`         // Role-aware budgeting
-	EnableSWEAdaptive  bool `mapstructure:"enable_swe_adaptive_loop"`   // SWE adaptive prune loop
-	EnableAgentOCRHist bool `mapstructure:"enable_agent_ocr_history"`   // AgentOCR history compaction
-	EnablePlanBudget   bool `mapstructure:"enable_plan_budget"`         // Plan-and-budget controller
-	EnableLightMem     bool `mapstructure:"enable_lightmem"`            // Lightweight memory reuse
+	EnableDiffAdapt     bool `mapstructure:"enable_difft_adapt"`         // Difficulty-adaptive pruning
+	EnableEPiC          bool `mapstructure:"enable_epic"`                // Causal-edge preservation
+	EnableSSDP          bool `mapstructure:"enable_ssdp"`                // ToT branch pruning
+	EnableAgentOCR      bool `mapstructure:"enable_agent_ocr"`           // Turn-density compression
+	EnableS2MAD         bool `mapstructure:"enable_s2_mad"`              // Agreement collapse
+	EnableACON          bool `mapstructure:"enable_acon"`                // Adaptive context optimization
+	EnableLatentCollab  bool `mapstructure:"enable_latent_collab"`       // Latent collaboration merge
+	EnableGraphCoT      bool `mapstructure:"enable_graph_cot"`           // Graph-CoT compression
+	EnableRoleBudget    bool `mapstructure:"enable_role_budget"`         // Role-aware budgeting
+	EnableSWEAdaptive   bool `mapstructure:"enable_swe_adaptive_loop"`   // SWE adaptive prune loop
+	EnableAgentOCRHist  bool `mapstructure:"enable_agent_ocr_history"`   // AgentOCR history compaction
+	EnablePlanBudget    bool `mapstructure:"enable_plan_budget"`         // Plan-and-budget controller
+	EnableLightMem      bool `mapstructure:"enable_lightmem"`            // Lightweight memory reuse
 	EnablePathShorten   bool `mapstructure:"enable_path_shorten"`        // Path/identifier shortening
 	EnableJSONSampler   bool `mapstructure:"enable_json_sampler"`        // JSON statistical sampler
 	EnableContextCrunch bool `mapstructure:"enable_context_crunch"`      // Context crunch (merged log + diff folding)
 	EnableSearchCrunch  bool `mapstructure:"enable_search_crunch"`       // Search result dedup stage
 	EnableStructColl    bool `mapstructure:"enable_structural_collapse"` // Structural boilerplate collapse
-	EnableResearchPack bool `mapstructure:"enable_research_pack"`       // One-toggle research bundle
+	EnableResearchPack  bool `mapstructure:"enable_research_pack"`       // One-toggle research bundle
 
 	// Perplexity Filter (Layer 2) - Detailed settings
 	PerplexityTargetRatio          float64 `mapstructure:"perplexity_target_ratio"`          // Target compression ratio (default: 0.3)
@@ -419,25 +419,25 @@ func Defaults() *Config {
 			AgentMemoryExtractFn: "default", // Extraction function
 
 			// Research Layers 31-49 (off by default unless preset/profile enables)
-			EnableDiffAdapt:    false,
-			EnableEPiC:         false,
-			EnableSSDP:         false,
-			EnableAgentOCR:     false,
-			EnableS2MAD:        false,
-			EnableACON:         false,
-			EnableLatentCollab: false,
-			EnableGraphCoT:     false,
-			EnableRoleBudget:   false,
-			EnableSWEAdaptive:  false,
-			EnableAgentOCRHist: false,
-			EnablePlanBudget:   false,
-			EnableLightMem:     false,
-			EnablePathShorten:  false,
+			EnableDiffAdapt:     false,
+			EnableEPiC:          false,
+			EnableSSDP:          false,
+			EnableAgentOCR:      false,
+			EnableS2MAD:         false,
+			EnableACON:          false,
+			EnableLatentCollab:  false,
+			EnableGraphCoT:      false,
+			EnableRoleBudget:    false,
+			EnableSWEAdaptive:   false,
+			EnableAgentOCRHist:  false,
+			EnablePlanBudget:    false,
+			EnableLightMem:      false,
+			EnablePathShorten:   false,
 			EnableJSONSampler:   false,
 			EnableContextCrunch: false,
 			EnableSearchCrunch:  false,
 			EnableStructColl:    false,
-			EnableResearchPack: false,
+			EnableResearchPack:  false,
 
 			// Perplexity Filter (Layer 2) - Detailed settings
 			PerplexityTargetRatio:          0.3,  // Keep 30% of tokens

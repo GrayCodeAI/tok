@@ -173,5 +173,3 @@ func printL2Summary(l2 *filter.L2Summary) {
 	}
 	fmt.Printf("\nTokens: %d\n", l2.TokenCount)
 }
-
-

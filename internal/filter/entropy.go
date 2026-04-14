@@ -322,9 +322,9 @@ func (f *EntropyFilter) Name() string {
 // Parameters:
 //   - input: The text to compress. Can be empty (returns empty with 0 savings)
 //   - mode: Compression mode (ModeNone, ModeMinimal, ModeAggressive)
-//     * ModeNone: Returns input unchanged
-//     * ModeMinimal: Moderate compression, preserves readability
-//     * ModeAggressive: Maximum compression, may remove more content
+//   - ModeNone: Returns input unchanged
+//   - ModeMinimal: Moderate compression, preserves readability
+//   - ModeAggressive: Maximum compression, may remove more content
 //
 // Returns:
 //   - output: The compressed text
@@ -338,10 +338,11 @@ func (f *EntropyFilter) Name() string {
 // Thread-safety: Safe for concurrent use (uses mutex for dynamic frequency updates)
 //
 // Example:
-//   filter := NewEntropyFilter()
-//   output, saved := filter.Apply("large text content", ModeAggressive)
-//   // output: compressed text
-//   // saved: number of tokens saved
+//
+//	filter := NewEntropyFilter()
+//	output, saved := filter.Apply("large text content", ModeAggressive)
+//	// output: compressed text
+//	// saved: number of tokens saved
 //
 // Research: 2-3x compression while preserving semantic content
 // Paper: https://arxiv.org/abs/2310.06201

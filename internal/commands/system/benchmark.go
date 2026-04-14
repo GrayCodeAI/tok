@@ -20,7 +20,7 @@ var (
 )
 
 var benchCmd = &cobra.Command{
-	Use:   "benchmark",
+	Use:   "pipeline-bench",
 	Short: "Run stage-by-stage pipeline benchmark report",
 	Long:  "Runs TokMan pipeline on synthetic mixed content and prints per-stage token savings and time.",
 	RunE:  runBenchmark,

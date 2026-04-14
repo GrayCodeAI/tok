@@ -23,10 +23,10 @@ type GitWatcher struct {
 
 // RepoState tracks the state of a git repository
 type RepoState struct {
-	WorkingDir   string
-	HeadCommit   string
-	DirtyFiles   map[string]string // file -> hash
-	LastChecked  time.Time
+	WorkingDir  string
+	HeadCommit  string
+	DirtyFiles  map[string]string // file -> hash
+	LastChecked time.Time
 }
 
 // NewGitWatcher creates a new git watcher

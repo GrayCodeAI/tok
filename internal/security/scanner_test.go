@@ -248,27 +248,27 @@ func TestRedactWithMask(t *testing.T) {
 
 func TestValidateContent(t *testing.T) {
 	tests := []struct {
-		name           string
-		content        string
-		expectedSafe   bool
+		name             string
+		content          string
+		expectedSafe     bool
 		expectedFindings int
 	}{
 		{
-			name:           "Safe Content",
-			content:        "Hello world, this is safe text.",
-			expectedSafe:   true,
+			name:             "Safe Content",
+			content:          "Hello world, this is safe text.",
+			expectedSafe:     true,
 			expectedFindings: 0,
 		},
 		{
-			name:           "Critical Finding",
-			content:        "AWS: AKIAIOSFODNN7EXAMPLE",
-			expectedSafe:   false,
+			name:             "Critical Finding",
+			content:          "AWS: AKIAIOSFODNN7EXAMPLE",
+			expectedSafe:     false,
 			expectedFindings: 1,
 		},
 		{
-			name:           "Medium Finding Only",
-			content:        "Contact us at test@example.com",
-			expectedSafe:   true,
+			name:             "Medium Finding Only",
+			content:          "Contact us at test@example.com",
+			expectedSafe:     true,
 			expectedFindings: 1,
 		},
 	}

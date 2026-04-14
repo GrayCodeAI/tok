@@ -10,7 +10,7 @@ import (
 // Manager consolidates all global state with single mutex
 type Manager struct {
 	mu sync.RWMutex
-	
+
 	// CLI state
 	rootCmd      *cobra.Command
 	cfgFile      string
@@ -19,10 +19,10 @@ type Manager struct {
 	ultraCompact bool
 	queryIntent  string
 	tokenBudget  int
-	
+
 	// Config
 	config *config.Config
-	
+
 	// Runtime state
 	version string
 }

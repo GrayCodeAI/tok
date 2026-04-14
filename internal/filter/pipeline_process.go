@@ -43,14 +43,15 @@ import "github.com/GrayCodeAI/tokman/internal/core"
 //   - Layer enables: Individual layer on/off flags
 //
 // Example:
-//   pipeline := NewPipelineCoordinator(PipelineConfig{
-//       Mode: ModeAggressive,
-//       Budget: 1000,
-//       EnableEntropy: true,
-//       EnableH2O: true,
-//   })
-//   output, stats := pipeline.Process(largeText)
-//   fmt.Printf("Saved %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
+//
+//	pipeline := NewPipelineCoordinator(PipelineConfig{
+//	    Mode: ModeAggressive,
+//	    Budget: 1000,
+//	    EnableEntropy: true,
+//	    EnableH2O: true,
+//	})
+//	output, stats := pipeline.Process(largeText)
+//	fmt.Printf("Saved %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
 //
 // Research: Combines techniques from 120+ papers for optimal compression
 func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {

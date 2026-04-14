@@ -31,11 +31,11 @@ type AnalyzeParams struct {
 
 // FilterResult for filter tool response
 type FilterResult struct {
-	FilteredText  string  `json:"filtered_text"`
-	OriginalTokens int    `json:"original_tokens"`
-	FilteredTokens int    `json:"filtered_tokens"`
-	TokensSaved    int    `json:"tokens_saved"`
-	SavingsPercent float64 `json:"savings_percent"`
+	FilteredText   string   `json:"filtered_text"`
+	OriginalTokens int      `json:"original_tokens"`
+	FilteredTokens int      `json:"filtered_tokens"`
+	TokensSaved    int      `json:"tokens_saved"`
+	SavingsPercent float64  `json:"savings_percent"`
 	LayersApplied  []string `json:"layers_applied"`
 }
 
@@ -77,7 +77,7 @@ func (s *Server) handleFilter(arguments json.RawMessage) (*ToolsCallResult, erro
 	for name := range stats.LayerStats {
 		layersApplied = append(layersApplied, name)
 	}
-	
+
 	result := FilterResult{
 		FilteredText:   filtered,
 		OriginalTokens: stats.OriginalTokens,
@@ -145,7 +145,7 @@ func (s *Server) handleCompressFile(arguments json.RawMessage) (*ToolsCallResult
 		lines := strings.Split(filtered, "\n")
 		if len(lines) > params.MaxLines {
 			lines = lines[:params.MaxLines]
-			lines = append(lines, fmt.Sprintf("... (%d more lines)", 
+			lines = append(lines, fmt.Sprintf("... (%d more lines)",
 				len(strings.Split(filtered, "\n"))-params.MaxLines))
 			filtered = strings.Join(lines, "\n")
 		}
@@ -363,7 +363,7 @@ PRESETS:
 // detectPatterns detects content patterns
 func detectPatterns(text string) []string {
 	patterns := []string{}
-	
+
 	if strings.Contains(text, "error") || strings.Contains(text, "Error") {
 		patterns = append(patterns, "- Error messages detected")
 	}
@@ -388,14 +388,14 @@ func detectPatterns(text string) []string {
 	if len(patterns) == 0 {
 		patterns = append(patterns, "- Generic text content")
 	}
-	
+
 	return patterns
 }
 
 // estimateCompression estimates compression ratios
 func estimateCompression(text string) map[filter.Mode]float64 {
 	lines := len(strings.Split(text, "\n"))
-	
+
 	// Heuristic estimates
 	switch {
 	case lines < 50:
@@ -424,7 +424,7 @@ func estimateCompression(text string) map[filter.Mode]float64 {
 // getRecommendations returns filter recommendations
 func getRecommendations(patterns []string) string {
 	recs := []string{}
-	
+
 	for _, p := range patterns {
 		switch {
 		case strings.Contains(p, "Error"):
@@ -435,10 +435,10 @@ func getRecommendations(patterns []string) string {
 			recs = append(recs, "- AST layer will preserve function signatures")
 		}
 	}
-	
+
 	if len(recs) == 0 {
 		return "- Use 'minimal' mode for general purpose filtering"
 	}
-	
+
 	return strings.Join(recs, "\n")
 }

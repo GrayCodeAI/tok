@@ -415,10 +415,10 @@ func (v *Validator) ValidatePreset(preset string) error {
 // ValidateMode validates a compression mode value
 func (v *Validator) ValidateMode(mode string) error {
 	validModes := map[string]bool{
-		"minimal":   true,
+		"minimal":    true,
 		"aggressive": true,
-		"none":      true,
-		"":          true, // empty is valid
+		"none":       true,
+		"":           true, // empty is valid
 	}
 	if !validModes[mode] {
 		return fmt.Errorf("invalid mode: %s (must be 'minimal', 'aggressive', or 'none')", mode)

@@ -18,14 +18,14 @@ const (
 
 // Breaker implements circuit breaker pattern
 type Breaker struct {
-	mu            sync.Mutex
-	state         State
-	failures      int
-	successes     int
-	lastFailTime  time.Time
-	threshold     int
-	timeout       time.Duration
-	halfOpenMax   int
+	mu           sync.Mutex
+	state        State
+	failures     int
+	successes    int
+	lastFailTime time.Time
+	threshold    int
+	timeout      time.Duration
+	halfOpenMax  int
 }
 
 // New creates a circuit breaker
@@ -43,7 +43,7 @@ func (b *Breaker) Call(fn func() error) error {
 	if !b.allow() {
 		return ErrCircuitOpen
 	}
-	
+
 	err := fn()
 	b.record(err == nil)
 	return err
@@ -52,7 +52,7 @@ func (b *Breaker) Call(fn func() error) error {
 func (b *Breaker) allow() bool {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	switch b.state {
 	case StateClosed:
 		return true
@@ -72,11 +72,11 @@ func (b *Breaker) allow() bool {
 func (b *Breaker) record(success bool) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	if success {
 		b.failures = 0
 		b.successes++
-		
+
 		if b.state == StateHalfOpen && b.successes >= b.halfOpenMax {
 			b.state = StateClosed
 		}
@@ -84,7 +84,7 @@ func (b *Breaker) record(success bool) {
 		b.successes = 0
 		b.failures++
 		b.lastFailTime = time.Now()
-		
+
 		if b.failures >= b.threshold {
 			b.state = StateOpen
 		}

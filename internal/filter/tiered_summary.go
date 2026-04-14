@@ -41,10 +41,10 @@ type L0Summary struct {
 
 // L1Summary is the structural summary.
 type L1Summary struct {
-	Title      string   `json:"title"`
+	Title      string    `json:"title"`
 	Sections   []Section `json:"sections"`
-	Outline    string   `json:"outline"`
-	TokenCount int      `json:"token_count"`
+	Outline    string    `json:"outline"`
+	TokenCount int       `json:"token_count"`
 }
 
 // Section represents a document section.
@@ -56,10 +56,10 @@ type Section struct {
 
 // L2Summary is the deep semantic summary.
 type L2Summary struct {
-	Summary      string `json:"summary"`
+	Summary      string   `json:"summary"`
 	KeyPoints    []string `json:"key_points"`
 	Implications []string `json:"implications,omitempty"`
-	TokenCount   int    `json:"token_count"`
+	TokenCount   int      `json:"token_count"`
 }
 
 // NewTieredSummaryFilter creates a new tiered summary filter.

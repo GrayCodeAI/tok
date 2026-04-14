@@ -323,24 +323,24 @@ type LayerConfig struct {
 // Use this gradually: migrate from flat fields to nested Layers config over time.
 type PipelineConfigWithNestedLayers struct {
 	// Core fields
-	Mode                       Mode
-	QueryIntent                string
-	Budget                     int
-	LLMEnabled                 bool
-	SessionTracking            bool
-	NgramEnabled               bool
-	MultiFileEnabled           bool
-	PromptTemplate             string
-	EnableTOMLFilter           bool
-	TOMLFilterCommand          string
-	EnablePolicyRouter         bool
-	EnableExtractivePrefilter  bool
-	ExtractiveMaxLines         int
-	ExtractiveHeadLines        int
-	ExtractiveTailLines        int
-	ExtractiveSignalLines      int
-	EnableQualityGuardrail     bool
-	LayerGateMode              string
+	Mode                      Mode
+	QueryIntent               string
+	Budget                    int
+	LLMEnabled                bool
+	SessionTracking           bool
+	NgramEnabled              bool
+	MultiFileEnabled          bool
+	PromptTemplate            string
+	EnableTOMLFilter          bool
+	TOMLFilterCommand         string
+	EnablePolicyRouter        bool
+	EnableExtractivePrefilter bool
+	ExtractiveMaxLines        int
+	ExtractiveHeadLines       int
+	ExtractiveTailLines       int
+	ExtractiveSignalLines     int
+	EnableQualityGuardrail    bool
+	LayerGateMode             string
 
 	// New: Claw Compactor features
 	EnableAdaptiveLearning     bool // Enable adaptive learning (merged EngramLearner + TieredSummary)
@@ -481,18 +481,18 @@ type PipelineConfigWithNestedLayers struct {
 	EnableSlimInfer     bool
 
 	// Layers 31-45: adaptive reasoning + trajectory filters
-	EnableDiffAdapt    bool
-	EnableEPiC         bool
-	EnableSSDP         bool
-	EnableAgentOCR     bool
-	EnableS2MAD        bool
-	EnableLatentCollab bool
-	EnableGraphCoT     bool
-	EnableRoleBudget   bool
-	EnableSWEAdaptive  bool
-	EnableAgentOCRHist bool
-	EnablePlanBudget   bool
-	EnableLightMem     bool
+	EnableDiffAdapt     bool
+	EnableEPiC          bool
+	EnableSSDP          bool
+	EnableAgentOCR      bool
+	EnableS2MAD         bool
+	EnableLatentCollab  bool
+	EnableGraphCoT      bool
+	EnableRoleBudget    bool
+	EnableSWEAdaptive   bool
+	EnableAgentOCRHist  bool
+	EnablePlanBudget    bool
+	EnableLightMem      bool
 	EnablePathShorten   bool
 	EnableJSONSampler   bool
 	EnableContextCrunch bool // Merged LogCrunch + DiffCrunch
@@ -504,8 +504,8 @@ type PipelineConfigWithNestedLayers struct {
 	CacheMaxSize int
 
 	// Tier-based configuration (new)
-	EnableTiers  bool         // Enable tier-based automatic layer selection
-	EnabledTiers []AutoTier   // Explicit list of tiers to enable (if empty, auto-select)
+	EnableTiers  bool       // Enable tier-based automatic layer selection
+	EnabledTiers []AutoTier // Explicit list of tiers to enable (if empty, auto-select)
 }
 
 // PipelineConfig is an alias for the full config type with backward-compatible flat fields.
@@ -521,7 +521,7 @@ type PipelineStats struct {
 	LayerStats       map[string]LayerStat
 	runningSaved     int
 	CacheHit         bool
-	
+
 	// Thread-safety fields
 	mu sync.RWMutex
 }
@@ -539,12 +539,11 @@ func (s *PipelineStats) RunningSavedSafe() int {
 	return s.runningSaved
 }
 
-
 // AddLayerStatSafe adds a layer stat in a thread-safe manner.
 func (s *PipelineStats) AddLayerStatSafe(name string, stat LayerStat) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	
+
 	if s.LayerStats == nil {
 		s.LayerStats = make(map[string]LayerStat)
 	}

@@ -24,27 +24,27 @@ type EngramLearner struct {
 
 // EngramRule represents a learned compression rule.
 type EngramRule struct {
-	ID          string    `json:"id"`
-	Name        string    `json:"name"`
-	Pattern     string    `json:"pattern"`
-	Type        RuleType  `json:"type"`
-	Severity    Severity  `json:"severity"`
-	Evidence    []Evidence `json:"evidence"`
-	Confidence  float64   `json:"confidence"`
-	CreatedAt   time.Time `json:"created_at"`
-	AppliedCount int64    `json:"applied_count"`
-	SuccessCount int64    `json:"success_count"`
+	ID           string     `json:"id"`
+	Name         string     `json:"name"`
+	Pattern      string     `json:"pattern"`
+	Type         RuleType   `json:"type"`
+	Severity     Severity   `json:"severity"`
+	Evidence     []Evidence `json:"evidence"`
+	Confidence   float64    `json:"confidence"`
+	CreatedAt    time.Time  `json:"created_at"`
+	AppliedCount int64      `json:"applied_count"`
+	SuccessCount int64      `json:"success_count"`
 }
 
 // RuleType defines the type of engram rule.
 type RuleType string
 
 const (
-	RuleTypePreserve    RuleType = "preserve"    // Always preserve matching content
-	RuleTypeCompress    RuleType = "compress"    // Aggressively compress
-	RuleTypeSkipLayer   RuleType = "skip_layer"  // Skip specific layer for this content
-	RuleTypeBoost       RuleType = "boost"       // Boost importance score
-	RuleTypeReduce      RuleType = "reduce"      // Reduce importance score
+	RuleTypePreserve  RuleType = "preserve"   // Always preserve matching content
+	RuleTypeCompress  RuleType = "compress"   // Aggressively compress
+	RuleTypeSkipLayer RuleType = "skip_layer" // Skip specific layer for this content
+	RuleTypeBoost     RuleType = "boost"      // Boost importance score
+	RuleTypeReduce    RuleType = "reduce"     // Reduce importance score
 )
 
 // Severity defines rule severity.
@@ -402,10 +402,10 @@ func (el *EngramLearner) GetStats() map[string]interface{} {
 	defer el.mu.RUnlock()
 
 	return map[string]interface{}{
-		"rules_learned":   len(el.rules),
+		"rules_learned":    len(el.rules),
 		"patterns_tracked": len(el.patterns),
-		"classifiers":     len(defaultClassifiers),
-		"storage_path":    el.storagePath,
+		"classifiers":      len(defaultClassifiers),
+		"storage_path":     el.storagePath,
 	}
 }
 

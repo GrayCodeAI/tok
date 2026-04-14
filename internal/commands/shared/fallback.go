@@ -100,12 +100,12 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 	start := time.Now()
 	output, exitCode, err := h.executeCommand(args)
 	execTime := time.Since(start)
-	
+
 	// Validate output size
 	if err := validation.ValidateInputSize(output); err != nil {
 		return output, true, fmt.Errorf("output too large: %w", err)
 	}
-	
+
 	filtered := output
 	if output != "" {
 		filtered = h.applyPipeline(output, config)

@@ -6,9 +6,9 @@ import (
 )
 
 type entry struct {
-	value      any
-	expiry     time.Time
-	size       int
+	value  any
+	expiry time.Time
+	size   int
 }
 
 // Cache implements TTL-based cache with memory limits
@@ -35,17 +35,17 @@ func New(ttl time.Duration, maxSize int) *Cache {
 func (c *Cache) Set(key string, value any, size int) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	// Remove old entry if exists
 	if old, exists := c.items[key]; exists {
 		c.currentSize -= old.size
 	}
-	
+
 	// Evict if needed
 	for c.currentSize+size > c.maxSize && len(c.items) > 0 {
 		c.evictOldest()
 	}
-	
+
 	c.items[key] = &entry{
 		value:  value,
 		expiry: time.Now().Add(c.ttl),
@@ -58,16 +58,16 @@ func (c *Cache) Set(key string, value any, size int) {
 func (c *Cache) Get(key string) (any, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	
+
 	e, exists := c.items[key]
 	if !exists {
 		return nil, false
 	}
-	
+
 	if time.Now().After(e.expiry) {
 		return nil, false
 	}
-	
+
 	return e.value, true
 }
 
@@ -75,7 +75,7 @@ func (c *Cache) Get(key string) (any, bool) {
 func (c *Cache) Delete(key string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if e, exists := c.items[key]; exists {
 		c.currentSize -= e.size
 		delete(c.items, key)
@@ -93,14 +93,14 @@ func (c *Cache) Clear() {
 func (c *Cache) evictOldest() {
 	var oldestKey string
 	var oldestTime time.Time
-	
+
 	for k, e := range c.items {
 		if oldestKey == "" || e.expiry.Before(oldestTime) {
 			oldestKey = k
 			oldestTime = e.expiry
 		}
 	}
-	
+
 	if oldestKey != "" {
 		c.currentSize -= c.items[oldestKey].size
 		delete(c.items, oldestKey)
@@ -110,7 +110,7 @@ func (c *Cache) evictOldest() {
 func (c *Cache) cleanup() {
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
-	
+
 	for range ticker.C {
 		c.mu.Lock()
 		now := time.Now()

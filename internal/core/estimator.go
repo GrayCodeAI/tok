@@ -178,17 +178,17 @@ func init() {
 // Avoids BPE overhead for small content.
 func fastEstimateTokens(text string) int {
 	length := len(text)
-	
+
 	// Very short strings: assume 1 token per 3 chars
 	if length < 30 {
 		return (length + 2) / 3
 	}
-	
+
 	// Short strings: use standard heuristic
 	if length < 100 {
 		return (length + 3) / 4
 	}
-	
+
 	// Medium strings: slightly more accurate heuristic
 	// Account for spaces and punctuation being 1 token
 	spaces := 0
@@ -208,7 +208,7 @@ func EstimateTokens(text string) int {
 	if len(text) < 200 {
 		return fastEstimateTokens(text)
 	}
-	
+
 	// Slow path: use BPE for accuracy on large content
 	if useBPE.Load() && bpeReady.Load() {
 		if tok, err := getBPETokenizer(); err == nil {
