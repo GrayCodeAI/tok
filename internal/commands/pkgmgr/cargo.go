@@ -76,6 +76,8 @@ func runCargo(cmd *cobra.Command, args []string) error {
 		filtered = filterCargoNextest(output)
 	case "clippy":
 		filtered = filterCargoClippy(output)
+	case "install":
+		filtered = filterCargoInstall(output)
 	default:
 		filtered = output
 	}
@@ -240,4 +242,57 @@ func filterCargoTestUltraCompact(output string) string {
 		return fmt.Sprintf("tests: %d passed, %d failed", passed, failed)
 	}
 	return fmt.Sprintf("tests: %d passed", passed)
+}
+
+func filterCargoInstall(output string) string {
+	lines := strings.Split(output, "\n")
+	var installed []string
+	var updated []string
+	var compiling []string
+
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "Installing") {
+			pkg := strings.TrimPrefix(line, "Installing ")
+			installed = append(installed, pkg)
+		} else if strings.HasPrefix(line, "Updating") {
+			pkg := strings.TrimPrefix(line, "Updating ")
+			updated = append(updated, pkg)
+		} else if strings.HasPrefix(line, "Compiling") {
+			// Skip compilation noise
+			continue
+		} else if strings.HasPrefix(line, "Finished") || strings.HasPrefix(line, "error") {
+			// Keep these important lines
+			compiling = append(compiling, line)
+		}
+	}
+
+	var result strings.Builder
+
+	if len(installed) > 0 {
+		result.WriteString(fmt.Sprintf("📦 Installed %d package(s):\n", len(installed)))
+		for _, pkg := range installed {
+			result.WriteString(fmt.Sprintf("  ✓ %s\n", pkg))
+		}
+	}
+
+	if len(updated) > 0 {
+		result.WriteString(fmt.Sprintf("🔄 Updated %d package(s):\n", len(updated)))
+		for _, pkg := range updated {
+			result.WriteString(fmt.Sprintf("  ✓ %s\n", pkg))
+		}
+	}
+
+	if len(compiling) > 0 {
+		for _, line := range compiling {
+			result.WriteString(line)
+			result.WriteString("\n")
+		}
+	}
+
+	if result.Len() == 0 {
+		return "✅ Install complete"
+	}
+
+	return result.String()
 }
