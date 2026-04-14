@@ -5,29 +5,32 @@ package filter
 type Tier string
 
 const (
-	// Tier 1: Surface — removes obvious noise, keeps everything intact
-	TierSurface Tier = "surface" // 3 layers, 30-50% reduction
+	// Tier 1: Surface — 4 consolidated layers for speed
+	// L1: TokenPrune + L3: CodeStructure + L7: Budget + L17: ContentDetect
+	TierSurface Tier = "surface" // 4 layers, 30-50% reduction
 
-	// Tier 2: Trim — cuts dead weight, keeps structure
-	TierTrim Tier = "trim" // 12 layers, 50-70% reduction
+	// Tier 2: Trim — 8 consolidated layers for balanced compression
+	// L1-L3, L5, L7-L10
+	TierTrim Tier = "trim" // 8 layers, 50-70% reduction
 
-	// Tier 3: Extract — pulls out the essence
-	TierExtract Tier = "extract" // 24 layers, 70-90% reduction
+	// Tier 3: Extract — 20 consolidated layers for maximum compression
+	// All L1-L20 layers
+	TierExtract Tier = "extract" // 20 layers, 70-90% reduction
 
-	// Tier 4: Core — practical high-impact 20-layer runtime profile
+	// Tier 4: Core — practical 20-layer production profile
 	TierCore Tier = "core" // 20 layers, quality-first compression
 
-	// Tier C: Code — code-aware, preserves syntax structure
-	TierCode Tier = "code" // 8 layers, 50-70% reduction
+	// Tier C: Code — code-aware with structure preservation
+	TierCode Tier = "code" // 6 layers, 50-70% reduction
 
-	// Tier L: Log — log-aware, deduplicates and groups
-	TierLog Tier = "log" // 7 layers, 60-80% reduction
+	// Tier L: Log — log-aware with deduplication
+	TierLog Tier = "log" // 5 layers, 60-80% reduction
 
-	// Tier T: Thread — conversation-aware, preserves context
-	TierThread Tier = "thread" // 6 layers, 55-75% reduction
+	// Tier T: Thread — conversation-aware context preservation
+	TierThread Tier = "thread" // 5 layers, 55-75% reduction
 
-	// Tier A: Adaptive — routing + extractive-first for large/mixed outputs
-	TierAdaptive Tier = "adaptive" // dynamic path, quality-first
+	// Tier A: Adaptive — dynamic path based on content type
+	TierAdaptive Tier = "adaptive" // dynamic, quality-first
 )
 
 // TierConfig returns a PipelineConfig for the given tier.
