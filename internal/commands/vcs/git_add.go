@@ -12,6 +12,7 @@ import (
 var gitAddCmd = &cobra.Command{
 	Use:   "add [args...]",
 	Short: "Add files to staging (compact output)",
+	Long:  `Add files to git staging area with filtered output. Supports all git add options including -A, --all, -u, etc.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return shared.ExecuteAndRecord("git add", func() (string, string, error) {
 			return runGitAdd(args)
@@ -21,8 +22,20 @@ var gitAddCmd = &cobra.Command{
 
 func runGitAdd(args []string) (string, string, error) {
 	addArgs := args
-	if len(addArgs) == 0 {
-		addArgs = []string{"."}
+
+	hasAllFlag := false
+	hasUpdateFlag := false
+	for _, arg := range args {
+		if arg == "-A" || arg == "--all" || arg == "--no-ignore-removal" {
+			hasAllFlag = true
+		}
+		if arg == "-u" || arg == "--update" {
+			hasUpdateFlag = true
+		}
+	}
+
+	if len(addArgs) == 0 || (!hasAllFlag && !hasUpdateFlag && len(args) == 0) {
+		addArgs = []string{"-A"}
 	}
 
 	addCmd := buildGitCmd("add", addArgs...)
