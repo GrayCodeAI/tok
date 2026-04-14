@@ -270,6 +270,9 @@ func addGitPassthroughCommands() {
 		"blame", "shortlog", "format-patch", "difftool", "fsck",
 		"sparse-checkout", "stage", "am", "apply", "help",
 		"for-each-ref", "rev-parse", "rev-list", "ls-files", "ls-tree",
+		// More user-facing commands
+		"annotate", "citool", "diagnose", "gui", "mergetool",
+		"range-diff", "send-email", "show-branch", "version", "whatchanged",
 	}
 
 	for _, cmdName := range passthroughCommands {
