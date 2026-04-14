@@ -157,10 +157,10 @@ func BenchmarkLayer_Perplexity(b *testing.B) {
 // Benchmark parallel processing
 func BenchmarkPipeline_ProcessParallel(b *testing.B) {
 	cfg := PipelineConfig{
-		Mode:                ModeMinimal,
-		EnableEntropy:       true,
-		EnablePerplexity:    true,
-		EnableAST:           true,
+		Mode:             ModeMinimal,
+		EnableEntropy:    true,
+		EnablePerplexity: true,
+		EnableAST:        true,
 	}
 	p := NewPipelineCoordinator(cfg)
 	input := "Test input for parallel processing benchmark"

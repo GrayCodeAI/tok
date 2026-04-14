@@ -16,7 +16,7 @@ var (
 // TestEntropyFilter tests entropy-based filtering
 func TestEntropyFilter(t *testing.T) {
 	f := NewEntropyFilter()
-	
+
 	tests := []struct {
 		name  string
 		input string
@@ -27,7 +27,7 @@ func TestEntropyFilter(t *testing.T) {
 		{"medium", mediumInput, ModeAggressive},
 		{"large", largeInput, ModeAggressive},
 	}
-	
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			output, saved := f.Apply(tt.input, tt.mode)
@@ -44,10 +44,10 @@ func TestEntropyFilter(t *testing.T) {
 // TestPerplexityFilter tests perplexity-based pruning
 func TestPerplexityFilter(t *testing.T) {
 	f := NewPerplexityFilter()
-	
+
 	input := "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\n"
 	output, saved := f.Apply(input, ModeAggressive)
-	
+
 	if output == "" {
 		t.Error("output should not be empty")
 	}
@@ -59,13 +59,13 @@ func TestPerplexityFilter(t *testing.T) {
 // TestASTPreserveFilter tests AST-aware compression
 func TestASTPreserveFilter(t *testing.T) {
 	f := NewASTPreserveFilter()
-	
+
 	code := `func main() {
 		fmt.Println("hello")
 		x := 42
 		return x
 	}`
-	
+
 	output, saved := f.Apply(code, ModeMinimal)
 	if !strings.Contains(output, "func") {
 		t.Error("should preserve function declaration")
@@ -233,7 +233,7 @@ func TestFilterNilSafety(t *testing.T) {
 func BenchmarkEntropyFilter(b *testing.B) {
 	f := NewEntropyFilter()
 	input := mediumInput
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		f.Apply(input, ModeMinimal)
@@ -244,7 +244,7 @@ func BenchmarkEntropyFilter(b *testing.B) {
 func BenchmarkPerplexityFilter(b *testing.B) {
 	f := NewPerplexityFilter()
 	input := mediumInput
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		f.Apply(input, ModeAggressive)

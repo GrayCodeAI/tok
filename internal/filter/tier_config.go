@@ -31,13 +31,13 @@ const (
 
 // AutoTierConfig holds configuration for each tier.
 type AutoTierConfig struct {
-	Name        string
-	Description string
-	LayerRange  [2]int  // [start, end] layer numbers
-	Default     bool    // Enabled by default
-	AutoEnable  bool    // Can be auto-enabled based on context
-	CostLevel   int     // 1=low, 2=medium, 3=high, 4=very high
-	MinInputLen int     // Minimum input length to enable
+	Name         string
+	Description  string
+	LayerRange   [2]int        // [start, end] layer numbers
+	Default      bool          // Enabled by default
+	AutoEnable   bool          // Can be auto-enabled based on context
+	CostLevel    int           // 1=low, 2=medium, 3=high, 4=very high
+	MinInputLen  int           // Minimum input length to enable
 	ContentTypes []ContentType // Content types this tier is good for
 }
 

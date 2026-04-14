@@ -482,8 +482,8 @@ type CompressionCache struct {
 }
 
 type cacheEntry struct {
-	result   *CachedResult
-	element  *list.Element
+	result  *CachedResult
+	element *list.Element
 }
 
 // CachedResult represents a cached compression result
@@ -537,7 +537,7 @@ func (c *CompressionCache) evictOldest() {
 	if front == nil {
 		return
 	}
-	
+
 	key := front.Value.(string)
 	c.order.Remove(front)
 	delete(c.entries, key)

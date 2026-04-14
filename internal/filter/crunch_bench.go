@@ -58,13 +58,13 @@ type BenchmarkReport struct {
 
 // AggregateStats provides summary statistics.
 type AggregateStats struct {
-	AvgCompression   float64
-	MinCompression   float64
-	MaxCompression   float64
+	AvgCompression    float64
+	MinCompression    float64
+	MaxCompression    float64
 	StdDevCompression float64
-	AvgLatency       float64
-	TotalTime        time.Duration
-	AvgQuality       float64
+	AvgLatency        float64
+	TotalTime         time.Duration
+	AvgQuality        float64
 }
 
 // NewCrunchBench creates a new benchmark instance.

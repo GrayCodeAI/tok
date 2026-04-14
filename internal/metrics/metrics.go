@@ -155,7 +155,7 @@ func (m *Metrics) calculateAverageDuration() float64 {
 	if count == 0 {
 		return 0
 	}
-	
+
 	total := m.compressionDurationSum.Load()
 	return float64(total) / float64(count)
 }

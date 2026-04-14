@@ -9,24 +9,24 @@ import (
 
 // LayerCacheEntry stores cached filter results.
 type LayerCacheEntry struct {
-	InputHash     string
-	Output        string
-	TokensSaved   int
-	LayerName     string
-	Mode          Mode
-	Timestamp     time.Time
-	HitCount      int
+	InputHash   string
+	Output      string
+	TokensSaved int
+	LayerName   string
+	Mode        Mode
+	Timestamp   time.Time
+	HitCount    int
 }
 
 // LayerCache provides content-addressable caching for filter results.
 // Uses SHA-256 hashing for cache keys with LRU eviction.
 type LayerCache struct {
-	mu       sync.RWMutex
-	items    map[string]*LayerCacheEntry
-	maxSize  int
-	ttl      time.Duration
-	hits     int64
-	misses   int64
+	mu        sync.RWMutex
+	items     map[string]*LayerCacheEntry
+	maxSize   int
+	ttl       time.Duration
+	hits      int64
+	misses    int64
 	evictions int64
 }
 

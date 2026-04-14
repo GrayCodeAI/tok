@@ -138,18 +138,18 @@ func (sp *StreamingProcessor) ProcessStreamReader(reader io.Reader, writer io.Wr
 
 // StreamConfig holds configuration for streaming mode.
 type StreamConfig struct {
-	Enabled       bool
-	Threshold     int
-	ChunkSize     int
+	Enabled        bool
+	Threshold      int
+	ChunkSize      int
 	ParallelChunks bool // Future: process chunks in parallel
 }
 
 // DefaultStreamConfig returns the default streaming configuration.
 func DefaultStreamConfig() StreamConfig {
 	return StreamConfig{
-		Enabled:       true,
-		Threshold:     StreamingThreshold,
-		ChunkSize:     ChunkSize,
+		Enabled:        true,
+		Threshold:      StreamingThreshold,
+		ChunkSize:      ChunkSize,
 		ParallelChunks: false,
 	}
 }

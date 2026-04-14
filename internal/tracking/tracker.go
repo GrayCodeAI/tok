@@ -168,8 +168,8 @@ func NewTracker(dbPath string) (*Tracker, error) {
 	}
 
 	// Configure connection pool for concurrent access
-	db.SetMaxOpenConns(25)           // Maximum number of open connections
-	db.SetMaxIdleConns(25)           // Maximum number of idle connections
+	db.SetMaxOpenConns(25)                 // Maximum number of open connections
+	db.SetMaxIdleConns(25)                 // Maximum number of idle connections
 	db.SetConnMaxLifetime(5 * time.Minute) // Maximum lifetime of a connection
 	db.SetConnMaxIdleTime(2 * time.Minute) // Maximum idle time before closing
 
@@ -350,7 +350,7 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		}
 		return nil
 	})
-	
+
 	if err != nil {
 		slog.Error("failed to record command", "error", err, "command", record.Command)
 		return fmt.Errorf("failed to record command: %w", err)

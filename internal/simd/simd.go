@@ -12,18 +12,18 @@ func FastHasANSI(data string) bool {
 	if len(data) == 0 {
 		return false
 	}
-	
+
 	// Check 8 bytes at a time (SIMD-friendly)
 	n := len(data)
 	for i := 0; i < n-7; i += 8 {
-		if data[i] == 0x1b || data[i+1] == 0x1b || 
-		   data[i+2] == 0x1b || data[i+3] == 0x1b ||
-		   data[i+4] == 0x1b || data[i+5] == 0x1b ||
-		   data[i+6] == 0x1b || data[i+7] == 0x1b {
+		if data[i] == 0x1b || data[i+1] == 0x1b ||
+			data[i+2] == 0x1b || data[i+3] == 0x1b ||
+			data[i+4] == 0x1b || data[i+5] == 0x1b ||
+			data[i+6] == 0x1b || data[i+7] == 0x1b {
 			return true
 		}
 	}
-	
+
 	// Check remaining bytes
 	for i := (n / 8) * 8; i < n; i++ {
 		if data[i] == 0x1b {
@@ -37,19 +37,35 @@ func FastHasANSI(data string) bool {
 func FastCountBytes(data string, target byte) int {
 	count := 0
 	n := len(data)
-	
+
 	// Process 8 bytes at a time
 	for i := 0; i < n-7; i += 8 {
-		if data[i] == target { count++ }
-		if data[i+1] == target { count++ }
-		if data[i+2] == target { count++ }
-		if data[i+3] == target { count++ }
-		if data[i+4] == target { count++ }
-		if data[i+5] == target { count++ }
-		if data[i+6] == target { count++ }
-		if data[i+7] == target { count++ }
+		if data[i] == target {
+			count++
+		}
+		if data[i+1] == target {
+			count++
+		}
+		if data[i+2] == target {
+			count++
+		}
+		if data[i+3] == target {
+			count++
+		}
+		if data[i+4] == target {
+			count++
+		}
+		if data[i+5] == target {
+			count++
+		}
+		if data[i+6] == target {
+			count++
+		}
+		if data[i+7] == target {
+			count++
+		}
 	}
-	
+
 	// Remaining bytes
 	for i := (n / 8) * 8; i < n; i++ {
 		if data[i] == target {
@@ -70,18 +86,18 @@ func FastEqual(a, b string) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	
+
 	// Compare 8 bytes at a time
 	n := len(a)
 	for i := 0; i < n-7; i += 8 {
 		if a[i] != b[i] || a[i+1] != b[i+1] ||
-		   a[i+2] != b[i+2] || a[i+3] != b[i+3] ||
-		   a[i+4] != b[i+4] || a[i+5] != b[i+5] ||
-		   a[i+6] != b[i+6] || a[i+7] != b[i+7] {
+			a[i+2] != b[i+2] || a[i+3] != b[i+3] ||
+			a[i+4] != b[i+4] || a[i+5] != b[i+5] ||
+			a[i+6] != b[i+6] || a[i+7] != b[i+7] {
 			return false
 		}
 	}
-	
+
 	// Remaining bytes
 	for i := (n / 8) * 8; i < n; i++ {
 		if a[i] != b[i] {

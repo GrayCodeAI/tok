@@ -12,8 +12,8 @@ package filter
 // - EngramLearner: Error pattern learning with 14 classifiers
 // - TieredSummary: Progressive summarization (surface → structural → deep)
 type AdaptiveLearningFilter struct {
-	engram *EngramLearner
-	tiered *TieredSummaryFilter
+	engram  *EngramLearner
+	tiered  *TieredSummaryFilter
 	enabled bool
 }
 

@@ -21,7 +21,7 @@ func (sf *SafeFilter) Apply(input string, mode Mode) (output string, saved int) 
 	if sf.filter == nil {
 		return input, 0
 	}
-	
+
 	// Panic recovery
 	defer func() {
 		if r := recover(); r != nil {
@@ -31,7 +31,7 @@ func (sf *SafeFilter) Apply(input string, mode Mode) (output string, saved int) 
 			saved = 0
 		}
 	}()
-	
+
 	return sf.filter.Apply(input, mode)
 }
 

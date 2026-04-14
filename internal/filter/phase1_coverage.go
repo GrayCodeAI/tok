@@ -1,3 +1,4 @@
+//go:build ignore
 // +build ignore
 
 // Phase 1: Coverage improvement script

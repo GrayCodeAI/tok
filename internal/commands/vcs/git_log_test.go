@@ -49,5 +49,3 @@ func TestFilterLog(t *testing.T) {
 		})
 	}
 }
-
-

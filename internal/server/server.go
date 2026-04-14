@@ -64,7 +64,7 @@ func (rl *RateLimiter) Allow(clientIP string) bool {
 		if clientCount >= rl.maxClients {
 			return true // Allow request but don't track to prevent DoS
 		}
-		
+
 		rl.mu.Lock()
 		cl = &clientLimiter{
 			tokens:     float64(rl.burst) - 1,
@@ -127,7 +127,7 @@ func getClientIP(r *http.Request) string {
 	// Only trust X-Forwarded-For when behind a known proxy
 	// For direct connections, use RemoteAddr exclusively
 	// This prevents IP spoofing attacks on rate limiting
-	
+
 	// Check X-Real-Ip header (only if behind trusted proxy)
 	xri := r.Header.Get("X-Real-Ip")
 	if xri != "" {

@@ -380,4 +380,3 @@ func (s *AppState) IsStructCollapseEnabled() bool {
 
 // Global accessor functions for backward compatibility.
 // These delegate to the global AppState instance and also sync package-level globals.
-

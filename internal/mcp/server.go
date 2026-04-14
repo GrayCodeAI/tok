@@ -13,12 +13,12 @@ import (
 
 // Server implements an MCP server
 type Server struct {
-	name       string
-	version    string
-	tools      map[string]*registeredTool
-	handlers   map[string]ToolHandler
-	pipeline   *filter.PipelineCoordinator
-	mu         sync.RWMutex
+	name        string
+	version     string
+	tools       map[string]*registeredTool
+	handlers    map[string]ToolHandler
+	pipeline    *filter.PipelineCoordinator
+	mu          sync.RWMutex
 	initialized bool
 }
 

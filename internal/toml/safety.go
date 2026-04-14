@@ -48,9 +48,9 @@ func CheckFilterSafety(content string) SafetyCheck {
 
 	// Check for shell injection patterns (using separate patterns for clarity)
 	patterns := []string{
-		`\$\([^)]+\)`,        // $(cmd)
-		"`[^`]+`",            // `cmd`
-		`\|[\s]*[a-z]+`,      // |cmd
+		`\$\([^)]+\)`,   // $(cmd)
+		"`[^`]+`",       // `cmd`
+		`\|[\s]*[a-z]+`, // |cmd
 	}
 	shellInjectionPattern := regexp.MustCompile(strings.Join(patterns, "|"))
 	if shellInjectionPattern.MatchString(content) {

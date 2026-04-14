@@ -19,9 +19,9 @@ func NewLogCrunchFilter() *LogCrunchFilter {
 func (f *LogCrunchFilter) Name() string { return "46_log_crunch" }
 
 var (
-	stackFramePattern = regexp.MustCompile(`(?:^\s+at\s+|^\s+File\s+"|^\s+in\s+\w|Traceback|goroutine\s+\d+)`)
+	stackFramePattern  = regexp.MustCompile(`(?:^\s+at\s+|^\s+File\s+"|^\s+in\s+\w|Traceback|goroutine\s+\d+)`)
 	stackIndentPattern = regexp.MustCompile(`^(\s{2,}|\t)`)
-	timestampPattern = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?`)
+	timestampPattern   = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?`)
 )
 
 func (f *LogCrunchFilter) Apply(input string, mode Mode) (string, int) {
