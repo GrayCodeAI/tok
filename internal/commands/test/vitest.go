@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ var vitestCmd = &cobra.Command{
 	Short: "Vitest with filtered output (90% token reduction)",
 	Long: `Execute Vitest with token-optimized output.
 
-Shows only test failures and summary.
+Shows only test failures and summary with accurate count extraction.
 
 Examples:
   tokman vitest run
@@ -64,64 +65,125 @@ func runVitest(cmd *cobra.Command, args []string) error {
 	return err
 }
 
+var vitestSummaryRe = regexp.MustCompile(`(\d+)\s+(passed|failed|skipped)`)
+var vitestSuiteRe = regexp.MustCompile(`(✓|×|FAIL|PASS)\s+(.+)`)
+var vitestFileRe = regexp.MustCompile(`(✓|×|✗)\s+(.+?)(?:\s+\(\d+\s*ms\))`)
+
 func filterVitestOutput(raw string) string {
-	lines := strings.Split(raw, "\n")
-	var result []string
 	var passed, failed, skipped int
+	var suitePassed, suiteFailed, suiteTotal int
 	var failures []string
-	var inFailure bool
-	var currentFailure []string
+	var testFiles []string
+	suiteTotal++
 
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
 
-		if strings.Contains(line, "passed") || strings.Contains(line, "✓") {
-			passed++
+		if trimmed == "" {
+			continue
 		}
-		if strings.Contains(line, "failed") || strings.Contains(line, "✗") || strings.Contains(line, "FAIL") {
-			if !strings.Contains(line, "0 failed") {
-				failed++
-				inFailure = true
-				currentFailure = []string{line}
+
+		matches := vitestSummaryRe.FindAllStringSubmatch(trimmed, -1)
+		for _, m := range matches {
+			count := 0
+			fmt.Sscanf(m[1], "%d", &count)
+			switch m[2] {
+			case "passed":
+				passed += count
+			case "failed":
+				failed += count
+			case "skipped":
+				skipped += count
 			}
 		}
-		if strings.Contains(line, "skipped") {
-			skipped++
+
+		if strings.Contains(trimmed, "Tests") && strings.Contains(trimmed, "passed") {
+			suiteTotal++
 		}
 
-		if inFailure {
-			if line == "" || strings.HasPrefix(line, "✓") || strings.HasPrefix(line, "RUN") {
-				if len(currentFailure) > 0 {
-					failures = append(failures, strings.Join(currentFailure, "\n"))
-				}
-				inFailure = false
-				currentFailure = nil
-			} else {
-				currentFailure = append(currentFailure, line)
+		if strings.Contains(trimmed, "FAIL") || strings.Contains(trimmed, "✗") || strings.Contains(trimmed, "×") {
+			if !strings.Contains(trimmed, "0 failed") {
+				failures = append(failures, shared.TruncateLine(trimmed, 80))
 			}
+		}
+
+		if strings.Contains(trimmed, "✓") || strings.Contains(trimmed, "PASS") {
+			suitePassed++
+		}
+		if strings.Contains(trimmed, "✗") || strings.Contains(trimmed, "×") || strings.Contains(trimmed, "FAIL") {
+			if !strings.Contains(trimmed, "0 failed") {
+				suiteFailed++
+			}
+		}
+
+		if strings.Contains(trimmed, "Test Files") || strings.Contains(trimmed, "Tests") {
+			testFiles = append(testFiles, trimmed)
 		}
 	}
 
-	result = append(result, "📋 Vitest Results:")
-	result = append(result, fmt.Sprintf("   ✅ %d passed", passed))
+	if shared.UltraCompact {
+		var parts []string
+		parts = append(parts, fmt.Sprintf("P:%d F:%d", passed, failed))
+		if skipped > 0 {
+			parts = append(parts, fmt.Sprintf("S:%d", skipped))
+		}
+		if suiteFailed > 0 {
+			parts = append(parts, fmt.Sprintf("SuitesF:%d", suiteFailed))
+		}
+		if len(failures) > 0 {
+			for i, f := range failures {
+				if i >= 3 {
+					parts = append(parts, fmt.Sprintf("+%d more", len(failures)-3))
+					break
+				}
+				parts = append(parts, shared.TruncateLine(f, 50))
+			}
+		}
+		return strings.Join(parts, " ")
+	}
+
+	var result []string
+	result = append(result, "Vitest Results:")
+	if suitePassed > 0 || suiteFailed > 0 {
+		result = append(result, fmt.Sprintf("  %d suites passed, %d suites failed", suitePassed, suiteFailed))
+	}
+	if passed > 0 {
+		result = append(result, fmt.Sprintf("  %d passed", passed))
+	}
 	if failed > 0 {
-		result = append(result, fmt.Sprintf("   ❌ %d failed", failed))
+		result = append(result, fmt.Sprintf("  %d failed", failed))
 	}
 	if skipped > 0 {
-		result = append(result, fmt.Sprintf("   ⏭️  %d skipped", skipped))
+		result = append(result, fmt.Sprintf("  %d skipped", skipped))
+	}
+
+	if len(testFiles) > 0 {
+		result = append(result, "")
+		for _, tf := range testFiles {
+			result = append(result, fmt.Sprintf("  %s", tf))
+		}
 	}
 
 	if len(failures) > 0 {
 		result = append(result, "")
 		result = append(result, "Failures:")
 		for i, f := range failures {
-			if i >= 5 {
-				result = append(result, fmt.Sprintf("   ... +%d more failures", len(failures)-5))
+			if i >= 10 {
+				result = append(result, fmt.Sprintf("  ... +%d more failures", len(failures)-10))
 				break
 			}
-			for _, l := range strings.Split(f, "\n") {
-				if len(l) > 5 {
-					result = append(result, fmt.Sprintf("   %s", shared.TruncateLine(l, 80)))
+			result = append(result, fmt.Sprintf("  %s", f))
+		}
+	}
+
+	if passed == 0 && failed == 0 && len(result) <= 1 {
+		for _, line := range strings.Split(raw, "\n") {
+			trimmed := strings.TrimSpace(line)
+			if trimmed != "" {
+				result = append(result, shared.TruncateLine(trimmed, 100))
+				if len(result) > 20 {
+					result = append(result, fmt.Sprintf("  ... (%d more lines)", len(strings.Split(raw, "\n"))-20))
+					break
 				}
 			}
 		}
