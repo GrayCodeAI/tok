@@ -5,14 +5,21 @@ import (
 	"os"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/cache"
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/GrayCodeAI/tokman/internal/cache"
+	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 )
 
 func init() {
-	registry.Add(func() { registry.Register(cacheCmd) })
+	registry.Add(func() {
+		registry.Register(cacheCmd)
+	})
+	cacheCmd.AddCommand(cacheStatsCmd)
+	cacheCmd.AddCommand(cacheClearCmd)
+	cacheCmd.AddCommand(cacheTopCmd)
+	cacheCmd.AddCommand(cacheCleanupCmd)
 }
 
 var cacheCmd = &cobra.Command{
@@ -29,13 +36,6 @@ Subcommands:
   top       Show most frequently accessed queries
   cleanup   Remove old entries
 `,
-}
-
-func init() {
-	cacheCmd.AddCommand(cacheStatsCmd)
-	cacheCmd.AddCommand(cacheClearCmd)
-	cacheCmd.AddCommand(cacheTopCmd)
-	cacheCmd.AddCommand(cacheCleanupCmd)
 }
 
 var cacheStatsCmd = &cobra.Command{

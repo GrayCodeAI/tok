@@ -23,6 +23,45 @@ func init() {
 	registry.Add(func() {
 		registry.Register(sessionCmd)
 	})
+
+	startCmd := &cobra.Command{
+		Use:   "start",
+		Short: "Start a new session",
+		RunE:  runSessionStart,
+	}
+	startCmd.Flags().StringVar(&sessionAgent, "agent", "", "Agent name (claude, cursor, etc.)")
+	startCmd.Flags().StringVar(&sessionProject, "project", "", "Project path")
+	sessionCmd.AddCommand(startCmd)
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List sessions",
+		RunE:  runSessionList,
+	}
+	listCmd.Flags().BoolVar(&sessionListActive, "active", false, "Show only active sessions")
+	listCmd.Flags().IntVar(&sessionListLimit, "limit", 20, "Maximum sessions to show")
+	sessionCmd.AddCommand(listCmd)
+
+	activeCmd := &cobra.Command{
+		Use:   "active",
+		Short: "Show active session",
+		RunE:  runSessionActive,
+	}
+	sessionCmd.AddCommand(activeCmd)
+
+	compactCmd := &cobra.Command{
+		Use:   "compact",
+		Short: "Run PreCompact on active session",
+		RunE:  runSessionCompact,
+	}
+	sessionCmd.AddCommand(compactCmd)
+
+	snapshotCmd := &cobra.Command{
+		Use:   "snapshot",
+		Short: "Create session snapshot",
+		RunE:  runSessionSnapshot,
+	}
+	sessionCmd.AddCommand(snapshotCmd)
 }
 
 var sessionCmd = &cobra.Command{
@@ -42,52 +81,6 @@ Examples:
   tokman session list                     # List sessions
   tokman session active                   # Show active session
   tokman session compact                  # Run PreCompact manually`,
-}
-
-func init() {
-	// Start subcommand
-	startCmd := &cobra.Command{
-		Use:   "start",
-		Short: "Start a new session",
-		RunE:  runSessionStart,
-	}
-	startCmd.Flags().StringVar(&sessionAgent, "agent", "", "Agent name (claude, cursor, etc.)")
-	startCmd.Flags().StringVar(&sessionProject, "project", "", "Project path")
-	sessionCmd.AddCommand(startCmd)
-
-	// List subcommand
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List sessions",
-		RunE:  runSessionList,
-	}
-	listCmd.Flags().BoolVar(&sessionListActive, "active", false, "Show only active sessions")
-	listCmd.Flags().IntVar(&sessionListLimit, "limit", 20, "Maximum sessions to show")
-	sessionCmd.AddCommand(listCmd)
-
-	// Active subcommand
-	activeCmd := &cobra.Command{
-		Use:   "active",
-		Short: "Show active session",
-		RunE:  runSessionActive,
-	}
-	sessionCmd.AddCommand(activeCmd)
-
-	// Compact subcommand
-	compactCmd := &cobra.Command{
-		Use:   "compact",
-		Short: "Run PreCompact on active session",
-		RunE:  runSessionCompact,
-	}
-	sessionCmd.AddCommand(compactCmd)
-
-	// Snapshot subcommand
-	snapshotCmd := &cobra.Command{
-		Use:   "snapshot",
-		Short: "Create session snapshot",
-		RunE:  runSessionSnapshot,
-	}
-	sessionCmd.AddCommand(snapshotCmd)
 }
 
 func runSessionStart(cmd *cobra.Command, args []string) error {

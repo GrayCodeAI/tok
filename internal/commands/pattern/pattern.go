@@ -20,6 +20,38 @@ func init() {
 	registry.Add(func() {
 		registry.Register(patternCmd)
 	})
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List discovered patterns",
+		RunE:  runPatternList,
+	}
+	listCmd.Flags().Float64Var(&patternMinConfidence, "min-confidence", 0.7, "Minimum confidence threshold")
+	listCmd.Flags().IntVar(&patternMaxResults, "limit", 50, "Maximum results")
+	patternCmd.AddCommand(listCmd)
+
+	discoverCmd := &cobra.Command{
+		Use:   "discover [file]",
+		Short: "Analyze file for patterns",
+		RunE:  runPatternDiscover,
+	}
+	patternCmd.AddCommand(discoverCmd)
+
+	showCmd := &cobra.Command{
+		Use:   "show <pattern-id>",
+		Short: "Show pattern details",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runPatternShow,
+	}
+	patternCmd.AddCommand(showCmd)
+
+	deleteCmd := &cobra.Command{
+		Use:   "delete <pattern-id>",
+		Short: "Delete a pattern",
+		Args:  cobra.ExactArgs(1),
+		RunE:  runPatternDelete,
+	}
+	patternCmd.AddCommand(deleteCmd)
 }
 
 var patternCmd = &cobra.Command{
@@ -36,44 +68,6 @@ Pattern discovery automatically identifies:
 - Stack traces
 
 Discovered patterns can be used to create filters.`,
-}
-
-func init() {
-	// List subcommand
-	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List discovered patterns",
-		RunE:  runPatternList,
-	}
-	listCmd.Flags().Float64Var(&patternMinConfidence, "min-confidence", 0.7, "Minimum confidence threshold")
-	listCmd.Flags().IntVar(&patternMaxResults, "limit", 50, "Maximum results")
-	patternCmd.AddCommand(listCmd)
-
-	// Discover subcommand
-	discoverCmd := &cobra.Command{
-		Use:   "discover [file]",
-		Short: "Analyze file for patterns",
-		RunE:  runPatternDiscover,
-	}
-	patternCmd.AddCommand(discoverCmd)
-
-	// Show subcommand
-	showCmd := &cobra.Command{
-		Use:   "show <pattern-id>",
-		Short: "Show pattern details",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runPatternShow,
-	}
-	patternCmd.AddCommand(showCmd)
-
-	// Delete subcommand
-	deleteCmd := &cobra.Command{
-		Use:   "delete <pattern-id>",
-		Short: "Delete a pattern",
-		Args:  cobra.ExactArgs(1),
-		RunE:  runPatternDelete,
-	}
-	patternCmd.AddCommand(deleteCmd)
 }
 
 func runPatternList(cmd *cobra.Command, args []string) error {

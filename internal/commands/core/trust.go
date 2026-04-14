@@ -105,7 +105,7 @@ func runTrust(cmd *cobra.Command, args []string) error {
 	fmt.Scanln(&response)
 
 	if strings.ToLower(response) != "y" && strings.ToLower(response) != "yes" {
-		fmt.Println("Trust cancelled.")
+		fmt.Println("Trust canceled.")
 		return nil
 	}
 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -15,6 +16,12 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
+
+var npmJSON bool
+
+func formatAsJSONnpm(output string) string {
+	return fmt.Sprintf(`{"output": %s}`, strconv.Quote(output))
+}
 
 func atoi(s string) int {
 	var n int
@@ -43,6 +50,7 @@ Examples:
 
 func init() {
 	registry.Add(func() { registry.Register(npmCmd) })
+	npmCmd.Flags().BoolVarP(&npmJSON, "json", "j", false, "Output as JSON")
 }
 
 func runNpm(cmd *cobra.Command, args []string) error {
@@ -84,6 +92,14 @@ func runNpm(cmd *cobra.Command, args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmOutput(output)
+
+	if npmJSON {
+		fmt.Println(formatAsJSONnpm(output))
+		originalTokens := filter.EstimateTokens(output)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tokman npm", originalTokens, filteredTokens)
+		return err
+	}
 
 	fmt.Print(filtered)
 

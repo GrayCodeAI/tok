@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +15,12 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
+
+var cargoJSON bool
+
+func formatAsJSONcargo(output string) string {
+	return fmt.Sprintf(`{"output": %s}`, strconv.Quote(output))
+}
 
 var cargoCmd = &cobra.Command{
 	Use:   "cargo [subcommand] [args...]",
@@ -42,6 +49,7 @@ Examples:
 
 func init() {
 	registry.Add(func() { registry.Register(cargoCmd) })
+	cargoCmd.Flags().BoolVarP(&cargoJSON, "json", "j", false, "Output as JSON")
 }
 
 func runCargo(cmd *cobra.Command, args []string) error {
@@ -94,6 +102,14 @@ func runCargo(cmd *cobra.Command, args []string) error {
 		filtered = filterCargoClean(output)
 	default:
 		filtered = output
+	}
+
+	if cargoJSON {
+		fmt.Println(formatAsJSONcargo(output))
+		originalTokens := filter.EstimateTokens(output)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tokman cargo", originalTokens, filteredTokens)
+		return err
 	}
 
 	if err != nil {
