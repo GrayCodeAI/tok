@@ -154,7 +154,71 @@ Each layer implements `Apply(input string, mode Mode) (string, int)`:
 ### Additional Layers
 
 - **T12 Question-Aware:** `question_aware.go` - LongLLMLingua-style relevance
-- **T17 Density-Adaptive:** `density_adaptive.go` - DAST-style allocation
+- **T17 Density-Adaptive:** `adaptive.go` (contains `DensityAdaptiveAllocator`) - DAST-style allocation
+
+### Unified Research Layers (Consolidated L21-L45 into L14-L16)
+
+| # | Layer | File | Merges | Mechanism |
+|---|-------|------|--------|-----------|
+| 14 | Edge Case | `edge_case_unified.go` | L21 MarginalInfoGain, L22 NearDedup, L23 CoTCompress, L24 CodingAgentContext, L25 PerceptionCompress | Rare case handling |
+| 15 | Reasoning | `reasoning_unified.go` | L26 LightThinker, L27 ThinkSwitcher, L28 GMSA, L29 CARL, L30 SlimInfer | Reasoning trace compression |
+| 16 | Advanced | `advanced_research_unified.go` | L31-L45 (DiffAdapt, EPiC, SSDP, AgentOCR, etc.) | Advanced research optimizations |
+
+### Extended Research & Utility Layers
+
+| File | Description |
+|------|-------------|
+| `adaptive_context_optimize.go` | ACON: adaptive context optimization (ICLR 2026) |
+| `critical_action_retain.go` | CARL: retain critical tool-call entries, drop non-critical |
+| `group_merge_semantic_align.go` | GMSA: group merging & semantic alignment |
+| `multi_agent_debate_collapse.go` | S2MAD: collapse agreement phrases in multi-agent debate |
+| `tree_search_diverge_prune.go` | SSDP: prune redundant tree-of-thought branches |
+| `difficulty_adaptive_compress.go` | DiffAdapt: difficulty-adaptive compression ratio |
+| `causal_edge_preserve.go` | EPiC: preserve causal edge lines in reasoning |
+| `token_dense_dialect.go` | TDD: replace common terms with Unicode symbol shorthand |
+| `columnar_json_encode.go` | TOON: columnar encoding for homogeneous JSON arrays |
+| `path_shim_injector.go` | PATH shim injector for auto-filtering subprocesses |
+| `core_filters.go` | CoreFilters: manages layers 1-9 pipeline |
+| `image_compress.go` | PhotonFilter: detect & compress base64-encoded images |
+| `compression_stage_map.go` | FusionStageMap: maps Claw-style stages to TokMan layer IDs |
+| `coverage_check.go` | Coverage test runner script |
+| `reasoning_step_compress.go` | LightThinker: compress reasoning output per step |
+| `memory_augment_compress.go` | LightMem: replace repeated facts with short references |
+| `orphan_line_drop.go` | SlimInfer: drop isolated lines not referenced by others |
+| `path_alias_compress.go` | PathShorten: alias repeated long paths with short tokens |
+| `json_stream_sampler.go` | JSONSampler: down-sample dense JSON line streams |
+| `structural_collapse.go` | StructuralCollapse: compact repetitive structural boilerplate |
+| `chain_of_thought_compress.go` | CoTCompress: compress chain-of-thought reasoning traces |
+| `near_duplicate_collapse.go` | NearDedup: SimHash-based near-duplicate line collapse |
+| `conversation_turn_dedup.go` | ConversationDedup: deduplicate across conversation turns |
+| `coding_agent_context.go` | CodingAgentContext: prune coding agent tool outputs |
+| `perceptual_redundancy_drop.go` | PerceptionCompress: remove perceptually redundant lines |
+| `reasoning_route_compress.go` | ThinkSwitcher: route to fast/light/heavy compression |
+| `agent_density_compress.go` | AgentOCR: measure density per agent turn, collapse low-density |
+| `agent_history_compress.go` | AgentOCRHistory: compact older conversation turns |
+| `role_budget_compress.go` | RoleBudget: allocate budget by multi-agent role |
+| `graph_reasoning_compress.go` | GraphCoT: keep high-centrality reasoning lines |
+| `latent_collab_collapse.go` | LatentCollab: collapse semantically equivalent multi-agent turns |
+| `kv_cache_stabilize.go` | QuantumLock: stabilize system prompts for KV-cache alignment |
+| `small_model_bridge.go` | SmallKV: reconstruct bridges for broken patterns |
+| `signature_truncate.go` | SmartTruncate: truncate preserving function signatures |
+| `log_fold_compress.go` | LogCrunch: fold repetitive logs, preserve errors |
+| `diff_fold_compress.go` | DiffCrunch: compact large diffs |
+| `auto_content_compress.go` | ContextCrunch: auto-detecting log/diff compression |
+| `search_result_dedup.go` | SearchCrunch: deduplicate search results |
+| `error_pattern_learner.go` | EngramLearner: learn compression failure patterns |
+| `progressive_summarize.go` | TieredSummary: L0/L1/L2 progressive summarization |
+| `content_profile_detect.go` | ContentProfile: auto-detect compression profile |
+| `code_comment_strip.go` | CommentFilter: strip comments per language |
+| `panic_safe_wrapper.go` | SafeFilter: nil-safe panic-recovery wrapper |
+| `threshold_feedback_learn.go` | FeedbackLoop: learn thresholds from compression quality |
+| `cross_layer_feedback.go` | InterLayerFeedback: cross-layer compression feedback |
+| `kv_cache_aligner.go` | KVCacheAligner: KV-cache prompt alignment |
+| `signature_patterns.go` | Precompiled regex patterns for signatures/imports |
+| `file_read_modes.go` | ReadMode: file reading strategy definitions |
+| `pipeline_early_exit.go` | shouldEarlyExit: pipeline skip/early-exit gates |
+| `cache_lru_compat.go` | LRUCache backward-compatibility shim |
+| `coordinator_pool.go` | CoordinatorPool: reusable PipelineCoordinator pool |
 
 ### Stage Gates
 
