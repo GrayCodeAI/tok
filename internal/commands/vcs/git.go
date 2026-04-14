@@ -266,6 +266,10 @@ func addGitPassthroughCommands() {
 		"reset", "checkout", "switch", "restore", "mv", "rm", "bisect",
 		"grep", "describe", "cherry-pick", "revert", "submodule", "notes",
 		"reflog", "archive", "bundle", "clean", "gc",
+		// Additional important commands
+		"blame", "shortlog", "format-patch", "difftool", "fsck",
+		"sparse-checkout", "stage", "am", "apply", "help",
+		"for-each-ref", "rev-parse", "rev-list", "ls-files", "ls-tree",
 	}
 
 	for _, cmdName := range passthroughCommands {
