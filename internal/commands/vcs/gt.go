@@ -69,6 +69,13 @@ func runGtLog(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtLogOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_log", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -90,6 +97,13 @@ func runGtSubmit(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtSubmitOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_submit", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -111,6 +125,13 @@ func runGtSync(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtSyncOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_sync", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -132,6 +153,13 @@ func runGtRestack(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtRestackOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_restack", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -153,6 +181,13 @@ func runGtCreate(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtCreateOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_create", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -174,6 +209,13 @@ func runGtBranch(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtBranchOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt_branch", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -195,6 +237,13 @@ func runGtPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterGtOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gt", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -207,6 +256,17 @@ func runGtPassthrough(args []string) error {
 // Filter functions
 
 func filterGtLogOutput(raw string) string {
+	if shared.UltraCompact {
+		branches := 0
+		for _, line := range strings.Split(raw, "\n") {
+			line = strings.TrimSpace(line)
+			if line != "" && (strings.HasPrefix(line, "│") || strings.HasPrefix(line, "├") || strings.HasPrefix(line, "└") || len(line) > 2) {
+				branches++
+			}
+		}
+		return fmt.Sprintf("%d branches in stack\n", branches)
+	}
+
 	lines := strings.Split(raw, "\n")
 	var result []string
 	var branches []string
@@ -244,6 +304,13 @@ func filterGtLogOutput(raw string) string {
 }
 
 func filterGtSubmitOutput(raw string) string {
+	if shared.UltraCompact {
+		if strings.Contains(strings.ToLower(raw), "error") {
+			return "submit failed\n"
+		}
+		return "submit ok\n"
+	}
+
 	lines := strings.Split(raw, "\n")
 	var result []string
 
@@ -267,6 +334,13 @@ func filterGtSubmitOutput(raw string) string {
 }
 
 func filterGtSyncOutput(raw string) string {
+	if shared.UltraCompact {
+		if strings.Contains(strings.ToLower(raw), "error") {
+			return "sync failed\n"
+		}
+		return "sync ok\n"
+	}
+
 	lines := strings.Split(raw, "\n")
 	var result []string
 
@@ -287,6 +361,12 @@ func filterGtSyncOutput(raw string) string {
 }
 
 func filterGtRestackOutput(raw string) string {
+	if shared.UltraCompact {
+		if strings.Contains(strings.ToLower(raw), "error") {
+			return "restack failed\n"
+		}
+		return "restack ok\n"
+	}
 	lines := strings.Split(raw, "\n")
 	var result []string
 

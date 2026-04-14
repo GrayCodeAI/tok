@@ -158,21 +158,31 @@ func runLint(cmd *cobra.Command, args []string) error {
 	output := stdout.String() + stderr.String()
 
 	var filtered string
-	switch linter {
-	case "eslint":
-		filtered = filterEslintJSON(stdout.String())
-	case "ruff":
-		if strings.TrimSpace(stdout.String()) != "" {
-			filtered = filterRuffCheckJSON(stdout.String())
-		} else {
-			filtered = "✓ Ruff: No issues found\n"
+	if shared.UltraCompact {
+		filtered = filterLintUltraCompact(stdout.String(), stderr.String(), linter)
+	} else {
+		switch linter {
+		case "eslint":
+			filtered = filterEslintJSON(stdout.String())
+		case "ruff":
+			if strings.TrimSpace(stdout.String()) != "" {
+				filtered = filterRuffCheckJSON(stdout.String())
+			} else {
+				filtered = "✓ Ruff: No issues found\n"
+			}
+		case "pylint":
+			filtered = filterPylintJSON(stdout.String())
+		case "mypy":
+			filtered = filterMypyOutput(stripANSI(output))
+		default:
+			filtered = filterGenericLint(output)
 		}
-	case "pylint":
-		filtered = filterPylintJSON(stdout.String())
-	case "mypy":
-		filtered = filterMypyOutput(stripANSI(output))
-	default:
-		filtered = filterGenericLint(output)
+	}
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "lint_"+linter, err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
 	}
 
 	fmt.Print(filtered)
@@ -435,6 +445,72 @@ func filterPylintJSON(output string) string {
 	}
 
 	return result.String()
+}
+
+func filterLintUltraCompact(stdout string, stderr string, linter string) string {
+	switch linter {
+	case "eslint":
+		var results []EslintResult
+		if err := json.Unmarshal([]byte(stdout), &results); err != nil {
+			return "eslint: parse error\n"
+		}
+		totalErrors := 0
+		totalWarnings := 0
+		for _, r := range results {
+			totalErrors += r.ErrorCount
+			totalWarnings += r.WarningCount
+		}
+		if totalErrors == 0 && totalWarnings == 0 {
+			return "eslint: ok\n"
+		}
+		return fmt.Sprintf("eslint: %d errors, %d warnings\n", totalErrors, totalWarnings)
+	case "ruff":
+		var diagnostics []RuffDiagnostic
+		if err := json.Unmarshal([]byte(stdout), &diagnostics); err != nil {
+			return "ruff: parse error\n"
+		}
+		if len(diagnostics) == 0 {
+			return "ruff: ok\n"
+		}
+		return fmt.Sprintf("ruff: %d issues\n", len(diagnostics))
+	case "pylint":
+		var diagnostics []PylintDiagnostic
+		if err := json.Unmarshal([]byte(stdout), &diagnostics); err != nil {
+			return "pylint: parse error\n"
+		}
+		if len(diagnostics) == 0 {
+			return "pylint: ok\n"
+		}
+		return fmt.Sprintf("pylint: %d issues\n", len(diagnostics))
+	case "mypy":
+		clean := stripANSI(stdout + stderr)
+		errors := 0
+		for _, line := range strings.Split(clean, "\n") {
+			if strings.Contains(line, ": error:") {
+				errors++
+			}
+		}
+		if errors == 0 {
+			return "mypy: ok\n"
+		}
+		return fmt.Sprintf("mypy: %d errors\n", errors)
+	default:
+		warnings := 0
+		errors := 0
+		for _, line := range strings.Split(stdout+stderr, "\n") {
+			lineLower := strings.ToLower(line)
+			if strings.Contains(lineLower, "error") && !strings.Contains(lineLower, "0 error") {
+				errors++
+			}
+			if strings.Contains(lineLower, "warning") {
+				warnings++
+			}
+		}
+		if errors == 0 && warnings == 0 {
+			return "lint: ok\n"
+		}
+		return fmt.Sprintf("lint: %d errors, %d warnings\n", errors, warnings)
+	}
 }
 
 func filterGenericLint(output string) string {

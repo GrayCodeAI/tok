@@ -53,21 +53,19 @@ func runGrep(cmd *cobra.Command, args []string) error {
 	output, exitCode, err := shared.RunAndCapture("grep", grepArgs)
 
 	// Grep returns exit code 1 when no matches - that's not an error for us
-	if err != nil {
-		if exitCode == 1 {
-			// No matches found - not an error
-			if output == "" {
-				fmt.Println("(no matches)")
-				return nil
-			}
-		} else {
-			// Real error
-			return fmt.Errorf("grep failed: %w", err)
-		}
+	if err != nil && exitCode == 1 && output == "" {
+		fmt.Println("(no matches)")
+		return nil
 	}
 
 	// Compact output for minimal tokens
 	filtered := compactGrepOutputSimple(output, grepMaxLen, grepMax)
+
+	if err != nil && exitCode != 1 {
+		if hint := shared.TeeOnFailure(output, "grep", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
 
 	fmt.Print(filtered)
 
@@ -77,10 +75,32 @@ func runGrep(cmd *cobra.Command, args []string) error {
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
+	if err != nil && exitCode != 1 {
+		return fmt.Errorf("grep failed: %w", err)
+	}
 	return nil
 }
 
 func compactGrepOutputSimple(output string, maxLen, maxResults int) string {
+	if shared.UltraCompact {
+		lines := strings.Split(output, "\n")
+		matchCount := 0
+		fileSet := make(map[string]bool)
+		for _, line := range lines {
+			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			matchCount++
+			if idx := strings.Index(line, ":"); idx > 0 {
+				fileSet[line[:idx]] = true
+			}
+		}
+		if matchCount == 0 {
+			return "0 matches\n"
+		}
+		return fmt.Sprintf("%d matches in %d files\n", matchCount, len(fileSet))
+	}
+
 	var result strings.Builder
 	count := 0
 

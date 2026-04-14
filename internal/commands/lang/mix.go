@@ -207,6 +207,12 @@ func runMixDeps(args []string) error {
 
 	filtered := filterMixDepsOutput(raw)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "mix_deps", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -265,6 +271,12 @@ func runMixFormat(args []string) error {
 		fmt.Println("✅ Formatted successfully")
 	} else {
 		fmt.Println(raw)
+	}
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "mix_format", err); hint != "" {
+			fmt.Println(hint)
+		}
 	}
 
 	originalTokens := filter.EstimateTokens(raw)

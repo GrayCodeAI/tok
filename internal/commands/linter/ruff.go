@@ -112,6 +112,12 @@ func runRuff(cmd *cobra.Command, args []string) error {
 		filtered = strings.TrimSpace(output)
 	}
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "ruff", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
@@ -130,6 +136,17 @@ func runRuff(cmd *cobra.Command, args []string) error {
 }
 
 func filterRuffCheckJSON(output string) string {
+	if shared.UltraCompact {
+		var diagnostics []RuffDiagnostic
+		if err := json.Unmarshal([]byte(output), &diagnostics); err != nil {
+			return "ruff: parse error\n"
+		}
+		if len(diagnostics) == 0 {
+			return "ruff: ok\n"
+		}
+		return fmt.Sprintf("ruff: %d issues\n", len(diagnostics))
+	}
+
 	var diagnostics []RuffDiagnostic
 	if err := json.Unmarshal([]byte(output), &diagnostics); err != nil {
 		return fmt.Sprintf("Ruff check (JSON parse failed: %s)\n%s", err, shared.Truncate(output, 500))
@@ -237,6 +254,22 @@ func filterRuffCheckJSON(output string) string {
 }
 
 func filterRuffFormat(output string) string {
+	if shared.UltraCompact {
+		var filesToFormat []string
+		for _, line := range strings.Split(output, "\n") {
+			if strings.Contains(strings.ToLower(strings.TrimSpace(line)), "would reformat") {
+				parts := strings.SplitN(strings.TrimSpace(line), ":", 2)
+				if len(parts) == 2 {
+					filesToFormat = append(filesToFormat, strings.TrimSpace(parts[1]))
+				}
+			}
+		}
+		if len(filesToFormat) == 0 {
+			return "ruff format: ok\n"
+		}
+		return fmt.Sprintf("ruff format: %d files need formatting\n", len(filesToFormat))
+	}
+
 	var filesToFormat []string
 	filesChecked := 0
 

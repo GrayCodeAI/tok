@@ -241,6 +241,12 @@ func runMavenDependency(args []string) error {
 
 	filtered := filterMavenDependencyOutput(raw)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "maven_dep", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -305,6 +311,12 @@ func runMavenPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterMavenBasicOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "maven", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
 
 	fmt.Println(filtered)
 

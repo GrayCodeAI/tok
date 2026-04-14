@@ -74,6 +74,12 @@ func runMypy(cmd *cobra.Command, args []string) error {
 
 	filtered := filterMypyOutput(clean)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "mypy", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
@@ -92,6 +98,19 @@ func runMypy(cmd *cobra.Command, args []string) error {
 }
 
 func filterMypyOutput(output string) string {
+	if shared.UltraCompact {
+		errorCount := 0
+		for _, line := range strings.Split(output, "\n") {
+			if strings.Contains(line, ": error:") {
+				errorCount++
+			}
+		}
+		if errorCount == 0 {
+			return "mypy: ok\n"
+		}
+		return fmt.Sprintf("mypy: %d errors\n", errorCount)
+	}
+
 	lines := strings.Split(output, "\n")
 	var errors []MypyError
 	var filelessLines []string

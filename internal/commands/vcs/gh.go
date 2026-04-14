@@ -78,6 +78,13 @@ func runGhPr(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhPrOutput(raw, args)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_pr", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -103,6 +110,13 @@ func runGhIssue(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhIssueOutput(raw, args)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_issue", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -129,6 +143,13 @@ func runGhRun(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhRunOutput(raw, args)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_run", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -150,6 +171,13 @@ func runGhRepo(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhRepoOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_repo", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -171,6 +199,13 @@ func runGhPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -218,6 +253,36 @@ type GhCheckRun struct {
 }
 
 func filterGhPrOutput(raw string, args []string) string {
+	if shared.UltraCompact {
+		if len(args) > 0 && args[0] == "list" {
+			var prs []GhPR
+			if err := json.Unmarshal([]byte(raw), &prs); err == nil {
+				openCount := 0
+				mergedCount := 0
+				for _, pr := range prs {
+					if pr.State == "OPEN" {
+						openCount++
+					} else if pr.State == "MERGED" {
+						mergedCount++
+					}
+				}
+				return fmt.Sprintf("%d PRs: %d open %d merged\n", len(prs), openCount, mergedCount)
+			}
+		}
+		if len(args) > 0 && args[0] == "view" {
+			var pr GhPRView
+			if err := json.Unmarshal([]byte(raw), &pr); err == nil {
+				state := "open"
+				if pr.State == "MERGED" {
+					state = "merged"
+				} else if pr.State == "CLOSED" {
+					state = "closed"
+				}
+				return fmt.Sprintf("#%d %s [%s] +%d -%d\n", pr.Number, shared.TruncateLine(pr.Title, 30), state, pr.Additions, pr.Deletions)
+			}
+		}
+	}
+
 	// Try JSON parsing for list command
 	if len(args) > 0 && args[0] == "list" {
 		var prs []GhPR
@@ -332,6 +397,24 @@ type GhIssue struct {
 }
 
 func filterGhIssueOutput(raw string, args []string) string {
+	if shared.UltraCompact {
+		if len(args) > 0 && args[0] == "list" {
+			var issues []GhIssue
+			if err := json.Unmarshal([]byte(raw), &issues); err == nil {
+				openCount := 0
+				closedCount := 0
+				for _, issue := range issues {
+					if issue.State == "OPEN" {
+						openCount++
+					} else {
+						closedCount++
+					}
+				}
+				return fmt.Sprintf("%d issues: %d open %d closed\n", len(issues), openCount, closedCount)
+			}
+		}
+	}
+
 	if len(args) > 0 && args[0] == "list" {
 		var issues []GhIssue
 		if err := json.Unmarshal([]byte(raw), &issues); err == nil {
@@ -366,6 +449,27 @@ type GhRun struct {
 }
 
 func filterGhRunOutput(raw string, args []string) string {
+	if shared.UltraCompact {
+		if len(args) > 0 && args[0] == "list" {
+			var runs []GhRun
+			if err := json.Unmarshal([]byte(raw), &runs); err == nil {
+				successCount := 0
+				failCount := 0
+				pendingCount := 0
+				for _, run := range runs {
+					if run.Status == "completed" && run.Conclusion == "success" {
+						successCount++
+					} else if run.Status == "completed" && run.Conclusion == "failure" {
+						failCount++
+					} else {
+						pendingCount++
+					}
+				}
+				return fmt.Sprintf("%d runs: %d ok %d fail %d pending\n", len(runs), successCount, failCount, pendingCount)
+			}
+		}
+	}
+
 	// Try JSON parsing for list command
 	if len(args) > 0 && args[0] == "list" {
 		var runs []GhRun
@@ -432,6 +536,13 @@ func runGhRelease(args []string) error {
 	raw := string(output)
 
 	filtered := filterGhReleaseOutput(raw, args)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_release", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -505,6 +616,13 @@ func runGhApi(args []string) error {
 
 	// Try to parse as JSON and show structure
 	filtered := filterGhApiOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gh_api", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)

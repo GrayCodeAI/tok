@@ -48,6 +48,12 @@ func runFind(cmd *cobra.Command, args []string) error {
 	// Further compact: one file per line, strip common prefix
 	filtered = compactFindOutput(filtered)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "find", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
@@ -60,6 +66,27 @@ func runFind(cmd *cobra.Command, args []string) error {
 }
 
 func compactFindOutput(output string) string {
+	if shared.UltraCompact {
+		lines := strings.Split(output, "\n")
+		dirCount := 0
+		fileCount := 0
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || trimmed == "." {
+				continue
+			}
+			if strings.HasSuffix(line, "/") || !strings.Contains(line, ".") {
+				dirCount++
+			} else {
+				fileCount++
+			}
+		}
+		if dirCount == 0 && fileCount == 0 {
+			return "0 entries\n"
+		}
+		return fmt.Sprintf("%d dirs, %d files\n", dirCount, fileCount)
+	}
+
 	lines := strings.Split(output, "\n")
 	var files []string
 	var dirs []string
