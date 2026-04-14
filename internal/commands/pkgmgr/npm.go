@@ -2,6 +2,7 @@ package pkgmgr
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -43,8 +44,23 @@ func runNpm(cmd *cobra.Command, args []string) error {
 		args = []string{"--help"}
 	}
 
-	if len(args) > 0 && args[0] == "test" {
-		return runNpmTest(args[1:])
+	if len(args) > 0 {
+		switch args[0] {
+		case "test":
+			return runNpmTest(args[1:])
+		case "install", "i", "add":
+			return runNpmInstall(args[1:])
+		case "ls", "list":
+			return runNpmList(args[1:])
+		case "outdated":
+			return runNpmOutdated(args[1:])
+		case "run":
+			return runNpmRun(args[1:])
+		case "audit":
+			return runNpmAudit(args[1:])
+		case "publish":
+			return runNpmPublish(args[1:])
+		}
 	}
 
 	npmArgs := append([]string{}, args...)
@@ -278,4 +294,418 @@ func filterNpmTestOutputUltraCompact(passed, failed, skipped, suitesPassed, suit
 	}
 
 	return strings.Join(result, "\n")
+}
+
+func runNpmInstall(args []string) error {
+	timer := tracking.Start()
+
+	npmArgs := append([]string{"install"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := c.Run()
+	output := stdout.String() + stderr.String()
+
+	filtered := filterNpmInstallOutput(output)
+	fmt.Println(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm install %s", strings.Join(args, " ")), "tokman npm install", originalTokens, filteredTokens)
+
+	return err
+}
+
+func filterNpmInstallOutput(output string) string {
+	var added, removed, changed, audited int
+	var vulnerabilities []string
+	var warnings []string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+
+		if strings.Contains(trimmed, "added") {
+			fmt.Sscanf(trimmed, "added %d", &added)
+		}
+		if strings.Contains(trimmed, "removed") {
+			fmt.Sscanf(trimmed, "removed %d", &removed)
+		}
+		if strings.Contains(trimmed, "changed") {
+			fmt.Sscanf(trimmed, "changed %d", &changed)
+		}
+		if strings.Contains(trimmed, "audited") {
+			fmt.Sscanf(trimmed, "audited %d", &audited)
+		}
+		if strings.Contains(trimmed, "vulnerabilities") {
+			vulnerabilities = append(vulnerabilities, trimmed)
+		}
+		if strings.HasPrefix(trimmed, "npm WARN") && strings.Contains(trimmed, "deprecated") {
+			warnings = append(warnings, trimmed)
+		}
+	}
+
+	var result []string
+	result = append(result, "Install Summary:")
+	if added > 0 {
+		result = append(result, fmt.Sprintf("  + %d added", added))
+	}
+	if removed > 0 {
+		result = append(result, fmt.Sprintf("  - %d removed", removed))
+	}
+	if changed > 0 {
+		result = append(result, fmt.Sprintf("  ~ %d changed", changed))
+	}
+	if audited > 0 {
+		result = append(result, fmt.Sprintf("  %d audited", audited))
+	}
+
+	if len(vulnerabilities) > 0 {
+		result = append(result, "")
+		for _, v := range vulnerabilities {
+			result = append(result, fmt.Sprintf("  %s", v))
+		}
+	}
+
+	if len(warnings) > 0 {
+		result = append(result, fmt.Sprintf("  %d deprecation warnings", len(warnings)))
+	}
+
+	if len(result) == 1 {
+		return "Install complete"
+	}
+	return strings.Join(result, "\n")
+}
+
+func runNpmList(args []string) error {
+	timer := tracking.Start()
+
+	npmArgs := append([]string{"ls", "--depth=0"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := c.Run()
+	output := stdout.String() + stderr.String()
+
+	filtered := filterNpmListOutput(output)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm ls %s", strings.Join(args, " ")), "tokman npm ls", originalTokens, filteredTokens)
+
+	return err
+}
+
+func filterNpmListOutput(output string) string {
+	var deps []string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || strings.HasPrefix(trimmed, "(") || strings.Contains(trimmed, "ERR!") {
+			continue
+		}
+		if strings.HasPrefix(trimmed, "├──") || strings.HasPrefix(trimmed, "└──") {
+			pkg := strings.TrimPrefix(trimmed, "├── ")
+			pkg = strings.TrimPrefix(pkg, "└── ")
+			pkg = strings.TrimSpace(pkg)
+			if pkg != "" && len(pkg) < 80 {
+				deps = append(deps, pkg)
+			}
+		}
+	}
+
+	if len(deps) == 0 {
+		return output
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d packages:\n", len(deps)))
+	for i, dep := range deps {
+		if i >= 20 {
+			break
+		}
+		result.WriteString(fmt.Sprintf("  %s\n", shared.TruncateLine(dep, 60)))
+	}
+	if len(deps) > 20 {
+		result.WriteString(fmt.Sprintf("  ... +%d more\n", len(deps)-20))
+	}
+
+	return result.String()
+}
+
+func runNpmOutdated(args []string) error {
+	timer := tracking.Start()
+
+	npmArgs := append([]string{"outdated"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	output, _ := c.CombinedOutput()
+	raw := string(output)
+
+	filtered := filterNpmOutdatedOutput(raw)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm outdated %s", strings.Join(args, " ")), "tokman npm outdated", originalTokens, filteredTokens)
+
+	return nil
+}
+
+func filterNpmOutdatedOutput(output string) string {
+	if strings.Contains(output, "ERR!") {
+		return output
+	}
+
+	lines := strings.Split(output, "\n")
+	if len(lines) <= 1 {
+		return "All packages up to date"
+	}
+
+	var result []string
+	for i, line := range lines {
+		if i == 0 {
+			continue
+		}
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		fields := strings.Fields(trimmed)
+		if len(fields) >= 3 {
+			pkg := fields[0]
+			current := fields[1]
+			latest := fields[2]
+			if len(fields) >= 4 {
+				latest = fields[3]
+			}
+			result = append(result, fmt.Sprintf("  %s: %s -> %s", pkg, current, latest))
+		}
+	}
+
+	if len(result) == 0 {
+		return "All packages up to date"
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%d outdated packages:\n", len(result)))
+	for _, r := range result {
+		sb.WriteString(r + "\n")
+	}
+	return sb.String()
+}
+
+func runNpmRun(args []string) error {
+	timer := tracking.Start()
+
+	if len(args) == 0 {
+		return runNpmPassthrough(append([]string{"run"}, args...))
+	}
+
+	npmArgs := append([]string{"run"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := c.Run()
+	output := stdout.String() + stderr.String()
+
+	filtered := filterNpmRunOutput(output)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm run %s", strings.Join(args, " ")), "tokman npm run", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runNpmPassthrough(args []string) error {
+	c := exec.Command("npm", args...)
+	c.Env = os.Environ()
+
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := c.Run()
+	output := stdout.String() + stderr.String()
+
+	filtered := filterNpmOutput(output)
+	fmt.Print(filtered)
+
+	return err
+}
+
+func filterNpmRunOutput(output string) string {
+	var result strings.Builder
+	var errors []string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if strings.Contains(trimmed, "error") || strings.Contains(trimmed, "Error") || strings.Contains(trimmed, "ERR!") {
+			errors = append(errors, shared.TruncateLine(trimmed, 120))
+			continue
+		}
+		if strings.HasPrefix(trimmed, ">") || strings.Contains(trimmed, "watching") || strings.Contains(trimmed, "ready") || strings.Contains(trimmed, "compiled") {
+			result.WriteString(trimmed + "\n")
+		}
+	}
+
+	if len(errors) > 0 {
+		result.WriteString(fmt.Sprintf("\nErrors (%d):\n", len(errors)))
+		for i, e := range errors {
+			if i >= 10 {
+				result.WriteString(fmt.Sprintf("  ... +%d more\n", len(errors)-10))
+				break
+			}
+			result.WriteString(fmt.Sprintf("  %s\n", e))
+		}
+	}
+
+	if result.Len() == 0 {
+		return filterNpmOutput(output)
+	}
+	return result.String()
+}
+
+func runNpmAudit(args []string) error {
+	timer := tracking.Start()
+
+	npmArgs := append([]string{"audit", "--json"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	output, _ := c.CombinedOutput()
+	raw := string(output)
+
+	filtered := filterNpmAuditOutput(raw)
+	fmt.Println(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm audit %s", strings.Join(args, " ")), "tokman npm audit", originalTokens, filteredTokens)
+
+	return nil
+}
+
+func filterNpmAuditOutput(output string) string {
+	var data interface{}
+	if err := json.Unmarshal([]byte(output), &data); err != nil {
+		return filterNpmOutput(output)
+	}
+
+	m, ok := data.(map[string]interface{})
+	if !ok {
+		return filterNpmOutput(output)
+	}
+
+	var result strings.Builder
+
+	if metadata, ok := m["metadata"].(map[string]interface{}); ok {
+		if vulnerabilities, ok := metadata["vulnerabilities"].(map[string]interface{}); ok {
+			info := ""
+			if critical, ok := vulnerabilities["critical"].(float64); ok && critical > 0 {
+				info += fmt.Sprintf(" critical=%d", int(critical))
+			}
+			if high, ok := vulnerabilities["high"].(float64); ok && high > 0 {
+				info += fmt.Sprintf(" high=%d", int(high))
+			}
+			if moderate, ok := vulnerabilities["moderate"].(float64); ok && moderate > 0 {
+				info += fmt.Sprintf(" moderate=%d", int(moderate))
+			}
+			if low, ok := vulnerabilities["low"].(float64); ok && low > 0 {
+				info += fmt.Sprintf(" low=%d", int(low))
+			}
+			if info != "" {
+				result.WriteString(fmt.Sprintf("Vulnerabilities:%s\n", info))
+			} else {
+				result.WriteString("No vulnerabilities found\n")
+			}
+		}
+	}
+
+	if vulns, ok := m["vulnerabilities"].(map[string]interface{}); ok {
+		result.WriteString(fmt.Sprintf("\n%d affected packages:\n", len(vulns)))
+		count := 0
+		for name, adv := range vulns {
+			if count >= 10 {
+				result.WriteString(fmt.Sprintf("  ... +%d more\n", len(vulns)-10))
+				break
+			}
+			if am, ok := adv.(map[string]interface{}); ok {
+				severity, _ := am["severity"].(string)
+				title, _ := am["title"].(string)
+				if len(title) > 60 {
+					title = title[:57] + "..."
+				}
+				result.WriteString(fmt.Sprintf("  [%s] %s: %s\n", severity, name, title))
+			}
+			count++
+		}
+	}
+
+	if result.Len() == 0 {
+		return "No vulnerabilities found"
+	}
+	return result.String()
+}
+
+func runNpmPublish(args []string) error {
+	timer := tracking.Start()
+
+	npmArgs := append([]string{"publish"}, args...)
+	c := exec.Command("npm", npmArgs...)
+	c.Env = os.Environ()
+
+	var stdout, stderr bytes.Buffer
+	c.Stdout = &stdout
+	c.Stderr = &stderr
+
+	err := c.Run()
+	output := stdout.String() + stderr.String()
+
+	filtered := filterNpmPublishOutput(output)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("npm publish %s", strings.Join(args, " ")), "tokman npm publish", originalTokens, filteredTokens)
+
+	return err
+}
+
+func filterNpmPublishOutput(output string) string {
+	var result strings.Builder
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if strings.Contains(trimmed, "published") || strings.Contains(trimmed, "+") {
+			result.WriteString(trimmed + "\n")
+		}
+		if strings.Contains(trimmed, "error") || strings.Contains(trimmed, "ERR!") || strings.Contains(trimmed, "403") {
+			result.WriteString(trimmed + "\n")
+		}
+	}
+	if result.Len() == 0 {
+		return "Publish complete"
+	}
+	return result.String()
 }
