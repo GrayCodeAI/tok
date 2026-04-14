@@ -19,12 +19,14 @@ import (
 
 	// CLI commands
 	_ "github.com/GrayCodeAI/tokman/internal/commands/build"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/cloud"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/compression"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/configcmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/container"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/core"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/filtercmd"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/hooks"
+	_ "github.com/GrayCodeAI/tokman/internal/commands/infra"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/lang"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/linter"
 	_ "github.com/GrayCodeAI/tokman/internal/commands/output"
