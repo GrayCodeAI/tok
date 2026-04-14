@@ -66,7 +66,7 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 
 func filterGolangciOutput(raw string) string {
 	if raw == "" {
-		return "✅ No linting issues found"
+		return "OK No linting issues found"
 	}
 
 	if shared.UltraCompact {
@@ -110,7 +110,7 @@ func filterGolangciOutput(raw string) string {
 
 	if len(byLinter) > 0 {
 		for linter, issues := range byLinter {
-			result = append(result, fmt.Sprintf("🔍 %s (%d):", linter, len(issues)))
+			result = append(result, fmt.Sprintf("%s (%d):", linter, len(issues)))
 			for i, issue := range issues {
 				if i >= 5 {
 					result = append(result, fmt.Sprintf("   ... +%d more", len(issues)-5))
@@ -122,7 +122,7 @@ func filterGolangciOutput(raw string) string {
 	}
 
 	if len(errors) > 0 {
-		result = append(result, fmt.Sprintf("❌ Other Issues (%d):", len(errors)))
+		result = append(result, fmt.Sprintf("FAIL Other Issues (%d):", len(errors)))
 		for i, e := range errors {
 			if i >= 10 {
 				result = append(result, fmt.Sprintf("   ... +%d more", len(errors)-10))
@@ -133,7 +133,7 @@ func filterGolangciOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ No linting issues found"
+		return "OK No linting issues found"
 	}
 	return strings.Join(result, "\n")
 }

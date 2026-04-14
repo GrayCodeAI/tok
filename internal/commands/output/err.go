@@ -122,9 +122,9 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 
 	if filtered == "" {
 		if exitCode == 0 {
-			result.WriteString("✅ Command completed successfully (no errors)\n")
+			result.WriteString("OK Command completed successfully (no errors)\n")
 		} else {
-			result.WriteString(fmt.Sprintf("❌ Command failed (exit code: %d)\n", exitCode))
+			result.WriteString(fmt.Sprintf("FAIL Command failed (exit code: %d)\n", exitCode))
 			lines := strings.Split(raw, "\n")
 			start := len(lines) - 10
 			if start < 0 {

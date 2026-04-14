@@ -62,7 +62,7 @@ var cacheStatsCmd = &cobra.Command{
 		blue := color.New(color.FgBlue).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
 
-		fmt.Println("📊 Query Cache Statistics")
+		fmt.Println("Query Cache Statistics")
 		fmt.Println("=========================")
 		fmt.Printf("Total Entries: %s\n", green(fmt.Sprintf("%d", stats.TotalEntries)))
 		fmt.Printf("Cache Hits:    %s\n", green(fmt.Sprintf("%d", hits)))
@@ -83,8 +83,11 @@ var cacheClearCmd = &cobra.Command{
 		}
 		defer qc.Close()
 
-		// Get count before clear
-		stats, _ := qc.Stats()
+		stats, err := qc.Stats()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			return
+		}
 		count := stats.TotalEntries
 
 		// Clear all
@@ -125,7 +128,7 @@ var cacheTopCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Printf("🔥 Top %d Most Accessed Queries\n", len(entries))
+		fmt.Printf("Top %d Most Accessed Queries\n", len(entries))
 		fmt.Println("================================")
 
 		for i, entry := range entries {
@@ -156,8 +159,11 @@ var cacheCleanupCmd = &cobra.Command{
 		}
 		defer qc.Close()
 
-		// Get count before cleanup
-		statsBefore, _ := qc.Stats()
+		statsBefore, err := qc.Stats()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			return
+		}
 
 		// Cleanup
 		maxAge := time.Duration(days) * 24 * time.Hour
@@ -167,8 +173,11 @@ var cacheCleanupCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Get count after cleanup
-		statsAfter, _ := qc.Stats()
+		statsAfter, err := qc.Stats()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			return
+		}
 		removed := statsBefore.TotalEntries - statsAfter.TotalEntries
 
 		green := color.New(color.FgGreen).SprintFunc()

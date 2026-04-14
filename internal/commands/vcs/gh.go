@@ -288,7 +288,7 @@ func filterGhPrOutput(raw string, args []string) string {
 		var prs []GhPR
 		if err := json.Unmarshal([]byte(raw), &prs); err == nil {
 			var result []string
-			result = append(result, fmt.Sprintf("📋 Pull Requests (%d):", len(prs)))
+			result = append(result, fmt.Sprintf("Pull Requests (%d):", len(prs)))
 			for i, pr := range prs {
 				if i >= 15 {
 					result = append(result, fmt.Sprintf("   ... +%d more", len(prs)-15))
@@ -338,13 +338,13 @@ func formatGhPRView(pr GhPRView) string {
 	result = append(result, fmt.Sprintf("   by %s | +%d -%d in %d files | %d commits", pr.Author, pr.Additions, pr.Deletions, pr.ChangedFiles, pr.Commits))
 
 	// Merge status
-	mergeStatus := "❓ unknown"
+	mergeStatus := "? unknown"
 	if pr.Mergeable == "MERGEABLE" {
-		mergeStatus = "✅ mergeable"
+		mergeStatus = "OK mergeable"
 	} else if pr.Mergeable == "CONFLICTING" {
-		mergeStatus = "❌ conflicts"
+		mergeStatus = "FAIL conflicts"
 	} else if pr.Mergeable == "UNKNOWN" {
-		mergeStatus = "⏳ checking..."
+		mergeStatus = "...checking"
 	}
 	result = append(result, fmt.Sprintf("   Merge: %s", mergeStatus))
 
@@ -364,12 +364,12 @@ func formatGhPRView(pr GhPRView) string {
 				pending++
 			}
 		}
-		checks := fmt.Sprintf("   Checks: %d ✅", passed)
+		checks := fmt.Sprintf("   Checks: %d PASS", passed)
 		if failed > 0 {
-			checks += fmt.Sprintf(" %d ❌", failed)
+			checks += fmt.Sprintf(" %d FAIL", failed)
 		}
 		if pending > 0 {
-			checks += fmt.Sprintf(" %d ⏳", pending)
+			checks += fmt.Sprintf(" %d pending", pending)
 		}
 		result = append(result, checks)
 	}
@@ -419,7 +419,7 @@ func filterGhIssueOutput(raw string, args []string) string {
 		var issues []GhIssue
 		if err := json.Unmarshal([]byte(raw), &issues); err == nil {
 			var result []string
-			result = append(result, fmt.Sprintf("📋 Issues (%d):", len(issues)))
+			result = append(result, fmt.Sprintf("Issues (%d):", len(issues)))
 			for i, issue := range issues {
 				if i >= 15 {
 					result = append(result, fmt.Sprintf("   ... +%d more", len(issues)-15))
@@ -475,7 +475,7 @@ func filterGhRunOutput(raw string, args []string) string {
 		var runs []GhRun
 		if err := json.Unmarshal([]byte(raw), &runs); err == nil {
 			var result []string
-			result = append(result, fmt.Sprintf("📋 Workflow Runs (%d):", len(runs)))
+			result = append(result, fmt.Sprintf("Workflow Runs (%d):", len(runs)))
 			for i, run := range runs {
 				if i >= 15 {
 					result = append(result, fmt.Sprintf("   ... +%d more", len(runs)-15))
@@ -484,16 +484,16 @@ func filterGhRunOutput(raw string, args []string) string {
 				status := "○"
 				if run.Status == "completed" {
 					if run.Conclusion == "success" {
-						status = "✅"
+						status = "OK"
 					} else if run.Conclusion == "failure" {
-						status = "❌"
+						status = "FAIL"
 					} else {
-						status = "⚠️"
+						status = "WARN"
 					}
 				} else if run.Status == "in_progress" {
-					status = "🔄"
+					status = "..."
 				} else if run.Status == "queued" {
-					status = "⏳"
+					status = "queued"
 				}
 				result = append(result, fmt.Sprintf("   %s #%d: %s (%s)", status, run.DatabaseId, shared.TruncateLine(run.DisplayTitle, 40), run.Event))
 			}
@@ -566,17 +566,17 @@ func filterGhReleaseOutput(raw string, args []string) string {
 		var releases []GhRelease
 		if err := json.Unmarshal([]byte(raw), &releases); err == nil {
 			var result []string
-			result = append(result, fmt.Sprintf("📋 Releases (%d):", len(releases)))
+			result = append(result, fmt.Sprintf("Releases (%d):", len(releases)))
 			for i, rel := range releases {
 				if i >= 15 {
 					result = append(result, fmt.Sprintf("   ... +%d more", len(releases)-15))
 					break
 				}
-				status := "✅"
+				status := "OK"
 				if rel.IsDraft {
-					status = "📝"
+					status = "draft"
 				} else if rel.IsPrerelease {
-					status = "🔸"
+					status = "pre"
 				}
 				name := rel.Name
 				if name == "" {
@@ -639,7 +639,7 @@ func filterGhApiOutput(raw string) string {
 		// Use the JSON structure filter
 		schema := shared.TryJSONSchema(trimmed, 10)
 		if schema != "" {
-			return "📋 API Response:\n" + schema
+			return "API Response:\n" + schema
 		}
 	}
 

@@ -191,11 +191,11 @@ func outputTrxText(testRun *TestRun) error {
 	fmt.Println()
 
 	// Test counts
-	fmt.Printf("📊 Total Tests: %d\n", counters.Total)
-	fmt.Printf("   ✅ Passed:   %d\n", counters.Passed)
-	fmt.Printf("   ❌ Failed:   %d\n", counters.Failed)
-	fmt.Printf("   ⚠️  Skipped:  %d\n", counters.NotExecuted)
-	fmt.Printf("   ⏱️  Duration: %s\n", formatTrxDuration(testRun.Times.Start, testRun.Times.Finish))
+	fmt.Printf("Total Tests: %d\n", counters.Total)
+	fmt.Printf("   PASS Passed:   %d\n", counters.Passed)
+	fmt.Printf("   FAIL Failed:   %d\n", counters.Failed)
+	fmt.Printf("   SKIP Skipped:  %d\n", counters.NotExecuted)
+	fmt.Printf("   Duration: %s\n", formatTrxDuration(testRun.Times.Start, testRun.Times.Finish))
 	fmt.Println()
 
 	// Failed tests

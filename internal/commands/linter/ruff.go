@@ -247,7 +247,7 @@ func filterRuffCheckJSON(output string) string {
 	}
 
 	if fixableCount > 0 {
-		result.WriteString(fmt.Sprintf("\n💡 Run `ruff check --fix` to auto-fix %d issues\n", fixableCount))
+		result.WriteString(fmt.Sprintf("\nRun `ruff check --fix` to auto-fix %d issues\n", fixableCount))
 	}
 
 	return result.String()
@@ -328,7 +328,7 @@ func filterRuffFormat(output string) string {
 				result.WriteString(fmt.Sprintf("\n✓ %d files already formatted\n", filesChecked))
 			}
 
-			result.WriteString("\n💡 Run `ruff format` to format these files\n")
+			result.WriteString("\nRun `ruff format` to format these files\n")
 		}
 	} else {
 		result.WriteString(strings.TrimSpace(output) + "\n")

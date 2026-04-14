@@ -208,7 +208,7 @@ func compactS3(data interface{}, args []string) string {
 			}
 		}
 		if len(items) > 0 {
-			return fmt.Sprintf("📁 S3 Objects (%d):\n%s", len(items), strings.Join(items, "\n"))
+			return fmt.Sprintf("S3 Objects (%d):\n%s", len(items), strings.Join(items, "\n"))
 		}
 	}
 	return formatGeneric(data)
@@ -334,7 +334,7 @@ func compactECS(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("🐳 ECS Clusters (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("ECS Clusters (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 		if services, ok := m["services"].([]interface{}); ok {
@@ -353,7 +353,7 @@ func compactECS(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("🐳 ECS Services (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("ECS Services (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}
@@ -382,7 +382,7 @@ func compactRDS(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("🗄️  RDS Instances (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("RDS Instances (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}
@@ -449,7 +449,7 @@ func compactDynamoDB(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("📊 DynamoDB Tables (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("DynamoDB Tables (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 		if desc, ok := m["Table"].(map[string]interface{}); ok {
@@ -465,7 +465,7 @@ func compactDynamoDB(data interface{}, args []string) string {
 			if val, ok := desc["ItemCount"].(float64); ok {
 				count = int(val)
 			}
-			return fmt.Sprintf("📊 Table: %s (%s, %d items)", name, status, count)
+			return fmt.Sprintf("Table: %s (%s, %d items)", name, status, count)
 		}
 	}
 	return formatGeneric(data)
@@ -518,7 +518,7 @@ func compactIAM(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("📋 IAM Policies (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("IAM Policies (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}
@@ -539,7 +539,7 @@ func compactLogs(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("📝 CloudWatch Log Groups (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("CloudWatch Log Groups (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 		// Log events
@@ -558,7 +558,7 @@ func compactLogs(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("📝 Log Events (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("Log Events (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}
@@ -616,7 +616,7 @@ func compactSQS(data interface{}, args []string) string {
 func compactKMS(data interface{}, args []string) string {
 	if m, ok := data.(map[string]interface{}); ok {
 		if keys, ok := m["Keys"].([]interface{}); ok {
-			return fmt.Sprintf("🔐 KMS Keys: %d", len(keys))
+			return fmt.Sprintf("KMS Keys: %d", len(keys))
 		}
 		if desc, ok := m["KeyMetadata"].(map[string]interface{}); ok {
 			id := ""
@@ -627,7 +627,7 @@ func compactKMS(data interface{}, args []string) string {
 			if val, ok := desc["Description"].(string); ok {
 				descVal = val
 			}
-			return fmt.Sprintf("🔐 Key: %s (%s)", id, descVal)
+			return fmt.Sprintf("Key: %s (%s)", id, descVal)
 		}
 	}
 	return formatGeneric(data)
@@ -647,7 +647,7 @@ func compactSecretsManager(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("🔒 Secrets (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("Secrets (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}
@@ -672,7 +672,7 @@ func compactSSM(data interface{}, args []string) string {
 				}
 			}
 			if len(items) > 0 {
-				return fmt.Sprintf("⚙️  SSM Parameters (%d):\n%s", len(items), strings.Join(items, "\n"))
+				return fmt.Sprintf("SSM Parameters (%d):\n%s", len(items), strings.Join(items, "\n"))
 			}
 		}
 	}

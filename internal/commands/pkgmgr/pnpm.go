@@ -110,7 +110,7 @@ func filterPnpmList(output string) string {
 
 	var result []string
 	if len(packages) > 0 {
-		result = append(result, fmt.Sprintf("📦 Dependencies (%d):", len(packages)))
+		result = append(result, fmt.Sprintf("Dependencies (%d):", len(packages)))
 		for i, pkg := range packages {
 			if i >= 15 {
 				result = append(result, fmt.Sprintf("   ... +%d more", len(packages)-15))
@@ -121,7 +121,7 @@ func filterPnpmList(output string) string {
 	}
 
 	if len(devDeps) > 0 {
-		result = append(result, fmt.Sprintf("📦 DevDependencies (%d):", len(devDeps)))
+		result = append(result, fmt.Sprintf("DevDependencies (%d):", len(devDeps)))
 		for i, pkg := range devDeps {
 			if i >= 10 {
 				result = append(result, fmt.Sprintf("   ... +%d more", len(devDeps)-10))
@@ -156,13 +156,13 @@ func filterPnpmOutdated(output string) string {
 			if len(fields) >= 4 {
 				latest = fields[3]
 			}
-			result = append(result, fmt.Sprintf("📦 %s: %s → %s", pkg, current, latest))
+			result = append(result, fmt.Sprintf("%s: %s → %s", pkg, current, latest))
 			count++
 		}
 	}
 
 	if count == 0 {
-		return "✅ All packages up to date"
+		return "OK All packages up to date"
 	}
 	return strings.Join(result, "\n")
 }
@@ -195,19 +195,19 @@ func filterPnpmInstall(output string) string {
 	}
 
 	var result []string
-	result = append(result, "📦 Install Summary:")
+	result = append(result, "Install Summary:")
 	if added > 0 {
-		result = append(result, fmt.Sprintf("   ✅ %d added", added))
+		result = append(result, fmt.Sprintf("   OK %d added", added))
 	}
 	if removed > 0 {
-		result = append(result, fmt.Sprintf("   🗑️  %d removed", removed))
+		result = append(result, fmt.Sprintf("   %d removed", removed))
 	}
 	if changed > 0 {
 		result = append(result, fmt.Sprintf("   🔄 %d changed", changed))
 	}
 
 	if len(warnings) > 0 {
-		result = append(result, "   ⚠️  Warnings:")
+		result = append(result, "   WARN Warnings:")
 		for _, w := range warnings {
 			if len(w) > 10 {
 				result = append(result, fmt.Sprintf("   • %s", w))
@@ -216,7 +216,7 @@ func filterPnpmInstall(output string) string {
 	}
 
 	if len(result) == 1 {
-		return "✅ Install complete"
+		return "OK Install complete"
 	}
 	return strings.Join(result, "\n")
 }
@@ -252,11 +252,11 @@ func filterPnpmTypecheck(output string) string {
 	}
 
 	var result []string
-	result = append(result, "🔍 TypeScript Type Check:")
+	result = append(result, "TypeScript Type Check:")
 
 	if len(errors) > 0 {
 		result = append(result, "")
-		result = append(result, fmt.Sprintf("   ❌ %d error(s):", len(errors)))
+		result = append(result, fmt.Sprintf("   FAIL %d error(s):", len(errors)))
 		for i, err := range errors {
 			if i >= 10 {
 				result = append(result, fmt.Sprintf("   ... +%d more errors", len(errors)-10))
@@ -268,7 +268,7 @@ func filterPnpmTypecheck(output string) string {
 
 	if len(warnings) > 0 {
 		result = append(result, "")
-		result = append(result, fmt.Sprintf("   ⚠️  %d warning(s):", len(warnings)))
+		result = append(result, fmt.Sprintf("   WARN %d warning(s):", len(warnings)))
 		for i, warn := range warnings {
 			if i >= 5 {
 				result = append(result, fmt.Sprintf("   ... +%d more warnings", len(warnings)-5))
@@ -280,11 +280,11 @@ func filterPnpmTypecheck(output string) string {
 
 	if summary != "" {
 		result = append(result, "")
-		result = append(result, fmt.Sprintf("   📊 %s", summary))
+		result = append(result, fmt.Sprintf("   %s", summary))
 	}
 
 	if len(errors) == 0 && len(warnings) == 0 {
-		result = append(result, "   ✅ No type errors found")
+		result = append(result, "   OK No type errors found")
 	}
 
 	return strings.Join(result, "\n")
@@ -394,17 +394,17 @@ func filterPnpmTest(output string) string {
 			for i, f := range fields {
 				if f == "passed" || f == "passing" {
 					if i > 0 {
-						fmt.Sscanf(fields[i-1], "%d", &passed)
+						passed = atoi(fields[i-1])
 					}
 				}
 				if f == "failed" || f == "failing" {
 					if i > 0 {
-						fmt.Sscanf(fields[i-1], "%d", &failed)
+						failed = atoi(fields[i-1])
 					}
 				}
 				if f == "skipped" || f == "pending" {
 					if i > 0 {
-						fmt.Sscanf(fields[i-1], "%d", &skipped)
+						skipped = atoi(fields[i-1])
 					}
 				}
 			}

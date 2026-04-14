@@ -114,14 +114,14 @@ func filterJestOutput(raw string) string {
 		}
 	}
 
-	result = append(result, "📋 Jest Results:")
+	result = append(result, "Jest Results:")
 	result = append(result, fmt.Sprintf("   %d suites passed, %d suites failed", testSuitesPassed, testSuitesFailed))
-	result = append(result, fmt.Sprintf("   ✅ %d tests passed", passed))
+	result = append(result, fmt.Sprintf("   OK %d tests passed", passed))
 	if failed > 0 {
-		result = append(result, fmt.Sprintf("   ❌ %d tests failed", failed))
+		result = append(result, fmt.Sprintf("   FAIL %d tests failed", failed))
 	}
 	if skipped > 0 {
-		result = append(result, fmt.Sprintf("   ⏭️  %d tests skipped", skipped))
+		result = append(result, fmt.Sprintf("   SKIP %d tests skipped", skipped))
 	}
 
 	if len(failures) > 0 {

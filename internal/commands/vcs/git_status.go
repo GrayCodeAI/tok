@@ -176,7 +176,7 @@ func formatStatus(status *GitStatus) string {
 	red := color.New(color.FgRed).SprintFunc()
 	bold := color.New(color.Bold).SprintFunc()
 
-	buf.WriteString(bold("📌 ") + cyan(status.Branch))
+	buf.WriteString(bold("") + cyan(status.Branch))
 	if status.Ahead > 0 || status.Behind > 0 {
 		buf.WriteString(" [")
 		if status.Ahead > 0 {
@@ -193,7 +193,7 @@ func formatStatus(status *GitStatus) string {
 	buf.WriteString("\n")
 
 	if len(status.Staged) > 0 {
-		buf.WriteString(green("\n✅ Staged:\n"))
+		buf.WriteString(green("\nStaged:\n"))
 		for _, f := range status.Staged {
 			statusChar := getStatusCode(f.Code[0])
 			buf.WriteString(fmt.Sprintf("   %s %s\n", statusChar, f.Path))
@@ -201,14 +201,14 @@ func formatStatus(status *GitStatus) string {
 	}
 
 	if len(status.Modified) > 0 {
-		buf.WriteString(yellow("\n📝 Modified:\n"))
+		buf.WriteString(yellow("\nModified:\n"))
 		for _, f := range status.Modified {
 			buf.WriteString(fmt.Sprintf("   %s\n", f.Path))
 		}
 	}
 
 	if len(status.Untracked) > 0 {
-		buf.WriteString(red("\n❓ Untracked:\n"))
+		buf.WriteString(red("\nUntracked:\n"))
 		maxShow := 10
 		for i, f := range status.Untracked {
 			if i >= maxShow {
@@ -220,7 +220,7 @@ func formatStatus(status *GitStatus) string {
 	}
 
 	if len(status.Conflicted) > 0 {
-		buf.WriteString(red("\n⚠️  Conflicted:\n"))
+		buf.WriteString(red("\nWARN Conflicted:\n"))
 		for _, f := range status.Conflicted {
 			buf.WriteString(fmt.Sprintf("   %s\n", f.Path))
 		}

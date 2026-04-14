@@ -84,9 +84,9 @@ func filterBundleInstallOutput(raw string) string {
 		} else if strings.Contains(line, "Using") {
 			updated++
 		} else if strings.Contains(line, "Bundle complete!") {
-			result = append(result, "✅ "+line)
+			result = append(result, "OK "+line)
 		} else if strings.Contains(line, "error") || strings.Contains(line, "Error") {
-			result = append(result, "❌ "+shared.TruncateLine(line, 100))
+			result = append(result, "FAIL "+shared.TruncateLine(line, 100))
 		}
 	}
 
@@ -102,15 +102,15 @@ func filterBundleInstallOutput(raw string) string {
 		if len(parts) > 0 {
 			return strings.Join(parts, " ")
 		}
-		return "✅ Done"
+		return "OK Done"
 	}
 
 	// Normal output
 	if len(result) == 0 {
 		if installed > 0 || updated > 0 {
-			result = append(result, "📋 Bundle Install Summary:")
+			result = append(result, "Bundle Install Summary:")
 			if installed > 0 {
-				result = append(result, fmt.Sprintf("   📦 %d gems installed", installed))
+				result = append(result, fmt.Sprintf("   %d gems installed", installed))
 				if len(gems) > 0 && len(gems) <= 5 {
 					result = append(result, fmt.Sprintf("      %s", strings.Join(gems, ", ")))
 				} else if len(gems) > 5 {
@@ -122,7 +122,7 @@ func filterBundleInstallOutput(raw string) string {
 				result = append(result, fmt.Sprintf("   ✓ %d gems unchanged", updated))
 			}
 		} else {
-			result = append(result, "✅ Bundle already up to date")
+			result = append(result, "OK Bundle already up to date")
 		}
 	}
 
@@ -165,17 +165,17 @@ func filterBundleUpdateOutput(raw string) string {
 		if strings.Contains(line, "Installing") || strings.Contains(line, "Updating") {
 			updated++
 		} else if strings.Contains(line, "Bundle updated!") {
-			result = append(result, "✅ "+line)
+			result = append(result, "OK "+line)
 		} else if strings.Contains(line, "error") || strings.Contains(line, "Error") {
-			result = append(result, "❌ "+shared.TruncateLine(line, 100))
+			result = append(result, "FAIL "+shared.TruncateLine(line, 100))
 		}
 	}
 
 	if len(result) == 0 {
 		if updated > 0 {
-			return fmt.Sprintf("✅ Updated %d gems", updated)
+			return fmt.Sprintf("OK Updated %d gems", updated)
 		}
-		return "✅ Bundle update complete"
+		return "OK Bundle update complete"
 	}
 
 	return strings.Join(result, "\n")
@@ -221,15 +221,15 @@ func filterBundleOutdatedOutput(raw string) string {
 			// Outdated gem line like "rails (6.1.0 > 7.0.0)"
 			outdated = append(outdated, shared.TruncateLine(line, 60))
 		} else if strings.Contains(line, "Bundle up to date") {
-			return "✅ All gems are up to date"
+			return "OK All gems are up to date"
 		}
 	}
 
 	if len(outdated) == 0 {
-		return "✅ All gems are up to date"
+		return "OK All gems are up to date"
 	}
 
-	result = append(result, fmt.Sprintf("📋 %d outdated gems:", len(outdated)))
+	result = append(result, fmt.Sprintf("%d outdated gems:", len(outdated)))
 	for i, gem := range outdated {
 		if i >= 15 {
 			result = append(result, fmt.Sprintf("   ... +%d more", len(outdated)-15))

@@ -14,6 +14,14 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
+func atoi(s string) int {
+	var n int
+	if _, err := fmt.Sscanf(s, "%d", &n); err != nil {
+		n = 0
+	}
+	return n
+}
+
 var (
 	treeDepth      int
 	treePruneNoise bool
@@ -123,12 +131,12 @@ func filterTreeOutput(output string) string {
 
 		if strings.Contains(trimmed, "directories") && strings.Contains(trimmed, "file") {
 			summaryLine = trimmed
-			fmt.Sscanf(trimmed, "%d directories", &dirs)
+			dirs = atoi(trimmed)
 			parts := strings.Split(trimmed, ",")
 			for _, p := range parts {
 				p = strings.TrimSpace(p)
 				if strings.Contains(p, "file") {
-					fmt.Sscanf(p, "%d file", &files)
+					files = atoi(p)
 				}
 			}
 			continue

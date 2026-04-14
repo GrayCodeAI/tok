@@ -13,6 +13,14 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
+func atoi(s string) int {
+	var n int
+	if _, err := fmt.Sscanf(s, "%d", &n); err != nil {
+		n = 0
+	}
+	return n
+}
+
 var ansibleCmd = &cobra.Command{
 	Use:   "ansible [subcommand] [args...]",
 	Short: "Ansible CLI with compact output",
@@ -227,19 +235,19 @@ func filterAnsiblePlaybook(raw string) string {
 			parts := strings.Fields(trimmed)
 			for _, p := range parts {
 				if strings.HasPrefix(p, "ok=") {
-					fmt.Sscanf(p[3:], "%d", &okCount)
+					okCount = atoi(p[3:])
 				}
 				if strings.HasPrefix(p, "changed=") {
-					fmt.Sscanf(p[8:], "%d", &changedCount)
+					changedCount = atoi(p[8:])
 				}
 				if strings.HasPrefix(p, "failed=") {
-					fmt.Sscanf(p[7:], "%d", &failedCount)
+					failedCount = atoi(p[7:])
 				}
 				if strings.HasPrefix(p, "skipped=") {
-					fmt.Sscanf(p[8:], "%d", &skippedCount)
+					skippedCount = atoi(p[8:])
 				}
 				if strings.HasPrefix(p, "rescued=") {
-					fmt.Sscanf(p[8:], "%d", &rescuedCount)
+					rescuedCount = atoi(p[8:])
 				}
 			}
 			continue

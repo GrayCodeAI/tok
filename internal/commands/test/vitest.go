@@ -15,6 +15,14 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
+func atoi(s string) int {
+	var n int
+	if _, err := fmt.Sscanf(s, "%d", &n); err != nil {
+		n = 0
+	}
+	return n
+}
+
 var vitestCmd = &cobra.Command{
 	Use:   "vitest [args...]",
 	Short: "Vitest with filtered output (90% token reduction)",
@@ -85,8 +93,7 @@ func filterVitestOutput(raw string) string {
 
 		matches := vitestSummaryRe.FindAllStringSubmatch(trimmed, -1)
 		for _, m := range matches {
-			count := 0
-			fmt.Sscanf(m[1], "%d", &count)
+			count := atoi(m[1])
 			switch m[2] {
 			case "passed":
 				passed += count

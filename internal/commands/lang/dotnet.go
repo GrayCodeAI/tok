@@ -14,6 +14,14 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
+func atoi(s string) int {
+	var n int
+	if _, err := fmt.Sscanf(s, "%d", &n); err != nil {
+		n = 0
+	}
+	return n
+}
+
 var dotnetCmd = &cobra.Command{
 	Use:   "dotnet [command]",
 	Short: ".NET commands with compact output",
@@ -163,7 +171,7 @@ func filterDotnetBuild(output string) string {
 		}
 		if strings.Contains(trimmed, "error ") || strings.Contains(trimmed, "Error(s)") {
 			if strings.Contains(trimmed, " Error(s)") {
-				fmt.Sscanf(trimmed, "%d Error(s)", &errors)
+				errors = atoi(trimmed)
 			} else {
 				errors++
 				errorLines = append(errorLines, shared.TruncateLine(trimmed, 100))
@@ -172,7 +180,7 @@ func filterDotnetBuild(output string) string {
 		}
 		if strings.Contains(trimmed, "warning ") || strings.Contains(trimmed, "Warning(s)") {
 			if strings.Contains(trimmed, " Warning(s)") {
-				fmt.Sscanf(trimmed, "%d Warning(s)", &warnings)
+				warnings = atoi(trimmed)
 			} else {
 				warnings++
 				if len(warningLines) < 5 {
@@ -228,13 +236,13 @@ func filterDotnetTest(output string) string {
 		}
 
 		if strings.Contains(trimmed, "passed") && !strings.Contains(trimmed, "0 passed") {
-			fmt.Sscanf(trimmed, "%d passed", &passed)
+			passed = atoi(trimmed)
 		}
 		if strings.Contains(trimmed, "failed") && !strings.Contains(trimmed, "0 failed") {
-			fmt.Sscanf(trimmed, "%d failed", &failed)
+			failed = atoi(trimmed)
 		}
 		if strings.Contains(trimmed, "skipped") && !strings.Contains(trimmed, "0 skipped") {
-			fmt.Sscanf(trimmed, "%d skipped", &skipped)
+			skipped = atoi(trimmed)
 		}
 
 		if strings.Contains(trimmed, "Failed!") || strings.Contains(trimmed, "[FAIL]") {

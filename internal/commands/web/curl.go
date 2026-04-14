@@ -92,7 +92,6 @@ func parseCurlOutput(output string) (body, contentType, statusCode string) {
 
 func formatCurlOutput(body, contentType, statusCode string) string {
 	green := color.New(color.FgGreen).SprintFunc()
-	yellow := color.New(color.FgYellow).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 
@@ -101,11 +100,11 @@ func formatCurlOutput(body, contentType, statusCode string) string {
 	// Show status code
 	if statusCode != "" {
 		if strings.HasPrefix(statusCode, "2") {
-			result.WriteString(fmt.Sprintf("%s HTTP %s\n", green("✓"), statusCode))
+			result.WriteString(fmt.Sprintf("%s HTTP %s\n", green("OK"), statusCode))
 		} else if strings.HasPrefix(statusCode, "4") || strings.HasPrefix(statusCode, "5") {
-			result.WriteString(fmt.Sprintf("%s HTTP %s\n", red("✗"), statusCode))
+			result.WriteString(fmt.Sprintf("%s HTTP %s\n", red("FAIL"), statusCode))
 		} else {
-			result.WriteString(fmt.Sprintf("%s HTTP %s\n", yellow("→"), statusCode))
+			result.WriteString(fmt.Sprintf("HTTP %s\n", statusCode))
 		}
 	}
 
@@ -114,7 +113,7 @@ func formatCurlOutput(body, contentType, statusCode string) string {
 	if isJSON(trimmedBody) || strings.Contains(contentType, "application/json") {
 		formatted := formatJSON(trimmedBody)
 		if formatted != "" {
-			result.WriteString(cyan("📄 JSON Response:\n"))
+			result.WriteString(cyan("JSON Response:\n"))
 			result.WriteString(formatted)
 			return result.String()
 		}

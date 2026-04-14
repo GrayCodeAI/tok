@@ -76,7 +76,7 @@ func runMerge(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no files found")
 	}
 
-	fmt.Fprintf(os.Stderr, "📁 Merging %d files...\n", len(files))
+	fmt.Fprintf(os.Stderr, "Merging %d files...\n", len(files))
 
 	// Read all files
 	fileContents := make(map[string]string)
@@ -85,19 +85,19 @@ func runMerge(cmd *cobra.Command, args []string) error {
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "⚠️  Skipping %s: %v\n", file, err)
+			fmt.Fprintf(os.Stderr, "WARNING Skipping %s: %v\n", file, err)
 			continue
 		}
 		fileContents[file] = string(content)
 		totalSize += len(content)
 	}
 
-	fmt.Fprintf(os.Stderr, "📊 Total size: %d bytes\n", totalSize)
+	fmt.Fprintf(os.Stderr, "Total size: %d bytes\n", totalSize)
 
 	// Apply intelligent ordering if requested
 	orderedFiles := files
 	if mergeIntelligent {
-		fmt.Fprintf(os.Stderr, "🧠 Analyzing dependencies...\n")
+		fmt.Fprintf(os.Stderr, "Analyzing dependencies...\n")
 		orderedFiles = intelligentOrder(fileContents)
 	}
 
@@ -106,13 +106,13 @@ func runMerge(cmd *cobra.Command, args []string) error {
 
 	// Compress if needed to meet budget
 	mergedTokens := core.EstimateTokens(merged)
-	fmt.Fprintf(os.Stderr, "📉 Initial: %d tokens\n", mergedTokens)
+	fmt.Fprintf(os.Stderr, "Initial: %d tokens\n", mergedTokens)
 
 	if mergedTokens > mergeMaxTokens {
-		fmt.Fprintf(os.Stderr, "🔄 Compressing to meet %d token budget...\n", mergeMaxTokens)
+		fmt.Fprintf(os.Stderr, "Compressing to meet %d token budget...\n", mergeMaxTokens)
 		merged = compressToFit(merged, mergeMaxTokens)
 		mergedTokens = core.EstimateTokens(merged)
-		fmt.Fprintf(os.Stderr, "✅ Final: %d tokens\n", mergedTokens)
+		fmt.Fprintf(os.Stderr, "Final: %d tokens\n", mergedTokens)
 	}
 
 	// Format output
