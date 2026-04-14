@@ -262,17 +262,40 @@ func init() {
 // addGitPassthroughCommands adds passthrough subcommands for git operations without explicit filters
 func addGitPassthroughCommands() {
 	passthroughCommands := []string{
-		"init", "clone", "config", "remote", "merge", "rebase", "tag",
-		"reset", "checkout", "switch", "restore", "mv", "rm", "bisect",
-		"grep", "describe", "cherry-pick", "revert", "submodule", "notes",
-		"reflog", "archive", "bundle", "clean", "gc",
-		// Additional important commands
-		"blame", "shortlog", "format-patch", "difftool", "fsck",
-		"sparse-checkout", "stage", "am", "apply", "help",
-		"for-each-ref", "rev-parse", "rev-list", "ls-files", "ls-tree",
-		// More user-facing commands
-		"annotate", "citool", "diagnose", "gui", "mergetool",
-		"range-diff", "send-email", "show-branch", "version", "whatchanged",
+		// All official git commands (excluding the 12 with explicit TokMan filters)
+		"am", "annotate", "apply", "archimport", "archive", "backfill",
+		"bisect", "blame", "bugreport", "bundle",
+		"checkout", "cherry", "cherry-pick", "citool", "clean", "clone", "column",
+		"commit-graph", "commit-tree", "config", "count-objects",
+		"credential", "credential-cache", "credential-store",
+		"cvsexportcommit", "cvsimport", "cvsserver",
+		"daemon", "describe", "diagnose", "diff-files", "diff-index",
+		"diff-pairs", "diff-tree", "difftool",
+		"fast-export", "fast-import", "fetch-pack", "filter-branch",
+		"fmt-merge-msg", "for-each-ref", "for-each-repo", "format-patch", "fsck",
+		"gc", "get-tar-commit-id", "gitk", "grep", "gui",
+		"hash-object", "help", "hook", "http-backend", "http-fetch", "http-push",
+		"imap-send", "index-pack", "init", "init-db", "instaweb", "interpret-trailers",
+		"ls-files", "ls-remote", "ls-tree",
+		"mailinfo", "mailsplit", "maintenance", "merge", "merge-base", "merge-file",
+		"merge-index", "merge-one-file", "merge-tree", "mergetool", "mktag", "mktree",
+		"multi-pack-index", "mv",
+		"name-rev", "notes",
+		"pack-objects", "pack-redundant", "pack-refs", "p4", "patch-id", "prune",
+		"prune-packed",
+		"quiltimport",
+		"range-diff", "read-tree", "rebase", "receive-pack", "reflog", "refs",
+		"remote", "repack", "replace", "replay", "request-pull", "rerere",
+		"reset", "restore", "rev-list", "rev-parse", "revert", "rm",
+		"scalar", "send-email", "send-pack", "sh-i18n", "sh-setup", "shell",
+		"shortlog", "show-branch", "show-index", "show-ref",
+		"sparse-checkout", "stage", "stripspace", "submodule",
+		"subtree", "svn", "switch", "symbolic-ref",
+		"tag",
+		"unpack-file", "unpack-objects", "update-index", "update-ref",
+		"update-server-info", "upload-archive", "upload-pack",
+		"var", "verify-commit", "verify-pack", "verify-tag", "version",
+		"whatchanged", "write-tree",
 	}
 
 	for _, cmdName := range passthroughCommands {
