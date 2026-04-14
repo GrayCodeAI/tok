@@ -10,9 +10,10 @@ import (
 )
 
 var gitAddCmd = &cobra.Command{
-	Use:   "add [args...]",
-	Short: "Add files to staging (compact output)",
-	Long:  `Add files to git staging area with filtered output. Supports all git add options including -A, --all, -u, etc.`,
+	Use:                "add [args...]",
+	Short:              "Add files to staging (compact output)",
+	Long:               `Add files to git staging area with filtered output. Supports all git add options including -A, --all, -u, etc.`,
+	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return shared.ExecuteAndRecord("git add", func() (string, string, error) {
 			return runGitAdd(args)
