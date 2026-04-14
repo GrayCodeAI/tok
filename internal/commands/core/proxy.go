@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -29,8 +28,7 @@ Examples:
   tokman proxy ls -la
   tokman proxy cargo build --release
   tokman proxy ./custom-script.sh`,
-	DisableFlagParsing: true,
-	RunE:               runProxy,
+	RunE: runProxy,
 }
 
 func init() {
@@ -39,7 +37,7 @@ func init() {
 
 func runProxy(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("please specify a command to execute")
+		return cmd.Help()
 	}
 
 	timer := tracking.Start()
