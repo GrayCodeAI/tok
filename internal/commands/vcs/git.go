@@ -1,6 +1,7 @@
 package vcs
 
 import (
+	"os"
 	"os/exec"
 	"strings"
 
@@ -45,9 +46,25 @@ Global flags (applied before subcommand):
   --no-optional-locks         Skip optional locks
   --bare                      Treat repository as bare
   --literal-pathspecs         Treat pathspecs literally
-  -c, --config <key=value>    Set git config option`,
+  -c, --config <key=value>    Set git config option
+
+Note: All git commands are supported. Commands with explicit TokMan
+filters (status, diff, log, etc.) use optimized output. Other commands
+pass through to git with global flags applied.`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	TraverseChildren:   true,
+	SilenceUsage:       true,
+	SilenceErrors:      true,
+	Args:               cobra.ArbitraryArgs,
+	Run: func(cmd *cobra.Command, args []string) {
+		// If no subcommand specified, show help
+		if len(args) == 0 {
+			cmd.Help()
+			return
+		}
+		// Pass through to real git
+		runGitPassthrough(args)
+	},
 }
 
 // buildGitCmd builds a git command with global flags prepended
@@ -146,6 +163,49 @@ func extractGitArgs(args []string) []string {
 	return gitArgs
 }
 
+// runGitPassthrough executes an unknown git subcommand directly
+func runGitPassthrough(args []string) {
+	gitArgs := []string{}
+
+	// Add global flags first
+	if gitDirectory != "" {
+		gitArgs = append(gitArgs, "-C", gitDirectory)
+	}
+	if gitDir != "" {
+		gitArgs = append(gitArgs, "--git-dir", gitDir)
+	}
+	if gitWorkTree != "" {
+		gitArgs = append(gitArgs, "--work-tree", gitWorkTree)
+	}
+	if gitNoPager {
+		gitArgs = append(gitArgs, "--no-pager")
+	}
+	if gitNoOptLocks {
+		gitArgs = append(gitArgs, "--no-optional-locks")
+	}
+	if gitBare {
+		gitArgs = append(gitArgs, "--bare")
+	}
+	if gitLiteralPaths {
+		gitArgs = append(gitArgs, "--literal-pathspecs")
+	}
+	for _, opt := range gitConfigOpts {
+		gitArgs = append(gitArgs, "-c", opt)
+	}
+
+	// Add the subcommand and args
+	gitArgs = append(gitArgs, args...)
+
+	// Execute git directly
+	cmd := exec.Command("git", gitArgs...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+
+	cmd.Run()
+}
+
 // gray returns a gray-colored string
 func gray(s string) string {
 	dim := color.New(color.FgHiBlack).SprintFunc()
@@ -194,4 +254,74 @@ func init() {
 
 	// Git log specific flags
 	gitLogCmd.Flags().IntVarP(&gitLogCount, "number", "n", 0, "Number of commits to show")
+
+	// Add passthrough subcommands for common git operations
+	addGitPassthroughCommands()
+}
+
+// addGitPassthroughCommands adds passthrough subcommands for git operations without explicit filters
+func addGitPassthroughCommands() {
+	passthroughCommands := []string{
+		"init", "clone", "config", "remote", "merge", "rebase", "tag",
+		"reset", "checkout", "switch", "restore", "mv", "rm", "bisect",
+		"grep", "describe", "cherry-pick", "revert", "submodule", "notes",
+		"reflog", "archive", "bundle", "clean", "gc",
+	}
+
+	for _, cmdName := range passthroughCommands {
+		name := cmdName // capture for closure
+		cmd := &cobra.Command{
+			Use:                name + " [args...]",
+			Short:              "Git " + name + " (passthrough to git)",
+			DisableFlagParsing: true,
+			RunE: func(cmd *cobra.Command, args []string) error {
+				gitArgs := []string{name}
+				gitArgs = append(gitArgs, args...)
+				return runGitPassthroughReturn(gitArgs)
+			},
+		}
+		gitCmd.AddCommand(cmd)
+	}
+}
+
+// runGitPassthroughReturn executes git with args and returns error
+func runGitPassthroughReturn(args []string) error {
+	gitArgs := []string{}
+
+	// Add global flags
+	if gitDirectory != "" {
+		gitArgs = append(gitArgs, "-C", gitDirectory)
+	}
+	if gitDir != "" {
+		gitArgs = append(gitArgs, "--git-dir", gitDir)
+	}
+	if gitWorkTree != "" {
+		gitArgs = append(gitArgs, "--work-tree", gitWorkTree)
+	}
+	if gitNoPager {
+		gitArgs = append(gitArgs, "--no-pager")
+	}
+	if gitNoOptLocks {
+		gitArgs = append(gitArgs, "--no-optional-locks")
+	}
+	if gitBare {
+		gitArgs = append(gitArgs, "--bare")
+	}
+	if gitLiteralPaths {
+		gitArgs = append(gitArgs, "--literal-pathspecs")
+	}
+	for _, opt := range gitConfigOpts {
+		gitArgs = append(gitArgs, "-c", opt)
+	}
+
+	gitArgs = append(gitArgs, args...)
+
+	// Execute git directly
+	cmd := exec.Command("git", gitArgs...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+
+	return cmd.Run()
 }
