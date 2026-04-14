@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -13,6 +14,12 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
+
+var pipJSON bool
+
+func formatAsJSONpip(output string) string {
+	return fmt.Sprintf(`{"output": %s}`, strconv.Quote(output))
+}
 
 var pipCmd = &cobra.Command{
 	Use:   "pip [args...]",
@@ -37,6 +44,7 @@ Examples:
 
 func init() {
 	registry.Add(func() { registry.Register(pipCmd) })
+	pipCmd.Flags().BoolVarP(&pipJSON, "json", "j", false, "Output as JSON")
 }
 
 func runPip(cmd *cobra.Command, args []string) error {
@@ -77,6 +85,14 @@ func runPip(cmd *cobra.Command, args []string) error {
 		}
 	} else {
 		filtered = filterPipOutput(output)
+	}
+
+	if pipJSON {
+		fmt.Println(formatAsJSONpip(output))
+		originalTokens := filter.EstimateTokens(output)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tokman pip", originalTokens, filteredTokens)
+		return err
 	}
 
 	fmt.Print(filtered)

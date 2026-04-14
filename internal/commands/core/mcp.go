@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/mcp"
-	"github.com/spf13/cobra"
 )
 
 func init() {

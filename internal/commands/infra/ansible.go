@@ -40,7 +40,11 @@ Examples:
 }
 
 func init() {
-	registry.Add(func() { registry.Register(ansibleCmd) })
+	registry.Add(func() {
+		registry.Register(ansibleCmd)
+		registry.Register(ansiblePlaybookCmd)
+		registry.Register(ansibleInventoryCmd)
+	})
 }
 
 func runAnsible(cmd *cobra.Command, args []string) error {
@@ -67,10 +71,6 @@ Examples:
 	},
 }
 
-func init() {
-	registry.Add(func() { registry.Register(ansiblePlaybookCmd) })
-}
-
 var ansibleInventoryCmd = &cobra.Command{
 	Use:   "ansible-inventory [args...]",
 	Short: "Ansible inventory with compact output",
@@ -83,10 +83,6 @@ Examples:
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runAnsibleInventory(args)
 	},
-}
-
-func init() {
-	registry.Add(func() { registry.Register(ansibleInventoryCmd) })
 }
 
 func runAnsiblePassthrough(args []string) error {
@@ -129,6 +125,7 @@ func runAnsiblePlaybook(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "ansible_playbook", err); hint != "" {
 			filtered = filtered + "\n" + hint
+			fmt.Print(filtered)
 		}
 	}
 	return err

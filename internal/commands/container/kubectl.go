@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +15,12 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
+
+var kubectlJSON bool
+
+func formatAsJSONKubectl(output string) string {
+	return fmt.Sprintf(`{"output": %s}`, strconv.Quote(output))
+}
 
 var kubectlCmd = &cobra.Command{
 	Use:   "kubectl [command] [args...]",
@@ -47,6 +54,7 @@ Examples:
 
 func init() {
 	registry.Add(func() { registry.Register(kubectlCmd) })
+	kubectlCmd.Flags().BoolVarP(&kubectlJSON, "json", "j", false, "Output as JSON")
 }
 
 func runKubectl(cmd *cobra.Command, args []string) error {
@@ -138,6 +146,13 @@ func runKubectlPassthrough(args []string) error {
 	err := c.Run()
 	output := stdoutBuf.String() + stderrBuf.String()
 
+	if kubectlJSON {
+		fmt.Println(formatAsJSONKubectl(output))
+		originalTokens := filter.EstimateTokens(output)
+		timer.Track(fmt.Sprintf("kubectl %s", strings.Join(args, " ")), "tokman kubectl", originalTokens, originalTokens)
+		return err
+	}
+
 	fmt.Print(output)
 
 	originalTokens := filter.EstimateTokens(output)
@@ -177,7 +192,10 @@ func runKubectlPods(args []string) error {
 	}
 
 	var podList K8sPodList
-	if unmarshalJSON(raw, &podList) != nil || len(podList.Items) == 0 {
+	if err := unmarshalJSON(raw, &podList); err != nil {
+		return err
+	}
+	if len(podList.Items) == 0 {
 		fmt.Println("No pods found")
 		timer.Track("kubectl get pods", "tokman kubectl pods", filter.EstimateTokens(raw), 0)
 		return nil
@@ -282,7 +300,10 @@ func runKubectlServices(args []string) error {
 	}
 
 	var svcList K8sServiceList
-	if unmarshalJSON(raw, &svcList) != nil || len(svcList.Items) == 0 {
+	if err := unmarshalJSON(raw, &svcList); err != nil {
+		return err
+	}
+	if len(svcList.Items) == 0 {
 		fmt.Println("No services found")
 		timer.Track("kubectl get services", "tokman kubectl services", filter.EstimateTokens(raw), 0)
 		return nil
@@ -363,7 +384,10 @@ func runKubectlDeployments(args []string) error {
 	raw := string(output)
 
 	var deployList K8sDeploymentList
-	if unmarshalJSON(raw, &deployList) != nil || len(deployList.Items) == 0 {
+	if err := unmarshalJSON(raw, &deployList); err != nil {
+		return err
+	}
+	if len(deployList.Items) == 0 {
 		fmt.Println("No deployments found")
 		timer.Track("kubectl get deployments", "tokman kubectl deployments", filter.EstimateTokens(raw), 0)
 		return nil
@@ -444,7 +468,10 @@ func runKubectlNodes(args []string) error {
 	raw := string(output)
 
 	var nodeList K8sNodeList
-	if unmarshalJSON(raw, &nodeList) != nil || len(nodeList.Items) == 0 {
+	if err := unmarshalJSON(raw, &nodeList); err != nil {
+		return err
+	}
+	if len(nodeList.Items) == 0 {
 		fmt.Println("No nodes found")
 		timer.Track("kubectl get nodes", "tokman kubectl nodes", filter.EstimateTokens(raw), 0)
 		return nil
@@ -525,7 +552,10 @@ func runKubectlNamespaces(args []string) error {
 	raw := string(output)
 
 	var nsList K8sNamespaceList
-	if unmarshalJSON(raw, &nsList) != nil || len(nsList.Items) == 0 {
+	if err := unmarshalJSON(raw, &nsList); err != nil {
+		return err
+	}
+	if len(nsList.Items) == 0 {
 		fmt.Println("No namespaces found")
 		timer.Track("kubectl get namespaces", "tokman kubectl namespaces", filter.EstimateTokens(raw), 0)
 		return nil
@@ -590,7 +620,10 @@ func runKubectlConfigMaps(args []string) error {
 	raw := string(output)
 
 	var cmList K8sGenericList
-	if unmarshalJSON(raw, &cmList) != nil || len(cmList.Items) == 0 {
+	if err := unmarshalJSON(raw, &cmList); err != nil {
+		return err
+	}
+	if len(cmList.Items) == 0 {
 		fmt.Println("No configmaps found")
 		timer.Track("kubectl get configmaps", "tokman kubectl configmaps", filter.EstimateTokens(raw), 0)
 		return nil
@@ -619,7 +652,10 @@ func runKubectlSecrets(args []string) error {
 	raw := string(output)
 
 	var secretList K8sGenericList
-	if unmarshalJSON(raw, &secretList) != nil || len(secretList.Items) == 0 {
+	if err := unmarshalJSON(raw, &secretList); err != nil {
+		return err
+	}
+	if len(secretList.Items) == 0 {
 		fmt.Println("No secrets found")
 		timer.Track("kubectl get secrets", "tokman kubectl secrets", filter.EstimateTokens(raw), 0)
 		return nil
@@ -648,7 +684,10 @@ func runKubectlIngress(args []string) error {
 	raw := string(output)
 
 	var ingressList K8sIngressList
-	if unmarshalJSON(raw, &ingressList) != nil || len(ingressList.Items) == 0 {
+	if err := unmarshalJSON(raw, &ingressList); err != nil {
+		return err
+	}
+	if len(ingressList.Items) == 0 {
 		fmt.Println("No ingress found")
 		timer.Track("kubectl get ingress", "tokman kubectl ingress", filter.EstimateTokens(raw), 0)
 		return nil
@@ -716,7 +755,10 @@ func runKubectlEvents(args []string) error {
 	raw := string(output)
 
 	var eventList K8sEventList
-	if unmarshalJSON(raw, &eventList) != nil || len(eventList.Items) == 0 {
+	if err := unmarshalJSON(raw, &eventList); err != nil {
+		return err
+	}
+	if len(eventList.Items) == 0 {
 		fmt.Println("No events found")
 		timer.Track("kubectl get events", "tokman kubectl events", filter.EstimateTokens(raw), 0)
 		return nil
@@ -871,7 +913,10 @@ func runKubectlJobs(args []string) error {
 	raw := string(output)
 
 	var jobList K8sGenericList
-	if unmarshalJSON(raw, &jobList) != nil || len(jobList.Items) == 0 {
+	if err := unmarshalJSON(raw, &jobList); err != nil {
+		return err
+	}
+	if len(jobList.Items) == 0 {
 		fmt.Println("No jobs found")
 		timer.Track("kubectl get jobs", "tokman kubectl jobs", filter.EstimateTokens(raw), 0)
 		return nil
@@ -899,7 +944,10 @@ func runKubectlCronJobs(args []string) error {
 	raw := string(output)
 
 	var cjList K8sGenericList
-	if unmarshalJSON(raw, &cjList) != nil || len(cjList.Items) == 0 {
+	if err := unmarshalJSON(raw, &cjList); err != nil {
+		return err
+	}
+	if len(cjList.Items) == 0 {
 		fmt.Println("No cronjobs found")
 		timer.Track("kubectl get cronjobs", "tokman kubectl cronjobs", filter.EstimateTokens(raw), 0)
 		return nil
@@ -927,7 +975,10 @@ func runKubectlPVs(args []string) error {
 	raw := string(output)
 
 	var pvList K8sGenericList
-	if unmarshalJSON(raw, &pvList) != nil || len(pvList.Items) == 0 {
+	if err := unmarshalJSON(raw, &pvList); err != nil {
+		return err
+	}
+	if len(pvList.Items) == 0 {
 		fmt.Println("No PVs found")
 		timer.Track("kubectl get pv", "tokman kubectl pv", filter.EstimateTokens(raw), 0)
 		return nil
@@ -955,7 +1006,10 @@ func runKubectlPVCs(args []string) error {
 	raw := string(output)
 
 	var pvcList K8sGenericList
-	if unmarshalJSON(raw, &pvcList) != nil || len(pvcList.Items) == 0 {
+	if err := unmarshalJSON(raw, &pvcList); err != nil {
+		return err
+	}
+	if len(pvcList.Items) == 0 {
 		fmt.Println("No PVCs found")
 		timer.Track("kubectl get pvc", "tokman kubectl pvc", filter.EstimateTokens(raw), 0)
 		return nil
@@ -1011,7 +1065,10 @@ func runKubectlCRDs(args []string) error {
 	raw := string(output)
 
 	var crdList K8sGenericList
-	if unmarshalJSON(raw, &crdList) != nil || len(crdList.Items) == 0 {
+	if err := unmarshalJSON(raw, &crdList); err != nil {
+		return err
+	}
+	if len(crdList.Items) == 0 {
 		fmt.Println("No CRDs found")
 		timer.Track("kubectl get crds", "tokman kubectl crds", filter.EstimateTokens(raw), 0)
 		return nil
@@ -1039,7 +1096,10 @@ func runKubectlGenericGet(resource, shortName string, args []string) error {
 	raw := string(output)
 
 	var list K8sGenericList
-	if unmarshalJSON(raw, &list) != nil || len(list.Items) == 0 {
+	if err := unmarshalJSON(raw, &list); err != nil {
+		return err
+	}
+	if len(list.Items) == 0 {
 		fmt.Printf("No %s found\n", resource)
 		timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tokman kubectl %s", shortName), filter.EstimateTokens(raw), 0)
 		return nil

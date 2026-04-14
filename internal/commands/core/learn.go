@@ -231,7 +231,7 @@ func resetLearnedData() error {
 	fmt.Scanln(&response)
 
 	if strings.ToLower(response) != "y" && strings.ToLower(response) != "yes" {
-		fmt.Println("Reset cancelled.")
+		fmt.Println("Reset canceled.")
 		return nil
 	}
 

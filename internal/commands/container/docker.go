@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -14,6 +15,12 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/filter"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
+
+var dockerJSON bool
+
+func formatAsJSON(output string) string {
+	return fmt.Sprintf(`{"output": %s}`, strconv.Quote(output))
+}
 
 var dockerCmd = &cobra.Command{
 	Use:   "docker [command] [args...]",
@@ -44,6 +51,7 @@ Examples:
 
 func init() {
 	registry.Add(func() { registry.Register(dockerCmd) })
+	dockerCmd.Flags().BoolVarP(&dockerJSON, "json", "j", false, "Output as JSON")
 }
 
 func runDocker(cmd *cobra.Command, args []string) error {
@@ -105,6 +113,13 @@ func runDockerPassthrough(args []string) error {
 
 	err := c.Run()
 	output := stdoutBuf.String() + stderrBuf.String()
+
+	if dockerJSON {
+		fmt.Println(formatAsJSON(output))
+		originalTokens := filter.EstimateTokens(output)
+		timer.Track(fmt.Sprintf("docker %s", strings.Join(args, " ")), "tokman docker", originalTokens, originalTokens)
+		return err
+	}
 
 	fmt.Print(output)
 
@@ -1376,13 +1391,13 @@ func filterDockerInfo(raw string) string {
 	}
 
 	if shared.UltraCompact {
-		var parts []string
+		parts := []string{}
 		for _, line := range strings.Split(raw, "\n") {
 			if strings.Contains(line, ":") {
-				parts := strings.SplitN(line, ":", 2)
-				key := strings.TrimSpace(parts[0])
+				partsSplit := strings.SplitN(line, ":", 2)
+				key := strings.TrimSpace(partsSplit[0])
 				if keyFields[key] {
-					val := strings.TrimSpace(parts[1])
+					val := strings.TrimSpace(partsSplit[1])
 					parts = append(parts, fmt.Sprintf("%s=%s", key, val))
 				}
 			}

@@ -22,6 +22,9 @@ func init() {
 	registry.Add(func() {
 		registry.Register(brotliCmd)
 	})
+	brotliCmd.Flags().IntVarP(&brotliLevel, "level", "l", 4, "Compression level (0-11)")
+	brotliCmd.Flags().BoolVarP(&brotliDecompress, "decompress", "d", false, "Decompress mode")
+	brotliCmd.Flags().StringVarP(&brotliOutput, "output", "o", "", "Output file")
 }
 
 var brotliCmd = &cobra.Command{
@@ -46,12 +49,6 @@ Examples:
   tokman brotli file.txt.br -d              # Decompress`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runBrotli,
-}
-
-func init() {
-	brotliCmd.Flags().IntVarP(&brotliLevel, "level", "l", 4, "Compression level (0-11)")
-	brotliCmd.Flags().BoolVarP(&brotliDecompress, "decompress", "d", false, "Decompress mode")
-	brotliCmd.Flags().StringVarP(&brotliOutput, "output", "o", "", "Output file")
 }
 
 func runBrotli(cmd *cobra.Command, args []string) error {

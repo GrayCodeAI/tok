@@ -116,6 +116,7 @@ func runTerraformPlan(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_plan", err); hint != "" {
 			filtered = filtered + "\n" + hint
+			fmt.Print(filtered)
 		}
 	}
 	return err
@@ -139,6 +140,7 @@ func runTerraformApply(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_apply", err); hint != "" {
 			filtered = filtered + "\n" + hint
+			fmt.Print(filtered)
 		}
 	}
 	return err

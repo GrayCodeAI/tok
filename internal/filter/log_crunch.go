@@ -54,7 +54,7 @@ func (f *LogCrunchFilter) Apply(input string, mode Mode) (string, int) {
 func compressLogLines(lines []string, mode Mode) []string {
 	out := make([]string, 0, len(lines))
 	inTrace := false
-	traceBuffer := []string{}
+	var traceBuffer []string
 	runNorm := ""
 	runLines := []string{}
 	runCount := 0

@@ -54,7 +54,7 @@ func (w *GitWatcher) GetFileHashes(workingDir string, files []string) (map[strin
 	// Check which files are dirty
 	dirtyFiles, err := w.getDirtyFiles(workingDir)
 	if err != nil {
-		return hashes, nil // Return just commit hash
+		return hashes, err
 	}
 
 	// Add dirty file hashes
