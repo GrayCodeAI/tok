@@ -10,8 +10,9 @@ import (
 )
 
 var gitCommitCmd = &cobra.Command{
-	Use:   "commit [args...]",
-	Short: "Commit changes (compact output)",
+	Use:                "commit [args...]",
+	Short:              "Commit changes (compact output)",
+	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return shared.ExecuteAndRecord("git commit", func() (string, string, error) {
 			return runGitCommit(args)

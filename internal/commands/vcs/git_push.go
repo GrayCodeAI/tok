@@ -10,8 +10,9 @@ import (
 )
 
 var gitPushCmd = &cobra.Command{
-	Use:   "push [args...]",
-	Short: "Push commits (compact output)",
+	Use:                "push [args...]",
+	Short:              "Push commits (compact output)",
+	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return shared.ExecuteAndRecord("git push", func() (string, string, error) {
 			return runGitPush(args)
