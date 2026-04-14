@@ -19,11 +19,12 @@ var playwrightCmd = &cobra.Command{
 	Short: "Playwright E2E tests with compact output",
 	Long: `Execute Playwright with token-optimized output.
 
-Shows only test failures and summary.
+Shows only test results, failures, and per-browser breakdown.
 
 Examples:
   tokman playwright test
-  tokman playwright test --project=chromium`,
+  tokman playwright test --project=chromium
+  tokman playwright test --reporter=json`,
 	DisableFlagParsing: true,
 	RunE:               runPlaywright,
 }
@@ -43,11 +44,18 @@ func runPlaywright(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "Running: playwright %s\n", strings.Join(args, " "))
 	}
 
-	execCmd := exec.Command("playwright", args...)
+	execCmd := exec.Command("npx", append([]string{"playwright"}, args...)...)
 	output, err := execCmd.CombinedOutput()
 	raw := string(output)
 
 	filtered := filterPlaywrightOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "playwright", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -58,73 +66,170 @@ func runPlaywright(cmd *cobra.Command, args []string) error {
 }
 
 func filterPlaywrightOutput(raw string) string {
-	lines := strings.Split(raw, "\n")
-	var result []string
-	var passed, failed, skipped int
+	var passed, failed, skipped, flaky int
 	var failures []string
 	var inFailure bool
 	var currentFailure []string
+	var browsers []string
 
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
 
-		if strings.Contains(line, "passed") {
-			if _, err := fmt.Sscanf(line, "%d passed", &passed); err != nil {
-				passed = 0
-			}
-		}
-		if strings.Contains(line, "failed") {
-			if _, err := fmt.Sscanf(line, "%d failed", &failed); err != nil {
-				failed = 0
-			}
-		}
-		if strings.Contains(line, "skipped") {
-			if _, err := fmt.Sscanf(line, "%d skipped", &skipped); err != nil {
-				skipped = 0
-			}
+		if trimmed == "" {
+			continue
 		}
 
-		if strings.Contains(line, "✘") || strings.Contains(line, "FAIL") {
-			inFailure = true
-			currentFailure = []string{line}
+		if strings.Contains(trimmed, "passed") {
+			fields := strings.Fields(trimmed)
+			for i, f := range fields {
+				if f == "passed" && i > 0 {
+					var v int
+					if _, err := fmt.Sscanf(fields[i-1], "%d", &v); err == nil {
+						passed += v
+					}
+				}
+			}
+		}
+		if strings.Contains(trimmed, "failed") && !strings.Contains(trimmed, "0 failed") {
+			fields := strings.Fields(trimmed)
+			for i, f := range fields {
+				if f == "failed" && i > 0 {
+					var v int
+					if _, err := fmt.Sscanf(fields[i-1], "%d", &v); err == nil {
+						failed += v
+					}
+				}
+			}
+		}
+		if strings.Contains(trimmed, "skipped") {
+			fields := strings.Fields(trimmed)
+			for i, f := range fields {
+				if (f == "skipped" || f == "pending") && i > 0 {
+					var v int
+					if _, err := fmt.Sscanf(fields[i-1], "%d", &v); err == nil {
+						skipped += v
+					}
+				}
+			}
+		}
+		if strings.Contains(trimmed, "flaky") {
+			flaky++
+		}
+
+		if strings.Contains(trimmed, "workers") || strings.Contains(trimmed, "project") || strings.Contains(trimmed, "browser") {
+			browsers = append(browsers, shared.TruncateLine(trimmed, 80))
+		}
+
+		if strings.Contains(trimmed, "✘") || strings.Contains(trimmed, "FAIL") || strings.Contains(trimmed, "Error:") {
+			if !strings.Contains(trimmed, "0 failed") {
+				inFailure = true
+				currentFailure = []string{shared.TruncateLine(trimmed, 80)}
+			}
 		}
 
 		if inFailure {
-			currentFailure = append(currentFailure, line)
-			if strings.HasPrefix(line, "   at ") || line == "" {
-				if len(currentFailure) > 1 {
+			if strings.HasPrefix(trimmed, "   at ") || trimmed == "" || strings.Contains(trimmed, "passed") {
+				if len(currentFailure) > 0 {
 					failures = append(failures, strings.Join(currentFailure, "\n"))
 				}
 				inFailure = false
 				currentFailure = nil
+			} else {
+				currentFailure = append(currentFailure, shared.TruncateLine(trimmed, 80))
 			}
 		}
 	}
 
-	result = append(result, "🎭 Playwright Results:")
-	result = append(result, fmt.Sprintf("   ✅ %d passed", passed))
+	if inFailure && len(currentFailure) > 0 {
+		failures = append(failures, strings.Join(currentFailure, "\n"))
+	}
+
+	if shared.UltraCompact {
+		var parts []string
+		parts = append(parts, fmt.Sprintf("P:%d F:%d", passed, failed))
+		if skipped > 0 {
+			parts = append(parts, fmt.Sprintf("S:%d", skipped))
+		}
+		if flaky > 0 {
+			parts = append(parts, fmt.Sprintf("Flaky:%d", flaky))
+		}
+		if len(failures) > 0 {
+			for i, f := range failures {
+				if i >= 3 {
+					parts = append(parts, fmt.Sprintf("+%d", len(failures)-3))
+					break
+				}
+				lines := strings.Split(f, "\n")
+				if len(lines) > 0 && len(lines[0]) > 5 {
+					parts = append(parts, shared.TruncateLine(lines[0], 60))
+				}
+			}
+		}
+		return strings.Join(parts, " ")
+	}
+
+	var result []string
+	result = append(result, "Playwright Results:")
+	if passed > 0 {
+		result = append(result, fmt.Sprintf("  %d passed", passed))
+	}
 	if failed > 0 {
-		result = append(result, fmt.Sprintf("   ❌ %d failed", failed))
+		result = append(result, fmt.Sprintf("  %d failed", failed))
 	}
 	if skipped > 0 {
-		result = append(result, fmt.Sprintf("   ⏭️  %d skipped", skipped))
+		result = append(result, fmt.Sprintf("  %d skipped", skipped))
+	}
+	if flaky > 0 {
+		result = append(result, fmt.Sprintf("  %d flaky", flaky))
+	}
+
+	if len(browsers) > 0 {
+		result = append(result, "")
+		result = append(result, "Browsers:")
+		for i, b := range browsers {
+			if i >= 5 {
+				result = append(result, fmt.Sprintf("  ... +%d more", len(browsers)-5))
+				break
+			}
+			result = append(result, fmt.Sprintf("  %s", b))
+		}
 	}
 
 	if len(failures) > 0 {
 		result = append(result, "")
 		result = append(result, "Failures:")
 		for i, f := range failures {
-			if i >= 5 {
-				result = append(result, fmt.Sprintf("   ... +%d more failures", len(failures)-5))
+			if i >= 10 {
+				result = append(result, fmt.Sprintf("  ... +%d more failures", len(failures)-10))
 				break
 			}
 			for _, l := range strings.Split(f, "\n") {
-				if len(l) > 5 {
-					result = append(result, fmt.Sprintf("   %s", shared.TruncateLine(l, 80)))
+				if len(l) > 3 {
+					result = append(result, fmt.Sprintf("  %s", l))
 				}
 			}
 		}
 	}
 
+	if len(result) <= 1 {
+		return filterTestOutput(raw)
+	}
+
+	return strings.Join(result, "\n")
+}
+
+func filterTestOutput(raw string) string {
+	lines := strings.Split(raw, "\n")
+	var result []string
+	for i, line := range lines {
+		if i > 30 {
+			result = append(result, fmt.Sprintf("... (%d more lines)", len(lines)-30))
+			break
+		}
+		trimmed := strings.TrimSpace(line)
+		if trimmed != "" {
+			result = append(result, shared.TruncateLine(trimmed, 100))
+		}
+	}
 	return strings.Join(result, "\n")
 }
