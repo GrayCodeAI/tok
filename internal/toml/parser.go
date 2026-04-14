@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/BurntSushi/toml"
@@ -26,6 +27,16 @@ type TOMLFilterRule struct {
 	Tail               int               `toml:"tail"`
 	MaxLines           int               `toml:"max_lines"`
 	OnEmpty            string            `toml:"on_empty"`
+	CaptureStderr      bool              `toml:"capture_stderr"` // Capture stderr output for filtering
+	Tests              []FilterTest      `toml:"tests"`          // Inline test definitions
+}
+
+// FilterTest represents an inline test case for a filter
+type FilterTest struct {
+	Name     string `toml:"name"`
+	Input    string `toml:"input"`
+	Expected string `toml:"expected"`
+	Command  string `toml:"command,omitempty"` // Optional command to match
 }
 
 // ReplaceRule defines a regex replacement rule
@@ -239,6 +250,33 @@ func parseFilterRule(m map[string]any) (TOMLFilterRule, error) {
 		}
 	}
 
+	// Parse capture_stderr option
+	if v, ok := m["capture_stderr"].(bool); ok {
+		cfg.CaptureStderr = v
+	}
+
+	// Parse inline tests
+	if v, ok := m["tests"].([]any); ok {
+		for _, item := range v {
+			if testMap, ok := item.(map[string]any); ok {
+				test := FilterTest{}
+				if n, ok := testMap["name"].(string); ok {
+					test.Name = n
+				}
+				if i, ok := testMap["input"].(string); ok {
+					test.Input = i
+				}
+				if e, ok := testMap["expected"].(string); ok {
+					test.Expected = e
+				}
+				if c, ok := testMap["command"].(string); ok {
+					test.Command = c
+				}
+				cfg.Tests = append(cfg.Tests, test)
+			}
+		}
+	}
+
 	return cfg, nil
 }
 
@@ -292,6 +330,30 @@ func (f *TOMLFilter) Validate() error {
 	return nil
 }
 
+// RunTests executes all inline tests for this filter and returns results
+func (f *TOMLFilter) RunTests() ([]TestResult, error) {
+	var results []TestResult
+
+	for filterName, cfg := range f.Filters {
+		for _, test := range cfg.Tests {
+			result := TestResult{
+				FilterName: filterName,
+				TestName:   test.Name,
+			}
+
+			// Run the filter on test input
+			output, _ := ApplyTOMLFilter(test.Input, &cfg)
+			result.Got = output
+			result.Expected = test.Expected
+			result.Passed = strings.TrimSpace(output) == strings.TrimSpace(test.Expected)
+
+			results = append(results, result)
+		}
+	}
+
+	return results, nil
+}
+
 // MatchesCommand checks if any filter matches the given command
 func (f *TOMLFilter) MatchesCommand(command string) (string, *TOMLFilterRule, error) {
 	for name, cfg := range f.Filters {
@@ -313,12 +375,148 @@ type FilterRegistry struct {
 	parser  *Parser
 }
 
+// FilterConflict represents a potential filter conflict
+type FilterConflict struct {
+	Filter1  string
+	Filter2  string
+	Pattern1 string
+	Pattern2 string
+	Type     string // "shadow", "duplicate", "overlap"
+}
+
 // NewFilterRegistry creates a new filter registry
 func NewFilterRegistry() *FilterRegistry {
 	return &FilterRegistry{
 		filters: make(map[string]*TOMLFilter),
 		parser:  NewParser(),
 	}
+}
+
+// DetectConflicts analyzes all loaded filters and reports potential conflicts
+func (r *FilterRegistry) DetectConflicts() []FilterConflict {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	var conflicts []FilterConflict
+
+	// Collect all filter patterns
+	type filterPattern struct {
+		filename string
+		name     string
+		pattern  string
+		filter   *TOMLFilterRule
+	}
+
+	var patterns []filterPattern
+
+	for filename, filter := range r.filters {
+		for name, cfg := range filter.Filters {
+			patterns = append(patterns, filterPattern{
+				filename: filename,
+				name:     name,
+				pattern:  cfg.MatchCommand,
+				filter:   &cfg,
+			})
+		}
+	}
+
+	// Check for conflicts between patterns
+	for i, p1 := range patterns {
+		for j, p2 := range patterns {
+			if i >= j {
+				continue // Skip self and duplicates
+			}
+
+			// Check if one pattern shadows another
+			if isShadowing(p1.pattern, p2.pattern) {
+				conflicts = append(conflicts, FilterConflict{
+					Filter1:  fmt.Sprintf("%s.%s", p1.filename, p1.name),
+					Filter2:  fmt.Sprintf("%s.%s", p2.filename, p2.name),
+					Pattern1: p1.pattern,
+					Pattern2: p2.pattern,
+					Type:     "shadow",
+				})
+			} else if isDuplicate(p1.pattern, p2.pattern) {
+				conflicts = append(conflicts, FilterConflict{
+					Filter1:  fmt.Sprintf("%s.%s", p1.filename, p1.name),
+					Filter2:  fmt.Sprintf("%s.%s", p2.filename, p2.name),
+					Pattern1: p1.pattern,
+					Pattern2: p2.pattern,
+					Type:     "duplicate",
+				})
+			} else if hasOverlap(p1.pattern, p2.pattern) {
+				conflicts = append(conflicts, FilterConflict{
+					Filter1:  fmt.Sprintf("%s.%s", p1.filename, p1.name),
+					Filter2:  fmt.Sprintf("%s.%s", p2.filename, p2.name),
+					Pattern1: p1.pattern,
+					Pattern2: p2.pattern,
+					Type:     "overlap",
+				})
+			}
+		}
+	}
+
+	return conflicts
+}
+
+// isShadowing checks if pattern1 shadows pattern2 (pattern1 is more specific)
+func isShadowing(pattern1, pattern2 string) bool {
+	// If pattern1 is an exact match but pattern2 is a wildcard
+	if !strings.Contains(pattern1, ".*") && !strings.Contains(pattern1, "*") &&
+		(strings.Contains(pattern2, ".*") || strings.Contains(pattern2, "*")) {
+		// Check if pattern1 matches what pattern2 would match
+		re2, err := regexp.Compile(pattern2)
+		if err != nil {
+			return false
+		}
+		return re2.MatchString(pattern1)
+	}
+	return false
+}
+
+// isDuplicate checks if two patterns are effectively the same
+func isDuplicate(pattern1, pattern2 string) bool {
+	// Normalize patterns for comparison
+	n1 := strings.TrimSpace(pattern1)
+	n2 := strings.TrimSpace(pattern2)
+	return n1 == n2
+}
+
+// hasOverlap checks if two patterns might match the same commands
+func hasOverlap(pattern1, pattern2 string) bool {
+	// Create regex objects
+	re1, err1 := regexp.Compile(pattern1)
+	re2, err2 := regexp.Compile(pattern2)
+	if err1 != nil || err2 != nil {
+		return false
+	}
+
+	// Test some common command patterns
+	testCommands := []string{
+		"git status",
+		"git log",
+		"cargo build",
+		"npm install",
+		"docker ps",
+		"kubectl get pods",
+	}
+
+	match1 := false
+	match2 := false
+
+	for _, cmd := range testCommands {
+		if re1.MatchString(cmd) {
+			match1 = true
+		}
+		if re2.MatchString(cmd) {
+			match2 = true
+		}
+		if match1 && match2 {
+			return true
+		}
+	}
+
+	return false
 }
 
 // LoadFile loads a single TOML filter file
