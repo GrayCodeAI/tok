@@ -14,7 +14,10 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
-var jsonDepth int
+var (
+	jsonDepth    int
+	jsonKeysOnly bool
+)
 
 var jsonCmd = &cobra.Command{
 	Use:   "json <file>",
@@ -25,7 +28,8 @@ Useful for understanding large JSON responses without consuming tokens on values
 
 Examples:
   tokman json response.json
-  tokman json response.json --depth 3`,
+  tokman json response.json --depth 3
+  tokman json response.json --keys-only`,
 	Args: cobra.ExactArgs(1),
 	RunE: runJSON,
 }
@@ -33,6 +37,7 @@ Examples:
 func init() {
 	registry.Add(func() {
 		jsonCmd.Flags().IntVarP(&jsonDepth, "depth", "d", 5, "Max depth to show")
+		jsonCmd.Flags().BoolVar(&jsonKeysOnly, "keys-only", false, "Show only top-level keys")
 		registry.Register(jsonCmd)
 	})
 }
@@ -51,7 +56,12 @@ func runJSON(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to parse JSON: %w", err)
 	}
 
-	filtered := generateSchema(v, 0, jsonDepth)
+	var filtered string
+	if jsonKeysOnly {
+		filtered = generateKeysOnly(v)
+	} else {
+		filtered = generateSchema(v, 0, jsonDepth)
+	}
 
 	fmt.Println(filtered)
 
@@ -97,5 +107,20 @@ func generateSchema(v any, depth, maxDepth int) string {
 		return fmt.Sprintf("{\n%s  %s\n%s}", indent, strings.Join(parts, ",\n"+indent+"  "), indent)
 	default:
 		return fmt.Sprintf("%T", v)
+	}
+}
+
+func generateKeysOnly(v any) string {
+	switch val := v.(type) {
+	case map[string]any:
+		var keys []string
+		for k := range val {
+			keys = append(keys, k)
+		}
+		return fmt.Sprintf("Keys (%d): %s", len(keys), strings.Join(keys, ", "))
+	case []any:
+		return fmt.Sprintf("Array with %d element(s)", len(val))
+	default:
+		return generateSchema(v, 0, 0)
 	}
 }

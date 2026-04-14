@@ -49,8 +49,10 @@ Examples:
 }
 
 var (
-	smartUseLLM      bool
-	smartLLMEndpoint string
+	smartUseLLM        bool
+	smartLLMEndpoint   string
+	smartModel         string
+	smartForceDownload bool
 )
 
 func init() {
@@ -60,6 +62,8 @@ func init() {
 	// Add LLM flags to smart command
 	smartCmd.Flags().BoolVar(&smartUseLLM, "llm", false, "Use local LLM for enhanced analysis (requires Ollama or compatible API)")
 	smartCmd.Flags().StringVar(&smartLLMEndpoint, "llm-endpoint", "http://localhost:11434", "Local LLM API endpoint (default: Ollama)")
+	smartCmd.Flags().StringVar(&smartModel, "model", "codellama", "Model to use for LLM analysis (default: codellama)")
+	smartCmd.Flags().BoolVar(&smartForceDownload, "force-download", false, "Force re-download/pull the model before analysis")
 }
 
 func runLocalLlm(cmd *cobra.Command, args []string) error {
@@ -414,6 +418,13 @@ func detectPatterns(content string, lang string) []string {
 
 // runSmartWithLLM uses a local LLM API (like Ollama) for enhanced code analysis
 func runSmartWithLLM(filePath string, content []byte) error {
+	// Force download if requested
+	if smartForceDownload {
+		if err := pullModel(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to pull model: %v\n", err)
+		}
+	}
+
 	// Try to use LLM via API call
 	llmOutput, err := queryLocalLLM(filePath, content)
 	if err != nil {
@@ -423,6 +434,34 @@ func runSmartWithLLM(filePath string, content []byte) error {
 	}
 
 	fmt.Println(llmOutput)
+	return nil
+}
+
+// pullModel pulls the model from Ollama
+func pullModel() error {
+	fmt.Fprintf(os.Stderr, "Pulling model %s...\n", smartModel)
+
+	reqBody := map[string]interface{}{
+		"name": smartModel,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return err
+	}
+
+	pullURL := smartLLMEndpoint + "/api/pull"
+	resp, err := http.Post(pullURL, "application/json", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("pull returned status %d", resp.StatusCode)
+	}
+
+	fmt.Fprintf(os.Stderr, "Model %s ready\n", smartModel)
 	return nil
 }
 
@@ -452,7 +491,7 @@ Provide only the 2-line summary, nothing else.`, lang, filepath.Base(filePath), 
 
 	// Prepare request body
 	reqBody := map[string]interface{}{
-		"model":  "codellama", // Default model, could be configurable
+		"model":  smartModel,
 		"prompt": prompt,
 		"stream": false,
 	}

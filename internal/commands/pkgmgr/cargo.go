@@ -26,11 +26,17 @@ Subcommands:
   nextest - Nextest test runner with failures-only output
   check   - Check with compact output
   clippy  - Clippy with warnings grouped by lint rule
+  run     - Run with compact output
+  doc     - Doc generation with compact output
+  fmt     - Format check with compact output
+  clean   - Clean build artifacts
 
 Examples:
   tokman cargo build
   tokman cargo test --lib
-  tokman cargo clippy -- -W clippy::all`,
+  tokman cargo clippy -- -W clippy::all
+  tokman cargo run
+  tokman cargo doc --open`,
 	RunE: runCargo,
 }
 
@@ -78,6 +84,14 @@ func runCargo(cmd *cobra.Command, args []string) error {
 		filtered = filterCargoClippy(output)
 	case "install":
 		filtered = filterCargoInstall(output)
+	case "run":
+		filtered = filterCargoRun(output)
+	case "doc":
+		filtered = filterCargoDoc(output)
+	case "fmt":
+		filtered = filterCargoFmt(output)
+	case "clean":
+		filtered = filterCargoClean(output)
 	default:
 		filtered = output
 	}
@@ -295,4 +309,183 @@ func filterCargoInstall(output string) string {
 	}
 
 	return result.String()
+}
+
+func filterCargoRun(output string) string {
+	lines := strings.Split(output, "\n")
+	var result strings.Builder
+	var errors []string
+	var warnings []string
+	var programOutput []string
+	inProgramOutput := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		// Skip compilation lines
+		if strings.HasPrefix(trimmed, "Compiling") ||
+			strings.HasPrefix(trimmed, "Finished") ||
+			strings.HasPrefix(trimmed, "Running") {
+			continue
+		}
+
+		// Capture errors
+		if strings.Contains(line, "error[") || strings.Contains(line, "error:") {
+			errors = append(errors, line)
+			continue
+		}
+
+		// Capture warnings
+		if strings.Contains(line, "warning:") {
+			warnings = append(warnings, line)
+			continue
+		}
+
+		// Everything else is program output
+		programOutput = append(programOutput, line)
+		inProgramOutput = true
+	}
+
+	// Show errors first
+	if len(errors) > 0 {
+		result.WriteString("❌ Build Errors:\n")
+		for _, err := range errors {
+			result.WriteString(fmt.Sprintf("  %s\n", err))
+		}
+		result.WriteString("\n")
+	}
+
+	// Show warnings
+	if len(warnings) > 0 {
+		result.WriteString(fmt.Sprintf("⚠️  %d warning(s)\n", len(warnings)))
+		if len(warnings) <= 5 {
+			for _, warn := range warnings {
+				result.WriteString(fmt.Sprintf("  %s\n", warn))
+			}
+		}
+		result.WriteString("\n")
+	}
+
+	// Show program output (limited)
+	if inProgramOutput && len(programOutput) > 0 {
+		if len(programOutput) > 20 {
+			for _, line := range programOutput[:10] {
+				result.WriteString(line + "\n")
+			}
+			result.WriteString(fmt.Sprintf("... (%d more lines) ...\n", len(programOutput)-20))
+			for _, line := range programOutput[len(programOutput)-10:] {
+				result.WriteString(line + "\n")
+			}
+		} else {
+			for _, line := range programOutput {
+				result.WriteString(line + "\n")
+			}
+		}
+	}
+
+	if result.Len() == 0 {
+		return "✅ Program executed successfully"
+	}
+
+	return result.String()
+}
+
+func filterCargoDoc(output string) string {
+	lines := strings.Split(output, "\n")
+	var result strings.Builder
+	var documented int
+	var errors []string
+	var docPath string
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Count documented items
+		if strings.HasPrefix(trimmed, "Documenting") {
+			documented++
+			continue
+		}
+
+		// Skip compilation lines
+		if strings.HasPrefix(trimmed, "Compiling") ||
+			strings.HasPrefix(trimmed, "Finished") {
+			continue
+		}
+
+		// Capture errors
+		if strings.Contains(line, "error[") || strings.Contains(line, "error:") {
+			errors = append(errors, line)
+			continue
+		}
+
+		// Capture doc path
+		if strings.Contains(line, "file://") {
+			docPath = line
+		}
+	}
+
+	if documented > 0 {
+		result.WriteString(fmt.Sprintf("📚 Documented %d crate(s)\n", documented))
+	}
+
+	if len(errors) > 0 {
+		result.WriteString(fmt.Sprintf("\n❌ %d error(s):\n", len(errors)))
+		for _, err := range errors {
+			result.WriteString(fmt.Sprintf("  %s\n", err))
+		}
+	}
+
+	if docPath != "" {
+		result.WriteString(fmt.Sprintf("\n📖 Documentation: %s\n", docPath))
+	}
+
+	if result.Len() == 0 {
+		return "✅ Documentation generated"
+	}
+
+	return result.String()
+}
+
+func filterCargoFmt(output string) string {
+	lines := strings.Split(output, "\n")
+	var formatted []string
+	var errors []string
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		// Check for formatted files
+		if strings.Contains(line, "Formatting") || strings.Contains(line, "formatted") {
+			formatted = append(formatted, line)
+			continue
+		}
+
+		// Check for errors
+		if strings.Contains(line, "error") || strings.Contains(line, "Error") {
+			errors = append(errors, line)
+		}
+	}
+
+	if len(errors) > 0 {
+		return fmt.Sprintf("❌ Format check failed: %d error(s)", len(errors))
+	}
+
+	if len(formatted) > 0 {
+		return fmt.Sprintf("✅ Formatted %d file(s)", len(formatted))
+	}
+
+	return "✅ All files formatted correctly"
+}
+
+func filterCargoClean(output string) string {
+	if strings.Contains(output, "error") || strings.Contains(output, "Error") {
+		return "❌ Clean failed"
+	}
+	return "✅ Build artifacts cleaned"
 }
