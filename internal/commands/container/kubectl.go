@@ -23,14 +23,26 @@ var kubectlCmd = &cobra.Command{
 Specialized filters for common commands:
   - kubectl get pods: Pod status summary
   - kubectl get services: Service listing
+  - kubectl get deployments: Deployment status
+  - kubectl get nodes: Node status
+  - kubectl get namespaces: Namespace listing
+  - kubectl get configmaps: ConfigMap listing
+  - kubectl get secrets: Secret listing
+  - kubectl get ingress: Ingress rules
+  - kubectl get events: Event summary
   - kubectl logs: Log deduplication
+  - kubectl describe: Compact describe output
+  - kubectl top pods/nodes: Resource usage
 
 Examples:
   tokman kubectl get pods
   tokman kubectl get pods -n production
   tokman kubectl get services
-  tokman kubectl logs <pod>`,
-	RunE: runKubectl,
+  tokman kubectl logs <pod>
+  tokman kubectl describe pod <name>
+  tokman kubectl top pods`,
+	DisableFlagParsing: true,
+	RunE:               runKubectl,
 }
 
 func init() {
@@ -43,16 +55,68 @@ func runKubectl(cmd *cobra.Command, args []string) error {
 	}
 
 	if args[0] == "get" && len(args) > 1 {
-		switch args[1] {
+		resourceType := args[1]
+		remaining := args[2:]
+		switch resourceType {
 		case "pods", "pod", "po":
-			return runKubectlPods(args[2:])
+			return runKubectlPods(remaining)
 		case "services", "service", "svc":
-			return runKubectlServices(args[2:])
+			return runKubectlServices(remaining)
+		case "deployments", "deployment", "deploy":
+			return runKubectlDeployments(remaining)
+		case "nodes", "node", "no":
+			return runKubectlNodes(remaining)
+		case "namespaces", "namespace", "ns":
+			return runKubectlNamespaces(remaining)
+		case "configmaps", "configmap", "cm":
+			return runKubectlConfigMaps(remaining)
+		case "secrets", "secret":
+			return runKubectlSecrets(remaining)
+		case "ingress", "ing", "ingresses":
+			return runKubectlIngress(remaining)
+		case "events", "event", "ev":
+			return runKubectlEvents(remaining)
+		case "jobs", "job":
+			return runKubectlJobs(remaining)
+		case "cronjobs", "cronjob", "cj":
+			return runKubectlCronJobs(remaining)
+		case "persistentvolumes", "persistentvolume", "pv":
+			return runKubectlPVs(remaining)
+		case "persistentvolumeclaims", "persistentvolumeclaim", "pvc":
+			return runKubectlPVCs(remaining)
+		case "serviceaccounts", "serviceaccount", "sa":
+			return runKubectlServiceAccounts(remaining)
+		case "replicasets", "replicaset", "rs":
+			return runKubectlReplicaSets(remaining)
+		case "daemonsets", "daemonset", "ds":
+			return runKubectlDaemonSets(remaining)
+		case "statefulsets", "statefulset", "sts":
+			return runKubectlStatefulSets(remaining)
+		case "horizontalpodautoscalers", "horizontalpodautoscaler", "hpa":
+			return runKubectlHPA(remaining)
+		case "networkpolicies", "networkpolicy", "netpol":
+			return runKubectlNetworkPolicies(remaining)
+		case "poddisruptionbudgets", "poddisruptionbudget", "pdb":
+			return runKubectlPDB(remaining)
+		case "customresourcedefinitions", "customresourcedefinition", "crd", "crds":
+			return runKubectlCRDs(remaining)
 		}
 	}
 
 	if args[0] == "logs" && len(args) > 1 {
 		return runKubectlLogs(args[1:])
+	}
+
+	if args[0] == "describe" && len(args) > 1 {
+		return runKubectlDescribe(args[1:])
+	}
+
+	if args[0] == "top" && len(args) > 1 {
+		return runKubectlTop(args[1:])
+	}
+
+	if args[0] == "apply" || args[0] == "delete" {
+		return runKubectlDryRunFirst(args)
 	}
 
 	return runKubectlPassthrough(args)
@@ -91,7 +155,6 @@ func runKubectlPassthrough(args []string) error {
 func runKubectlPods(args []string) error {
 	timer := tracking.Start()
 
-	// Build command with JSON output
 	kargs := []string{"get", "pods", "-o", "json"}
 	kargs = append(kargs, args...)
 
@@ -115,7 +178,7 @@ func runKubectlPods(args []string) error {
 
 	var podList K8sPodList
 	if unmarshalJSON(raw, &podList) != nil || len(podList.Items) == 0 {
-		fmt.Println("☸️  No pods found")
+		fmt.Println("No pods found")
 		timer.Track("kubectl get pods", "tokman kubectl pods", filter.EstimateTokens(raw), 0)
 		return nil
 	}
@@ -147,19 +210,18 @@ func runKubectlPods(args []string) error {
 
 	var parts []string
 	if running > 0 {
-		parts = append(parts, fmt.Sprintf("%d ✓", running))
+		parts = append(parts, fmt.Sprintf("%d ok", running))
 	}
 	if pending > 0 {
 		parts = append(parts, fmt.Sprintf("%d pending", pending))
 	}
 	if failed > 0 {
-		parts = append(parts, fmt.Sprintf("%d ✗", failed))
+		parts = append(parts, fmt.Sprintf("%d failed", failed))
 	}
 	if restartsTotal > 0 {
 		parts = append(parts, fmt.Sprintf("%d restarts", restartsTotal))
 	}
 
-	// Ultra-compact mode: ASCII-only, single line
 	if shared.UltraCompact {
 		filtered := fmt.Sprintf("%d pods: %s", len(pods), strings.Join(parts, ", "))
 		fmt.Println(filtered)
@@ -170,10 +232,10 @@ func runKubectlPods(args []string) error {
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("☸️  %d pods: %s\n", len(pods), strings.Join(parts, ", ")))
+	result.WriteString(fmt.Sprintf("%d pods: %s\n", len(pods), strings.Join(parts, ", ")))
 
 	if len(issues) > 0 {
-		result.WriteString("⚠️  Issues:\n")
+		result.WriteString("Issues:\n")
 		for i, issue := range issues {
 			if i >= 10 {
 				break
@@ -198,7 +260,6 @@ func runKubectlPods(args []string) error {
 func runKubectlServices(args []string) error {
 	timer := tracking.Start()
 
-	// Build command with JSON output
 	kargs := []string{"get", "services", "-o", "json"}
 	kargs = append(kargs, args...)
 
@@ -222,22 +283,20 @@ func runKubectlServices(args []string) error {
 
 	var svcList K8sServiceList
 	if unmarshalJSON(raw, &svcList) != nil || len(svcList.Items) == 0 {
-		fmt.Println("☸️  No services found")
+		fmt.Println("No services found")
 		timer.Track("kubectl get services", "tokman kubectl services", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
 	services := svcList.Items
 
-	// Ultra-compact mode: ASCII-only, inline format
 	if shared.UltraCompact {
 		filtered := fmt.Sprintf("%d services:", len(services))
 		for i, svc := range services {
 			if i >= 5 {
 				break
 			}
-			name := svc.Metadata.Name
-			filtered += " " + name
+			filtered += " " + svc.Metadata.Name
 		}
 		if len(services) > 5 {
 			filtered += fmt.Sprintf(" +%d", len(services)-5)
@@ -250,7 +309,7 @@ func runKubectlServices(args []string) error {
 	}
 
 	var result strings.Builder
-	result.WriteString(fmt.Sprintf("☸️  %d services:\n", len(services)))
+	result.WriteString(fmt.Sprintf("%d services:\n", len(services)))
 
 	for i, svc := range services {
 		if i >= 15 {
@@ -270,7 +329,7 @@ func runKubectlServices(args []string) error {
 			if target == "" || target == fmt.Sprintf("%d", port) {
 				ports = append(ports, fmt.Sprintf("%d", port))
 			} else {
-				ports = append(ports, fmt.Sprintf("%d→%s", port, target))
+				ports = append(ports, fmt.Sprintf("%d->%s", port, target))
 			}
 		}
 
@@ -289,6 +348,412 @@ func runKubectlServices(args []string) error {
 	timer.Track("kubectl get services", "tokman kubectl services", originalTokens, filteredTokens)
 
 	return nil
+}
+
+func runKubectlDeployments(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "deployments", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var deployList K8sDeploymentList
+	if unmarshalJSON(raw, &deployList) != nil || len(deployList.Items) == 0 {
+		fmt.Println("No deployments found")
+		timer.Track("kubectl get deployments", "tokman kubectl deployments", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	deployments := deployList.Items
+
+	if shared.UltraCompact {
+		filtered := fmt.Sprintf("%d deploys:", len(deployments))
+		for i, d := range deployments {
+			if i >= 5 {
+				break
+			}
+			ready := d.Status.ReadyReplicas
+			desired := d.Status.Replicas
+			filtered += fmt.Sprintf(" %s(%d/%d)", d.Metadata.Name, ready, desired)
+		}
+		if len(deployments) > 5 {
+			filtered += fmt.Sprintf(" +%d", len(deployments)-5)
+		}
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("kubectl get deployments", "tokman kubectl deployments", originalTokens, filteredTokens)
+		return err
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d deployments:\n", len(deployments)))
+
+	for i, d := range deployments {
+		if i >= 15 {
+			break
+		}
+		name := d.Metadata.Name
+		ns := d.Metadata.Namespace
+		ready := d.Status.ReadyReplicas
+		desired := d.Status.Replicas
+		upToDate := d.Status.UpdatedReplicas
+		available := d.Status.AvailableReplicas
+
+		status := "ok"
+		if ready != desired && desired > 0 {
+			status = "updating"
+		}
+		if ready == 0 && desired > 0 {
+			status = "down"
+		}
+
+		result.WriteString(fmt.Sprintf("  %s/%s %d/%d ready %d up %d avail [%s]\n",
+			ns, name, ready, desired, upToDate, available, status))
+	}
+
+	if len(deployments) > 15 {
+		result.WriteString(fmt.Sprintf("  ... +%d more\n", len(deployments)-15))
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get deployments", "tokman kubectl deployments", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlNodes(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "nodes", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var nodeList K8sNodeList
+	if unmarshalJSON(raw, &nodeList) != nil || len(nodeList.Items) == 0 {
+		fmt.Println("No nodes found")
+		timer.Track("kubectl get nodes", "tokman kubectl nodes", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	nodes := nodeList.Items
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d nodes:\n", len(nodes)))
+
+	for i, n := range nodes {
+		if i >= 20 {
+			break
+		}
+		name := n.Metadata.Name
+		status := "Ready"
+		for _, cond := range n.Status.Conditions {
+			if cond.Type == "Ready" {
+				status = cond.Status
+				if status == "True" {
+					status = "Ready"
+				}
+			}
+		}
+
+		cri := ""
+		kubelet := ""
+		os := ""
+		arch := ""
+		for k, v := range n.Status.NodeInfo {
+			switch k {
+			case "containerRuntimeVersion":
+				cri = v
+			case "kubeletVersion":
+				kubelet = v
+			case "operatingSystem":
+				os = v
+			case "architecture":
+				arch = v
+			}
+		}
+
+		capacity := ""
+		for k, v := range n.Status.Capacity {
+			if k == "cpu" {
+				capacity = v
+			}
+		}
+
+		if shared.UltraCompact {
+			result.WriteString(fmt.Sprintf("  %s %s k8s=%s\n", name, status, kubelet))
+		} else {
+			result.WriteString(fmt.Sprintf("  %s [%s] k8s=%s cri=%s os=%s arch=%s cpu=%s\n",
+				name, status, kubelet, cri, os, arch, capacity))
+		}
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get nodes", "tokman kubectl nodes", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlNamespaces(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "namespaces", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var nsList K8sNamespaceList
+	if unmarshalJSON(raw, &nsList) != nil || len(nsList.Items) == 0 {
+		fmt.Println("No namespaces found")
+		timer.Track("kubectl get namespaces", "tokman kubectl namespaces", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	namespaces := nsList.Items
+
+	if shared.UltraCompact {
+		filtered := fmt.Sprintf("%d ns:", len(namespaces))
+		for i, ns := range namespaces {
+			if i >= 10 {
+				break
+			}
+			filtered += " " + ns.Metadata.Name
+		}
+		if len(namespaces) > 10 {
+			filtered += fmt.Sprintf(" +%d", len(namespaces)-10)
+		}
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track("kubectl get namespaces", "tokman kubectl namespaces", originalTokens, filteredTokens)
+		return err
+	}
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d namespaces:\n", len(namespaces)))
+
+	for i, ns := range namespaces {
+		if i >= 20 {
+			break
+		}
+		name := ns.Metadata.Name
+		status := ns.Status.Phase
+		result.WriteString(fmt.Sprintf("  %-30s %s\n", name, status))
+	}
+
+	if len(namespaces) > 20 {
+		result.WriteString(fmt.Sprintf("  ... +%d more\n", len(namespaces)-20))
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get namespaces", "tokman kubectl namespaces", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlConfigMaps(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "configmaps", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var cmList K8sGenericList
+	if unmarshalJSON(raw, &cmList) != nil || len(cmList.Items) == 0 {
+		fmt.Println("No configmaps found")
+		timer.Track("kubectl get configmaps", "tokman kubectl configmaps", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("configmaps", cmList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get configmaps", "tokman kubectl configmaps", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlSecrets(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "secrets", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var secretList K8sGenericList
+	if unmarshalJSON(raw, &secretList) != nil || len(secretList.Items) == 0 {
+		fmt.Println("No secrets found")
+		timer.Track("kubectl get secrets", "tokman kubectl secrets", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("secrets", secretList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get secrets", "tokman kubectl secrets", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlIngress(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "ingress", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var ingressList K8sIngressList
+	if unmarshalJSON(raw, &ingressList) != nil || len(ingressList.Items) == 0 {
+		fmt.Println("No ingress found")
+		timer.Track("kubectl get ingress", "tokman kubectl ingress", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	ingresses := ingressList.Items
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d ingress rules:\n", len(ingresses)))
+
+	for i, ing := range ingresses {
+		if i >= 15 {
+			break
+		}
+		name := ing.Metadata.Name
+		ns := ing.Metadata.Namespace
+
+		var hosts []string
+		var paths []string
+		for _, rule := range ing.Spec.Rules {
+			if rule.Host != "" {
+				hosts = append(hosts, rule.Host)
+			}
+			for _, path := range rule.HTTP.Paths {
+				paths = append(paths, fmt.Sprintf("%s->%s", path.Path, path.Backend.Service.Name))
+			}
+		}
+
+		hostStr := strings.Join(hosts, ", ")
+		if hostStr == "" {
+			hostStr = "*"
+		}
+		pathStr := strings.Join(paths, ", ")
+		if pathStr == "" {
+			pathStr = "default"
+		}
+
+		result.WriteString(fmt.Sprintf("  %s/%s %s [%s]\n", ns, name, hostStr, pathStr))
+	}
+
+	if len(ingresses) > 15 {
+		result.WriteString(fmt.Sprintf("  ... +%d more\n", len(ingresses)-15))
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get ingress", "tokman kubectl ingress", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlEvents(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "events", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var eventList K8sEventList
+	if unmarshalJSON(raw, &eventList) != nil || len(eventList.Items) == 0 {
+		fmt.Println("No events found")
+		timer.Track("kubectl get events", "tokman kubectl events", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	events := eventList.Items
+
+	var result strings.Builder
+	result.WriteString(fmt.Sprintf("%d events:\n", len(events)))
+
+	for i, ev := range events {
+		if i >= 20 {
+			break
+		}
+		msg := ev.Message
+		if len(msg) > 80 {
+			msg = msg[:77] + "..."
+		}
+		reason := ev.Reason
+		if reason == "" {
+			reason = ev.Type
+		}
+		result.WriteString(fmt.Sprintf("  [%s] %s: %s\n", reason, ev.Metadata.Name, msg))
+	}
+
+	if len(events) > 20 {
+		result.WriteString(fmt.Sprintf("  ... +%d more\n", len(events)-20))
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get events", "tokman kubectl events", originalTokens, filteredTokens)
+
+	return err
 }
 
 func runKubectlLogs(args []string) error {
@@ -317,7 +782,7 @@ func runKubectlLogs(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
-	fmt.Printf("☸️  Logs for %s:\n%s", pod, filtered)
+	fmt.Printf("Logs for %s:\n%s", pod, filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -326,7 +791,408 @@ func runKubectlLogs(args []string) error {
 	return err
 }
 
+func runKubectlDescribe(args []string) error {
+	timer := tracking.Start()
+
+	c := exec.Command("kubectl", append([]string{"describe"}, args...)...)
+	c.Env = os.Environ()
+
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
+
+	err := c.Run()
+	output := stdoutBuf.String() + stderrBuf.String()
+
+	filtered := filterKubectlDescribe(output)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("kubectl describe %s", strings.Join(args, " ")), "tokman kubectl describe", originalTokens, filteredTokens)
+
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("command failed with exit code %d: %w", exitErr.ExitCode(), err)
+		}
+		return fmt.Errorf("command failed: %w", err)
+	}
+	return nil
+}
+
+func runKubectlTop(args []string) error {
+	timer := tracking.Start()
+
+	c := exec.Command("kubectl", append([]string{"top"}, args...)...)
+	c.Env = os.Environ()
+
+	stdoutBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stdoutBuf)
+	stderrBuf := shared.GetBuffer()
+	defer shared.PutBuffer(stderrBuf)
+	c.Stdout = stdoutBuf
+	c.Stderr = stderrBuf
+
+	err := c.Run()
+	output := stdoutBuf.String() + stderrBuf.String()
+
+	filtered := filterKubectlTop(output)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(output)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("kubectl top %s", strings.Join(args, " ")), "tokman kubectl top", originalTokens, filteredTokens)
+
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return fmt.Errorf("command failed with exit code %d: %w", exitErr.ExitCode(), err)
+		}
+		return fmt.Errorf("command failed: %w", err)
+	}
+	return nil
+}
+
+func runKubectlDryRunFirst(args []string) error {
+	return runKubectlPassthrough(args)
+}
+
+func runKubectlJobs(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "jobs", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var jobList K8sGenericList
+	if unmarshalJSON(raw, &jobList) != nil || len(jobList.Items) == 0 {
+		fmt.Println("No jobs found")
+		timer.Track("kubectl get jobs", "tokman kubectl jobs", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("jobs", jobList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get jobs", "tokman kubectl jobs", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlCronJobs(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "cronjobs", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var cjList K8sGenericList
+	if unmarshalJSON(raw, &cjList) != nil || len(cjList.Items) == 0 {
+		fmt.Println("No cronjobs found")
+		timer.Track("kubectl get cronjobs", "tokman kubectl cronjobs", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("cronjobs", cjList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get cronjobs", "tokman kubectl cronjobs", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlPVs(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "persistentvolumes", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var pvList K8sGenericList
+	if unmarshalJSON(raw, &pvList) != nil || len(pvList.Items) == 0 {
+		fmt.Println("No PVs found")
+		timer.Track("kubectl get pv", "tokman kubectl pv", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("persistentvolumes", pvList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get pv", "tokman kubectl pv", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlPVCs(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "persistentvolumeclaims", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var pvcList K8sGenericList
+	if unmarshalJSON(raw, &pvcList) != nil || len(pvcList.Items) == 0 {
+		fmt.Println("No PVCs found")
+		timer.Track("kubectl get pvc", "tokman kubectl pvc", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("persistentvolumeclaims", pvcList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get pvc", "tokman kubectl pvc", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlServiceAccounts(args []string) error {
+	return runKubectlGenericGet("serviceaccounts", "sa", args)
+}
+
+func runKubectlReplicaSets(args []string) error {
+	return runKubectlGenericGet("replicasets", "rs", args)
+}
+
+func runKubectlDaemonSets(args []string) error {
+	return runKubectlGenericGet("daemonsets", "ds", args)
+}
+
+func runKubectlStatefulSets(args []string) error {
+	return runKubectlGenericGet("statefulsets", "sts", args)
+}
+
+func runKubectlHPA(args []string) error {
+	return runKubectlGenericGet("horizontalpodautoscalers", "hpa", args)
+}
+
+func runKubectlNetworkPolicies(args []string) error {
+	return runKubectlGenericGet("networkpolicies", "netpol", args)
+}
+
+func runKubectlPDB(args []string) error {
+	return runKubectlGenericGet("poddisruptionbudgets", "pdb", args)
+}
+
+func runKubectlCRDs(args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", "crds", "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var crdList K8sGenericList
+	if unmarshalJSON(raw, &crdList) != nil || len(crdList.Items) == 0 {
+		fmt.Println("No CRDs found")
+		timer.Track("kubectl get crds", "tokman kubectl crds", filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList("crds", crdList.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track("kubectl get crds", "tokman kubectl crds", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runKubectlGenericGet(resource, shortName string, args []string) error {
+	timer := tracking.Start()
+
+	kargs := []string{"get", resource, "-o", "json"}
+	kargs = append(kargs, args...)
+
+	c := exec.Command("kubectl", kargs...)
+	c.Env = os.Environ()
+	output, err := c.CombinedOutput()
+	raw := string(output)
+
+	var list K8sGenericList
+	if unmarshalJSON(raw, &list) != nil || len(list.Items) == 0 {
+		fmt.Printf("No %s found\n", resource)
+		timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tokman kubectl %s", shortName), filter.EstimateTokens(raw), 0)
+		return nil
+	}
+
+	filtered := compactGenericList(resource, list.Items)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tokman kubectl %s", shortName), originalTokens, filteredTokens)
+
+	return err
+}
+
+func compactGenericList(resourceType string, items []K8sGenericItem) string {
+	if shared.UltraCompact {
+		result := fmt.Sprintf("%d %s:", len(items), resourceType)
+		for i, item := range items {
+			if i >= 5 {
+				break
+			}
+			result += " " + item.Metadata.Name
+		}
+		if len(items) > 5 {
+			result += fmt.Sprintf(" +%d", len(items)-5)
+		}
+		return result + "\n"
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("%d %s:\n", len(items), resourceType))
+	for i, item := range items {
+		if i >= 20 {
+			break
+		}
+		ns := item.Metadata.Namespace
+		name := item.Metadata.Name
+		if ns != "" && ns != "default" {
+			sb.WriteString(fmt.Sprintf("  %s/%s\n", ns, name))
+		} else {
+			sb.WriteString(fmt.Sprintf("  %s\n", name))
+		}
+	}
+	if len(items) > 20 {
+		sb.WriteString(fmt.Sprintf("  ... +%d more\n", len(items)-20))
+	}
+	return sb.String()
+}
+
+func filterKubectlDescribe(output string) string {
+	var result strings.Builder
+	importantKeys := map[string]bool{
+		"Name:":          true,
+		"Namespace:":     true,
+		"Status:":        true,
+		"Node:":          true,
+		"Start":          true,
+		"Containers:":    true,
+		"Image:":         true,
+		"Port:":          true,
+		"State:":         true,
+		"Last State:":    true,
+		"Restart Count:": true,
+		"IP:":            true,
+		"Controlled By:": true,
+		"Labels:":        true,
+		"Annotations:":   true,
+		"Conditions:":    true,
+		"Type":           true,
+		"Events:":        true,
+		"Warning":        true,
+		"Normal":         true,
+		"Replicas:":      true,
+		"Volumes:":       true,
+		"Capacity:":      true,
+		"Access Modes:":  true,
+		"Storage Class:": true,
+		"Selector:":      true,
+		"Endpoints:":     true,
+		"Session":        true,
+	}
+
+	inEvents := false
+	eventCount := 0
+
+	for _, line := range strings.Split(output, "\n") {
+		if strings.HasPrefix(line, "Events:") || strings.HasPrefix(line, "  Type") {
+			inEvents = true
+			continue
+		}
+
+		if inEvents {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" || (!strings.HasPrefix(line, "  ") && !strings.HasPrefix(line, "\t")) {
+				inEvents = false
+			} else {
+				eventCount++
+				if eventCount <= 10 {
+					result.WriteString(shared.TruncateLine(line, 100) + "\n")
+				}
+				continue
+			}
+		}
+
+		for key := range importantKeys {
+			if strings.HasPrefix(line, "  "+key) || strings.HasPrefix(line, key) {
+				truncated := shared.TruncateLine(line, 100)
+				result.WriteString(truncated + "\n")
+				break
+			}
+		}
+	}
+
+	if eventCount > 10 {
+		result.WriteString(fmt.Sprintf("  ... +%d more events\n", eventCount-10))
+	}
+
+	if result.Len() == 0 {
+		return filterLogOutput(output)
+	}
+	return result.String()
+}
+
+func filterKubectlTop(output string) string {
+	var result strings.Builder
+	lines := strings.Split(output, "\n")
+
+	for i, line := range lines {
+		if i == 0 {
+			continue
+		}
+		fields := strings.Fields(line)
+		if len(fields) >= 3 {
+			name := fields[0]
+			cpu := fields[1]
+			mem := fields[2]
+			if shared.UltraCompact {
+				result.WriteString(fmt.Sprintf("%s cpu=%s mem=%s\n", name, cpu, mem))
+			} else {
+				result.WriteString(fmt.Sprintf("%-40s cpu=%-10s mem=%s\n", name, cpu, mem))
+			}
+		}
+	}
+
+	if result.Len() == 0 {
+		return output
+	}
+	return result.String()
+}
+
 // JSON structures for kubectl
+
 type K8sPodList struct {
 	Items []K8sPod `json:"items"`
 }
@@ -369,6 +1235,114 @@ type K8sServiceSpec struct {
 type K8sServicePort struct {
 	Port       int    `json:"port"`
 	TargetPort string `json:"targetPort"`
+}
+
+type K8sDeploymentList struct {
+	Items []K8sDeployment `json:"items"`
+}
+
+type K8sDeployment struct {
+	Metadata K8sMetadata         `json:"metadata"`
+	Spec     K8sDeploymentSpec   `json:"spec"`
+	Status   K8sDeploymentStatus `json:"status"`
+}
+
+type K8sDeploymentSpec struct {
+	Replicas int `json:"replicas"`
+}
+
+type K8sDeploymentStatus struct {
+	Replicas          int `json:"replicas"`
+	ReadyReplicas     int `json:"readyReplicas"`
+	UpdatedReplicas   int `json:"updatedReplicas"`
+	AvailableReplicas int `json:"availableReplicas"`
+}
+
+type K8sNodeList struct {
+	Items []K8sNode `json:"items"`
+}
+
+type K8sNode struct {
+	Metadata K8sMetadata   `json:"metadata"`
+	Status   K8sNodeStatus `json:"status"`
+}
+
+type K8sNodeStatus struct {
+	Conditions []K8sNodeCondition `json:"conditions"`
+	NodeInfo   map[string]string  `json:"nodeInfo"`
+	Capacity   map[string]string  `json:"capacity"`
+}
+
+type K8sNodeCondition struct {
+	Type   string `json:"type"`
+	Status string `json:"status"`
+}
+
+type K8sNamespaceList struct {
+	Items []K8sNamespace `json:"items"`
+}
+
+type K8sNamespace struct {
+	Metadata K8sMetadata        `json:"metadata"`
+	Status   K8sNamespaceStatus `json:"status"`
+}
+
+type K8sNamespaceStatus struct {
+	Phase string `json:"phase"`
+}
+
+type K8sGenericList struct {
+	Items []K8sGenericItem `json:"items"`
+}
+
+type K8sGenericItem struct {
+	Metadata K8sMetadata `json:"metadata"`
+}
+
+type K8sIngressList struct {
+	Items []K8sIngress `json:"items"`
+}
+
+type K8sIngress struct {
+	Metadata K8sMetadata    `json:"metadata"`
+	Spec     K8sIngressSpec `json:"spec"`
+}
+
+type K8sIngressSpec struct {
+	Rules []K8sIngressRule `json:"rules"`
+}
+
+type K8sIngressRule struct {
+	Host string          `json:"host"`
+	HTTP *K8sIngressHTTP `json:"http"`
+}
+
+type K8sIngressHTTP struct {
+	Paths []K8sIngressPath `json:"paths"`
+}
+
+type K8sIngressPath struct {
+	Path    string            `json:"path"`
+	Backend K8sIngressBackend `json:"backend"`
+}
+
+type K8sIngressBackend struct {
+	Service K8sIngressService `json:"service"`
+}
+
+type K8sIngressService struct {
+	Name string `json:"name"`
+}
+
+type K8sEventList struct {
+	Items []K8sEvent `json:"items"`
+}
+
+type K8sEvent struct {
+	Metadata K8sMetadata `json:"metadata"`
+	Type     string      `json:"type"`
+	Reason   string      `json:"reason"`
+	Message  string      `json:"message"`
 }
 
 func unmarshalJSON(data string, v any) error {

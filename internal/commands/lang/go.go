@@ -47,6 +47,14 @@ func runGo(cmd *cobra.Command, args []string) error {
 		return runGoBuildCmd(args[1:])
 	case "vet":
 		return runGoVet(args[1:])
+	case "mod":
+		return runGoMod(args[1:])
+	case "doc":
+		return runGoDoc(args[1:])
+	case "list":
+		return runGoList(args[1:])
+	case "env":
+		return runGoEnv(args)
 	default:
 		return runGoPassthrough(args)
 	}
@@ -394,4 +402,139 @@ func filterGoOutput(raw string) string {
 		return strings.Join(result[:30], "\n") + fmt.Sprintf("\n... (%d more lines)", len(result)-30)
 	}
 	return strings.Join(result, "\n")
+}
+
+func runGoMod(args []string) error {
+	timer := tracking.Start()
+
+	if len(args) == 0 {
+		args = []string{"help"}
+	}
+
+	execCmd := exec.Command("go", append([]string{"mod"}, args...)...)
+	output, err := execCmd.CombinedOutput()
+	raw := string(output)
+
+	filtered := filterGoModOutput(raw, args)
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("go mod %s", strings.Join(args, " ")), "tokman go mod", originalTokens, filteredTokens)
+
+	return err
+}
+
+func filterGoModOutput(raw string, args []string) string {
+	if len(args) == 0 {
+		return raw
+	}
+
+	switch args[0] {
+	case "tidy":
+		if strings.TrimSpace(raw) == "" {
+			return "go mod tidy: clean\n"
+		}
+		return filterGoOutput(raw)
+	case "verify":
+		if strings.Contains(raw, "all modules verified") {
+			return "All modules verified\n"
+		}
+		return filterGoOutput(raw)
+	case "graph":
+		var result strings.Builder
+		lines := strings.Split(raw, "\n")
+		for i, line := range lines {
+			if i >= 30 {
+				result.WriteString(fmt.Sprintf("... (%d more lines)\n", len(lines)-30))
+				break
+			}
+			if strings.TrimSpace(line) != "" {
+				result.WriteString(shared.TruncateLine(line, 80) + "\n")
+			}
+		}
+		return result.String()
+	case "why":
+		return shared.TruncateLine(raw, 200) + "\n"
+	default:
+		return raw
+	}
+}
+
+func runGoDoc(args []string) error {
+	timer := tracking.Start()
+
+	execCmd := exec.Command("go", append([]string{"doc"}, args...)...)
+	output, err := execCmd.CombinedOutput()
+	raw := string(output)
+
+	var result strings.Builder
+	lineCount := 0
+	for _, line := range strings.Split(raw, "\n") {
+		if lineCount >= 40 {
+			result.WriteString(fmt.Sprintf("... (%d more lines)\n", strings.Count(raw, "\n")-40))
+			break
+		}
+		result.WriteString(line + "\n")
+		lineCount++
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("go doc %s", strings.Join(args, " ")), "tokman go doc", originalTokens, filteredTokens)
+
+	return err
+}
+
+func runGoList(args []string) error {
+	timer := tracking.Start()
+
+	execCmd := exec.Command("go", append([]string{"list"}, args...)...)
+	output, err := execCmd.CombinedOutput()
+	raw := string(output)
+
+	lines := strings.Split(strings.TrimSpace(raw), "\n")
+	if len(lines) > 30 {
+		filtered := strings.Join(lines[:30], "\n") + fmt.Sprintf("\n... +%d more", len(lines)-30)
+		fmt.Println(filtered)
+		originalTokens := filter.EstimateTokens(raw)
+		filteredTokens := filter.EstimateTokens(filtered)
+		timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tokman go list", originalTokens, filteredTokens)
+		return err
+	}
+
+	fmt.Print(raw)
+	originalTokens := filter.EstimateTokens(raw)
+	timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tokman go list", originalTokens, originalTokens)
+
+	return err
+}
+
+func runGoEnv(args []string) error {
+	timer := tracking.Start()
+
+	execCmd := exec.Command("go", args...)
+	output, err := execCmd.CombinedOutput()
+	raw := string(output)
+
+	var result strings.Builder
+	for _, line := range strings.Split(raw, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		result.WriteString(trimmed + "\n")
+	}
+
+	filtered := result.String()
+	fmt.Print(filtered)
+
+	originalTokens := filter.EstimateTokens(raw)
+	filteredTokens := filter.EstimateTokens(filtered)
+	timer.Track(fmt.Sprintf("go %s", strings.Join(args, " ")), "tokman go", originalTokens, filteredTokens)
+
+	return err
 }

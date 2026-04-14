@@ -76,6 +76,12 @@ func filterPnpmOutput(output string, args []string) string {
 		return filterPnpmInstall(output)
 	case "typecheck":
 		return filterPnpmTypecheck(output)
+	case "audit":
+		return filterPnpmAudit(output)
+	case "run":
+		return filterPnpmRun(output)
+	case "test":
+		return filterPnpmTest(output)
 	default:
 		return output
 	}
@@ -279,6 +285,169 @@ func filterPnpmTypecheck(output string) string {
 
 	if len(errors) == 0 && len(warnings) == 0 {
 		result = append(result, "   ✅ No type errors found")
+	}
+
+	return strings.Join(result, "\n")
+}
+
+func filterPnpmAudit(output string) string {
+	var critical, high, moderate, low int
+	var vulnerabilities []string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if strings.Contains(trimmed, "critical") {
+			critical++
+			vulnerabilities = append(vulnerabilities, shared.TruncateLine(trimmed, 80))
+		} else if strings.Contains(trimmed, "high") && !strings.Contains(trimmed, "higher") {
+			high++
+			vulnerabilities = append(vulnerabilities, shared.TruncateLine(trimmed, 80))
+		} else if strings.Contains(trimmed, "moderate") {
+			moderate++
+			vulnerabilities = append(vulnerabilities, shared.TruncateLine(trimmed, 80))
+		} else if strings.Contains(trimmed, "low") {
+			low++
+		}
+	}
+
+	if critical == 0 && high == 0 && moderate == 0 && low == 0 {
+		return "No known vulnerabilities found"
+	}
+
+	var result []string
+	result = append(result, "Audit Results:")
+	if critical > 0 {
+		result = append(result, fmt.Sprintf("  critical: %d", critical))
+	}
+	if high > 0 {
+		result = append(result, fmt.Sprintf("  high: %d", high))
+	}
+	if moderate > 0 {
+		result = append(result, fmt.Sprintf("  moderate: %d", moderate))
+	}
+	if low > 0 {
+		result = append(result, fmt.Sprintf("  low: %d", low))
+	}
+
+	if len(vulnerabilities) > 0 {
+		result = append(result, "")
+		for i, v := range vulnerabilities {
+			if i >= 10 {
+				result = append(result, fmt.Sprintf("  ... +%d more", len(vulnerabilities)-10))
+				break
+			}
+			result = append(result, fmt.Sprintf("  %s", v))
+		}
+	}
+
+	return strings.Join(result, "\n")
+}
+
+func filterPnpmRun(output string) string {
+	var result strings.Builder
+	var errors []string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if strings.Contains(trimmed, "ERR") || strings.Contains(trimmed, "error") || strings.Contains(trimmed, "Error") {
+			errors = append(errors, shared.TruncateLine(trimmed, 120))
+			continue
+		}
+		if strings.HasPrefix(trimmed, ">") || strings.Contains(trimmed, "ready") || strings.Contains(trimmed, "watching") || strings.Contains(trimmed, "compiled") {
+			result.WriteString(trimmed + "\n")
+		}
+	}
+
+	if len(errors) > 0 {
+		result.WriteString(fmt.Sprintf("\nErrors (%d):\n", len(errors)))
+		for i, e := range errors {
+			if i >= 10 {
+				result.WriteString(fmt.Sprintf("  ... +%d more\n", len(errors)-10))
+				break
+			}
+			result.WriteString(fmt.Sprintf("  %s\n", e))
+		}
+	}
+
+	if result.Len() == 0 {
+		return output
+	}
+	return result.String()
+}
+
+func filterPnpmTest(output string) string {
+	var passed, failed, skipped int
+	var failures []string
+	var summary string
+
+	for _, line := range strings.Split(output, "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		if strings.Contains(trimmed, "Tests:") || strings.Contains(trimmed, "passed") {
+			fields := strings.Fields(trimmed)
+			for i, f := range fields {
+				if f == "passed" || f == "passing" {
+					if i > 0 {
+						fmt.Sscanf(fields[i-1], "%d", &passed)
+					}
+				}
+				if f == "failed" || f == "failing" {
+					if i > 0 {
+						fmt.Sscanf(fields[i-1], "%d", &failed)
+					}
+				}
+				if f == "skipped" || f == "pending" {
+					if i > 0 {
+						fmt.Sscanf(fields[i-1], "%d", &skipped)
+					}
+				}
+			}
+		}
+
+		if strings.Contains(trimmed, "FAIL") || strings.Contains(trimmed, "Error:") {
+			failures = append(failures, shared.TruncateLine(trimmed, 80))
+		}
+
+		if strings.Contains(trimmed, "Test Files") || strings.Contains(trimmed, "Tests") {
+			summary = trimmed
+		}
+	}
+
+	var result []string
+	result = append(result, "Test Results:")
+	if passed > 0 {
+		result = append(result, fmt.Sprintf("  %d passed", passed))
+	}
+	if failed > 0 {
+		result = append(result, fmt.Sprintf("  %d failed", failed))
+	}
+	if skipped > 0 {
+		result = append(result, fmt.Sprintf("  %d skipped", skipped))
+	}
+	if summary != "" {
+		result = append(result, fmt.Sprintf("  %s", summary))
+	}
+
+	if len(failures) > 0 {
+		result = append(result, "")
+		result = append(result, "Failures:")
+		for i, f := range failures {
+			if i >= 10 {
+				result = append(result, fmt.Sprintf("  ... +%d more", len(failures)-10))
+				break
+			}
+			result = append(result, fmt.Sprintf("  %s", f))
+		}
+	}
+
+	if passed == 0 && failed == 0 && len(result) <= 1 {
+		return output
 	}
 
 	return strings.Join(result, "\n")
