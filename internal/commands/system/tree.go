@@ -40,9 +40,28 @@ func runTree(cmd *cobra.Command, args []string) error {
 
 	output, _, err := shared.RunAndCapture("tree", treeArgs)
 
+	if shared.UltraCompact {
+		for _, line := range strings.Split(output, "\n") {
+			trimmed := strings.TrimSpace(line)
+			if strings.Contains(trimmed, "directories") && strings.Contains(trimmed, "files") {
+				fmt.Println(trimmed)
+				return nil
+			}
+		}
+		lines := strings.Split(output, "\n")
+		fmt.Printf("%d entries\n", len(lines))
+		return nil
+	}
+
 	// Apply filtering
 	engine := filter.NewEngine(filter.ModeMinimal)
 	filtered, _ := engine.Process(output)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "tree", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
 
 	fmt.Print(filtered)
 

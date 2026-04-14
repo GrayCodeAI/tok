@@ -87,6 +87,12 @@ func runPytest(cmd *cobra.Command, args []string) error {
 
 	filtered := filterPytestOutput(stdout.String())
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "pytest", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Print(filtered)
 
 	if strings.TrimSpace(stderr.String()) != "" {
@@ -109,6 +115,23 @@ func runPytest(cmd *cobra.Command, args []string) error {
 }
 
 func filterPytestOutput(output string) string {
+	if shared.UltraCompact {
+		passed, failed, skipped := parseSummaryLine("")
+		for _, line := range strings.Split(output, "\n") {
+			if strings.Contains(line, "passed") || strings.Contains(line, "failed") {
+				passed, failed, skipped = parseSummaryLine(strings.TrimSpace(line))
+				break
+			}
+		}
+		if failed > 0 {
+			return fmt.Sprintf("%dP %dF %dS\n", passed, failed, skipped)
+		}
+		if passed > 0 {
+			return fmt.Sprintf("%dP %dS\n", passed, skipped)
+		}
+		return "0 tests\n"
+	}
+
 	state := StateHeader
 	var testFiles []string
 	var failures []string

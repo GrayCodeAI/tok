@@ -48,6 +48,13 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 	raw := string(output)
 
 	filtered := filterGolangciOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "golangci_lint", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -60,6 +67,20 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 func filterGolangciOutput(raw string) string {
 	if raw == "" {
 		return "✅ No linting issues found"
+	}
+
+	if shared.UltraCompact {
+		lines := strings.Split(raw, "\n")
+		issueCount := 0
+		for _, line := range lines {
+			if strings.TrimSpace(line) != "" && !strings.HasPrefix(strings.TrimSpace(line), "#") {
+				issueCount++
+			}
+		}
+		if issueCount == 0 {
+			return "golangci-lint: ok\n"
+		}
+		return fmt.Sprintf("golangci-lint: %d issues\n", issueCount)
 	}
 
 	lines := strings.Split(raw, "\n")

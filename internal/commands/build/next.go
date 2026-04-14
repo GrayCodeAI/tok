@@ -48,6 +48,13 @@ func runNext(cmd *cobra.Command, args []string) error {
 	raw := string(output)
 
 	filtered := filterNextOutputCompact(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "next", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -58,6 +65,28 @@ func runNext(cmd *cobra.Command, args []string) error {
 }
 
 func filterNextOutputCompact(raw string) string {
+	if shared.UltraCompact {
+		var staticPages, ssgPages, ssrPages int
+		var errors []string
+		for _, line := range strings.Split(raw, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.Contains(line, "○") {
+				staticPages++
+			} else if strings.Contains(line, "●") {
+				ssgPages++
+			} else if strings.Contains(line, "λ") || strings.Contains(line, "ƒ") {
+				ssrPages++
+			}
+			if strings.Contains(strings.ToLower(line), "error") {
+				errors = append(errors, shared.TruncateLine(line, 80))
+			}
+		}
+		if len(errors) > 0 {
+			return fmt.Sprintf("build failed: %d errors\n", len(errors))
+		}
+		return fmt.Sprintf("build ok: %d static %d ssg %d ssr\n", staticPages, ssgPages, ssrPages)
+	}
+
 	lines := strings.Split(raw, "\n")
 	var result []string
 	var routes []string

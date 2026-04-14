@@ -71,6 +71,12 @@ func runTsc(cmd *cobra.Command, args []string) error {
 
 	filtered := filterTscOutput(output)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(output, "tsc", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
@@ -91,6 +97,26 @@ func runTsc(cmd *cobra.Command, args []string) error {
 var tscErrorRegex = regexp.MustCompile(`^(.+?)\((\d+),(\d+)\):\s+(error|warning)\s+(TS\d+):\s+(.+)$`)
 
 func filterTscOutput(output string) string {
+	if shared.UltraCompact {
+		var errors []TsError
+		for i := 0; i < len(strings.Split(output, "\n")); i++ {
+			line := strings.Split(output, "\n")[i]
+			matches := tscErrorRegex.FindStringSubmatch(line)
+			if matches != nil {
+				errors = append(errors, TsError{File: matches[1], Code: matches[5]})
+			}
+		}
+		if len(errors) == 0 {
+			return "tsc: ok\n"
+		}
+		errorCount := len(errors)
+		fileSet := make(map[string]bool)
+		for _, e := range errors {
+			fileSet[e.File] = true
+		}
+		return fmt.Sprintf("tsc: %d errors in %d files\n", errorCount, len(fileSet))
+	}
+
 	var errors []TsError
 	lines := strings.Split(output, "\n")
 

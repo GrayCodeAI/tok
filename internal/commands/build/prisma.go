@@ -49,6 +49,13 @@ func runPrisma(cmd *cobra.Command, args []string) error {
 	raw := string(output)
 
 	filtered := filterPrismaOutputCompact(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "prisma", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -59,6 +66,21 @@ func runPrisma(cmd *cobra.Command, args []string) error {
 }
 
 func filterPrismaOutputCompact(raw string) string {
+	if shared.UltraCompact {
+		lines := strings.Split(raw, "\n")
+		var errors []string
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if strings.Contains(strings.ToLower(trimmed), "error") {
+				errors = append(errors, shared.TruncateLine(trimmed, 80))
+			}
+		}
+		if len(errors) > 0 {
+			return fmt.Sprintf("prisma: %d errors\n", len(errors))
+		}
+		return "prisma: ok\n"
+	}
+
 	lines := strings.Split(raw, "\n")
 	var result []string
 	var inBanner bool

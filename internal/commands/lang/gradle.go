@@ -224,6 +224,12 @@ func runGradleDependencies(args []string) error {
 
 	filtered := filterGradleDependenciesOutput(raw)
 
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gradle_deps", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
+
 	fmt.Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -278,6 +284,12 @@ func runGradleTasks(args []string) error {
 	raw := string(output)
 
 	filtered := filterGradleTasksOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gradle_tasks", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
 
 	fmt.Println(filtered)
 
@@ -337,6 +349,12 @@ func runGradlePassthrough(args []string) error {
 
 	// Basic filtering even for passthrough
 	filtered := filterGradleBasicOutput(raw)
+
+	if err != nil {
+		if hint := shared.TeeOnFailure(raw, "gradle", err); hint != "" {
+			filtered = filtered + "\n" + hint
+		}
+	}
 
 	fmt.Println(filtered)
 
