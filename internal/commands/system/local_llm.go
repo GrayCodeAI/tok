@@ -1,7 +1,10 @@
 package system
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -27,8 +30,36 @@ Example:
 	RunE: runLocalLlm,
 }
 
+// smartCmd is an alias for local-llm (matches RTK command name)
+var smartCmd = &cobra.Command{
+	Use:   "smart <file>",
+	Short: "Generate 2-line heuristic summary of a code file (alias for local-llm)",
+	Long: `Analyze a source file and produce a 2-line technical summary using heuristics.
+
+Line 1: What the file is (language, component counts, lines)
+Line 2: Key details (imports, patterns, main definitions)
+
+No external LLM required - uses pattern matching and static analysis.
+
+Examples:
+  tokman smart main.go
+  tokman smart src/utils.py`,
+	Args: cobra.ExactArgs(1),
+	RunE: runLocalLlm,
+}
+
+var (
+	smartUseLLM      bool
+	smartLLMEndpoint string
+)
+
 func init() {
 	registry.Add(func() { registry.Register(localLlmCmd) })
+	registry.Add(func() { registry.Register(smartCmd) })
+
+	// Add LLM flags to smart command
+	smartCmd.Flags().BoolVar(&smartUseLLM, "llm", false, "Use local LLM for enhanced analysis (requires Ollama or compatible API)")
+	smartCmd.Flags().StringVar(&smartLLMEndpoint, "llm-endpoint", "http://localhost:11434", "Local LLM API endpoint (default: Ollama)")
 }
 
 func runLocalLlm(cmd *cobra.Command, args []string) error {
@@ -39,6 +70,16 @@ func runLocalLlm(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
 
+	// Use LLM if requested
+	if smartUseLLM {
+		return runSmartWithLLM(filePath, content)
+	}
+
+	return runHeuristicAnalysis(filePath, content)
+}
+
+// runHeuristicAnalysis performs heuristic code analysis without LLM
+func runHeuristicAnalysis(filePath string, content []byte) error {
 	ext := filepath.Ext(filePath)
 	lang := detectLang(ext)
 	summary := analyzeCode(string(content), lang)
@@ -369,4 +410,94 @@ func detectPatterns(content string, lang string) []string {
 		patterns = patterns[:3]
 	}
 	return patterns
+}
+
+// runSmartWithLLM uses a local LLM API (like Ollama) for enhanced code analysis
+func runSmartWithLLM(filePath string, content []byte) error {
+	// Try to use LLM via API call
+	llmOutput, err := queryLocalLLM(filePath, content)
+	if err != nil {
+		// Fall back to heuristic analysis
+		fmt.Fprintf(os.Stderr, "LLM query failed (%v), using heuristic analysis\n", err)
+		return runHeuristicAnalysis(filePath, content)
+	}
+
+	fmt.Println(llmOutput)
+	return nil
+}
+
+// queryLocalLLM sends a request to a local LLM API (Ollama-compatible)
+func queryLocalLLM(filePath string, content []byte) (string, error) {
+	// Check if endpoint is reachable
+	pingURL := smartLLMEndpoint + "/api/tags"
+	resp, err := http.Get(pingURL)
+	if err != nil {
+		return "", fmt.Errorf("LLM endpoint not available: %w", err)
+	}
+	resp.Body.Close()
+
+	// Prepare the prompt
+	ext := filepath.Ext(filePath)
+	lang := detectLang(ext)
+	prompt := fmt.Sprintf(`Analyze this %s code file and provide a 2-line summary:
+Line 1: What the file is (component type, line count)
+Line 2: Key functionality or main purpose
+
+File: %s
+
+Code (first 2000 chars):
+%s
+
+Provide only the 2-line summary, nothing else.`, lang, filepath.Base(filePath), truncateContent(content, 2000))
+
+	// Prepare request body
+	reqBody := map[string]interface{}{
+		"model":  "codellama", // Default model, could be configurable
+		"prompt": prompt,
+		"stream": false,
+	}
+
+	jsonBody, err := json.Marshal(reqBody)
+	if err != nil {
+		return "", err
+	}
+
+	// Send request to LLM
+	generateURL := smartLLMEndpoint + "/api/generate"
+	resp, err = http.Post(generateURL, "application/json", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("LLM returned status %d", resp.StatusCode)
+	}
+
+	// Parse response
+	var result struct {
+		Response string `json:"response"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	// Clean up the response
+	summary := strings.TrimSpace(result.Response)
+	lines := strings.Split(summary, "\n")
+
+	// Ensure we only return 2 lines
+	if len(lines) >= 2 {
+		return strings.Join(lines[:2], "\n"), nil
+	}
+
+	return summary, nil
+}
+
+// truncateContent truncates content to max length
+func truncateContent(content []byte, maxLen int) string {
+	if len(content) > maxLen {
+		return string(content[:maxLen]) + "\n... (truncated)"
+	}
+	return string(content)
 }
