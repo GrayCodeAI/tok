@@ -193,14 +193,14 @@ func filterGoTestOutput(raw string) string {
 		case "pass":
 			if event.Test == "" {
 				// Package pass
-				packageResults[event.Package] = append(packageResults[event.Package], "✅ PASS")
+				packageResults[event.Package] = append(packageResults[event.Package], "PASS")
 			} else {
 				passed++
 			}
 		case "fail":
 			if event.Test == "" {
 				// Package fail
-				packageResults[event.Package] = append(packageResults[event.Package], "❌ FAIL")
+				packageResults[event.Package] = append(packageResults[event.Package], "FAIL")
 			} else {
 				failed++
 				failures = append(failures, fmt.Sprintf("%s.%s", event.Package, event.Test))
@@ -216,13 +216,13 @@ func filterGoTestOutput(raw string) string {
 	}
 
 	var result []string
-	result = append(result, "📋 Go Test Results:")
-	result = append(result, fmt.Sprintf("   ✅ %d passed", passed))
+	result = append(result, "Go Test Results:")
+	result = append(result, fmt.Sprintf("   OK %d passed", passed))
 	if failed > 0 {
-		result = append(result, fmt.Sprintf("   ❌ %d failed", failed))
+		result = append(result, fmt.Sprintf("   FAIL %d failed", failed))
 	}
 	if skipped > 0 {
-		result = append(result, fmt.Sprintf("   ⏭️  %d skipped", skipped))
+		result = append(result, fmt.Sprintf("   SKIP %d skipped", skipped))
 	}
 
 	// Package summary
@@ -309,7 +309,7 @@ func filterGoTestOutputUltraCompact(passed, failed, skipped int, failures []stri
 
 func filterGoBuildOutput(raw string) string {
 	if raw == "" {
-		return "✅ Build successful"
+		return "OK Build successful"
 	}
 
 	lines := strings.Split(raw, "\n")
@@ -332,14 +332,14 @@ func filterGoBuildOutput(raw string) string {
 
 	var result []string
 	if len(errors) > 0 {
-		result = append(result, fmt.Sprintf("❌ Errors (%d):", len(errors)))
+		result = append(result, fmt.Sprintf("FAIL Errors (%d):", len(errors)))
 		for _, e := range errors {
 			result = append(result, fmt.Sprintf("   %s", e))
 		}
 	}
 
 	if len(warnings) > 0 {
-		result = append(result, fmt.Sprintf("⚠️  Warnings (%d):", len(warnings)))
+		result = append(result, fmt.Sprintf("WARN Warnings (%d):", len(warnings)))
 		for _, w := range warnings {
 			result = append(result, fmt.Sprintf("   %s", w))
 		}
@@ -351,14 +351,14 @@ func filterGoBuildOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ Build successful"
+		return "OK Build successful"
 	}
 	return strings.Join(result, "\n")
 }
 
 func filterGoVetOutput(raw string) string {
 	if raw == "" {
-		return "✅ No vet issues found"
+		return "OK No vet issues found"
 	}
 
 	lines := strings.Split(raw, "\n")
@@ -372,11 +372,11 @@ func filterGoVetOutput(raw string) string {
 	}
 
 	if len(issues) == 0 {
-		return "✅ No vet issues found"
+		return "OK No vet issues found"
 	}
 
 	var result []string
-	result = append(result, fmt.Sprintf("⚠️  Vet Issues (%d):", len(issues)))
+	result = append(result, fmt.Sprintf("WARN Vet Issues (%d):", len(issues)))
 	for i, issue := range issues {
 		if i >= 15 {
 			result = append(result, fmt.Sprintf("   ... +%d more", len(issues)-15))

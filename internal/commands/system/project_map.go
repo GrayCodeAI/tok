@@ -102,7 +102,10 @@ func runProjectMap(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("%s is not a directory", dir)
 	}
 
-	root := buildProjectTree(absDir, 0)
+	root, err := buildProjectTree(absDir, 0)
+	if err != nil {
+		return err
+	}
 	computeStats(root)
 
 	switch pmOutputFormat {
@@ -118,14 +121,14 @@ func runProjectMap(cmd *cobra.Command, args []string) error {
 }
 
 // buildProjectTree recursively walks the directory and builds a tree.
-func buildProjectTree(path string, depth int) *DirNode {
+func buildProjectTree(path string, depth int) (*DirNode, error) {
 	if depth > pmMaxDepth {
-		return nil
+		return nil, nil
 	}
 
 	entries, err := os.ReadDir(path)
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("reading directory: %w", err)
 	}
 
 	node := &DirNode{
@@ -151,7 +154,10 @@ func buildProjectTree(path string, depth int) *DirNode {
 		}
 
 		if info.IsDir() {
-			child := buildProjectTree(filepath.Join(path, name), depth+1)
+			child, childErr := buildProjectTree(filepath.Join(path, name), depth+1)
+			if childErr != nil {
+				continue
+			}
 			if child != nil {
 				node.SubDirs = append(node.SubDirs, child)
 			}
@@ -171,7 +177,7 @@ func buildProjectTree(path string, depth int) *DirNode {
 	sort.Slice(node.Files, func(i, j int) bool { return node.Files[i].Name < node.Files[j].Name })
 	sort.Slice(node.SubDirs, func(i, j int) bool { return node.SubDirs[i].Name < node.SubDirs[j].Name })
 
-	return node
+	return node, nil
 }
 
 // computeStats computes line counts, token estimates, and signatures.
@@ -221,7 +227,7 @@ func printProjectMapTree(root *DirNode, basePath string) {
 	collectStats(root, &totalFiles, &totalLines, &totalTokens, &totalSize, fileCountByExt, fileCountByDir)
 
 	// Header
-	color.New(color.Bold).Fprintf(os.Stderr, "📁 %s\n", relativePath(root.Path, basePath))
+	color.New(color.Bold).Fprintf(os.Stderr, "%s\n", relativePath(root.Path, basePath))
 
 	if shared.IsVerbose() {
 		fmt.Fprintf(os.Stderr, "\n")
@@ -232,7 +238,7 @@ func printProjectMapTree(root *DirNode, basePath string) {
 
 	// Summary
 	fmt.Fprintf(os.Stderr, "\n")
-	color.New(color.Bold).Printf("📊 Summary\n")
+	color.New(color.Bold).Printf("Summary\n")
 	fmt.Fprintf(os.Stderr, "  Files:     %d\n", totalFiles)
 	fmt.Fprintf(os.Stderr, "  Lines:     %s\n", formatNumber(totalLines))
 	if pmTokenEstimate {

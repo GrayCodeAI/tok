@@ -89,7 +89,7 @@ func runCcusage(cmd *cobra.Command, args []string) error {
 	}
 
 	// Display text format
-	fmt.Printf("📊 Claude Code Usage (%s)\n", strings.ToUpper(granularity[:1])+granularity[1:])
+	fmt.Printf("Claude Code Usage (%s)\n", strings.ToUpper(granularity[:1])+granularity[1:])
 	fmt.Println(strings.Repeat("-", 50))
 
 	var totalInput, totalOutput, totalTokens uint64
@@ -133,7 +133,7 @@ func runCcusageAll() error {
 			return err
 		}
 
-		fmt.Printf("\n📊 %s\n", strings.ToUpper(g[:1])+g[1:])
+		fmt.Printf("\n%s\n", strings.ToUpper(g[:1])+g[1:])
 		fmt.Println(strings.Repeat("-", 40))
 
 		var totalTokens uint64

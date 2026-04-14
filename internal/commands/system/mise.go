@@ -118,7 +118,7 @@ func filterMiseInstallOutput(raw string) string {
 	}
 
 	if shared.UltraCompact && installed > 0 {
-		return fmt.Sprintf("✅ Installed %d tools", installed)
+		return fmt.Sprintf("OK Installed %d tools", installed)
 	}
 
 	return strings.Join(result, "\n")
@@ -193,7 +193,7 @@ func runMiseOutdated(args []string) error {
 	filtered := filterMiseOutdatedOutput(raw)
 
 	if filtered == "" && err == nil {
-		fmt.Println("✅ All tools are up to date")
+		fmt.Println("OK All tools are up to date")
 	} else {
 		fmt.Println(filtered)
 	}

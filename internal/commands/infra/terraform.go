@@ -364,13 +364,13 @@ func filterTerraformApply(raw string) string {
 		trimmed := strings.TrimSpace(line)
 
 		if strings.Contains(trimmed, "will be created") {
-			fmt.Sscanf(trimmed, "%d", &additions)
+			additions = atoi(trimmed)
 		}
 		if strings.Contains(trimmed, "will be updated") || strings.Contains(trimmed, "will be changed") {
-			fmt.Sscanf(trimmed, "%d", &changes)
+			changes = atoi(trimmed)
 		}
 		if strings.Contains(trimmed, "will be destroyed") || strings.Contains(trimmed, "will be deleted") {
-			fmt.Sscanf(trimmed, "%d", &destroys)
+			destroys = atoi(trimmed)
 		}
 
 		if strings.Contains(trimmed, "Apply complete!") {

@@ -160,7 +160,7 @@ func formatTestSummary(suites []TestSuite, hasFailure bool) string {
 	bold := color.New(color.Bold).SprintFunc()
 
 	if hasFailure {
-		result.WriteString(bold("\n❌ Test Failures:\n"))
+		result.WriteString(bold("\nFAIL Test Failures:\n"))
 		result.WriteString(strings.Repeat("─", 40) + "\n")
 
 		for _, suite := range suites {
@@ -174,7 +174,7 @@ func formatTestSummary(suites []TestSuite, hasFailure bool) string {
 		result.WriteString("\n")
 	}
 
-	result.WriteString(bold("📊 Test Summary\n"))
+	result.WriteString(bold("Test Summary\n"))
 	result.WriteString(strings.Repeat("─", 40) + "\n")
 
 	totalPassed := 0

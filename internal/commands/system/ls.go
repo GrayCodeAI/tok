@@ -263,11 +263,11 @@ func filterLSOutput(output string) string {
 		if isDir {
 			totalDirSize += size
 			sizeStr := utils.FormatBytes(size)
-			dirs = append(dirs, fmt.Sprintf("📁 %s (%s)", name, sizeStr))
+			dirs = append(dirs, fmt.Sprintf("%s (%s)", name, sizeStr))
 		} else {
 			totalFileSize += size
 			sizeStr := utils.FormatBytes(size)
-			files = append(files, fmt.Sprintf("📄 %s (%s)", name, sizeStr))
+			files = append(files, fmt.Sprintf("%s (%s)", name, sizeStr))
 		}
 	}
 
@@ -283,7 +283,7 @@ func filterLSOutput(output string) string {
 	dim := color.New(color.FgHiBlack).SprintFunc()
 
 	// Summary header
-	result.WriteString(cyan("📂 Directory Listing\n"))
+	result.WriteString(cyan("Directory Listing\n"))
 	result.WriteString(dim(strings.Repeat("─", 40)) + "\n")
 
 	// Directories

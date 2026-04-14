@@ -16,6 +16,14 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
+func atoi(s string) int {
+	var n int
+	if _, err := fmt.Sscanf(s, "%d", &n); err != nil {
+		n = 0
+	}
+	return n
+}
+
 var npmCmd = &cobra.Command{
 	Use:   "npm [args...]",
 	Short: "npm run with filtered output",
@@ -212,18 +220,18 @@ func filterNpmTestOutput(output string) string {
 		return filterNpmTestOutputUltraCompact(passed, failed, skipped, testSuitesPassed, testSuitesFailed, failures)
 	}
 
-	result = append(result, "📋 npm test Results:")
+	result = append(result, "npm test Results:")
 	if testSuitesPassed > 0 || testSuitesFailed > 0 {
 		result = append(result, fmt.Sprintf("   %d suites passed, %d suites failed", testSuitesPassed, testSuitesFailed))
 	}
 	if passed > 0 {
-		result = append(result, fmt.Sprintf("   ✅ %d tests passed", passed))
+		result = append(result, fmt.Sprintf("   OK %d tests passed", passed))
 	}
 	if failed > 0 {
-		result = append(result, fmt.Sprintf("   ❌ %d tests failed", failed))
+		result = append(result, fmt.Sprintf("   FAIL %d tests failed", failed))
 	}
 	if skipped > 0 {
-		result = append(result, fmt.Sprintf("   ⏭️  %d tests skipped", skipped))
+		result = append(result, fmt.Sprintf("   SKIP %d tests skipped", skipped))
 	}
 
 	if len(failures) > 0 {
@@ -328,17 +336,17 @@ func filterNpmInstallOutput(output string) string {
 	for _, line := range strings.Split(output, "\n") {
 		trimmed := strings.TrimSpace(line)
 
-		if strings.Contains(trimmed, "added") {
-			fmt.Sscanf(trimmed, "added %d", &added)
+		if strings.HasPrefix(trimmed, "added ") {
+			added = atoi(strings.TrimPrefix(trimmed, "added "))
 		}
-		if strings.Contains(trimmed, "removed") {
-			fmt.Sscanf(trimmed, "removed %d", &removed)
+		if strings.HasPrefix(trimmed, "removed ") {
+			removed = atoi(strings.TrimPrefix(trimmed, "removed "))
 		}
-		if strings.Contains(trimmed, "changed") {
-			fmt.Sscanf(trimmed, "changed %d", &changed)
+		if strings.HasPrefix(trimmed, "changed ") {
+			changed = atoi(strings.TrimPrefix(trimmed, "changed "))
 		}
-		if strings.Contains(trimmed, "audited") {
-			fmt.Sscanf(trimmed, "audited %d", &audited)
+		if strings.HasPrefix(trimmed, "audited ") {
+			audited = atoi(strings.TrimPrefix(trimmed, "audited "))
 		}
 		if strings.Contains(trimmed, "vulnerabilities") {
 			vulnerabilities = append(vulnerabilities, trimmed)

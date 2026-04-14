@@ -119,10 +119,10 @@ func filterNextOutputCompact(raw string) string {
 		}
 	}
 
-	result = append(result, "🚀 Next.js Build Summary:")
+	result = append(result, "Next.js Build Summary:")
 
 	if staticPages > 0 || ssrPages > 0 || ssgPages > 0 {
-		result = append(result, fmt.Sprintf("   📄 %d static | %d SSG | %d SSR pages", staticPages, ssgPages, ssrPages))
+		result = append(result, fmt.Sprintf("   %d static | %d SSG | %d SSR pages", staticPages, ssgPages, ssrPages))
 	}
 
 	if len(routes) > 0 {
@@ -139,7 +139,7 @@ func filterNextOutputCompact(raw string) string {
 
 	if len(errors) > 0 {
 		result = append(result, "")
-		result = append(result, fmt.Sprintf("❌ Errors (%d):", len(errors)))
+		result = append(result, fmt.Sprintf("FAIL Errors (%d):", len(errors)))
 		for _, e := range errors {
 			result = append(result, fmt.Sprintf("   %s", e))
 		}
@@ -147,7 +147,7 @@ func filterNextOutputCompact(raw string) string {
 
 	if len(warnings) > 0 {
 		result = append(result, "")
-		result = append(result, fmt.Sprintf("⚠️  Warnings (%d):", len(warnings)))
+		result = append(result, fmt.Sprintf("WARN Warnings (%d):", len(warnings)))
 		for i, w := range warnings {
 			if i >= 5 {
 				result = append(result, fmt.Sprintf("   ... +%d more", len(warnings)-5))

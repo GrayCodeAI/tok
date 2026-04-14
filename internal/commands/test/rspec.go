@@ -253,7 +253,7 @@ func buildRspecSummary(rspec *RspecOutput) string {
 		if i >= 5 {
 			break
 		}
-		result.WriteString(fmt.Sprintf("%d. ❌ %s\n   %s:%d\n", i+1, example.FullDescription, example.FilePath, example.LineNumber))
+		result.WriteString(fmt.Sprintf("%d. FAIL %s\n   %s:%d\n", i+1, example.FullDescription, example.FilePath, example.LineNumber))
 
 		if example.Exception != nil {
 			exc := example.Exception
@@ -379,7 +379,7 @@ func filterRspecText(output string) string {
 			if i >= 5 {
 				break
 			}
-			result.WriteString(fmt.Sprintf("%d. ❌ %s\n", i+1, failure))
+			result.WriteString(fmt.Sprintf("%d. FAIL %s\n", i+1, failure))
 			if i < min(len(failures), 5)-1 {
 				result.WriteString("\n")
 			}

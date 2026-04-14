@@ -149,9 +149,9 @@ func summarizeOutput(output, command string, success bool) string {
 	lines := strings.Split(output, "\n")
 	var result []string
 
-	statusIcon := "✅"
+	statusIcon := "OK"
 	if !success {
-		statusIcon = "❌"
+		statusIcon = "FAIL"
 	}
 	result = append(result, fmt.Sprintf("%s Command: %s", statusIcon, shared.TruncateLine(command, 60)))
 	result = append(result, fmt.Sprintf("   %d lines of output", len(lines)))
@@ -203,7 +203,7 @@ func detectOutputType(output, command string) shared.OutputType {
 }
 
 func summarizeTests(output string, result *[]string) {
-	*result = append(*result, "📋 Test Results:")
+	*result = append(*result, "Test Results:")
 
 	var passed, failed, skipped int
 	var failures []string
@@ -232,12 +232,12 @@ func summarizeTests(output string, result *[]string) {
 		}
 	}
 
-	*result = append(*result, fmt.Sprintf("   ✅ %d passed", passed))
+	*result = append(*result, fmt.Sprintf("   PASS %d passed", passed))
 	if failed > 0 {
-		*result = append(*result, fmt.Sprintf("   ❌ %d failed", failed))
+		*result = append(*result, fmt.Sprintf("   FAIL %d failed", failed))
 	}
 	if skipped > 0 {
-		*result = append(*result, fmt.Sprintf("   ⏭️  %d skipped", skipped))
+		*result = append(*result, fmt.Sprintf("   SKIP %d skipped", skipped))
 	}
 
 	if len(failures) > 0 {
@@ -252,7 +252,7 @@ func summarizeTests(output string, result *[]string) {
 }
 
 func summarizeBuild(output string, result *[]string) {
-	*result = append(*result, "🔨 Build Summary:")
+	*result = append(*result, "Build Summary:")
 
 	var errors, warnings, compiled int
 	var errorMsgs []string
@@ -274,16 +274,16 @@ func summarizeBuild(output string, result *[]string) {
 	}
 
 	if compiled > 0 {
-		*result = append(*result, fmt.Sprintf("   📦 %d crates/files compiled", compiled))
+		*result = append(*result, fmt.Sprintf("   %d crates/files compiled", compiled))
 	}
 	if errors > 0 {
-		*result = append(*result, fmt.Sprintf("   ❌ %d errors", errors))
+		*result = append(*result, fmt.Sprintf("   FAIL %d errors", errors))
 	}
 	if warnings > 0 {
-		*result = append(*result, fmt.Sprintf("   ⚠️  %d warnings", warnings))
+		*result = append(*result, fmt.Sprintf("   WARN %d warnings", warnings))
 	}
 	if errors == 0 && warnings == 0 {
-		*result = append(*result, "   ✅ Build successful")
+		*result = append(*result, "   OK Build successful")
 	}
 
 	if len(errorMsgs) > 0 {
@@ -296,7 +296,7 @@ func summarizeBuild(output string, result *[]string) {
 }
 
 func summarizeLogs(output string, result *[]string) {
-	*result = append(*result, "📝 Log Summary:")
+	*result = append(*result, "Log Summary:")
 
 	var errors, warnings, info int
 
@@ -311,9 +311,9 @@ func summarizeLogs(output string, result *[]string) {
 		}
 	}
 
-	*result = append(*result, fmt.Sprintf("   ❌ %d errors", errors))
-	*result = append(*result, fmt.Sprintf("   ⚠️  %d warnings", warnings))
-	*result = append(*result, fmt.Sprintf("   ℹ️  %d info", info))
+	*result = append(*result, fmt.Sprintf("   FAIL %d errors", errors))
+	*result = append(*result, fmt.Sprintf("   WARN %d warnings", warnings))
+	*result = append(*result, fmt.Sprintf("   %d info", info))
 }
 
 func summarizeList(output string, result *[]string) {
@@ -325,7 +325,7 @@ func summarizeList(output string, result *[]string) {
 		}
 	}
 
-	*result = append(*result, fmt.Sprintf("📋 List (%d items):", len(nonEmpty)))
+	*result = append(*result, fmt.Sprintf("List (%d items):", len(nonEmpty)))
 
 	for i, line := range nonEmpty {
 		if i >= 10 {
@@ -339,7 +339,7 @@ func summarizeList(output string, result *[]string) {
 }
 
 func summarizeJSONOutput(output string, result *[]string) {
-	*result = append(*result, "📋 JSON Output:")
+	*result = append(*result, "JSON Output:")
 
 	schema := shared.TryJSONSchema(strings.TrimSpace(output), 5)
 	if schema != "" {
@@ -355,7 +355,7 @@ func summarizeJSONOutput(output string, result *[]string) {
 func summarizeGeneric(output string, result *[]string) {
 	lines := strings.Split(output, "\n")
 
-	*result = append(*result, "📋 Output:")
+	*result = append(*result, "Output:")
 
 	count := 0
 	for _, line := range lines {

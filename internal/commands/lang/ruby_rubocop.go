@@ -83,11 +83,11 @@ func filterRubocopOutput(raw string) string {
 	}
 
 	var result []string
-	result = append(result, "📋 RuboCop Results:")
-	result = append(result, fmt.Sprintf("   📁 %d files inspected", rubocop.Summary.InspectedFileCount))
+	result = append(result, "RuboCop Results:")
+	result = append(result, fmt.Sprintf("   %d files inspected", rubocop.Summary.InspectedFileCount))
 
 	if rubocop.Summary.OffenseCount == 0 {
-		result = append(result, "   ✅ No offenses detected")
+		result = append(result, "   OK No offenses detected")
 		return strings.Join(result, "\n")
 	}
 
@@ -99,7 +99,7 @@ func filterRubocopOutput(raw string) string {
 		}
 	}
 
-	result = append(result, fmt.Sprintf("   ⚠️  %d offenses:", rubocop.Summary.OffenseCount))
+	result = append(result, fmt.Sprintf("   WARN %d offenses:", rubocop.Summary.OffenseCount))
 	for sev, count := range severityCount {
 		result = append(result, fmt.Sprintf("      %s: %d", sev, count))
 	}
@@ -113,16 +113,16 @@ func filterRubocopOutput(raw string) string {
 				shortPath = file.Path[idx+1:]
 			}
 			result = append(result, "")
-			result = append(result, fmt.Sprintf("   📄 %s (%d offenses):", shortPath, len(file.Offenses)))
+			result = append(result, fmt.Sprintf("   %s (%d offenses):", shortPath, len(file.Offenses)))
 			for _, offense := range file.Offenses {
 				offenseCount++
 				if offenseCount > 15 {
 					result = append(result, fmt.Sprintf("   ... +%d more offenses", rubocop.Summary.OffenseCount-15))
 					break
 				}
-				severityIcon := "⚠️"
+				severityIcon := "WARN"
 				if offense.Severity == "error" || offense.Severity == "fatal" {
-					severityIcon = "❌"
+					severityIcon = "FAIL"
 				}
 				result = append(result, fmt.Sprintf("      %s L%d: %s",
 					severityIcon,
@@ -140,7 +140,7 @@ func filterRubocopOutput(raw string) string {
 
 func filterRubocopOutputUltraCompact(rubocop RuboCopJSON) string {
 	if rubocop.Summary.OffenseCount == 0 {
-		return "✅ Clean"
+		return "OK Clean"
 	}
 
 	var result []string

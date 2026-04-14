@@ -225,12 +225,12 @@ func buildPytestSummary(summary string, testFiles []string, failures []string) s
 			firstLine := lines[0]
 			if strings.HasPrefix(firstLine, "___") {
 				testName := strings.Trim(firstLine, "_ ")
-				result.WriteString(fmt.Sprintf("%d. ❌ %s\n", i+1, testName))
+				result.WriteString(fmt.Sprintf("%d. FAIL %s\n", i+1, testName))
 			} else if strings.HasPrefix(firstLine, "FAILED") {
 				parts := strings.SplitN(firstLine, " - ", 2)
 				if len(parts) > 0 {
 					testName := strings.TrimPrefix(parts[0], "FAILED ")
-					result.WriteString(fmt.Sprintf("%d. ❌ %s\n", i+1, testName))
+					result.WriteString(fmt.Sprintf("%d. FAIL %s\n", i+1, testName))
 				}
 				if len(parts) > 1 {
 					result.WriteString(fmt.Sprintf("     %s\n", shared.Truncate(parts[1], 100)))

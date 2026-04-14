@@ -290,7 +290,7 @@ func filterGtLogOutput(raw string) string {
 	}
 
 	if len(branches) > 0 {
-		result = append(result, fmt.Sprintf("🌳 Stack (%d branches):", len(branches)))
+		result = append(result, fmt.Sprintf("Stack (%d branches):", len(branches)))
 		for i, b := range branches {
 			if i >= 15 {
 				result = append(result, fmt.Sprintf("   ... +%d more", len(branches)-15))
@@ -328,7 +328,7 @@ func filterGtSubmitOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ Submit completed"
+		return "OK Submit completed"
 	}
 	return strings.Join(result, "\n")
 }
@@ -352,7 +352,7 @@ func filterGtSyncOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ Sync completed"
+		return "OK Sync completed"
 	}
 	if len(result) > 10 {
 		return strings.Join(result[:10], "\n") + fmt.Sprintf("\n... (%d more)", len(result)-10)
@@ -378,7 +378,7 @@ func filterGtRestackOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ Restack completed"
+		return "OK Restacked completed"
 	}
 	if len(result) > 10 {
 		return strings.Join(result[:10], "\n") + fmt.Sprintf("\n... (%d more)", len(result)-10)
@@ -398,7 +398,7 @@ func filterGtCreateOutput(raw string) string {
 	}
 
 	if len(result) == 0 {
-		return "✅ Branch created"
+		return "OK Branch created"
 	}
 	return strings.Join(result, "\n")
 }

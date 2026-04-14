@@ -284,7 +284,7 @@ func filterCargoInstall(output string) string {
 	var result strings.Builder
 
 	if len(installed) > 0 {
-		result.WriteString(fmt.Sprintf("📦 Installed %d package(s):\n", len(installed)))
+		result.WriteString(fmt.Sprintf("Installed %d package(s):\n", len(installed)))
 		for _, pkg := range installed {
 			result.WriteString(fmt.Sprintf("  ✓ %s\n", pkg))
 		}
@@ -305,7 +305,7 @@ func filterCargoInstall(output string) string {
 	}
 
 	if result.Len() == 0 {
-		return "✅ Install complete"
+		return "OK Install complete"
 	}
 
 	return result.String()
@@ -351,7 +351,7 @@ func filterCargoRun(output string) string {
 
 	// Show errors first
 	if len(errors) > 0 {
-		result.WriteString("❌ Build Errors:\n")
+		result.WriteString("FAIL Build Errors:\n")
 		for _, err := range errors {
 			result.WriteString(fmt.Sprintf("  %s\n", err))
 		}
@@ -360,7 +360,7 @@ func filterCargoRun(output string) string {
 
 	// Show warnings
 	if len(warnings) > 0 {
-		result.WriteString(fmt.Sprintf("⚠️  %d warning(s)\n", len(warnings)))
+		result.WriteString(fmt.Sprintf("WARN %d warning(s)\n", len(warnings)))
 		if len(warnings) <= 5 {
 			for _, warn := range warnings {
 				result.WriteString(fmt.Sprintf("  %s\n", warn))
@@ -387,7 +387,7 @@ func filterCargoRun(output string) string {
 	}
 
 	if result.Len() == 0 {
-		return "✅ Program executed successfully"
+		return "OK Program executed successfully"
 	}
 
 	return result.String()
@@ -428,22 +428,22 @@ func filterCargoDoc(output string) string {
 	}
 
 	if documented > 0 {
-		result.WriteString(fmt.Sprintf("📚 Documented %d crate(s)\n", documented))
+		result.WriteString(fmt.Sprintf("Documented %d crate(s)\n", documented))
 	}
 
 	if len(errors) > 0 {
-		result.WriteString(fmt.Sprintf("\n❌ %d error(s):\n", len(errors)))
+		result.WriteString(fmt.Sprintf("\nFAIL %d error(s):\n", len(errors)))
 		for _, err := range errors {
 			result.WriteString(fmt.Sprintf("  %s\n", err))
 		}
 	}
 
 	if docPath != "" {
-		result.WriteString(fmt.Sprintf("\n📖 Documentation: %s\n", docPath))
+		result.WriteString(fmt.Sprintf("\nDocumentation: %s\n", docPath))
 	}
 
 	if result.Len() == 0 {
-		return "✅ Documentation generated"
+		return "OK Documentation generated"
 	}
 
 	return result.String()
@@ -473,19 +473,19 @@ func filterCargoFmt(output string) string {
 	}
 
 	if len(errors) > 0 {
-		return fmt.Sprintf("❌ Format check failed: %d error(s)", len(errors))
+		return fmt.Sprintf("FAIL Format check failed: %d error(s)", len(errors))
 	}
 
 	if len(formatted) > 0 {
-		return fmt.Sprintf("✅ Formatted %d file(s)", len(formatted))
+		return fmt.Sprintf("OK Formatted %d file(s)", len(formatted))
 	}
 
-	return "✅ All files formatted correctly"
+	return "OK All files formatted correctly"
 }
 
 func filterCargoClean(output string) string {
 	if strings.Contains(output, "error") || strings.Contains(output, "Error") {
-		return "❌ Clean failed"
+		return "FAIL Clean failed"
 	}
-	return "✅ Build artifacts cleaned"
+	return "OK Build artifacts cleaned"
 }

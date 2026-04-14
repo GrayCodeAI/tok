@@ -51,7 +51,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	}
 
 	// Step 1: Detect agents
-	fmt.Println("🔍 Detecting AI agents...")
+	fmt.Println("Detecting AI agents...")
 	agents := detectAgents()
 
 	detectedCount := 0
@@ -74,7 +74,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Step 2: Install hooks
-	fmt.Println("📦 Installing hooks...")
+	fmt.Println("Installing hooks...")
 	installedCount := 0
 	for _, agent := range agents {
 		if agent.Detected {
@@ -95,7 +95,7 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Step 3: Create default config
-	fmt.Println("⚙️  Setting up configuration...")
+	fmt.Println("Setting up configuration...")
 	if err := createDefaultConfig(); err != nil {
 		fmt.Printf("   ✗ Config setup failed: %v\n", err)
 	} else {
@@ -104,18 +104,18 @@ func runQuickstart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Step 4: Run doctor
-	fmt.Println("🏥 Running diagnostics...")
+	fmt.Println("Running diagnostics...")
 	doctorCmd := exec.Command(tokmanExecutablePath(), "doctor")
 	doctorCmd.Stdout = os.Stdout
 	doctorCmd.Stderr = os.Stderr
 	if err := doctorCmd.Run(); err != nil {
 		fmt.Println()
-		fmt.Println("⚠️  Some issues detected. See above for details.")
+		fmt.Println("WARNING Some issues detected. See above for details.")
 		return fmt.Errorf("doctor command failed: %w", err)
 	}
 
 	fmt.Println()
-	fmt.Println("🎉 Quickstart complete!")
+	fmt.Println("Quickstart complete!")
 	fmt.Println()
 	fmt.Println("TokMan is now active and will compress CLI output automatically.")
 	fmt.Println()
