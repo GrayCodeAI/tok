@@ -297,171 +297,30 @@ func (p *PipelineCoordinator) processSemanticLayers(output string, stats *Pipeli
 }
 
 func (p *PipelineCoordinator) processResearchLayers(output string, stats *PipelineStats) string {
-	if p.marginalInfoGainFilter != nil {
+	// Unified L14: Edge cases (merges L21-L25)
+	if p.edgeCaseFilter != nil {
 		output = p.processLayer(p.layers[19], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
-	if p.nearDedupFilter != nil {
+
+	// Unified L15: Reasoning (merges L26-L30)
+	if p.reasoningFilter != nil {
 		output = p.processLayer(p.layers[20], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
-	if p.cotCompressFilter != nil {
+
+	// Unified L16: Advanced (merges L31-L45)
+	if p.advancedFilter != nil {
 		output = p.processLayer(p.layers[21], output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output
 		}
 	}
-	if p.codingAgentCtxFilter != nil {
-		output = p.processLayer(p.layers[22], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.perceptionCompressFilter != nil {
-		output = p.processLayer(p.layers[23], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.lightThinkerFilter != nil {
-		output = p.processLayer(p.layers[24], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.thinkSwitcherFilter != nil {
-		output = p.processLayer(p.layers[25], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.gmsaFilter != nil {
-		output = p.processLayer(p.layers[26], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.carlFilter != nil {
-		output = p.processLayer(p.layers[27], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.slimInferFilter != nil {
-		output = p.processLayer(p.layers[28], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.diffAdaptFilter != nil {
-		output = p.processLayer(p.layers[29], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.epicFilter != nil {
-		output = p.processLayer(p.layers[30], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.ssdpFilter != nil {
-		output = p.processLayer(p.layers[31], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.agentOCRFilter != nil {
-		output = p.processLayer(p.layers[32], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.s2madFilter != nil {
-		output = p.processLayer(p.layers[33], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.aconFilter != nil {
-		output = p.processLayer(p.layers[34], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.latentCollabFilter != nil {
-		output = p.processLayer(p.layers[35], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.graphCoTFilter != nil {
-		output = p.processLayer(p.layers[36], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.roleBudgetFilter != nil {
-		output = p.processLayer(p.layers[37], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.sweAdaptiveLoop != nil {
-		output = p.processLayer(p.layers[38], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.agentOCRHistory != nil {
-		output = p.processLayer(p.layers[39], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.planBudgetFilter != nil {
-		output = p.processLayer(p.layers[40], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.lightMemFilter != nil {
-		output = p.processLayer(p.layers[41], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.pathShortenFilter != nil {
-		output = p.processLayer(p.layers[42], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.jsonSamplerFilter != nil {
-		output = p.processLayer(p.layers[43], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.contextCrunchFilter != nil {
-		output = p.processLayer(p.layers[44], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.searchCrunchFilter != nil {
-		output = p.processLayer(p.layers[45], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-	if p.structuralCollapse != nil {
-		output = p.processLayer(p.layers[46], output, stats)
-	}
+
 	return output
 }
 

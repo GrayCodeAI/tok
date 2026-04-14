@@ -237,89 +237,19 @@ func (p *PipelineCoordinator) initSemanticFilters(cfg PipelineConfig) {
 }
 
 func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
-	if cfg.EnableMarginalInfoGain {
-		p.marginalInfoGainFilter = NewMarginalInfoGainFilter()
+	// Unified L14: Edge cases (merges L21-L25)
+	if cfg.EnableEdgeCase {
+		p.edgeCaseFilter = NewEdgeCaseFilter()
 	}
-	if cfg.EnableNearDedup {
-		p.nearDedupFilter = NewNearDedupFilter()
+
+	// Unified L15: Reasoning (merges L26-L30)
+	if cfg.EnableReasoning {
+		p.reasoningFilter = NewReasoningFilter()
 	}
-	if cfg.EnableCoTCompress {
-		p.cotCompressFilter = NewCoTCompressFilter()
-	}
-	if cfg.EnableCodingAgentCtx {
-		p.codingAgentCtxFilter = NewCodingAgentContextFilter()
-	}
-	if cfg.EnablePerceptionCompress {
-		p.perceptionCompressFilter = NewPerceptionCompressFilter()
-	}
-	if cfg.EnableLightThinker {
-		p.lightThinkerFilter = NewLightThinkerFilter()
-	}
-	if cfg.EnableThinkSwitcher {
-		p.thinkSwitcherFilter = NewThinkSwitcherFilter()
-	}
-	if cfg.EnableGMSA {
-		p.gmsaFilter = NewGMSAFilter()
-	}
-	if cfg.EnableCARL {
-		p.carlFilter = NewCARLFilter()
-	}
-	if cfg.EnableSlimInfer {
-		p.slimInferFilter = NewSlimInferFilter()
-	}
-	if cfg.EnableDiffAdapt {
-		p.diffAdaptFilter = NewDiffAdaptFilter()
-	}
-	if cfg.EnableEPiC {
-		p.epicFilter = NewEPiCFilter()
-	}
-	if cfg.EnableSSDP {
-		p.ssdpFilter = NewSSDPFilter()
-	}
-	if cfg.EnableAgentOCR {
-		p.agentOCRFilter = NewAgentOCRFilter()
-	}
-	if cfg.EnableS2MAD {
-		p.s2madFilter = NewS2MADFilter()
-	}
-	if cfg.EnableACON {
-		p.aconFilter = NewACONFilter()
-	}
-	if cfg.EnableLatentCollab {
-		p.latentCollabFilter = NewLatentCollabFilter()
-	}
-	if cfg.EnableGraphCoT {
-		p.graphCoTFilter = NewGraphCoTFilter()
-	}
-	if cfg.EnableRoleBudget {
-		p.roleBudgetFilter = NewRoleBudgetFilter()
-	}
-	if cfg.EnableSWEAdaptive {
-		p.sweAdaptiveLoop = NewSWEAdaptiveLoopFilter()
-	}
-	if cfg.EnableAgentOCRHist {
-		p.agentOCRHistory = NewAgentOCRHistoryFilter()
-	}
-	if cfg.EnablePlanBudget {
-		p.planBudgetFilter = NewPlanBudgetFilter()
-	}
-	if cfg.EnableLightMem {
-		p.lightMemFilter = NewLightMemFilter()
-	}
-	if cfg.EnablePathShorten {
-		p.pathShortenFilter = NewPathShortenFilter()
-	}
-	if cfg.EnableJSONSampler {
-		p.jsonSamplerFilter = NewJSONSamplerFilter()
-	}
-	if cfg.EnableContextCrunch {
-		p.contextCrunchFilter = NewContextCrunchFilter()
-	}
-	if cfg.EnableSearchCrunch {
-		p.searchCrunchFilter = NewSearchCrunchFilter()
-	}
-	if cfg.EnableStructColl {
-		p.structuralCollapse = NewStructuralCollapseFilter()
+
+	// Unified L16: Advanced (merges L31-L45)
+	if cfg.EnableAdvanced {
+		p.advancedFilter = NewAdvancedFilter()
 	}
 }
 
@@ -344,34 +274,10 @@ func (p *PipelineCoordinator) buildLayers() {
 		{p.lazyPrunerFilter, "18_lazy_pruner"},
 		{p.semanticAnchorFilter, "19_semantic_anchor"},
 		{p.agentMemoryFilter, "20_agent_memory"},
-		{p.marginalInfoGainFilter, "21_marginal_info_gain"},
-		{p.nearDedupFilter, "22_near_dedup"},
-		{p.cotCompressFilter, "23_cot_compress"},
-		{p.codingAgentCtxFilter, "24_coding_agent_ctx"},
-		{p.perceptionCompressFilter, "25_perception_compress"},
-		{p.lightThinkerFilter, "26_lightthinker"},
-		{p.thinkSwitcherFilter, "27_think_switcher"},
-		{p.gmsaFilter, "28_gmsa"},
-		{p.carlFilter, "29_carl"},
-		{p.slimInferFilter, "30_slim_infer"},
-		{p.diffAdaptFilter, "31_difft_adapt"},
-		{p.epicFilter, "32_epic"},
-		{p.ssdpFilter, "33_ssdp"},
-		{p.agentOCRFilter, "34_agent_ocr"},
-		{p.s2madFilter, "35_s2_mad"},
-		{p.aconFilter, "36_acon"},
-		{p.latentCollabFilter, "37_latent_collab"},
-		{p.graphCoTFilter, "38_graph_cot"},
-		{p.roleBudgetFilter, "39_role_budget"},
-		{p.sweAdaptiveLoop, "40_swe_adaptive_loop"},
-		{p.agentOCRHistory, "41_agent_ocr_history"},
-		{p.planBudgetFilter, "42_plan_budget"},
-		{p.lightMemFilter, "43_lightmem"},
-		{p.pathShortenFilter, "44_path_shorten"},
-		{p.jsonSamplerFilter, "45_json_sampler"},
-		{p.contextCrunchFilter, "46_context_crunch"},
-		{p.searchCrunchFilter, "47_search_crunch"},
-		{p.structuralCollapse, "48_structural_collapse"},
+		// Unified layers
+		{p.edgeCaseFilter, "14_edge_case"},
+		{p.reasoningFilter, "15_reasoning"},
+		{p.advancedFilter, "16_advanced"},
 	}
 }
 
