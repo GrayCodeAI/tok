@@ -197,14 +197,14 @@ output, applies intelligent filtering, and tracks token savings.`,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				return cmd.Help()
+				return showPowerfulWelcome(cmd)
 			}
 
 			fallback := shared.GetFallback()
 			output, handled, err := fallback.Handle(args)
 
 			if !handled {
-				return fmt.Errorf("unknown command: %s", args[0])
+				return fmt.Errorf("unknown command: %s\n\nTip: Run 'tokman --help' for 100+ available commands", args[0])
 			}
 
 			fmt.Print(output)
@@ -518,4 +518,46 @@ func isOperationalCommand(cmd *cobra.Command) bool {
 	}
 
 	return true
+}
+
+// showPowerfulWelcome displays a helpful welcome message for the CLI
+func showPowerfulWelcome(cmd *cobra.Command) error {
+	fmt.Println()
+	fmt.Println("╔════════════════════════════════════════════════════════════╗")
+	fmt.Println("║                    🚀 TokMan CLI v" + shared.Version + "                     ║")
+	fmt.Println("╠════════════════════════════════════════════════════════════╣")
+	fmt.Println("║  Token-aware CLI proxy - 60-90% token reduction           ║")
+	fmt.Println("╚════════════════════════════════════════════════════════════╝")
+	fmt.Println()
+	fmt.Println("📚 QUICK START:")
+	fmt.Println()
+	fmt.Println("  Run any command with automatic compression:")
+	fmt.Println("    tokman git status")
+	fmt.Println("    tokman docker ps")
+	fmt.Println("    tokman kubectl logs pod-123")
+	fmt.Println()
+	fmt.Println("  Or pipe output through TokMan:")
+	fmt.Println("    git status | tokman")
+	fmt.Println("    cat large.log | tokman")
+	fmt.Println()
+	fmt.Println("📊 CHECK YOUR SAVINGS:")
+	fmt.Println("    tokman gain          # Quick savings summary")
+	fmt.Println("    tokman audit         # Detailed optimization report")
+	fmt.Println("    tokman economics     # Cost analysis")
+	fmt.Println()
+	fmt.Println("🔧 COMMON COMMANDS:")
+	fmt.Println("    tokman git <cmd>     # Git with compression")
+	fmt.Println("    tokman docker <cmd>  # Docker with compression")
+	fmt.Println("    tokman kubectl <cmd> # Kubernetes with compression")
+	fmt.Println("    tokman go test       # Go tests with compression")
+	fmt.Println()
+	fmt.Println("⚡ POWER USER FEATURES:")
+	fmt.Println("    tokman agent         # Interactive agent mode")
+	fmt.Println("    tokman shell         # Interactive shell")
+	fmt.Println("    tokman compress      # Direct text compression")
+	fmt.Println("    tokman benchmark     # Performance benchmarks")
+	fmt.Println()
+	fmt.Println("💡 TIP: Run 'tokman --help' to see all 100+ commands")
+	fmt.Println()
+	return nil
 }
