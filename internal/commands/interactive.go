@@ -88,11 +88,15 @@ func (cli *InteractiveCLI) printWelcome() {
 }
 
 func (cli *InteractiveCLI) printInputBox() {
-	// Big prominent input box at bottom
-	fmt.Println()
-	fmt.Println(color.CyanString(strings.Repeat("─", cli.width)))
+	// Proper box with corners like Claude Code
+	width := cli.width - 4
 	
-	// Show context if exists
+	fmt.Println()
+	
+	// Top border
+	fmt.Println(color.CyanString("  ┌" + strings.Repeat("─", width) + "┐"))
+	
+	// Context line
 	if len(cli.session.Files) > 0 {
 		pct := float64(cli.session.TotalTokens) / float64(cli.session.Budget) * 100
 		var pctStr string
@@ -103,22 +107,33 @@ func (cli *InteractiveCLI) printInputBox() {
 		} else {
 			pctStr = color.GreenString(fmt.Sprintf("%.0f%%", pct))
 		}
-		fmt.Printf("  %s %d files · %s tokens (%s of %s)\n",
-			color.HiBlackString("Context:"),
+		line := fmt.Sprintf("Context: %d files · %s tokens (%s of %s)",
 			len(cli.session.Files),
 			formatNumber(cli.session.TotalTokens),
 			pctStr,
 			formatNumber(cli.session.Budget))
+		padding := width - len(line) - 1
+		fmt.Printf("  %s %s%s%s\n", 
+			color.CyanString("│"),
+			color.HiBlackString(line),
+			strings.Repeat(" ", padding),
+			color.CyanString("│"))
 	}
 	
 	// Mode line
-	fmt.Printf("  %s · %s\n",
-		color.HiBlackString("Mode: "+cli.session.Mode),
-		color.HiBlackString("Budget: "+formatNumber(cli.session.Budget)))
+	modeLine := fmt.Sprintf("Mode: %s · Budget: %s", cli.session.Mode, formatNumber(cli.session.Budget))
+	padding := width - len(modeLine) - 1
+	fmt.Printf("  %s %s%s%s\n",
+		color.CyanString("│"),
+		color.HiBlackString(modeLine),
+		strings.Repeat(" ", padding),
+		color.CyanString("│"))
 	
-	// Separator and prompt
-	fmt.Println(color.CyanString("  " + strings.Repeat("─", cli.width-4)))
-	fmt.Printf("  %s  ", color.CyanString("▶"))
+	// Separator
+	fmt.Println(color.CyanString("  ├" + strings.Repeat("─", width) + "┤"))
+	
+	// Input line with >
+	fmt.Printf("  %s %s ", color.CyanString("│"), color.WhiteString(">"))
 }
 
 func (cli *InteractiveCLI) clearScreen() {
@@ -140,8 +155,7 @@ func (cli *InteractiveCLI) loop() error {
 			continue
 		}
 
-		// In interactive mode, input is already shown after the prompt
-		// In pipe mode, we just need spacing
+		// Space after input
 		fmt.Println()
 
 		// Process
