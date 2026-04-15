@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
 // FilterParams for tokman_filter tool
@@ -230,14 +231,39 @@ Recommendations:
 
 // handleGetStats returns usage statistics
 func (s *Server) handleGetStats(arguments json.RawMessage) (*ToolsCallResult, error) {
-	// TODO: Integrate with tracking package
-	stats := `TokMan Statistics
-=================
+	// Get tracking data if available
+	tracker := tracking.GetGlobalTracker()
 
-Current Session:
+	var sessionStats string
+	if tracker != nil {
+		summary, err := tracker.GetSavings("")
+		if err == nil && summary != nil {
+			sessionStats = fmt.Sprintf(`Current Session:
+- Commands processed: %d
+- Total tokens saved: %d
+- Average compression: %.1f%%
+`,
+				summary.TotalCommands,
+				summary.TotalSaved,
+				summary.ReductionPct)
+		}
+	}
+
+	if sessionStats == "" {
+		sessionStats = `Current Session:
 - Commands processed: 0 (tracking not enabled)
 - Total tokens saved: 0
 - Average compression: N/A
+
+For detailed stats, enable tracking in config:
+[tracking]
+enabled = true`
+	}
+
+	stats := fmt.Sprintf(`TokMan Statistics
+=================
+
+%s
 
 Available Tools:
 - tokman_filter: Filter arbitrary text
@@ -245,11 +271,7 @@ Available Tools:
 - tokman_analyze_output: Analyze without filtering
 - tokman_get_stats: This tool
 - tokman_explain_layers: Explain compression layers
-
-For detailed stats, enable tracking in config:
-[tracking]
-enabled = true
-`
+`, sessionStats)
 
 	return &ToolsCallResult{
 		Content: []Content{

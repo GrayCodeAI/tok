@@ -15,6 +15,31 @@ type BytePool struct {
 	hugePool   sync.Pool // > 100KB
 }
 
+// bufferPools holds reusable bytes.Buffer pools by size category
+type bufferPools struct {
+	small  sync.Pool // < 1KB
+	medium sync.Pool // 1KB - 10KB
+	large  sync.Pool // 10KB - 100KB
+}
+
+var globalBufferPools = &bufferPools{
+	small: sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 1024))
+		},
+	},
+	medium: sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 10240))
+		},
+	},
+	large: sync.Pool{
+		New: func() interface{} {
+			return bytes.NewBuffer(make([]byte, 0, 102400))
+		},
+	},
+}
+
 // Global byte pool instance
 var globalBytePool = NewBytePool()
 
@@ -84,16 +109,41 @@ func (p *BytePool) Put(b *[]byte) {
 	}
 }
 
-// AcquireStringBuilder gets a strings.Builder from the pool
+// AcquireStringBuilder gets a bytes.Buffer from the pool based on capacity needs.
+// The returned buffer is reset and ready for use.
 func (p *BytePool) AcquireStringBuilder(capacity int) *bytes.Buffer {
-	buf := bytes.NewBuffer(make([]byte, 0, capacity))
+	var buf *bytes.Buffer
+
+	switch {
+	case capacity <= 1024:
+		buf = globalBufferPools.small.Get().(*bytes.Buffer)
+	case capacity <= 10240:
+		buf = globalBufferPools.medium.Get().(*bytes.Buffer)
+	default:
+		buf = globalBufferPools.large.Get().(*bytes.Buffer)
+	}
+
+	buf.Reset()
 	return buf
 }
 
-// ReleaseStringBuilder returns a builder to the pool (not actually pooled, just for API compatibility)
+// ReleaseStringBuilder returns a buffer to the appropriate pool for reuse.
+// Buffers are reset before pooling to prevent memory leaks.
 func (p *BytePool) ReleaseStringBuilder(buf *bytes.Buffer) {
-	// bytes.Buffer doesn't have a Reset that reduces capacity, so we just let GC handle it
-	// In production, we might want to pool these too
+	if buf == nil {
+		return
+	}
+
+	// Reset and return to pool based on capacity
+	capLen := buf.Cap()
+	switch {
+	case capLen <= 1024:
+		globalBufferPools.small.Put(buf)
+	case capLen <= 10240:
+		globalBufferPools.medium.Put(buf)
+	default:
+		globalBufferPools.large.Put(buf)
+	}
 }
 
 // GetBytes is a convenience function to get bytes from the global pool

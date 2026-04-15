@@ -10,6 +10,7 @@ import (
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/discover"
 )
 
@@ -164,8 +165,15 @@ func isDenied(baseCmd string, parts []string) bool {
 }
 
 func isDisabled(baseCmd string) bool {
-	// TODO: Read from config file
-	// For now, no commands are disabled by default
+	// Read disabled commands from config if available
+	cfg, err := config.Load("")
+	if err == nil && cfg != nil && cfg.Hooks.ExcludedCommands != nil {
+		for _, cmd := range cfg.Hooks.ExcludedCommands {
+			if baseCmd == cmd {
+				return true
+			}
+		}
+	}
 	return false
 }
 

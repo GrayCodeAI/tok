@@ -174,118 +174,141 @@ func IsCode(output string) bool {
 	return false
 }
 
+// languageIndicator defines a pattern and score for language detection
+type languageIndicator struct {
+	patterns []string
+	score    int
+}
+
+// languageRules contains detection rules for each language
+var languageRules = map[string][]languageIndicator{
+	"go": {
+		{[]string{"func "}, 10},
+		{[]string{"package "}, 5},
+		{[]string{"import (", "fmt.", " := "}, 5},
+	},
+	"rust": {
+		{[]string{"fn ", "pub fn"}, 10},
+		{[]string{"impl ", "trait ", "let mut"}, 5},
+		{[]string{"&str", "Vec<", "Option<"}, 10},
+	},
+	"python": {
+		{[]string{"self,", "self):"}, 10},
+		{[]string{"from "}, 3},
+	},
+	"java": {
+		{[]string{"public class ", "private ", "protected "}, 5},
+		{[]string{"System.out.", "public static void main"}, 10},
+	},
+	"cpp": {
+		{[]string{"std::", "cout", "cin"}, 15},
+	},
+	"c": {
+		{[]string{"printf(", "malloc("}, 10},
+	},
+	"ruby": {
+		{[]string{"puts ", "require '", "end\n"}, 5},
+	},
+	"shell": {
+		{[]string{"chmod", "chown", "sudo "}, 3},
+	},
+}
+
+// sqlKeywords for SQL detection
+var sqlKeywords = []string{"SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "JOIN", "GROUP BY", "ORDER BY"}
+
+// typescriptIndicators for TypeScript detection
+var typescriptIndicators = []string{
+	": string", ": number", ": boolean", ": void",
+	": any", ": unknown", "interface ", "type ", "enum ", "namespace ",
+}
+
 // DetectLanguage attempts to detect the programming language from output
 // using weighted scoring across multiple indicators.
 func DetectLanguage(output string) string {
-	scores := map[string]int{
-		"go": 0, "python": 0, "rust": 0, "javascript": 0,
-		"typescript": 0, "java": 0, "c": 0, "cpp": 0,
-		"ruby": 0, "sql": 0, "shell": 0,
-	}
+	scores := make(map[string]int)
 
-	// Go indicators (high weight since "func" is distinctive)
-	if strings.Contains(output, "func ") {
-		scores["go"] = 10
-	}
-	if strings.Contains(output, "package ") {
-		scores["go"] += 5
-	}
-	if strings.Contains(output, "import (") || strings.Contains(output, "fmt.") || strings.Contains(output, " := ") {
-		scores["go"] += 5
-	}
-
-	// Rust indicators
-	if strings.Contains(output, "fn ") || strings.Contains(output, "pub fn") {
-		scores["rust"] += 10
-	}
-	if strings.Contains(output, "impl ") || strings.Contains(output, "trait ") || strings.Contains(output, "let mut") {
-		scores["rust"] += 5
-	}
-	if strings.Contains(output, "&str") || strings.Contains(output, "Vec<") || strings.Contains(output, "Option<") {
-		scores["rust"] += 10
-	}
-
-	// Python indicators
-	if strings.Contains(output, "def ") {
-		if strings.Contains(output, "self,") || strings.Contains(output, "self):") {
-			scores["python"] += 10
-		} else {
-			scores["python"] += 5
+	// Apply rule-based scoring
+	for lang, rules := range languageRules {
+		for _, rule := range rules {
+			for _, pattern := range rule.patterns {
+				if strings.Contains(output, pattern) {
+					scores[lang] += rule.score
+					break
+				}
+			}
 		}
+	}
+
+	// Python-specific detection with curly brace penalty
+	detectPython(output, scores)
+
+	// SQL detection
+	detectSQL(output, scores)
+
+	// JavaScript/TypeScript detection
+	detectJavaScriptFamily(output, scores)
+
+	// C/C++ shared indicators
+	if strings.Contains(output, "#include") {
+		scores["c"] += 5
+		scores["cpp"] += 5
+	}
+
+	// Ruby-specific detection
+	detectRuby(output, scores)
+
+	return selectBestLanguage(scores)
+}
+
+func detectPython(output string, scores map[string]int) {
+	if strings.Contains(output, "def ") {
+		scores["python"] += 5
 	}
 	if strings.Contains(output, "import ") {
-		if strings.Contains(output, "from ") {
-			scores["python"] += 3
-		}
+		scores["python"] += 2
 	}
-	// Penalize Python if there are curly braces (not Python style)
+	// Penalize Python if there are curly braces
 	if strings.Contains(output, "{") && strings.Contains(output, "}") {
 		scores["python"] -= 5
 	}
+}
 
-	// SQL indicators - even a single SQL keyword in a command-like context counts
-	// Requires uppercase keywords to avoid false positives with English text
-	sqlKeywords := 0
-	for _, kw := range []string{"SELECT", "FROM", "WHERE", "INSERT", "UPDATE", "DELETE", "JOIN", "GROUP BY", "ORDER BY"} {
+func detectSQL(output string, scores map[string]int) {
+	keywordCount := 0
+	for _, kw := range sqlKeywords {
 		if strings.Contains(output, kw) {
-			sqlKeywords++
+			keywordCount++
 		}
 	}
-	if sqlKeywords >= 1 {
-		scores["sql"] = sqlKeywords * 15
+	if keywordCount > 0 {
+		scores["sql"] = keywordCount * 15
 	}
+}
 
-	// JavaScript/TypeScript
+func detectJavaScriptFamily(output string, scores map[string]int) {
 	if strings.Contains(output, "function ") || strings.Contains(output, "const ") || strings.Contains(output, "let ") {
 		scores["javascript"] += 5
 		if strings.Contains(output, "=>") {
 			scores["javascript"] += 3
 		}
 	}
-	// TypeScript type annotations (includes function return types like ": void", ": string", ": number")
-	if strings.Contains(output, ": string") || strings.Contains(output, ": number") ||
-		strings.Contains(output, ": boolean") || strings.Contains(output, ": void") ||
-		strings.Contains(output, ": any") || strings.Contains(output, ": unknown") ||
-		strings.Contains(output, "interface ") || strings.Contains(output, "type ") ||
-		strings.Contains(output, "enum ") || strings.Contains(output, "namespace ") {
-		scores["typescript"] += 15
-	}
 
-	// Java indicators
-	if strings.Contains(output, "public class ") || strings.Contains(output, "private ") || strings.Contains(output, "protected ") {
-		scores["java"] += 5
+	for _, indicator := range typescriptIndicators {
+		if strings.Contains(output, indicator) {
+			scores["typescript"] += 15
+			break
+		}
 	}
-	if strings.Contains(output, "System.out.") || strings.Contains(output, "public static void main") {
-		scores["java"] += 10
-	}
+}
 
-	// C/C++ indicators
-	if strings.Contains(output, "#include") {
-		scores["c"] += 5
-		scores["cpp"] += 5
-	}
-	if strings.Contains(output, "std::") || strings.Contains(output, "cout") || strings.Contains(output, "cin") {
-		scores["cpp"] += 15
-	}
-	if strings.Contains(output, "printf(") || strings.Contains(output, "malloc(") {
-		scores["c"] += 10
-	}
-
-	// Ruby indicators
-	if strings.Contains(output, "puts ") || strings.Contains(output, "require '") || strings.Contains(output, "end\n") {
-		scores["ruby"] += 5
-	}
+func detectRuby(output string, scores map[string]int) {
 	if strings.Contains(output, "def ") && !strings.Contains(output, "self:") {
-		// Ruby uses "def" but without "self:" which Python uses
 		scores["ruby"] += 3
 	}
+}
 
-	// Shell indicators
-	if strings.Contains(output, "chmod") || strings.Contains(output, "chown") || strings.Contains(output, "sudo ") {
-		scores["shell"] += 3
-	}
-
-	// Find highest score
+func selectBestLanguage(scores map[string]int) string {
 	bestLang := "unknown"
 	bestScore := 0
 	for lang, score := range scores {
@@ -294,7 +317,6 @@ func DetectLanguage(output string) string {
 			bestLang = lang
 		}
 	}
-
 	return bestLang
 }
 

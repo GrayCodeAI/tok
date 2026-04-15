@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -278,23 +281,15 @@ func applyFilterRule(rule toml.TOMLFilterRule, input string) string {
 	return joinLines(filtered)
 }
 
+// ansiEscapePattern matches ANSI escape sequences including:
+// - Standard escape sequences: ESC[<params><letter>
+// - Extended sequences: ESC[<params>;<params><letter>
+// - OSC sequences: ESC]<params><BEL> or ESC]<params>ESC\
+// - Cursor positioning, colors, styles, etc.
+var ansiEscapePattern = regexp.MustCompile(`\x1b\[[0-9;]*[A-Za-z]|\x1b\][0-9;]*(?:\x07|\x1b\\)|\x1b\[[\?0-9]*[hl]`)
+
 func stripANSI(s string) string {
-	// Simple ANSI escape sequence removal
-	// TODO: Use more robust regex
-	result := ""
-	inEscape := false
-	for _, ch := range s {
-		if ch == '\x1b' {
-			inEscape = true
-		} else if inEscape {
-			if (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') {
-				inEscape = false
-			}
-		} else {
-			result += string(ch)
-		}
-	}
-	return result
+	return ansiEscapePattern.ReplaceAllString(s, "")
 }
 
 func filterLines(lines []string, rule toml.TOMLFilterRule) []string {
@@ -335,10 +330,42 @@ func filterLines(lines []string, rule toml.TOMLFilterRule) []string {
 	return result
 }
 
+// regexCache stores compiled regex patterns for reuse
+var regexCache = &sync.Map{}
+
 func matchPattern(pattern, text string) (bool, error) {
-	// Simple pattern matching for now
-	// TODO: Use compiled regex cache
-	return filepath.Match(pattern, text)
+	// Check if pattern contains regex metacharacters
+	if !containsRegexMetachars(pattern) {
+		// Use simple glob matching for simple patterns
+		return filepath.Match(pattern, text)
+	}
+
+	// Try to get cached regex
+	if cached, ok := regexCache.Load(pattern); ok {
+		re := cached.(*regexp.Regexp)
+		return re.MatchString(text), nil
+	}
+
+	// Compile and cache new regex
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		// Fall back to glob matching for invalid regex
+		return filepath.Match(pattern, text)
+	}
+
+	regexCache.Store(pattern, re)
+	return re.MatchString(text), nil
+}
+
+func containsRegexMetachars(s string) bool {
+	// Check for regex-specific metacharacters not used in glob patterns
+	metachars := []string{"^", "$", "+", "?", "|", "(", ")", "[", "]", "{", "}"}
+	for _, char := range metachars {
+		if strings.Contains(s, char) {
+			return true
+		}
+	}
+	return false
 }
 
 func splitLines(s string) []string {
