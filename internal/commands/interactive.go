@@ -1,5 +1,4 @@
 // Package commands provides a Claude Code-style interactive CLI.
-// Big prominent input box at bottom like Claude Code.
 package commands
 
 import (
@@ -62,13 +61,12 @@ func RunInteractive() error {
 		width: 80,
 	}
 
-	cli.clearScreen()
 	cli.printWelcome()
 	return cli.loop()
 }
 
 func (cli *InteractiveCLI) printWelcome() {
-	// Big header like Claude Code
+	// Header
 	fmt.Println()
 	fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
 	fmt.Println()
@@ -87,11 +85,44 @@ func (cli *InteractiveCLI) printWelcome() {
 	fmt.Println()
 }
 
+func (cli *InteractiveCLI) loop() error {
+	for {
+		// Print input box
+		cli.printInputBox()
+
+		if !cli.scanner.Scan() {
+			break
+		}
+
+		input := strings.TrimSpace(cli.scanner.Text())
+		if input == "" {
+			fmt.Println()
+			continue
+		}
+
+		// Show what user typed
+		fmt.Printf("\n  %s %s\n\n", color.CyanString("▶"), input)
+
+		// Process
+		if err := cli.handle(input); err != nil {
+			if err.Error() == "exit" {
+				fmt.Println()
+				fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
+				fmt.Println()
+				fmt.Println("  " + color.HiBlackString("Goodbye!"))
+				fmt.Println()
+				return nil
+			}
+			cli.printError(err.Error())
+		}
+		
+		fmt.Println()
+	}
+	return nil
+}
+
 func (cli *InteractiveCLI) printInputBox() {
-	// Proper box with corners like Claude Code
 	width := cli.width - 4
-	
-	fmt.Println()
 	
 	// Top border
 	fmt.Println(color.CyanString("  ┌" + strings.Repeat("─", width) + "┐"))
@@ -132,46 +163,14 @@ func (cli *InteractiveCLI) printInputBox() {
 	// Separator
 	fmt.Println(color.CyanString("  ├" + strings.Repeat("─", width) + "┤"))
 	
-	// Input line with >
+	// Input line
 	fmt.Printf("  %s %s ", color.CyanString("│"), color.WhiteString(">"))
 }
 
-func (cli *InteractiveCLI) clearScreen() {
-	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
-		fmt.Print("\033[H\033[2J")
-	}
-}
-
-func (cli *InteractiveCLI) loop() error {
-	for {
-		cli.printInputBox()
-
-		if !cli.scanner.Scan() {
-			break
-		}
-
-		input := strings.TrimSpace(cli.scanner.Text())
-		if input == "" {
-			continue
-		}
-
-		// Space after input
-		fmt.Println()
-
-		// Process
-		if err := cli.handle(input); err != nil {
-			if err.Error() == "exit" {
-				fmt.Println()
-				fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
-				fmt.Println()
-				fmt.Println("  " + color.HiBlackString("Goodbye!"))
-				fmt.Println()
-				return nil
-			}
-			cli.printError(err.Error())
-		}
-	}
-	return nil
+func (cli *InteractiveCLI) printBoxBottom() {
+	// Don't print bottom border - keeps box open like Claude Code
+	// In interactive mode, the input appears after the >
+	fmt.Println()
 }
 
 func (cli *InteractiveCLI) handle(input string) error {
@@ -285,7 +284,7 @@ func (cli *InteractiveCLI) cmdHelp() error {
 		fmt.Println()
 	}
 	
-	fmt.Println(color.HiBlackString("  Type any shell command directly (git status, docker ps, etc.)"))
+	fmt.Println("  " + color.HiBlackString("Type any shell command directly (git status, docker ps, etc.)"))
 	return nil
 }
 
@@ -338,15 +337,14 @@ func (cli *InteractiveCLI) cmdList() error {
 		return nil
 	}
 
-	fmt.Printf("  %s (%d files, %s tokens)\n", 
+	fmt.Printf("  %s (%d files, %s tokens)\n\n",
 		color.WhiteString("Context:"),
 		len(cli.session.Files),
 		formatNumber(cli.session.TotalTokens))
-	fmt.Println()
 	
 	for _, f := range cli.session.Files {
 		name := truncate(f.Path, 45)
-		fmt.Printf("  %s  %-47s %s  %s\n", 
+		fmt.Printf("  %s  %-47s %s  %s\n",
 			color.GreenString("●"),
 			name,
 			color.HiBlackString(formatBytes(f.Size)),
@@ -362,7 +360,7 @@ func (cli *InteractiveCLI) cmdStatus() error {
 	fmt.Printf("  Mode:   %s\n", cli.session.Mode)
 	fmt.Printf("  Budget: %s tokens\n", formatNumber(cli.session.Budget))
 	fmt.Printf("  Files:  %d\n", len(cli.session.Files))
-	fmt.Printf("  Tokens: %s / %s\n", 
+	fmt.Printf("  Tokens: %s / %s\n",
 		formatNumber(cli.session.TotalTokens),
 		formatNumber(cli.session.Budget))
 	fmt.Printf("  Uptime: %s\n", time.Since(cli.session.StartTime).Round(time.Second))
@@ -377,7 +375,6 @@ func (cli *InteractiveCLI) cmdTokens() error {
 	fmt.Println(color.WhiteString("Token Usage"))
 	fmt.Println()
 	
-	// Big progress bar
 	width := 60
 	filled := int(float64(width) * pct / 100)
 	if filled > width {
@@ -396,15 +393,13 @@ func (cli *InteractiveCLI) cmdTokens() error {
 		coloredBar = color.GreenString(bar)
 	}
 	
-	fmt.Printf("  %s\n", coloredBar)
-	fmt.Println()
+	fmt.Printf("  %s\n\n", coloredBar)
 	fmt.Printf("  Used:      %s tokens (%.1f%%)\n", formatNumber(used), pct)
 	fmt.Printf("  Budget:    %s tokens\n", formatNumber(budget))
 	fmt.Printf("  Remaining: %s tokens\n", formatNumber(budget-used))
 	
 	if pct > 90 {
-		fmt.Println()
-		fmt.Printf("  %s Context nearly full! Run /compact.\n", color.YellowString("⚠"))
+		fmt.Printf("\n  %s Context nearly full! Run /compact.\n", color.YellowString("⚠"))
 	}
 	
 	return nil
@@ -542,7 +537,6 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 		return fmt.Errorf("%s: %v", parts[0], err)
 	}
 
-	// Compress
 	cfg := filter.PipelineConfig{
 		Mode:            filter.Mode(cli.session.Mode),
 		SessionTracking: true,
@@ -550,7 +544,6 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 	p := filter.NewPipelineCoordinator(cfg)
 	compressed, stats := p.Process(string(output))
 
-	// Show output
 	if len(compressed) > 0 {
 		lines := strings.Split(compressed, "\n")
 		for _, line := range lines[:min(len(lines), 15)] {
@@ -571,8 +564,6 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 
 	return nil
 }
-
-// Helpers
 
 func (cli *InteractiveCLI) printSuccess(msg string) {
 	fmt.Printf("  %s %s\n", color.GreenString("✓"), msg)
