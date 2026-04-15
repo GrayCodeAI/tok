@@ -8,10 +8,11 @@
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?style=flat-square&logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-144_packages-success?style=flat-square&logo=go)](.)
-[![Coverage](https://img.shields.io/badge/Coverage-Improving-yellow?style=flat-square)](..)
+[![CI](https://github.com/GrayCodeAI/tokman/workflows/CI/badge.svg)](https://github.com/GrayCodeAI/tokman/actions)
+[![Security](https://github.com/GrayCodeAI/tokman/workflows/Security/badge.svg)](https://github.com/GrayCodeAI/tokman/actions)
+[![codecov](https://codecov.io/gh/GrayCodeAI/tokman/branch/main/graph/badge.svg)](https://codecov.io/gh/GrayCodeAI/tokman)
+[![Go Report Card](https://goreportcard.com/badge/github.com/GrayCodeAI/tokman)](https://goreportcard.com/report/github.com/GrayCodeAI/tokman)
 [![Discord](https://img.shields.io/discord/1470188214710046894?label=Discord&logo=discord&style=flat-square&color=5865F2)](https://discord.gg/HrVA7ePyV)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen?style=flat-square&logo=github-actions)](.)
 
 [🌐 Website](https://tokman.dev) · [📖 Documentation](./docs) · [💬 Discord](https://discord.gg/HrVA7ePyV) · [🐛 Issues](https://github.com/GrayCodeAI/tokman/issues)
 
