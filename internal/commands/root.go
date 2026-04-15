@@ -197,8 +197,8 @@ output, applies intelligent filtering, and tracks token savings.`,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
-				// Launch professional CLI mode
-				return RunProfessional()
+				// Launch PI-style CLI mode
+				return RunPiStyle()
 			}
 
 			fallback := shared.GetFallback()
