@@ -1,8 +1,5 @@
-// Package commands provides an interactive CLI inspired by gh/vercel/stripe.
-// Design patterns from:
-// - github.com/cli/cli (clean output, tables)
-// - github.com/vercel/vercel (status indicators, minimal)
-// - github.com/stripe/stripe-cli (professional formatting)
+// Package commands provides an interactive CLI with prominent input box.
+// Inspired by Claude Code and PI agent interfaces.
 package commands
 
 import (
@@ -22,12 +19,13 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
-// InteractiveCLI provides a gh/vercel-inspired interface
+// InteractiveCLI provides a chat-like interface with input box
 type InteractiveCLI struct {
 	scanner *bufio.Scanner
 	tracker *tracking.Tracker
 	config  *config.Config
 	session *Session
+	width   int
 }
 
 type Session struct {
@@ -61,47 +59,96 @@ func RunInteractive() error {
 			Mode:      "balanced",
 			StartTime: time.Now(),
 		},
+		width: 70,
 	}
 
-	cli.printWelcome()
+	cli.clearScreen()
+	cli.printHeader()
 	return cli.loop()
 }
 
-// printWelcome shows a minimal welcome like gh CLI
-func (cli *InteractiveCLI) printWelcome() {
+// printHeader shows the top header
+func (cli *InteractiveCLI) printHeader() {
+	// Title bar
 	fmt.Println()
-	fmt.Printf("%s %s\n", 
-		color.CyanString("TokMan"),
-		color.HiBlackString("v"+shared.Version))
+	fmt.Println(color.CyanString("  ╔" + strings.Repeat("═", cli.width-4) + "╗"))
 	
+	title := "TokMan"
+	subtitle := "Token-efficient CLI"
+	padding := (cli.width - 4 - len(title) - 3 - len(subtitle)) / 2
+	line := strings.Repeat(" ", padding) + title + "  " + subtitle +
+		strings.Repeat(" ", cli.width-4-padding-len(title)-3-len(subtitle))
+	fmt.Println(color.CyanString("  ║") + line + color.CyanString("║"))
+	
+	fmt.Println(color.CyanString("  ╚" + strings.Repeat("═", cli.width-4) + "╝"))
+	
+	// Stats line
 	if cli.tracker != nil {
 		if summary, err := cli.tracker.GetSavings(""); err == nil && summary.TotalCommands > 0 {
-			fmt.Printf("  %s %d commands  %s %.1f%% avg savings\n",
-				color.HiBlackString("Session:"),
-				summary.TotalCommands,
-				color.HiBlackString("·"),
-				summary.ReductionPct)
+			fmt.Printf("  Session: %d commands  ·  Savings: %.1f%% avg\n",
+				summary.TotalCommands, summary.ReductionPct)
 		}
 	}
 	
+	// Quick help
 	fmt.Println()
+	fmt.Println(color.HiBlackString("  Commands: /add /drop /ls /status /tokens /cost /help /quit"))
+	fmt.Println()
+}
+
+// printInputBox shows the prominent input box at bottom
+func (cli *InteractiveCLI) printInputBox() {
+	// Build status line for inside the box
+	status := cli.getStatusString()
 	
-	// Quick reference - gh CLI style
-	fmt.Println(color.HiBlackString("Usage:"))
-	fmt.Println("  " + color.CyanString("/add <file>") + "     Add file to context")
-	fmt.Println("  " + color.CyanString("/status") + "         Show session status")
-	fmt.Println("  " + color.CyanString("/tokens") + "         Show token usage")
-	fmt.Println("  " + color.CyanString("/help") + "           List all commands")
 	fmt.Println()
-	fmt.Println("  Or type any shell command: git status, docker ps, kubectl logs")
-	fmt.Println()
+	fmt.Println(color.CyanString("  ┌" + strings.Repeat("─", cli.width-4) + "┐"))
+	
+	// Status line (if any)
+	if status != "" {
+		padding := cli.width - 4 - len(status) - 1
+		fmt.Printf("  %s %s%s%s\n", 
+			color.CyanString("│"),
+			status,
+			strings.Repeat(" ", padding),
+			color.CyanString("│"))
+	}
+	
+	// Input line with >
+	fmt.Printf("  %s %s ", color.CyanString("│"), color.HiBlackString(">"))
+}
+
+// getStatusString returns context status
+func (cli *InteractiveCLI) getStatusString() string {
+	if len(cli.session.Files) == 0 {
+		return ""
+	}
+	
+	pct := float64(cli.session.TotalTokens) / float64(cli.session.Budget) * 100
+	var pctStr string
+	if pct > 90 {
+		pctStr = color.RedString("%.0f%%", pct)
+	} else if pct > 70 {
+		pctStr = color.YellowString("%.0f%%", pct)
+	} else {
+		pctStr = color.GreenString("%.0f%%", pct)
+	}
+	
+	return fmt.Sprintf("Context: %d files · %s tokens", len(cli.session.Files), pctStr)
+}
+
+// clearScreen clears the terminal
+func (cli *InteractiveCLI) clearScreen() {
+	// Only clear if stdout is a terminal
+	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+		fmt.Print("\033[H\033[2J")
+	}
 }
 
 // loop runs the main REPL
 func (cli *InteractiveCLI) loop() error {
 	for {
-		prompt := cli.buildPrompt()
-		fmt.Print(prompt)
+		cli.printInputBox()
 
 		if !cli.scanner.Scan() {
 			break
@@ -109,12 +156,34 @@ func (cli *InteractiveCLI) loop() error {
 
 		input := strings.TrimSpace(cli.scanner.Text())
 		if input == "" {
+			// In interactive mode, clear empty line
+			if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+				fmt.Print("\033[F\033[2K")
+			}
 			continue
 		}
+
+		// Only manipulate cursor in interactive terminal
+		if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
+			// Move up to erase input box
+			fmt.Print("\033[F\033[2K")
+			if cli.getStatusString() != "" {
+				fmt.Print("\033[F\033[2K")
+			}
+			fmt.Print("\033[F\033[2K\033[F\033[2K")
+		} else {
+			// In pipe mode, just print a separator
+			fmt.Println()
+		}
+		
+		// Show user input as message
+		fmt.Printf("  %s %s\n", color.HiBlackString(">"), input)
 
 		// Process
 		if err := cli.handle(input); err != nil {
 			if err.Error() == "exit" {
+				fmt.Println()
+				fmt.Printf("  %s Goodbye!\n", color.CyanString("TokMan:"))
 				fmt.Println()
 				return nil
 			}
@@ -122,24 +191,6 @@ func (cli *InteractiveCLI) loop() error {
 		}
 	}
 	return nil
-}
-
-// buildPrompt creates a clean prompt like gh CLI
-func (cli *InteractiveCLI) buildPrompt() string {
-	// Simple prompt with optional status
-	if len(cli.session.Files) > 0 {
-		pct := float64(cli.session.TotalTokens) / float64(cli.session.Budget) * 100
-		var status string
-		if pct > 90 {
-			status = color.RedString(fmt.Sprintf("(%d files, %.0f%%)", len(cli.session.Files), pct))
-		} else if pct > 70 {
-			status = color.YellowString(fmt.Sprintf("(%d files, %.0f%%)", len(cli.session.Files), pct))
-		} else {
-			status = color.GreenString(fmt.Sprintf("(%d files, %.0f%%)", len(cli.session.Files), pct))
-		}
-		return fmt.Sprintf("%s %s ", color.CyanString("→"), status)
-	}
-	return color.CyanString("→ ")
 }
 
 // handle processes input
@@ -205,7 +256,7 @@ func (cli *InteractiveCLI) handleCommand(input string) error {
 	case "config", "cfg":
 		return cli.cmdConfig()
 	case "version", "v":
-		fmt.Printf("TokMan version %s\n", shared.Version)
+		fmt.Printf("  TokMan version %s\n", shared.Version)
 		return nil
 	
 	default:
@@ -213,10 +264,9 @@ func (cli *InteractiveCLI) handleCommand(input string) error {
 	}
 }
 
-// cmdHelp shows help like gh CLI
+// cmdHelp shows help
 func (cli *InteractiveCLI) cmdHelp() error {
-	fmt.Println()
-	fmt.Println(color.HiBlackString("Core commands:"))
+	fmt.Printf("  %s\n", color.CyanString("Available commands:"))
 	fmt.Println()
 	
 	commands := []struct {
@@ -231,14 +281,14 @@ func (cli *InteractiveCLI) cmdHelp() error {
 		{"/status", "Show session status"},
 		{"/tokens", "Show token usage with bar"},
 		{"/cost", "Show API cost estimate"},
-		{"/stats", "Show compression statistics"},
+		{"/stats", "Show statistics"},
 		{"", ""},
-		{"/mode <type>", "Set compression mode (fast/balanced/aggressive)"},
+		{"/mode <type>", "Set: fast/balanced/aggressive"},
 		{"/budget <n>", "Set token budget"},
-		{"/filters", "List active compression filters"},
+		{"/filters", "List active filters"},
 		{"/config", "Show configuration"},
 		{"", ""},
-		{"/compact", "Compress context to save tokens"},
+		{"/compact", "Compress context"},
 		{"/help", "Show this help"},
 		{"/quit", "Exit TokMan"},
 	}
@@ -252,12 +302,11 @@ func (cli *InteractiveCLI) cmdHelp() error {
 	}
 	
 	fmt.Println()
-	fmt.Println(color.HiBlackString("You can also type any shell command directly."))
-	fmt.Println()
+	fmt.Println(color.HiBlackString("  Or type any shell command: git status, docker ps, etc."))
 	return nil
 }
 
-// cmdAdd adds a file to context
+// cmdAdd adds a file
 func (cli *InteractiveCLI) cmdAdd(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("usage: /add <file>")
@@ -302,61 +351,51 @@ func (cli *InteractiveCLI) cmdDrop(args []string) error {
 	return fmt.Errorf("file not in context: %s", target)
 }
 
-// cmdList lists files like gh repo list
+// cmdList lists files
 func (cli *InteractiveCLI) cmdList() error {
 	if len(cli.session.Files) == 0 {
-		fmt.Println(color.HiBlackString("No files in context. Use /add <file> to add files."))
+		fmt.Println(color.HiBlackString("  No files in context. Use /add <file> to add."))
 		return nil
 	}
 
-	// Table header like gh CLI
-	fmt.Println()
-	fmt.Printf("  %s  %s  %s\n",
-		padRight("FILE", 40),
-		padRight("SIZE", 10),
-		"TOKENS")
-	fmt.Println(color.HiBlackString("  " + strings.Repeat("─", 60)))
-	
-	for _, f := range cli.session.Files {
-		name := truncate(f.Path, 38)
-		fmt.Printf("  %s  %s  %s\n",
-			padRight(name, 40),
-			padRight(formatBytes(f.Size), 10),
-			formatNumber(f.Tokens))
-	}
-	
-	fmt.Println(color.HiBlackString("  " + strings.Repeat("─", 60)))
-	fmt.Printf("  %s: %d files, %s tokens\n",
-		color.HiBlackString("Total"),
+	fmt.Printf("  %s (%d files, %s tokens)\n", 
+		color.CyanString("Context:"),
 		len(cli.session.Files),
 		formatNumber(cli.session.TotalTokens))
-	fmt.Println()
+	
+	fmt.Println(color.HiBlackString("  " + strings.Repeat("─", 50)))
+	
+	for _, f := range cli.session.Files {
+		name := truncate(f.Path, 35)
+		fmt.Printf("  %s %s %s\n", 
+			color.GreenString("•"),
+			padRight(name, 37),
+			color.HiBlackString("%s, %s", formatBytes(f.Size), formatNumber(f.Tokens)))
+	}
+	
 	return nil
 }
 
 // cmdStatus shows status
 func (cli *InteractiveCLI) cmdStatus() error {
-	fmt.Println()
-	fmt.Printf("  %s %s\n", color.HiBlackString("Mode:"), cli.session.Mode)
-	fmt.Printf("  %s %s tokens\n", color.HiBlackString("Budget:"), formatNumber(cli.session.Budget))
-	fmt.Printf("  %s %d files\n", color.HiBlackString("Files:"), len(cli.session.Files))
-	fmt.Printf("  %s %s / %s tokens (%.1f%%)\n", 
-		color.HiBlackString("Usage:"),
+	fmt.Printf("  %s\n", color.CyanString("Status"))
+	fmt.Printf("    Mode:   %s\n", cli.session.Mode)
+	fmt.Printf("    Budget: %s tokens\n", formatNumber(cli.session.Budget))
+	fmt.Printf("    Files:  %d\n", len(cli.session.Files))
+	fmt.Printf("    Tokens: %s / %s\n", 
 		formatNumber(cli.session.TotalTokens),
-		formatNumber(cli.session.Budget),
-		float64(cli.session.TotalTokens)/float64(cli.session.Budget)*100)
-	fmt.Printf("  %s %s\n", color.HiBlackString("Uptime:"), time.Since(cli.session.StartTime).Round(time.Second))
-	fmt.Println()
+		formatNumber(cli.session.Budget))
+	fmt.Printf("    Uptime: %s\n", time.Since(cli.session.StartTime).Round(time.Second))
 	return nil
 }
 
-// cmdTokens shows token usage with progress bar
+// cmdTokens shows token usage
 func (cli *InteractiveCLI) cmdTokens() error {
 	used := cli.session.TotalTokens
 	budget := cli.session.Budget
 	pct := float64(used) / float64(budget) * 100
 
-	fmt.Println()
+	fmt.Printf("  %s\n", color.CyanString("Token Usage"))
 	
 	// Progress bar
 	width := 40
@@ -378,36 +417,30 @@ func (cli *InteractiveCLI) cmdTokens() error {
 	}
 	
 	fmt.Printf("  %s\n", coloredBar)
-	fmt.Printf("  %s / %s tokens (%.1f%%)\n",
-		color.WhiteString(formatNumber(used)),
-		color.HiBlackString(formatNumber(budget)),
-		pct)
+	fmt.Printf("  %s / %s (%.1f%%)\n", formatNumber(used), formatNumber(budget), pct)
 	
 	if pct > 90 {
-		fmt.Println()
-		fmt.Printf("  %s Context nearly full. Run /compact to free tokens.\n", color.YellowString("!"))
+		fmt.Printf("  %s Context nearly full!\n", color.YellowString("⚠"))
 	}
 	
-	fmt.Println()
 	return nil
 }
 
-// cmdCost shows cost estimate
+// cmdCost shows cost
 func (cli *InteractiveCLI) cmdCost() error {
 	cost := float64(cli.session.TotalTokens) / 1000 * 0.03
 	
-	fmt.Println()
-	fmt.Printf("  %s %s\n", color.HiBlackString("Tokens:"), formatNumber(cli.session.TotalTokens))
-	fmt.Printf("  %s $%.2f\n", color.HiBlackString("Est. cost:"), cost)
-	fmt.Printf("  %s $0.03 / 1K tokens\n", color.HiBlackString("Rate:"))
-	fmt.Println()
+	fmt.Printf("  %s\n", color.CyanString("Cost Estimate"))
+	fmt.Printf("    Tokens: %s\n", formatNumber(cli.session.TotalTokens))
+	fmt.Printf("    Cost:   $%.2f\n", cost)
+	fmt.Printf("    Rate:   $0.03 / 1K tokens\n")
 	return nil
 }
 
-// cmdMode sets compression mode
+// cmdMode sets mode
 func (cli *InteractiveCLI) cmdMode(args []string) error {
 	if len(args) == 0 {
-		fmt.Printf("Current mode: %s (options: fast, balanced, aggressive)\n", cli.session.Mode)
+		fmt.Printf("  Current: %s (fast, balanced, aggressive)\n", cli.session.Mode)
 		return nil
 	}
 
@@ -424,7 +457,7 @@ func (cli *InteractiveCLI) cmdMode(args []string) error {
 // cmdBudget sets budget
 func (cli *InteractiveCLI) cmdBudget(args []string) error {
 	if len(args) == 0 {
-		fmt.Printf("Current budget: %s tokens\n", formatNumber(cli.session.Budget))
+		fmt.Printf("  Current: %s tokens\n", formatNumber(cli.session.Budget))
 		return nil
 	}
 
@@ -438,10 +471,10 @@ func (cli *InteractiveCLI) cmdBudget(args []string) error {
 	return nil
 }
 
-// cmdCompact compresses context
+// cmdCompact compresses
 func (cli *InteractiveCLI) cmdCompact() error {
 	if len(cli.session.Files) == 0 {
-		fmt.Println(color.HiBlackString("No files to compress"))
+		fmt.Println(color.HiBlackString("  No files to compress"))
 		return nil
 	}
 
@@ -452,86 +485,71 @@ func (cli *InteractiveCLI) cmdCompact() error {
 
 	cli.session.TotalTokens = after
 	
-	fmt.Println()
-	fmt.Printf("  %s Compressed context\n", color.GreenString("✓"))
-	fmt.Printf("  Before: %s tokens\n", formatNumber(before))
-	fmt.Printf("  After:  %s tokens\n", formatNumber(after))
-	fmt.Printf("  Saved:  %s tokens (%.0f%%)\n", formatNumber(saved), ratio*100)
-	fmt.Println()
+	cli.printSuccess(fmt.Sprintf("Compressed: %s → %s (saved %s, %.0f%%)",
+		formatNumber(before), formatNumber(after), formatNumber(saved), ratio*100))
 	return nil
 }
 
-// cmdStats shows statistics
+// cmdStats shows stats
 func (cli *InteractiveCLI) cmdStats() error {
 	if cli.tracker == nil {
-		fmt.Println(color.HiBlackString("Tracking not enabled"))
+		fmt.Println(color.HiBlackString("  Tracking not enabled"))
 		return nil
 	}
 
 	summary, err := cli.tracker.GetSavings("")
 	if err != nil || summary.TotalCommands == 0 {
-		fmt.Println(color.HiBlackString("No data yet. Run some commands!"))
+		fmt.Println(color.HiBlackString("  No data yet. Run some commands!"))
 		return nil
 	}
 
-	fmt.Println()
-	fmt.Printf("  %s %s\n", color.HiBlackString("Commands:"), formatNumber(summary.TotalCommands))
-	fmt.Printf("  %s %s\n", color.HiBlackString("Tokens saved:"), formatNumber(summary.TotalSaved))
-	fmt.Printf("  %s %.1f%%\n", color.HiBlackString("Avg reduction:"), summary.ReductionPct)
-	fmt.Printf("  %s $%.2f\n", color.HiBlackString("Est. value:"), float64(summary.TotalSaved)*0.00003)
-	fmt.Println()
+	fmt.Printf("  %s\n", color.CyanString("Statistics"))
+	fmt.Printf("    Commands: %s\n", formatNumber(summary.TotalCommands))
+	fmt.Printf("    Saved:    %s tokens\n", formatNumber(summary.TotalSaved))
+	fmt.Printf("    Avg:      %.1f%% reduction\n", summary.ReductionPct)
+	fmt.Printf("    Value:    $%.2f\n", float64(summary.TotalSaved)*0.00003)
 	return nil
 }
 
-// cmdFilters lists active filters
+// cmdFilters lists filters
 func (cli *InteractiveCLI) cmdFilters() error {
-	fmt.Println()
-	fmt.Println(color.HiBlackString("Active compression filters:"))
-	fmt.Println()
-	
-	filters := []struct {
-		name   string
-		status string
-	}{
-		{"Entropy Filter", "enabled"},
-		{"Perplexity Filter", "enabled"},
-		{"H2O Filter", "enabled"},
-		{"AST Preservation", "enabled"},
-		{"Semantic Compaction", "enabled"},
+	fmt.Printf("  %s\n", color.CyanString("Active Filters"))
+	filters := []string{
+		"Entropy Filter",
+		"Perplexity Filter",
+		"H2O Filter",
+		"AST Preservation",
+		"Semantic Compaction",
 	}
 	
 	for _, f := range filters {
-		fmt.Printf("  %s %s %s\n", color.GreenString("✓"), f.name, color.HiBlackString("["+f.status+"]"))
+		fmt.Printf("    %s %s\n", color.GreenString("✓"), f)
 	}
 	
-	fmt.Println()
 	return nil
 }
 
-// cmdConfig shows configuration
+// cmdConfig shows config
 func (cli *InteractiveCLI) cmdConfig() error {
-	fmt.Println()
-	fmt.Printf("  %s %s\n", color.HiBlackString("Config file:"), config.ConfigPath())
-	fmt.Printf("  %s %s\n", color.HiBlackString("Data dir:"), config.DataPath())
-	fmt.Printf("  %s %s\n", color.HiBlackString("Mode:"), cli.session.Mode)
-	fmt.Printf("  %s %s tokens\n", color.HiBlackString("Budget:"), formatNumber(cli.session.Budget))
-	fmt.Println()
+	fmt.Printf("  %s\n", color.CyanString("Configuration"))
+	fmt.Printf("    Config: %s\n", config.ConfigPath())
+	fmt.Printf("    Data:   %s\n", config.DataPath())
+	fmt.Printf("    Mode:   %s\n", cli.session.Mode)
+	fmt.Printf("    Budget: %s\n", formatNumber(cli.session.Budget))
 	return nil
 }
 
-// executeCommand runs a shell command
+// executeCommand runs shell command
 func (cli *InteractiveCLI) executeCommand(input string) error {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
 		return nil
 	}
 
-	// Check command exists
 	if _, err := exec.LookPath(parts[0]); err != nil {
 		return fmt.Errorf("command not found: %s", parts[0])
 	}
 
-	// Execute
 	cmd := exec.Command(parts[0], parts[1:]...)
 	cmd.Env = os.Environ()
 	output, err := cmd.CombinedOutput()
@@ -540,7 +558,7 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 		return fmt.Errorf("%s: %v", parts[0], err)
 	}
 
-	// Compress output
+	// Compress
 	cfg := filter.PipelineConfig{
 		Mode:            filter.Mode(cli.session.Mode),
 		SessionTracking: true,
@@ -551,19 +569,18 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 	// Show output
 	if len(compressed) > 0 {
 		lines := strings.Split(compressed, "\n")
-		for _, line := range lines[:min(len(lines), 25)] {
-			fmt.Println(line)
+		for _, line := range lines[:min(len(lines), 20)] {
+			fmt.Println("  " + line)
 		}
-		if len(lines) > 25 {
-			fmt.Println(color.HiBlackString(fmt.Sprintf("... %d more lines", len(lines)-25)))
+		if len(lines) > 20 {
+			fmt.Println(color.HiBlackString(fmt.Sprintf("  ... %d more lines", len(lines)-20)))
 		}
 	}
 
-	// Show savings
 	if stats.TotalSaved > 0 {
 		pct := float64(stats.TotalSaved) / float64(stats.OriginalTokens) * 100
 		fmt.Println()
-		fmt.Printf("%s Compressed %s → %s (%.0f%% savings)\n",
+		fmt.Printf("  %s Compressed %s → %s (%.0f%%)\n",
 			color.GreenString("✓"),
 			formatNumber(stats.OriginalTokens),
 			formatNumber(stats.OriginalTokens-stats.TotalSaved),
@@ -573,14 +590,14 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 	return nil
 }
 
-// Helper functions
+// Helpers
 
 func (cli *InteractiveCLI) printSuccess(msg string) {
-	fmt.Printf("%s %s\n", color.GreenString("✓"), msg)
+	fmt.Printf("  %s %s\n", color.GreenString("✓"), msg)
 }
 
 func (cli *InteractiveCLI) printError(msg string) {
-	fmt.Printf("%s %s\n", color.RedString("✗"), msg)
+	fmt.Printf("  %s %s\n", color.RedString("✗"), msg)
 }
 
 func padRight(s string, length int) string {
