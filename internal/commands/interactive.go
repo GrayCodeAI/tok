@@ -1,5 +1,5 @@
-// Package commands provides an interactive CLI with prominent input box.
-// Inspired by Claude Code and PI agent interfaces.
+// Package commands provides a Claude Code-style interactive CLI.
+// Big prominent input box at bottom like Claude Code.
 package commands
 
 import (
@@ -19,7 +19,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
-// InteractiveCLI provides a chat-like interface with input box
+// InteractiveCLI provides a Claude Code-style interface
 type InteractiveCLI struct {
 	scanner *bufio.Scanner
 	tracker *tracking.Tracker
@@ -59,93 +59,74 @@ func RunInteractive() error {
 			Mode:      "balanced",
 			StartTime: time.Now(),
 		},
-		width: 70,
+		width: 80,
 	}
 
 	cli.clearScreen()
-	cli.printHeader()
+	cli.printWelcome()
 	return cli.loop()
 }
 
-// printHeader shows the top header
-func (cli *InteractiveCLI) printHeader() {
-	// Title bar
+func (cli *InteractiveCLI) printWelcome() {
+	// Big header like Claude Code
 	fmt.Println()
-	fmt.Println(color.CyanString("  ╔" + strings.Repeat("═", cli.width-4) + "╗"))
+	fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
+	fmt.Println()
+	fmt.Printf("  %s  %s\n", color.CyanString("◉"), color.WhiteString("TokMan"))
+	fmt.Printf("     %s\n", color.HiBlackString("Token-efficient CLI"))
 	
-	title := "TokMan"
-	subtitle := "Token-efficient CLI"
-	padding := (cli.width - 4 - len(title) - 3 - len(subtitle)) / 2
-	line := strings.Repeat(" ", padding) + title + "  " + subtitle +
-		strings.Repeat(" ", cli.width-4-padding-len(title)-3-len(subtitle))
-	fmt.Println(color.CyanString("  ║") + line + color.CyanString("║"))
-	
-	fmt.Println(color.CyanString("  ╚" + strings.Repeat("═", cli.width-4) + "╝"))
-	
-	// Stats line
 	if cli.tracker != nil {
 		if summary, err := cli.tracker.GetSavings(""); err == nil && summary.TotalCommands > 0 {
-			fmt.Printf("  Session: %d commands  ·  Savings: %.1f%% avg\n",
-				summary.TotalCommands, summary.ReductionPct)
+			fmt.Printf("     %s %d commands · %.1f%% avg savings\n",
+				color.HiBlackString("●"), summary.TotalCommands, summary.ReductionPct)
 		}
 	}
 	
-	// Quick help
 	fmt.Println()
-	fmt.Println(color.HiBlackString("  Commands: /add /drop /ls /status /tokens /cost /help /quit"))
+	fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
 	fmt.Println()
 }
 
-// printInputBox shows the prominent input box at bottom
 func (cli *InteractiveCLI) printInputBox() {
-	// Build status line for inside the box
-	status := cli.getStatusString()
-	
+	// Big prominent input box at bottom
 	fmt.Println()
-	fmt.Println(color.CyanString("  ┌" + strings.Repeat("─", cli.width-4) + "┐"))
+	fmt.Println(color.CyanString(strings.Repeat("─", cli.width)))
 	
-	// Status line (if any)
-	if status != "" {
-		padding := cli.width - 4 - len(status) - 1
-		fmt.Printf("  %s %s%s%s\n", 
-			color.CyanString("│"),
-			status,
-			strings.Repeat(" ", padding),
-			color.CyanString("│"))
+	// Show context if exists
+	if len(cli.session.Files) > 0 {
+		pct := float64(cli.session.TotalTokens) / float64(cli.session.Budget) * 100
+		var pctStr string
+		if pct > 90 {
+			pctStr = color.RedString(fmt.Sprintf("%.0f%%", pct))
+		} else if pct > 70 {
+			pctStr = color.YellowString(fmt.Sprintf("%.0f%%", pct))
+		} else {
+			pctStr = color.GreenString(fmt.Sprintf("%.0f%%", pct))
+		}
+		fmt.Printf("  %s %d files · %s tokens (%s of %s)\n",
+			color.HiBlackString("Context:"),
+			len(cli.session.Files),
+			formatNumber(cli.session.TotalTokens),
+			pctStr,
+			formatNumber(cli.session.Budget))
 	}
 	
-	// Input line with >
-	fmt.Printf("  %s %s ", color.CyanString("│"), color.HiBlackString(">"))
+	// Mode line
+	fmt.Printf("  %s · %s\n",
+		color.HiBlackString("Mode: "+cli.session.Mode),
+		color.HiBlackString("Budget: "+formatNumber(cli.session.Budget)))
+	
+	// Separator and prompt
+	fmt.Println(color.CyanString("  " + strings.Repeat("─", cli.width-4)))
+	fmt.Printf("  %s  ", color.CyanString("▶"))
 }
 
-// getStatusString returns context status
-func (cli *InteractiveCLI) getStatusString() string {
-	if len(cli.session.Files) == 0 {
-		return ""
-	}
-	
-	pct := float64(cli.session.TotalTokens) / float64(cli.session.Budget) * 100
-	var pctStr string
-	if pct > 90 {
-		pctStr = color.RedString("%.0f%%", pct)
-	} else if pct > 70 {
-		pctStr = color.YellowString("%.0f%%", pct)
-	} else {
-		pctStr = color.GreenString("%.0f%%", pct)
-	}
-	
-	return fmt.Sprintf("Context: %d files · %s tokens", len(cli.session.Files), pctStr)
-}
-
-// clearScreen clears the terminal
 func (cli *InteractiveCLI) clearScreen() {
-	// Only clear if stdout is a terminal
 	if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
 		fmt.Print("\033[H\033[2J")
 	}
 }
 
-// loop runs the main REPL
 func (cli *InteractiveCLI) loop() error {
 	for {
 		cli.printInputBox()
@@ -156,34 +137,20 @@ func (cli *InteractiveCLI) loop() error {
 
 		input := strings.TrimSpace(cli.scanner.Text())
 		if input == "" {
-			// In interactive mode, clear empty line
-			if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
-				fmt.Print("\033[F\033[2K")
-			}
 			continue
 		}
 
-		// Only manipulate cursor in interactive terminal
-		if fileInfo, _ := os.Stdout.Stat(); (fileInfo.Mode() & os.ModeCharDevice) != 0 {
-			// Move up to erase input box
-			fmt.Print("\033[F\033[2K")
-			if cli.getStatusString() != "" {
-				fmt.Print("\033[F\033[2K")
-			}
-			fmt.Print("\033[F\033[2K\033[F\033[2K")
-		} else {
-			// In pipe mode, just print a separator
-			fmt.Println()
-		}
-		
-		// Show user input as message
-		fmt.Printf("  %s %s\n", color.HiBlackString(">"), input)
+		// In interactive mode, input is already shown after the prompt
+		// In pipe mode, we just need spacing
+		fmt.Println()
 
 		// Process
 		if err := cli.handle(input); err != nil {
 			if err.Error() == "exit" {
 				fmt.Println()
-				fmt.Printf("  %s Goodbye!\n", color.CyanString("TokMan:"))
+				fmt.Println(color.CyanString(strings.Repeat("═", cli.width)))
+				fmt.Println()
+				fmt.Println("  " + color.HiBlackString("Goodbye!"))
 				fmt.Println()
 				return nil
 			}
@@ -193,7 +160,6 @@ func (cli *InteractiveCLI) loop() error {
 	return nil
 }
 
-// handle processes input
 func (cli *InteractiveCLI) handle(input string) error {
 	if strings.HasPrefix(input, "/") {
 		return cli.handleCommand(input[1:])
@@ -201,7 +167,6 @@ func (cli *InteractiveCLI) handle(input string) error {
 	return cli.executeCommand(input)
 }
 
-// handleCommand processes slash commands
 func (cli *InteractiveCLI) handleCommand(input string) error {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
@@ -216,41 +181,31 @@ func (cli *InteractiveCLI) handleCommand(input string) error {
 		return cli.cmdHelp()
 	case "exit", "quit", "q":
 		return fmt.Errorf("exit")
-	
-	// Context
 	case "add", "a":
 		return cli.cmdAdd(args)
 	case "drop", "d", "rm":
 		return cli.cmdDrop(args)
-	case "ls", "list", "files":
+	case "ls", "list":
 		return cli.cmdList()
 	case "clear":
 		cli.session.Files = []ContextFile{}
 		cli.session.TotalTokens = 0
 		cli.printSuccess("Context cleared")
 		return nil
-	
-	// Status
 	case "status", "s":
 		return cli.cmdStatus()
 	case "tokens", "t":
 		return cli.cmdTokens()
 	case "cost", "c":
 		return cli.cmdCost()
-	
-	// Settings
 	case "mode", "m":
 		return cli.cmdMode(args)
 	case "budget", "b":
 		return cli.cmdBudget(args)
-	
-	// Actions
-	case "compact", "compress":
+	case "compact":
 		return cli.cmdCompact()
 	case "stats", "stat":
 		return cli.cmdStats()
-	
-	// Info
 	case "filters":
 		return cli.cmdFilters()
 	case "config", "cfg":
@@ -258,55 +213,68 @@ func (cli *InteractiveCLI) handleCommand(input string) error {
 	case "version", "v":
 		fmt.Printf("  TokMan version %s\n", shared.Version)
 		return nil
-	
 	default:
 		return fmt.Errorf("unknown command: /%s (try /help)", cmd)
 	}
 }
 
-// cmdHelp shows help
 func (cli *InteractiveCLI) cmdHelp() error {
-	fmt.Printf("  %s\n", color.CyanString("Available commands:"))
+	fmt.Println(color.WhiteString("Available commands:"))
 	fmt.Println()
 	
-	commands := []struct {
-		cmd  string
-		desc string
+	sections := []struct {
+		title string
+		cmds  []struct{ cmd, desc string }
 	}{
-		{"/add <file>", "Add file to context"},
-		{"/drop <file>", "Remove file from context"},
-		{"/ls", "List files in context"},
-		{"/clear", "Clear all context"},
-		{"", ""},
-		{"/status", "Show session status"},
-		{"/tokens", "Show token usage with bar"},
-		{"/cost", "Show API cost estimate"},
-		{"/stats", "Show statistics"},
-		{"", ""},
-		{"/mode <type>", "Set: fast/balanced/aggressive"},
-		{"/budget <n>", "Set token budget"},
-		{"/filters", "List active filters"},
-		{"/config", "Show configuration"},
-		{"", ""},
-		{"/compact", "Compress context"},
-		{"/help", "Show this help"},
-		{"/quit", "Exit TokMan"},
+		{
+			"Context Management",
+			[]struct{ cmd, desc string }{
+				{"/add <file>", "Add file to context"},
+				{"/drop <file>", "Remove file from context"},
+				{"/ls", "List files"},
+				{"/clear", "Clear all context"},
+			},
+		},
+		{
+			"Status & Info",
+			[]struct{ cmd, desc string }{
+				{"/status", "Show session status"},
+				{"/tokens", "Show token usage"},
+				{"/cost", "Show API cost"},
+				{"/stats", "Show statistics"},
+			},
+		},
+		{
+			"Settings",
+			[]struct{ cmd, desc string }{
+				{"/mode <type>", "Set: fast/balanced/aggressive"},
+				{"/budget <n>", "Set token budget"},
+				{"/filters", "List filters"},
+				{"/config", "Show config"},
+			},
+		},
+		{
+			"Other",
+			[]struct{ cmd, desc string }{
+				{"/compact", "Compress context"},
+				{"/help", "Show help"},
+				{"/quit", "Exit"},
+			},
+		},
 	}
 	
-	for _, c := range commands {
-		if c.cmd == "" {
-			fmt.Println()
-			continue
+	for _, section := range sections {
+		fmt.Printf("  %s\n", color.HiBlackString(section.title))
+		for _, c := range section.cmds {
+			fmt.Printf("    %s  %s\n", color.CyanString(padRight(c.cmd, 14)), c.desc)
 		}
-		fmt.Printf("  %s %s\n", color.CyanString(padRight(c.cmd, 14)), c.desc)
+		fmt.Println()
 	}
 	
-	fmt.Println()
-	fmt.Println(color.HiBlackString("  Or type any shell command: git status, docker ps, etc."))
+	fmt.Println(color.HiBlackString("  Type any shell command directly (git status, docker ps, etc.)"))
 	return nil
 }
 
-// cmdAdd adds a file
 func (cli *InteractiveCLI) cmdAdd(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("usage: /add <file>")
@@ -332,7 +300,6 @@ func (cli *InteractiveCLI) cmdAdd(args []string) error {
 	return nil
 }
 
-// cmdDrop removes a file
 func (cli *InteractiveCLI) cmdDrop(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("usage: /drop <file>")
@@ -351,7 +318,6 @@ func (cli *InteractiveCLI) cmdDrop(args []string) error {
 	return fmt.Errorf("file not in context: %s", target)
 }
 
-// cmdList lists files
 func (cli *InteractiveCLI) cmdList() error {
 	if len(cli.session.Files) == 0 {
 		fmt.Println(color.HiBlackString("  No files in context. Use /add <file> to add."))
@@ -359,46 +325,46 @@ func (cli *InteractiveCLI) cmdList() error {
 	}
 
 	fmt.Printf("  %s (%d files, %s tokens)\n", 
-		color.CyanString("Context:"),
+		color.WhiteString("Context:"),
 		len(cli.session.Files),
 		formatNumber(cli.session.TotalTokens))
-	
-	fmt.Println(color.HiBlackString("  " + strings.Repeat("─", 50)))
+	fmt.Println()
 	
 	for _, f := range cli.session.Files {
-		name := truncate(f.Path, 35)
-		fmt.Printf("  %s %s %s\n", 
-			color.GreenString("•"),
-			padRight(name, 37),
-			color.HiBlackString("%s, %s", formatBytes(f.Size), formatNumber(f.Tokens)))
+		name := truncate(f.Path, 45)
+		fmt.Printf("  %s  %-47s %s  %s\n", 
+			color.GreenString("●"),
+			name,
+			color.HiBlackString(formatBytes(f.Size)),
+			color.HiBlackString(formatNumber(f.Tokens)+" tokens"))
 	}
 	
 	return nil
 }
 
-// cmdStatus shows status
 func (cli *InteractiveCLI) cmdStatus() error {
-	fmt.Printf("  %s\n", color.CyanString("Status"))
-	fmt.Printf("    Mode:   %s\n", cli.session.Mode)
-	fmt.Printf("    Budget: %s tokens\n", formatNumber(cli.session.Budget))
-	fmt.Printf("    Files:  %d\n", len(cli.session.Files))
-	fmt.Printf("    Tokens: %s / %s\n", 
+	fmt.Println(color.WhiteString("Status"))
+	fmt.Println()
+	fmt.Printf("  Mode:   %s\n", cli.session.Mode)
+	fmt.Printf("  Budget: %s tokens\n", formatNumber(cli.session.Budget))
+	fmt.Printf("  Files:  %d\n", len(cli.session.Files))
+	fmt.Printf("  Tokens: %s / %s\n", 
 		formatNumber(cli.session.TotalTokens),
 		formatNumber(cli.session.Budget))
-	fmt.Printf("    Uptime: %s\n", time.Since(cli.session.StartTime).Round(time.Second))
+	fmt.Printf("  Uptime: %s\n", time.Since(cli.session.StartTime).Round(time.Second))
 	return nil
 }
 
-// cmdTokens shows token usage
 func (cli *InteractiveCLI) cmdTokens() error {
 	used := cli.session.TotalTokens
 	budget := cli.session.Budget
 	pct := float64(used) / float64(budget) * 100
 
-	fmt.Printf("  %s\n", color.CyanString("Token Usage"))
+	fmt.Println(color.WhiteString("Token Usage"))
+	fmt.Println()
 	
-	// Progress bar
-	width := 40
+	// Big progress bar
+	width := 60
 	filled := int(float64(width) * pct / 100)
 	if filled > width {
 		filled = width
@@ -417,30 +383,34 @@ func (cli *InteractiveCLI) cmdTokens() error {
 	}
 	
 	fmt.Printf("  %s\n", coloredBar)
-	fmt.Printf("  %s / %s (%.1f%%)\n", formatNumber(used), formatNumber(budget), pct)
+	fmt.Println()
+	fmt.Printf("  Used:      %s tokens (%.1f%%)\n", formatNumber(used), pct)
+	fmt.Printf("  Budget:    %s tokens\n", formatNumber(budget))
+	fmt.Printf("  Remaining: %s tokens\n", formatNumber(budget-used))
 	
 	if pct > 90 {
-		fmt.Printf("  %s Context nearly full!\n", color.YellowString("⚠"))
+		fmt.Println()
+		fmt.Printf("  %s Context nearly full! Run /compact.\n", color.YellowString("⚠"))
 	}
 	
 	return nil
 }
 
-// cmdCost shows cost
 func (cli *InteractiveCLI) cmdCost() error {
 	cost := float64(cli.session.TotalTokens) / 1000 * 0.03
 	
-	fmt.Printf("  %s\n", color.CyanString("Cost Estimate"))
-	fmt.Printf("    Tokens: %s\n", formatNumber(cli.session.TotalTokens))
-	fmt.Printf("    Cost:   $%.2f\n", cost)
-	fmt.Printf("    Rate:   $0.03 / 1K tokens\n")
+	fmt.Println(color.WhiteString("Cost Estimate"))
+	fmt.Println()
+	fmt.Printf("  Tokens: %s\n", formatNumber(cli.session.TotalTokens))
+	fmt.Printf("  Cost:   $%.2f\n", cost)
+	fmt.Printf("  Rate:   $0.03 / 1K tokens\n")
 	return nil
 }
 
-// cmdMode sets mode
 func (cli *InteractiveCLI) cmdMode(args []string) error {
 	if len(args) == 0 {
-		fmt.Printf("  Current: %s (fast, balanced, aggressive)\n", cli.session.Mode)
+		fmt.Printf("Current mode: %s\n", cli.session.Mode)
+		fmt.Println("Options: fast, balanced, aggressive")
 		return nil
 	}
 
@@ -454,10 +424,9 @@ func (cli *InteractiveCLI) cmdMode(args []string) error {
 	return nil
 }
 
-// cmdBudget sets budget
 func (cli *InteractiveCLI) cmdBudget(args []string) error {
 	if len(args) == 0 {
-		fmt.Printf("  Current: %s tokens\n", formatNumber(cli.session.Budget))
+		fmt.Printf("Current budget: %s tokens\n", formatNumber(cli.session.Budget))
 		return nil
 	}
 
@@ -471,7 +440,6 @@ func (cli *InteractiveCLI) cmdBudget(args []string) error {
 	return nil
 }
 
-// cmdCompact compresses
 func (cli *InteractiveCLI) cmdCompact() error {
 	if len(cli.session.Files) == 0 {
 		fmt.Println(color.HiBlackString("  No files to compress"))
@@ -485,12 +453,13 @@ func (cli *InteractiveCLI) cmdCompact() error {
 
 	cli.session.TotalTokens = after
 	
-	cli.printSuccess(fmt.Sprintf("Compressed: %s → %s (saved %s, %.0f%%)",
-		formatNumber(before), formatNumber(after), formatNumber(saved), ratio*100))
+	cli.printSuccess(fmt.Sprintf("Compressed context"))
+	fmt.Printf("  Before: %s tokens\n", formatNumber(before))
+	fmt.Printf("  After:  %s tokens\n", formatNumber(after))
+	fmt.Printf("  Saved:  %s tokens (%.0f%%)\n", formatNumber(saved), ratio*100)
 	return nil
 }
 
-// cmdStats shows stats
 func (cli *InteractiveCLI) cmdStats() error {
 	if cli.tracker == nil {
 		fmt.Println(color.HiBlackString("  Tracking not enabled"))
@@ -503,17 +472,19 @@ func (cli *InteractiveCLI) cmdStats() error {
 		return nil
 	}
 
-	fmt.Printf("  %s\n", color.CyanString("Statistics"))
-	fmt.Printf("    Commands: %s\n", formatNumber(summary.TotalCommands))
-	fmt.Printf("    Saved:    %s tokens\n", formatNumber(summary.TotalSaved))
-	fmt.Printf("    Avg:      %.1f%% reduction\n", summary.ReductionPct)
-	fmt.Printf("    Value:    $%.2f\n", float64(summary.TotalSaved)*0.00003)
+	fmt.Println(color.WhiteString("Statistics"))
+	fmt.Println()
+	fmt.Printf("  Commands: %s\n", formatNumber(summary.TotalCommands))
+	fmt.Printf("  Saved:    %s tokens\n", formatNumber(summary.TotalSaved))
+	fmt.Printf("  Avg:      %.1f%% reduction\n", summary.ReductionPct)
+	fmt.Printf("  Value:    $%.2f\n", float64(summary.TotalSaved)*0.00003)
 	return nil
 }
 
-// cmdFilters lists filters
 func (cli *InteractiveCLI) cmdFilters() error {
-	fmt.Printf("  %s\n", color.CyanString("Active Filters"))
+	fmt.Println(color.WhiteString("Active Filters"))
+	fmt.Println()
+	
 	filters := []string{
 		"Entropy Filter",
 		"Perplexity Filter",
@@ -523,23 +494,22 @@ func (cli *InteractiveCLI) cmdFilters() error {
 	}
 	
 	for _, f := range filters {
-		fmt.Printf("    %s %s\n", color.GreenString("✓"), f)
+		fmt.Printf("  %s  %s\n", color.GreenString("●"), f)
 	}
 	
 	return nil
 }
 
-// cmdConfig shows config
 func (cli *InteractiveCLI) cmdConfig() error {
-	fmt.Printf("  %s\n", color.CyanString("Configuration"))
-	fmt.Printf("    Config: %s\n", config.ConfigPath())
-	fmt.Printf("    Data:   %s\n", config.DataPath())
-	fmt.Printf("    Mode:   %s\n", cli.session.Mode)
-	fmt.Printf("    Budget: %s\n", formatNumber(cli.session.Budget))
+	fmt.Println(color.WhiteString("Configuration"))
+	fmt.Println()
+	fmt.Printf("  Config file: %s\n", config.ConfigPath())
+	fmt.Printf("  Data dir:    %s\n", config.DataPath())
+	fmt.Printf("  Mode:        %s\n", cli.session.Mode)
+	fmt.Printf("  Budget:      %s tokens\n", formatNumber(cli.session.Budget))
 	return nil
 }
 
-// executeCommand runs shell command
 func (cli *InteractiveCLI) executeCommand(input string) error {
 	parts := strings.Fields(input)
 	if len(parts) == 0 {
@@ -569,22 +539,20 @@ func (cli *InteractiveCLI) executeCommand(input string) error {
 	// Show output
 	if len(compressed) > 0 {
 		lines := strings.Split(compressed, "\n")
-		for _, line := range lines[:min(len(lines), 20)] {
+		for _, line := range lines[:min(len(lines), 15)] {
 			fmt.Println("  " + line)
 		}
-		if len(lines) > 20 {
-			fmt.Println(color.HiBlackString(fmt.Sprintf("  ... %d more lines", len(lines)-20)))
+		if len(lines) > 15 {
+			fmt.Println(color.HiBlackString(fmt.Sprintf("  ... %d more lines", len(lines)-15)))
 		}
 	}
 
 	if stats.TotalSaved > 0 {
-		pct := float64(stats.TotalSaved) / float64(stats.OriginalTokens) * 100
 		fmt.Println()
-		fmt.Printf("  %s Compressed %s → %s (%.0f%%)\n",
-			color.GreenString("✓"),
+		cli.printSuccess(fmt.Sprintf("Compressed %s → %s (%.0f%%)",
 			formatNumber(stats.OriginalTokens),
 			formatNumber(stats.OriginalTokens-stats.TotalSaved),
-			pct)
+			float64(stats.TotalSaved)/float64(stats.OriginalTokens)*100))
 	}
 
 	return nil
