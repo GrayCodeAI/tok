@@ -2,19 +2,15 @@ package tui
 
 import (
 	"fmt"
-	"os"
 	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/fatih/color"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/discover"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
@@ -71,7 +67,6 @@ type Model struct {
 	spinner     spinner.Model
 	progress    progress.Model
 	table       table.Model
-	viewport    viewport.Model
 	loading     bool
 	stats       DashboardStats
 	commands    []CommandEntry
