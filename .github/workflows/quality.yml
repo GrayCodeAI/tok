@@ -1,0 +1,147 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+    
+    - name: Run go vet
+      run: go vet ./...
+    
+    - name: Run staticcheck
+      uses: dominikh/staticcheck-action@v1
+      with:
+        version: "2024.1.1"
+        install-go: false
+    
+    - name: Run gosec
+      uses: securego/gosec@master
+      with:
+        args: '-fmt sarif -out gosec.sarif ./...'
+    
+    - name: Upload Gosec Results
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: gosec.sarif
+      if: always()
+
+  coverage:
+    name: Test Coverage
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+    
+    - name: Run tests with coverage
+      run: |
+        go test -race -coverprofile=coverage.out -covermode=atomic ./...
+    
+    - name: Generate coverage report
+      run: |
+        go tool cover -func=coverage.out > coverage.txt
+        cat coverage.txt
+    
+    - name: Check coverage threshold
+      run: |
+        COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
+        echo "Total coverage: $COVERAGE%"
+        
+        # Check if coverage is above threshold
+        if (( $(echo "$COVERAGE < 70" | bc -l) )); then
+          echo "❌ Coverage $COVERAGE% is below threshold of 70%"
+          exit 1
+        else
+          echo "✅ Coverage $COVERAGE% meets threshold of 70%"
+        fi
+    
+    - name: Upload coverage
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.out
+        flags: unittests
+        name: codecov-umbrella
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+    
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: latest
+        args: --timeout=5m
+    
+    - name: Check go mod tidy
+      run: |
+        go mod tidy
+        git diff --exit-code go.mod go.sum
+
+  fmt:
+    name: Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+    
+    - name: Check formatting
+      run: |
+        if [ -n "$(gofmt -l .)" ]; then
+          echo "❌ The following files need formatting:"
+          gofmt -l .
+          exit 1
+        fi
+        echo "✅ All files are properly formatted"
+
+  imports:
+    name: Import Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+    
+    - name: Check imports
+      run: |
+        go install golang.org/x/tools/cmd/goimports@latest
+        if [ -n "$(goimports -l .)" ]; then
+          echo "❌ The following files have import issues:"
+          goimports -l .
+          exit 1
+        fi
+        echo "✅ All imports are properly organized"
