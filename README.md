@@ -272,6 +272,52 @@ TokMan has built-in filters for **97+ development tools**:
 
 [**See full list →**](./docs/TOML_FILTERS.md)
 
+## 🆕 New Features (RTK-Compatible)
+
+### Generic Test Runner
+Auto-detect and run project tests with a single command:
+```bash
+tokman test-runner              # Auto-detect test runner
+tokman test-runner cargo test   # Run Rust tests
+tokman test-runner npm test     # Run Node.js tests
+tokman test-runner pytest       # Run Python tests
+```
+
+**Supported test runners:** Cargo, Go, Vitest, Jest, npm, pnpm, Pytest, RSpec, Rake Test, Playwright
+
+### Quota Estimation
+Estimate subscription tier usage based on your token consumption:
+```bash
+tokman gain --quota pro         # Estimate 'pro' tier usage
+tokman gain --quota 5x          # Estimate '5x' tier usage
+tokman gain --quota 20x         # Estimate '20x' tier usage
+```
+
+Shows projected monthly usage, tier limits, and upgrade recommendations.
+
+### Session Adoption Tracking
+View TokMan adoption across your Claude Code sessions:
+```bash
+tokman adoption                 # Show last 10 sessions
+tokman adoption --limit 20      # Show last 20 sessions
+```
+
+### Errors-Only Mode
+Run any command and show only errors/warnings:
+```bash
+tokman err npm run build
+tokman err cargo build
+tokman err go test ./...
+```
+
+### Smart File Summaries
+Generate 2-line summaries of any file:
+```bash
+tokman smart main.go            # Go file summary
+tokman smart package.json       # NPM package summary
+tokman smart README.md          # Documentation summary
+```
+
 ## 🔬 Technical Details
 
 ### Architecture

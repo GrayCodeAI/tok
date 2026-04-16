@@ -1,0 +1,64 @@
+# TokMan Example Configuration
+# Place this file at ~/.config/tokman/config.toml
+
+[tracking]
+enabled = true
+database_path = "~/.local/share/tokman/tokman.db"
+
+[filter]
+mode = "minimal"  # Options: minimal, aggressive
+preset = "balanced"  # Options: fast, balanced, full
+
+[pipeline]
+max_context_tokens = 2000000
+enable_entropy = true
+enable_perplexity = true
+enable_ast_preserve = true
+enable_h2o = true
+enable_attention_sink = true
+
+[display]
+colors = true
+emoji = true
+max_width = 120
+ultra_compact = false
+
+[tee]
+enabled = true
+mode = "failures"  # Options: always, failures, never
+max_files = 20
+max_file_size = 1048576  # 1MB in bytes
+
+[hooks]
+excluded_commands = ["curl", "playwright", "wget"]
+
+[telemetry]
+enabled = false  # Opt-in only, GDPR compliant
+
+[ai]
+query_intent = "general"  # Options: general, debug, review, explain
+llm_enabled = false
+
+[compression]
+budget = 0  # 0 = unlimited
+default_mode = "balanced"
+
+# Custom aliases for frequently used commands
+[aliases]
+# Define shortcuts for common commands
+# Example:
+# st = "git status"
+# lg = "git log --oneline -20"
+
+# Per-project overrides
+[[projects]]
+path = "/home/user/work/myproject"
+preset = "aggressive"  # More compression for this project
+budget = 10000  # 10K token limit for this project
+
+[[projects]]
+path = "/home/user/personal/small-project"
+preset = "fast"  # Faster processing for small projects
+
+# Custom TOML filters can be added to ~/.config/tokman/filters/
+# See: https://tokman.dev/docs/toml-filters
