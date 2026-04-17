@@ -464,14 +464,21 @@ func (m DashboardModel) renderHeader() string {
 		Align(lipgloss.Center).
 		Render(status)
 
-	// Welcome message centered above status (large, black background, no underline)
+	// Pixelated Tokman logo
+	tokmanLogo := `
+ ██╗   ████████╗  ██████╗ ██╗  ██╗ █████╗ ███╗   ██╗
+ ██║   ╚══██╔══╝ ██╔═══██╗██║ ██╔╝██╔══██╗████╗  ██║
+ ██║      ██║    ██║   ██║█████╔╝ ███████║██╔██╗ ██║
+ ██║      ██║    ██║   ██║██╔═██╗ ██╔══██║██║╚██╗██║
+ ███████╗ ██║    ╚██████╔╝██║  ██╗██║  ██║██║ ╚████║
+ ╚══════╝ ╚═╝     ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝
+`
 	welcome := lipgloss.NewStyle().
-		Bold(true).
 		Foreground(lipgloss.Color(ColorPrimary)).
 		Background(lipgloss.Color(ColorBg)).
 		Align(lipgloss.Center).
 		Width(m.width).
-		Render("  WELCOME TO TOKMAN  ")
+		Render(tokmanLogo)
 
 	// Add welcome + 2 spaces + status
 	return "\n" + welcome + "\n\n" + centered
