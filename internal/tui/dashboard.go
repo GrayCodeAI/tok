@@ -433,50 +433,25 @@ func (m DashboardModel) renderWelcome() string {
 	var b strings.Builder
 
 	// Empty lines for vertical centering
-	for i := 0; i < m.height/4; i++ {
+	for i := 0; i < m.height/3; i++ {
 		b.WriteString("\n")
 	}
 
-	// Welcome title
-	title := lipgloss.NewStyle().
+	// Simple centered welcome
+	welcome := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorPrimaryBright)).
-		Background(lipgloss.Color(ColorBgSurface)).
-		Padding(2, 4).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
-		Align(lipgloss.Center)
+		Align(lipgloss.Center).
+		Width(m.width)
 
-	b.WriteString(title.Render("WELCOME TO TOKMAN"))
+	b.WriteString(welcome.Render("Welcome to Tokman"))
 	b.WriteString("\n\n")
 
-	// Subtitle
-	subtitle := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextSecondary)).
-		Align(lipgloss.Center)
-
-	b.WriteString(subtitle.Render("Token-Aware CLI Proxy"))
-	b.WriteString("\n\n")
-
-	// Stats preview
-	stats := []string{
-		fmt.Sprintf("Total Commands: %s", AccentStyle.Render(fmt.Sprintf("%d", m.stats.TotalCommands))),
-		fmt.Sprintf("Tokens Saved: %s", SuccessStyle.Render(formatTokens(int(m.stats.TotalSaved)))),
-		fmt.Sprintf("Cache Hit Rate: %s", InfoStyle.Render(fmt.Sprintf("%.1f%%", m.stats.CacheHitRate))),
-	}
-
-	statsBox := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextPrimary)).
-		Align(lipgloss.Center)
-
-	b.WriteString(statsBox.Render(strings.Join(stats, "  •  ")))
-	b.WriteString("\n\n\n")
-
-	// Press any key
+	// Press any key hint
 	hint := lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorTextMuted)).
-		Italic(true).
-		Align(lipgloss.Center)
+		Align(lipgloss.Center).
+		Width(m.width)
 
 	b.WriteString(hint.Render("Press any key to start..."))
 
@@ -484,10 +459,7 @@ func (m DashboardModel) renderWelcome() string {
 }
 
 func (m DashboardModel) renderHeader() string {
-	// Title
-	title := TitleStyle.Render(" TOKMAN ")
-
-	// Status indicator with color coding
+	// Status indicator
 	statusColor := SuccessStyle
 	statusText := "ONLINE"
 	if m.stats.CacheHitRate < 50 {
@@ -495,38 +467,16 @@ func (m DashboardModel) renderHeader() string {
 		statusText = "WARN"
 	}
 
-	// Build status bar sections
-	sections := []string{
-		// Status
-		statusColor.Render("[" + statusText + "]"),
-		TextMutedStyle.Render("│"),
-		
-		// Sessions
-		InfoStyle.Render(fmt.Sprintf("◉ %d", m.stats.ActiveSessions)),
-		TextMutedStyle.Render("sessions"),
-		TextMutedStyle.Render("│"),
-		
-		// Today's savings
-		SuccessStyle.Render("▼"),
+	// Compact status bar exactly as requested
+	status := fmt.Sprintf("%s│◉ %dsessions│▼%stoday│∑%stotal│⚡ %.0f%%cache",
+		statusColor.Render("["+statusText+"]"),
+		m.stats.ActiveSessions,
 		AccentStyle.Render(formatTokens(int(m.stats.TodaySaved))),
-		TextMutedStyle.Render("today"),
-		TextMutedStyle.Render("│"),
-		
-		// Total savings
-		SuccessStyle.Render("∑"),
 		AccentStyle.Render(formatTokens(int(m.stats.TotalSaved))),
-		TextMutedStyle.Render("total"),
-		TextMutedStyle.Render("│"),
-		
-		// Cache hit rate
-		InfoStyle.Render(fmt.Sprintf("⚡ %.0f%%", m.stats.CacheHitRate)),
-		TextMutedStyle.Render("cache"),
-	}
+		m.stats.CacheHitRate,
+	)
 
-	statusBar := lipgloss.JoinHorizontal(lipgloss.Left, sections...)
-
-	// Combine title and status
-	return lipgloss.JoinHorizontal(lipgloss.Left, title, " ", statusBar)
+	return status
 }
 
 func (m DashboardModel) renderMainContent() string {
