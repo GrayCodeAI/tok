@@ -2,152 +2,123 @@ package tui
 
 import "github.com/charmbracelet/lipgloss"
 
-// Vibrant color palette for high contrast
+// Single solid color scheme - ONE accent only, NO gradients
 const (
-	// Primary colors
-	ColorPrimary    = "#FF6B6B" // Coral red
-	ColorSecondary  = "#4ECDC4" // Turquoise
-	ColorAccent     = "#FFE66D" // Yellow
-	ColorSuccess    = "#95E1D3" // Mint green
-	ColorWarning    = "#FFA07A" // Light salmon
-	ColorError      = "#FF4757" // Bright red
-	ColorInfo       = "#70A1FF" // Sky blue
+	// ONE primary accent color - Cyan (used everywhere)
+	ColorAccent      = "#00D4AA" // Bright cyan/teal - ONLY accent color
+	ColorAccentDim   = "#008F70" // Dimmer cyan for subtle elements
 
-	// Background colors
-	ColorBgDark     = "#1E1E2E" // Dark purple-gray
-	ColorBgDarker   = "#16161E" // Almost black
-	ColorBgLight    = "#2D2D44" // Lighter purple-gray
-	ColorBgLighter  = "#3D3D5C" // Even lighter
+	// Status colors (minimal, not competing)
+	ColorSuccess     = "#22C55E" // Green - success only
+	ColorWarning     = "#EAB308" // Yellow - warnings only
+	ColorError       = "#EF4444" // Red - errors only
 
-	// Text colors
-	ColorTextPrimary   = "#FFFFFF" // White
-	ColorTextSecondary = "#A0A0B0" // Gray
-	ColorTextMuted     = "#6E6E8A" // Muted gray
+	// Background - Dark solid
+	ColorBg          = "#0A0A0A" // Pure dark background
+	ColorBgPanel     = "#111111" // Panel background
+	ColorBgBorder    = "#00D4AA" // Accent border (same as accent)
 
-	// Gradient colors
-	ColorGradientStart = "#FF6B6B" // Red
-	ColorGradientMid   = "#4ECDC4" // Cyan
-	ColorGradientEnd   = "#95E1D3" // Green
+	// Text - Solid grayscale
+	ColorText        = "#FFFFFF" // White text
+	ColorTextMuted   = "#888888" // Gray text
+	ColorTextDim     = "#555555" // Dim text
 )
 
-// Styles with vibrant colors
+// Single accent color styles - ONE color only, NO gradients
 var (
-	// Title styles
+	// Title - Single cyan accent
 	TitleStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorPrimary)).
-		Background(lipgloss.Color(ColorBgDark)).
+		Foreground(lipgloss.Color(ColorAccent)).
+		Background(lipgloss.Color(ColorBgPanel)).
 		Padding(1, 2).
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
+		BorderForeground(lipgloss.Color(ColorAccent)).
 		MarginBottom(1)
 
-	// Header styles
+	// Header - Solid accent
 	HeaderStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorTextPrimary)).
-		Background(lipgloss.Color(ColorPrimary)).
-		Padding(0, 1).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorAccent)).
+		Padding(0, 2).
 		MarginBottom(1)
 
-	// Box styles
+	// ONE unified box style - single accent border
 	BoxStyle = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorSecondary)).
-		Background(lipgloss.Color(ColorBgDark)).
-		Padding(1, 2).
-		Margin(0, 1)
-
-	BoxActiveStyle = lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
-		Background(lipgloss.Color(ColorBgLight)).
+		BorderForeground(lipgloss.Color(ColorAccent)).
+		Background(lipgloss.Color(ColorBgPanel)).
 		Padding(1, 2).
 		Margin(0, 1)
 
 	// Tab styles
 	TabActiveStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorBgDark)).
-		Background(lipgloss.Color(ColorPrimary)).
-		Padding(0, 3).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorAccent)).
+		Padding(0, 2).
 		MarginRight(1)
 
 	TabInactiveStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextSecondary)).
-		Background(lipgloss.Color(ColorBgLight)).
-		Padding(0, 3).
+		Foreground(lipgloss.Color(ColorTextMuted)).
+		Background(lipgloss.Color(ColorBgPanel)).
+		Padding(0, 2).
 		MarginRight(1)
 
 	// Text styles
 	TextPrimaryStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextPrimary))
+		Foreground(lipgloss.Color(ColorText))
 
 	TextSecondaryStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextSecondary))
-
-	TextMutedStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorTextMuted))
 
-	// Status styles
+	TextMutedStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextDim))
+
+	// Status styles - only for indicators
 	SuccessStyle = lipgloss.NewStyle().
-		Bold(true).
 		Foreground(lipgloss.Color(ColorSuccess))
 
 	WarningStyle = lipgloss.NewStyle().
-		Bold(true).
 		Foreground(lipgloss.Color(ColorWarning))
 
 	ErrorStyle = lipgloss.NewStyle().
-		Bold(true).
 		Foreground(lipgloss.Color(ColorError))
 
-	InfoStyle = lipgloss.NewStyle().
+	// Accent style - single color
+	AccentStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorInfo))
+		Foreground(lipgloss.Color(ColorAccent))
 
-	// Stat value styles
+	// Stat styles - accent color
 	StatValueStyle = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorAccent)).
-		Background(lipgloss.Color(ColorBgDarker)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 1)
 
 	StatLabelStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextSecondary))
+		Foreground(lipgloss.Color(ColorTextMuted))
 
-	// Gradient bar style
-	GradientBarStyle = lipgloss.NewStyle().
-		Background(lipgloss.Color(ColorBgLight))
-
-	// Footer style
+	// Footer
 	FooterStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextMuted)).
-		Background(lipgloss.Color(ColorBgDarker)).
+		Foreground(lipgloss.Color(ColorTextDim)).
+		Background(lipgloss.Color(ColorBgPanel)).
 		Padding(0, 1).
 		MarginTop(1)
 
-	// Key style (for keyboard shortcuts)
+	// Key style - accent
 	KeyStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorBgDark)).
+		Foreground(lipgloss.Color(ColorBg)).
 		Background(lipgloss.Color(ColorAccent)).
 		Padding(0, 1)
 
 	// Help style
 	HelpStyle = lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextSecondary))
-)
+		Foreground(lipgloss.Color(ColorTextMuted))
 
-// GetGradientColors returns colors for progress bars
-func GetGradientColors() []string {
-	return []string{
-		ColorGradientStart,
-		"#FF8E53",
-		"#FF6B9D",
-		"#C44569",
-		ColorGradientMid,
-		"#38B2AC",
-		ColorGradientEnd,
-	}
-}
+	// Bar style - single accent color (NO gradients)
+	BarStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorAccent))
+)
