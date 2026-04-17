@@ -426,17 +426,23 @@ func (m DashboardModel) renderHeader() string {
 		statusText = "WARN"
 	}
 
-	// Compact status bar exactly as requested
-	status := fmt.Sprintf("%s│◉ %dsessions│▼%stoday│∑%stotal│⚡ %.0f%%cache",
-		statusColor.Render("["+statusText+"]"),
+	// Centered status bar with ASCII box-drawing characters
+	status := fmt.Sprintf("[ %s ] | [ Sessions: %d ] | [ Today: %s ] | [ Total: %s ] | [ Cache: %.0f%% ]",
+		statusColor.Render(statusText),
 		m.stats.ActiveSessions,
 		AccentStyle.Render(formatTokens(int(m.stats.TodaySaved))),
 		AccentStyle.Render(formatTokens(int(m.stats.TotalSaved))),
 		m.stats.CacheHitRate,
 	)
 
+	// Center the status bar
+	centered := lipgloss.NewStyle().
+		Width(m.width).
+		Align(lipgloss.Center).
+		Render(status)
+
 	// Add 2 spaces from top
-	return "\n\n" + status
+	return "\n\n" + centered
 }
 
 func (m DashboardModel) renderMainContent() string {
