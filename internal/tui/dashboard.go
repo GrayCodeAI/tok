@@ -540,7 +540,7 @@ func (m Model) renderOverview() string {
 }
 
 func (m Model) renderCommands() string {
-	header := HeaderCyan.Render(" RECENT COMMANDS ")
+	header := HeaderPrimary.Render(" RECENT COMMANDS ")
 
 	if len(m.commands) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -560,7 +560,7 @@ func (m Model) renderCommands() string {
 }
 
 func (m Model) renderCache() string {
-	header := HeaderCyan.Render(" CACHE STATISTICS ")
+	header := HeaderPrimary.Render(" CACHE STATISTICS ")
 
 	hits := StatValueStyle.Render(formatNumber(m.stats.CacheHits))
 	misses := StatValueStyle.Render(formatNumber(m.stats.CacheMisses))
@@ -607,7 +607,7 @@ func (m Model) renderCache() string {
 }
 
 func (m Model) renderFilterLayers() string {
-	header := HeaderCyan.Render(" 20-LAYER FILTER PIPELINE ")
+	header := HeaderPrimary.Render(" 20-LAYER FILTER PIPELINE ")
 
 	if len(m.layers) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -652,7 +652,7 @@ func (m Model) renderFilterLayers() string {
 }
 
 func (m Model) renderAnalytics() string {
-	header := HeaderCyan.Render(" ANALYTICS & INSIGHTS ")
+	header := HeaderPrimary.Render(" ANALYTICS & INSIGHTS ")
 
 	// Simple ASCII bar chart for top commands - uniform primary color
 	var chart strings.Builder
@@ -670,7 +670,7 @@ func (m Model) renderAnalytics() string {
 		if maxCount > 0 {
 			barWidth = (cmd.Count * 20) / maxCount
 		}
-		bar := BarCyan.Render(strings.Repeat("█", barWidth))
+		bar := BarPrimary.Render(strings.Repeat("█", barWidth))
 		chart.WriteString(fmt.Sprintf("%-15s %s %d\n", cmd.Command, bar, cmd.Count))
 	}
 
@@ -690,7 +690,7 @@ func (m Model) renderAnalytics() string {
 		if maxDaily > 0 {
 			barWidth = int((d.Value * 20) / maxDaily)
 		}
-		bar := BarCyan.Render(strings.Repeat("█", barWidth))
+		bar := BarPrimary.Render(strings.Repeat("█", barWidth))
 		dailyChart.WriteString(fmt.Sprintf("%-10s %s %s\n", d.Label, bar, formatTokens(int(d.Value))))
 	}
 
@@ -703,7 +703,7 @@ func (m Model) renderAnalytics() string {
 }
 
 func (m Model) renderSessions() string {
-	header := HeaderCyan.Render(" SESSION MANAGEMENT ")
+	header := HeaderPrimary.Render(" SESSION MANAGEMENT ")
 
 	if len(m.sessions) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -728,7 +728,7 @@ func (m Model) renderSessions() string {
 }
 
 func (m Model) renderEconomics() string {
-	header := HeaderCyan.Render(" COST ANALYSIS ")
+	header := HeaderPrimary.Render(" COST ANALYSIS ")
 
 	// Cost breakdown - uniform style
 	totalSaved := BoxStyle.Render(
@@ -748,13 +748,13 @@ func (m Model) renderEconomics() string {
 
 	// Pricing tiers - uniform primary accent
 	tiers := []string{
-		HeaderCyan.Render(" PRICING TIERS "),
+		HeaderPrimary.Render(" PRICING TIERS "),
 		"",
 		AccentStyle.Render("GPT-4/Claude 3:") + " ~$0.03/1K tokens",
 		AccentStyle.Render("GPT-3.5:") + " ~$0.002/1K tokens",
 		SuccessStyle.Render("Local LLM:") + " $0 (compute only)",
 		"",
-		HeaderCyan.Render(" YOUR SAVINGS "),
+		HeaderPrimary.Render(" YOUR SAVINGS "),
 		"",
 		SuccessStyle.Render(fmt.Sprintf("✓ Saved %s tokens", formatTokens(int(m.stats.TotalSaved)))),
 		SuccessStyle.Render(fmt.Sprintf("✓ Equivalent to $%.2f", m.stats.TotalCostSaved)),
@@ -770,24 +770,24 @@ func (m Model) renderEconomics() string {
 }
 
 func (m Model) renderConfig() string {
-	header := HeaderCyan.Render(" CONFIGURATION ")
+	header := HeaderPrimary.Render(" CONFIGURATION ")
 
 	// Config sections - uniform primary accent
 	sections := []string{
-		HeaderCyan.Render(" PIPELINE SETTINGS "),
+		HeaderPrimary.Render(" PIPELINE SETTINGS "),
 		"",
 		AccentStyle.Render("Max Context:") + " 2M tokens",
 		AccentStyle.Render("Chunk Size:") + " 100K tokens",
 		AccentStyle.Render("Stream Threshold:") + " 500K tokens",
 		"",
-		HeaderCyan.Render(" FEATURE FLAGS "),
+		HeaderPrimary.Render(" FEATURE FLAGS "),
 		"",
 		SuccessStyle.Render("✓") + " Semantic caching",
 		AccentStyle.Render("✓") + " LLM compaction",
 		AccentStyle.Render("✓") + " SIMD optimizations",
 		AccentStyle.Render("✓") + " Telemetry batching",
 		"",
-		HeaderCyan.Render(" PATHS "),
+		HeaderPrimary.Render(" PATHS "),
 		"",
 		TextSecondaryStyle.Render("Config:") + " ~/.config/tokman/config.toml",
 		TextSecondaryStyle.Render("Database:") + " ~/.local/share/tokman/tokman.db",
@@ -802,7 +802,7 @@ func (m Model) renderConfig() string {
 }
 
 func (m Model) renderLogs() string {
-	header := HeaderCyan.Render(" REAL-TIME LOGS ")
+	header := HeaderPrimary.Render(" REAL-TIME LOGS ")
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
@@ -812,24 +812,24 @@ func (m Model) renderLogs() string {
 }
 
 func (m Model) renderSystem() string {
-	header := HeaderCyan.Render(" SYSTEM INFORMATION ")
+	header := HeaderPrimary.Render(" SYSTEM INFORMATION ")
 
 	// System info - uniform primary accent
 	info := []string{
-		HeaderCyan.Render(" VERSION "),
+		HeaderPrimary.Render(" VERSION "),
 		"",
 		AccentStyle.Render("TokMan:") + " v0.28.0",
 		AccentStyle.Render("Go Version:") + " 1.26",
 		AccentStyle.Render("Platform:") + " " + os.Getenv("GOOS") + "/" + os.Getenv("GOARCH"),
 		"",
-		HeaderCyan.Render(" PERFORMANCE "),
+		HeaderPrimary.Render(" PERFORMANCE "),
 		"",
 		SuccessStyle.Render("✓") + " Caching enabled",
 		AccentStyle.Render("✓") + " Telemetry batching",
 		AccentStyle.Render("✓") + " SIMD optimizations",
 		AccentStyle.Render("✓") + " 20-layer pipeline active",
 		"",
-		HeaderCyan.Render(" RESEARCH FOUNDATION "),
+		HeaderPrimary.Render(" RESEARCH FOUNDATION "),
 		"",
 		TextSecondaryStyle.Render("Based on 120+ papers from:"),
 		AccentStyle.Render("•") + " Microsoft Research (LLMLingua, LongLLMLingua)",
@@ -996,7 +996,7 @@ func fetchDataCmd() tea.Cmd {
 func New() Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue1))
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPrimary))
 
 	p := progress.New(
 		progress.WithDefaultGradient(),
