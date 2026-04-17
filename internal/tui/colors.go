@@ -50,11 +50,11 @@ const (
 	ColorTextMuted    = "#9CA3AF" // Medium gray - labels, hints
 	ColorTextDim      = "#6B7280" // Dark gray - disabled, very muted
 
-	// BACKGROUNDS - Pure black theme
-	ColorBg           = "#000000" // Pure black background
-	ColorBgSurface    = "#0A0A0A" // Cards, panels
-	ColorBgElevated   = "#141414" // Elevated elements, hover states
-	ColorBgBorder     = "#1A1A1A" // Subtle borders
+	// BACKGROUNDS - Pure black theme everywhere
+	ColorBg           = "#000000" // Pure black - used everywhere
+	ColorBgSurface    = "#000000" // Pure black - no exceptions
+	ColorBgElevated   = "#000000" // Pure black - all panels
+	ColorBgBorder     = "#000000" // Pure black borders
 
 	// SPECIAL UI ELEMENTS
 	ColorBorderActive = ColorPrimary  // Active component borders
@@ -129,47 +129,47 @@ var (
 		Background(lipgloss.Color(ColorBgSurface)).
 		Padding(0, 2)
 
-	// BOXES - Container styles
+	// BOXES - All pure black backgrounds
 	BoxPrimary = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorPrimary)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxSuccess = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorSuccess)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxWarning = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorWarning)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxError = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorError)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxInfo = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorInfo)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxDim = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorBgBorder)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		BorderForeground(lipgloss.Color(ColorPrimaryDim)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxActive = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorPrimaryBright)).
-		Background(lipgloss.Color(ColorBgElevated)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2)
 
 	BoxStyle = BoxPrimary // Default
