@@ -64,15 +64,12 @@ const (
 
 // World-Class TUI Styles - Purpose-Driven Design
 var (
-	// TITLE - Application header
+	// TITLE - Application header (no border)
 	TitleStyle = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorPrimaryBright)).
 		Background(lipgloss.Color(ColorBg)).
-		Padding(0, 2).
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
-		MarginBottom(1)
+		Padding(0, 2)
 
 	// HEADERS - Section headers with specific purposes
 	HeaderPrimary = lipgloss.NewStyle().
