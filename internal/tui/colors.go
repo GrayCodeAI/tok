@@ -105,6 +105,30 @@ var (
 		Background(lipgloss.Color(ColorInfo)).
 		Padding(0, 2)
 
+	HeaderSuccessDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorSuccess)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2)
+
+	HeaderWarningDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorWarning)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2)
+
+	HeaderErrorDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorError)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2)
+
+	HeaderInfoDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorInfo)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2)
+
 	// BOXES - Container styles
 	BoxPrimary = lipgloss.NewStyle().
 		BorderStyle(lipgloss.RoundedBorder()).
@@ -150,11 +174,67 @@ var (
 
 	BoxStyle = BoxPrimary // Default
 
-	// TABS - Navigation
+	// TABS - Navigation with purpose colors
 	TabActive = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorBg)).
 		Background(lipgloss.Color(ColorPrimary)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabSuccess = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorSuccess)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabWarning = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorWarning)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabError = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorTextPrimary)).
+		Background(lipgloss.Color(ColorError)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabInfo = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorInfo)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabSuccessDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorSuccess)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabWarningDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorWarning)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabErrorDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorError)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabInfoDim = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorInfo)).
+		Background(lipgloss.Color(ColorBgSurface)).
 		Padding(0, 2).
 		MarginRight(1)
 
@@ -176,6 +256,7 @@ var (
 	TextPrimaryStyle = TextPrimary
 	TextSecondaryStyle = TextSecondary
 	TextMutedStyle = TextMuted
+	TextDimStyle = TextDim
 
 	// STATUS INDICATORS - Semantic colors
 	SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSuccess))
