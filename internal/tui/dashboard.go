@@ -3,7 +3,6 @@ package tui
 import (
 	"fmt"
 	"os"
-	"sort"
 	"strings"
 	"time"
 
@@ -13,42 +12,43 @@ import (
 	"github.com/charmbracelet/bubbles/progress"
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/bubbles/textinput"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/muesli/termenv"
 )
 
-// Tab definitions for all features
+// ============================================================================
+// WORLD-CLASS TUI DASHBOARD
+// Inspired by: k9s, lazygit, grafana, htop
+// Features: Purpose-driven colors, rich visualizations, professional layout
+// ============================================================================
+
+// Tab definitions
 type Tab int
 
 const (
 	OverviewTab Tab = iota
-	CommandsTab
-	CacheTab
-	FilterLayersTab
+	MetricsTab
+	LayersTab
 	AnalyticsTab
 	SessionsTab
 	EconomicsTab
 	ConfigTab
 	LogsTab
-	SystemTab
 	TabCount
 )
 
 func (t Tab) String() string {
 	names := []string{
-		"Overview",
-		"Commands",
-		"Cache",
-		"Layers",
-		"Analytics",
-		"Sessions",
-		"Economics",
-		"Config",
-		"Logs",
-		"System",
+		"[O]verview",
+		"[M]etrics",
+		"[L]ayers",
+		"[A]nalytics",
+		"[S]essions",
+		"[E]conomics",
+		"[C]onfig",
+		"Lo[G]s",
 	}
 	if int(t) < len(names) {
 		return names[t]
@@ -56,168 +56,147 @@ func (t Tab) String() string {
 	return "Unknown"
 }
 
-// FilterLayer represents a filter layer with its state
-type FilterLayer struct {
-	ID          int
-	Name        string
-	Description string
-	Enabled     bool
-	Research    string
-	Stats       LayerStats
+func (t Tab) Color() lipgloss.Style {
+	colors := []lipgloss.Style{
+		TabActive,      // Overview - Primary
+		TabSuccess,     // Metrics - Success
+		TabInfo,        // Layers - Info
+		TabWarning,     // Analytics - Warning
+		TabSuccessDim,  // Sessions - SuccessDim
+		TabWarningDim,  // Economics - WarningDim
+		TabInfoDim,     // Config - InfoDim
+		TabErrorDim,    // Logs - ErrorDim
+	}
+	return colors[t]
 }
 
-// LayerStats holds statistics for a layer
-type LayerStats struct {
-	Processed int64
-	Saved     int64
-	AvgTime   time.Duration
+// ============================================================================
+// DATA MODELS
+// ============================================================================
+
+type DashboardStats struct {
+	// Core metrics
+	TotalCommands   int64
+	TotalSaved      int64
+	TodaySaved      int64
+	AvgSavings      float64
+	CommandsPerHour float64
+
+	// Cache metrics
+	CacheHits      int64
+	CacheMisses    int64
+	CacheHitRate   float64
+	CacheSize      int64
+
+	// Performance
+	ActiveSessions int
+	TopCommand     string
+	TotalCostSaved float64
+
+	// Real-time
+	LastCommand    string
+	LastSaved      int
+	Uptime         time.Duration
 }
 
-// Session represents an active session
-type Session struct {
-	ID           string
-	StartTime    time.Time
-	CommandCount int
-	TokensSaved  int64
-	Status       string
-}
-
-// LogEntry represents a log entry
-type LogEntry struct {
-	Time    time.Time
-	Level   string
-	Message string
-}
-
-// Model represents the comprehensive TUI state
-type Model struct {
-	// Core
-	tabs      []string
-	activeTab Tab
-	width     int
-	height    int
-	ready     bool
-	loading   bool
-
-	// Components
-	spinner   spinner.Model
-	progress  progress.Model
-	help      help.Model
-	keys      keyMap
-
-	// Data
-	stats      Stats
-	commands   []CommandEntry
-	layers     []FilterLayer
-	sessions   []Session
-	logs       []LogEntry
-	lastUpdate time.Time
-
-	// Tables
-	cmdTable   table.Model
-	layerList  list.Model
-	sessionTable table.Model
-	logViewport viewport.Model
-
-	// Inputs
-	searchInput textinput.Model
-
-	// Charts data
-	dailySavings []DataPoint
-	topCommands  []CommandStat
-}
-
-// DataPoint for charts
-type DataPoint struct {
-	Label string
+type TimeSeriesPoint struct {
+	Time  time.Time
 	Value int64
 }
 
-// CommandStat for top commands
 type CommandStat struct {
-	Command string
-	Count   int
-	Saved   int64
+	Command    string
+	Count      int
+	TokensSaved int64
+	AvgInput   int
+	AvgOutput  int
+	Trend      float64 // -1 to 1
 }
 
-// Stats holds dashboard statistics
-type Stats struct {
-	TotalCommands    int64
-	TotalSaved       int64
-	TodaySaved       int64
-	CacheHits        int64
-	CacheMisses      int64
-	HitRate          float64
-	ActiveSessions   int
-	TopCommand       string
-	AvgSavings       float64
-	TotalCostSaved   float64
-	CommandsPerHour  float64
+type FilterLayerInfo struct {
+	ID          int
+	Name        string
+	Description string
+	Research    string
+	Enabled     bool
+	Efficiency  float64 // 0-100%
+	TokensSaved int64
+	Status      string // active, idle, error
 }
 
-// CommandEntry for table
-type CommandEntry struct {
-	Time    string
-	Command string
-	Input   string
-	Output  string
-	Saved   string
-	Percent string
-	Agent   string
+type SessionInfo struct {
+	ID           string
+	StartTime    time.Time
+	Duration     time.Duration
+	CommandCount int
+	TokensSaved  int64
+	Agent        string
+	Status       string
 }
 
-// Messages
-type tickMsg time.Time
-type updateMsg struct {
-	stats      Stats
-	commands   []CommandEntry
-	layers     []FilterLayer
-	sessions   []Session
-	logs       []LogEntry
-	dailyData  []DataPoint
-	topCmds    []CommandStat
+type LogEntryInfo struct {
+	Time    time.Time
+	Level   string // INFO, SUCCESS, WARN, ERROR
+	Source  string
+	Message string
+}
+
+// ============================================================================
+// MAIN MODEL
+// ============================================================================
+
+type DashboardModel struct {
+	// Core state
+	width      int
+	height     int
+	activeTab  Tab
+	ready      bool
+	loading    bool
+	lastUpdate time.Time
+
+	// Components
+	spinner  spinner.Model
+	progress progress.Model
+	help     help.Model
+	keys     keyMap
+
+	// Data
+	stats         DashboardStats
+	dailyTrend    []TimeSeriesPoint
+	hourlyTrend   []TimeSeriesPoint
+	topCommands   []CommandStat
+	layers        []FilterLayerInfo
+	sessions      []SessionInfo
+	logs          []LogEntryInfo
+
+	// Tables
+	cmdTable    table.Model
+	layerList   list.Model
+	sessionList list.Model
+	logViewport viewport.Model
+
+	// Views
+	sidebar viewport.Model
 }
 
 type keyMap struct {
-	Up       key.Binding
-	Down     key.Binding
-	Left     key.Binding
-	Right    key.Binding
 	Tab      key.Binding
 	ShiftTab key.Binding
 	Refresh  key.Binding
 	Search   key.Binding
-	Toggle   key.Binding
-	Enter    key.Binding
 	Quit     key.Binding
 	Help     key.Binding
 }
 
 func newKeyMap() keyMap {
 	return keyMap{
-		Up: key.NewBinding(
-			key.WithKeys("up", "k"),
-			key.WithHelp("↑/k", "up"),
-		),
-		Down: key.NewBinding(
-			key.WithKeys("down", "j"),
-			key.WithHelp("↓/j", "down"),
-		),
-		Left: key.NewBinding(
-			key.WithKeys("left", "h"),
-			key.WithHelp("←/h", "prev tab"),
-		),
-		Right: key.NewBinding(
-			key.WithKeys("right", "l"),
-			key.WithHelp("→/l", "next tab"),
-		),
 		Tab: key.NewBinding(
-			key.WithKeys("tab"),
-			key.WithHelp("tab", "next tab"),
+			key.WithKeys("tab", "right"),
+			key.WithHelp("tab/→", "next tab"),
 		),
 		ShiftTab: key.NewBinding(
-			key.WithKeys("shift+tab"),
-			key.WithHelp("shift+tab", "prev tab"),
+			key.WithKeys("shift+tab", "left"),
+			key.WithHelp("shift+tab/←", "prev tab"),
 		),
 		Refresh: key.NewBinding(
 			key.WithKeys("r"),
@@ -226,14 +205,6 @@ func newKeyMap() keyMap {
 		Search: key.NewBinding(
 			key.WithKeys("/"),
 			key.WithHelp("/", "search"),
-		),
-		Toggle: key.NewBinding(
-			key.WithKeys(" "),
-			key.WithHelp("space", "toggle"),
-		),
-		Enter: key.NewBinding(
-			key.WithKeys("enter"),
-			key.WithHelp("enter", "select"),
 		),
 		Quit: key.NewBinding(
 			key.WithKeys("q", "esc", "ctrl+c"),
@@ -246,31 +217,30 @@ func newKeyMap() keyMap {
 	}
 }
 
-// ShortHelp returns keybindings to be shown in the mini help view.
 func (k keyMap) ShortHelp() []key.Binding {
-	return []key.Binding{k.Tab, k.Refresh, k.Search, k.Quit, k.Help}
+	return []key.Binding{k.Tab, k.Refresh, k.Search, k.Help, k.Quit}
 }
 
-// FullHelp returns keybindings for the expanded help view.
 func (k keyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.Up, k.Down, k.Left, k.Right},
-		{k.Tab, k.ShiftTab, k.Refresh, k.Search},
-		{k.Toggle, k.Enter, k.Help, k.Quit},
+		{k.Tab, k.ShiftTab, k.Refresh},
+		{k.Search, k.Help, k.Quit},
 	}
 }
 
-// Init initializes the TUI
-func (m Model) Init() tea.Cmd {
+// ============================================================================
+// TEA METHODS
+// ============================================================================
+
+func (m DashboardModel) Init() tea.Cmd {
 	return tea.Batch(
 		m.spinner.Tick,
 		tickCmd(),
-		fetchDataCmd(),
+		fetchDashboardDataCmd(),
 	)
 }
 
-// Update handles messages
-func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmds []tea.Cmd
 
 	switch msg := msg.(type) {
@@ -278,21 +248,33 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
-		case key.Matches(msg, m.keys.Tab) || key.Matches(msg, m.keys.Right):
+		case key.Matches(msg, m.keys.Tab):
 			m.activeTab = Tab((int(m.activeTab) + 1) % int(TabCount))
-		case key.Matches(msg, m.keys.ShiftTab) || key.Matches(msg, m.keys.Left):
+		case key.Matches(msg, m.keys.ShiftTab):
 			m.activeTab = Tab((int(m.activeTab) - 1 + int(TabCount)) % int(TabCount))
 		case key.Matches(msg, m.keys.Refresh):
-			cmds = append(cmds, fetchDataCmd())
+			cmds = append(cmds, fetchDashboardDataCmd())
 		case key.Matches(msg, m.keys.Help):
 			m.help.ShowAll = !m.help.ShowAll
-		case key.Matches(msg, m.keys.Search):
-			if m.activeTab == CommandsTab {
-				m.searchInput.Focus()
-			}
-		case key.Matches(msg, m.keys.Toggle):
-			if m.activeTab == FilterLayersTab {
-				m.toggleSelectedLayer()
+		default:
+			// Direct tab access
+			switch msg.String() {
+			case "o":
+				m.activeTab = OverviewTab
+			case "m":
+				m.activeTab = MetricsTab
+			case "l":
+				m.activeTab = LayersTab
+			case "a":
+				m.activeTab = AnalyticsTab
+			case "s":
+				m.activeTab = SessionsTab
+			case "e":
+				m.activeTab = EconomicsTab
+			case "c":
+				m.activeTab = ConfigTab
+			case "g":
+				m.activeTab = LogsTab
 			}
 		}
 
@@ -303,16 +285,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.updateComponents()
 
 	case tickMsg:
-		cmds = append(cmds, tickCmd(), fetchDataCmd())
+		cmds = append(cmds, tickCmd(), fetchDashboardDataCmd())
 
-	case updateMsg:
+	case dashboardUpdateMsg:
 		m.stats = msg.stats
-		m.commands = msg.commands
+		m.dailyTrend = msg.dailyTrend
+		m.hourlyTrend = msg.hourlyTrend
+		m.topCommands = msg.topCommands
 		m.layers = msg.layers
 		m.sessions = msg.sessions
 		m.logs = msg.logs
-		m.dailySavings = msg.dailyData
-		m.topCommands = msg.topCmds
 		m.lastUpdate = time.Now()
 		m.loading = false
 		m.updateComponents()
@@ -321,176 +303,59 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		var cmd tea.Cmd
 		m.spinner, cmd = m.spinner.Update(msg)
 		cmds = append(cmds, cmd)
-
-		// Update sub-components based on active tab
-		switch m.activeTab {
-		case CommandsTab:
-			m.cmdTable, cmd = m.cmdTable.Update(msg)
-			cmds = append(cmds, cmd)
-		case FilterLayersTab:
-			m.layerList, cmd = m.layerList.Update(msg)
-			cmds = append(cmds, cmd)
-		case SessionsTab:
-			m.sessionTable, cmd = m.sessionTable.Update(msg)
-			cmds = append(cmds, cmd)
-		case LogsTab:
-			m.logViewport, cmd = m.logViewport.Update(msg)
-			cmds = append(cmds, cmd)
-		}
 	}
 
 	return m, tea.Batch(cmds...)
 }
 
-func (m *Model) toggleSelectedLayer() {
-	if len(m.layers) == 0 {
-		return
-	}
-	idx := m.layerList.Index()
-	if idx >= 0 && idx < len(m.layers) {
-		m.layers[idx].Enabled = !m.layers[idx].Enabled
-	}
-}
-
-func (m *Model) updateComponents() {
+func (m *DashboardModel) updateComponents() {
 	// Update command table
 	columns := []table.Column{
-		{Title: "Time", Width: 8},
 		{Title: "Command", Width: 20},
-		{Title: "Input", Width: 10},
-		{Title: "Output", Width: 10},
-		{Title: "Saved", Width: 10},
-		{Title: "Savings", Width: 8},
+		{Title: "Count", Width: 8},
+		{Title: "Saved", Width: 12},
+		{Title: "Trend", Width: 8},
 	}
-
 	rows := []table.Row{}
-	for _, cmd := range m.commands {
+	for _, cmd := range m.topCommands {
+		trend := "→"
+		if cmd.Trend > 0.1 {
+			trend = "↑"
+		} else if cmd.Trend < -0.1 {
+			trend = "↓"
+		}
 		rows = append(rows, table.Row{
-			cmd.Time,
 			cmd.Command,
-			cmd.Input,
-			cmd.Output,
-			cmd.Saved,
-			cmd.Percent,
+			fmt.Sprintf("%d", cmd.Count),
+			formatTokens(int(cmd.TokensSaved)),
+			trend,
 		})
 	}
-
 	m.cmdTable = table.New(
 		table.WithColumns(columns),
 		table.WithRows(rows),
 		table.WithFocused(true),
-		table.WithHeight(10),
+		table.WithHeight(8),
 	)
-
-	// Update layer list
-	layerItems := []list.Item{}
-	for _, layer := range m.layers {
-		status := "✓"
-		if !layer.Enabled {
-			status = "✗"
-		}
-		layerItems = append(layerItems, layerItem{
-			title:       fmt.Sprintf("%s %s", status, layer.Name),
-			description: layer.Description,
-		})
-	}
-	m.layerList = list.New(layerItems, list.NewDefaultDelegate(), m.width-4, 15)
-	m.layerList.Title = "Filter Layers (Space to toggle)"
-
-	// Update session table
-	sessionColumns := []table.Column{
-		{Title: "Session ID", Width: 20},
-		{Title: "Started", Width: 12},
-		{Title: "Commands", Width: 10},
-		{Title: "Tokens Saved", Width: 12},
-		{Title: "Status", Width: 10},
-	}
-
-	sessionRows := []table.Row{}
-	for _, s := range m.sessions {
-		sessionRows = append(sessionRows, table.Row{
-			s.ID,
-			s.StartTime.Format("15:04"),
-			fmt.Sprintf("%d", s.CommandCount),
-			formatTokens(int(s.TokensSaved)),
-			s.Status,
-		})
-	}
-
-	m.sessionTable = table.New(
-		table.WithColumns(sessionColumns),
-		table.WithRows(sessionRows),
-		table.WithFocused(true),
-		table.WithHeight(10),
-	)
-
-	// Update log viewport
-	var logContent strings.Builder
-	for _, log := range m.logs {
-		levelStyle := TextSecondaryStyle
-		switch log.Level {
-		case "ERROR":
-			levelStyle = ErrorStyle
-		case "WARN":
-			levelStyle = WarningStyle
-		case "INFO":
-			levelStyle = AccentStyle
-		case "SUCCESS":
-			levelStyle = SuccessStyle
-		}
-		logContent.WriteString(fmt.Sprintf("[%s] %s: %s\n",
-			log.Time.Format("15:04:05"),
-			levelStyle.Render(log.Level),
-			log.Message))
-	}
-	m.logViewport = viewport.New(m.width-4, 15)
-	m.logViewport.SetContent(logContent.String())
 }
 
-// View renders the TUI with single accent color
-func (m Model) View() string {
+// ============================================================================
+// VIEW RENDERING
+// ============================================================================
+
+func (m DashboardModel) View() string {
 	if !m.ready {
-		return "\n  " + m.spinner.View() + " Initializing TokMan Dashboard..."
+		return m.renderLoading()
 	}
 
 	var b strings.Builder
 
-	// Title with icon (using ASCII art instead of emoji)
-	title := TitleStyle.Render(" [+] TOKMAN DASHBOARD ")
-	b.WriteString(title)
-	b.WriteString("\n\n")
+	// Header
+	b.WriteString(m.renderHeader())
+	b.WriteString("\n")
 
-	// Tabs
-	b.WriteString(m.renderTabs())
-	b.WriteString("\n\n")
-
-	// Content based on active tab - wrapped in unified box
-	var content string
-	switch m.activeTab {
-	case OverviewTab:
-		content = m.renderOverview()
-	case CommandsTab:
-		content = m.renderCommands()
-	case CacheTab:
-		content = m.renderCache()
-	case FilterLayersTab:
-		content = m.renderFilterLayers()
-	case AnalyticsTab:
-		content = m.renderAnalytics()
-	case SessionsTab:
-		content = m.renderSessions()
-	case EconomicsTab:
-		content = m.renderEconomics()
-	case ConfigTab:
-		content = m.renderConfig()
-	case LogsTab:
-		content = m.renderLogs()
-	case SystemTab:
-		content = m.renderSystem()
-	}
-
-	// Wrap content in unified box
-	b.WriteString(BoxStyle.Render(content))
+	// Main content area
+	b.WriteString(m.renderMainContent())
 
 	// Footer
 	b.WriteString("\n")
@@ -499,501 +364,681 @@ func (m Model) View() string {
 	return b.String()
 }
 
-func (m Model) renderTabs() string {
-	var tabs []string
+func (m DashboardModel) renderLoading() string {
+	return "\n  " + m.spinner.View() + " Loading TokMan Dashboard..."
+}
+
+func (m DashboardModel) renderHeader() string {
+	// Title bar with status
+	title := TitleStyle.Render(" TOKMAN DASHBOARD ")
+
+	// Status indicators
+	status := []string{
+		SuccessStyle.Render("●"),
+		TextSecondaryStyle.Render("Active"),
+		TextMutedStyle.Render("|"),
+		InfoStyle.Render(fmt.Sprintf("%d", m.stats.ActiveSessions)),
+		TextMutedStyle.Render("sessions"),
+		TextMutedStyle.Render("|"),
+		AccentStyle.Render(fmt.Sprintf("%s", formatTokens(int(m.stats.TodaySaved)))),
+		TextMutedStyle.Render("saved today"),
+	}
+
+	statusBar := lipgloss.JoinHorizontal(lipgloss.Left, status...)
+
+	return lipgloss.JoinHorizontal(lipgloss.Left, title, "  ", statusBar)
+}
+
+func (m DashboardModel) renderMainContent() string {
+	// Sidebar + Content layout
+	sidebar := m.renderSidebar()
+	content := m.renderContent()
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
+}
+
+func (m DashboardModel) renderSidebar() string {
+	var items []string
+
+	// Navigation menu
+	items = append(items, TextMutedStyle.Render("NAVIGATION"))
+	items = append(items, "")
+
 	for i := 0; i < int(TabCount); i++ {
-		tabName := Tab(i).String()
+		tab := Tab(i)
+		label := tab.String()
+
 		if i == int(m.activeTab) {
-			tabs = append(tabs, TabActiveStyle.Render(" "+tabName+" "))
+			items = append(items, tab.Color().Render(" "+label+" "))
 		} else {
-			tabs = append(tabs, TabInactiveStyle.Render(" "+tabName+" "))
+			items = append(items, "  "+TextDimStyle.Render(label))
 		}
 	}
-	return lipgloss.JoinHorizontal(lipgloss.Left, tabs...)
+
+	items = append(items, "")
+	items = append(items, TextMutedStyle.Render("QUICK STATS"))
+	items = append(items, "")
+
+	// Mini stats
+	items = append(items, fmt.Sprintf("  %s %s",
+		TextMutedStyle.Render("Commands:"),
+		StatValueStyle.Render(fmt.Sprintf("%d", m.stats.TotalCommands))))
+
+	items = append(items, fmt.Sprintf("  %s %s",
+		TextMutedStyle.Render("Saved:"),
+		SuccessStyle.Render(formatTokens(int(m.stats.TotalSaved)))))
+
+	items = append(items, fmt.Sprintf("  %s %s",
+		TextMutedStyle.Render("Cache:"),
+		InfoStyle.Render(fmt.Sprintf("%.1f%%", m.stats.CacheHitRate))))
+
+	content := strings.Join(items, "\n")
+
+	return BoxDim.Render(content)
 }
 
-func (m Model) renderOverview() string {
-	// Single column layout with accent color
-	var b strings.Builder
+func (m DashboardModel) renderContent() string {
+	switch m.activeTab {
+	case OverviewTab:
+		return m.renderOverview()
+	case MetricsTab:
+		return m.renderMetrics()
+	case LayersTab:
+		return m.renderLayers()
+	case AnalyticsTab:
+		return m.renderAnalytics()
+	case SessionsTab:
+		return m.renderSessions()
+	case EconomicsTab:
+		return m.renderEconomics()
+	case ConfigTab:
+		return m.renderConfig()
+	case LogsTab:
+		return m.renderLogs()
+	default:
+		return m.renderOverview()
+	}
+}
 
-	b.WriteString(AccentStyle.Render("SYSTEM STATS"))
-	b.WriteString("\n\n")
+// ============================================================================
+// TAB VIEWS
+// ============================================================================
 
-	// Stats in a clean list format
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Total Commands:", StatValueStyle.Render(fmt.Sprintf("%d", m.stats.TotalCommands))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Tokens Saved:", StatValueStyle.Render(formatTokens(int(m.stats.TotalSaved)))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Cache Hit Rate:", StatValueStyle.Render(fmt.Sprintf("%.1f%%", m.stats.HitRate))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Active Sessions:", StatValueStyle.Render(fmt.Sprintf("%d", m.stats.ActiveSessions))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Avg Savings:", StatValueStyle.Render(fmt.Sprintf("%.1f%%", m.stats.AvgSavings))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Cost Saved:", StatValueStyle.Render(fmt.Sprintf("$%.2f", m.stats.TotalCostSaved))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Commands/Hour:", StatValueStyle.Render(fmt.Sprintf("%.1f", m.stats.CommandsPerHour))))
-	b.WriteString(fmt.Sprintf("  %-20s %s\n", "Today's Savings:", StatValueStyle.Render(formatTokens(int(m.stats.TodaySaved)))))
+func (m DashboardModel) renderOverview() string {
+	var sections []string
 
+	// Header
+	sections = append(sections, HeaderPrimary.Render(" SYSTEM OVERVIEW "))
+	sections = append(sections, "")
+
+	// Main stats grid
+	statsRow1 := lipgloss.JoinHorizontal(lipgloss.Top,
+		renderStatBox("Total Commands", fmt.Sprintf("%d", m.stats.TotalCommands), ColorPrimary),
+		renderStatBox("Tokens Saved", formatTokens(int(m.stats.TotalSaved)), ColorSuccess),
+		renderStatBox("Today's Savings", formatTokens(int(m.stats.TodaySaved)), ColorWarning),
+	)
+
+	statsRow2 := lipgloss.JoinHorizontal(lipgloss.Top,
+		renderStatBox("Avg Savings", fmt.Sprintf("%.1f%%", m.stats.AvgSavings), ColorInfo),
+		renderStatBox("Cache Hit Rate", fmt.Sprintf("%.1f%%", m.stats.CacheHitRate), ColorData1),
+		renderStatBox("Commands/Hour", fmt.Sprintf("%.1f", m.stats.CommandsPerHour), ColorData2),
+	)
+
+	sections = append(sections, statsRow1)
+	sections = append(sections, "")
+	sections = append(sections, statsRow2)
+	sections = append(sections, "")
+
+	// Top command
 	if m.stats.TopCommand != "" {
-		b.WriteString("\n")
-		b.WriteString(AccentStyle.Render("MOST USED"))
-		b.WriteString("\n")
-		b.WriteString(fmt.Sprintf("  > %s", m.stats.TopCommand))
+		sections = append(sections, HeaderSuccess.Render(" MOST USED COMMAND "))
+		sections = append(sections, "")
+		sections = append(sections, BoxSuccess.Render(
+			AccentStyle.Render(m.stats.TopCommand)))
+		sections = append(sections, "")
 	}
 
-	return b.String()
+	// Recent activity sparkline
+	if len(m.hourlyTrend) > 0 {
+		sections = append(sections, HeaderInfo.Render(" HOURLY ACTIVITY "))
+		sections = append(sections, "")
+		sections = append(sections, renderSparkline(m.hourlyTrend, 50))
+	}
+
+	return BoxPrimary.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderCommands() string {
-	header := HeaderPrimary.Render(" RECENT COMMANDS ")
+func (m DashboardModel) renderMetrics() string {
+	var sections []string
 
-	if len(m.commands) == 0 {
-		return lipgloss.JoinVertical(lipgloss.Left,
-			header,
-			"",
-			BoxStyle.Render("No commands recorded yet"),
-		)
+	sections = append(sections, HeaderSuccess.Render(" PERFORMANCE METRICS "))
+	sections = append(sections, "")
+
+	// Cache metrics
+	sections = append(sections, TextSecondaryStyle.Render("CACHE PERFORMANCE"))
+	sections = append(sections, "")
+
+	cacheMetrics := lipgloss.JoinHorizontal(lipgloss.Top,
+		renderMetricBox("Hits", fmt.Sprintf("%s", formatNumber(m.stats.CacheHits)), SuccessStyle),
+		renderMetricBox("Misses", fmt.Sprintf("%s", formatNumber(m.stats.CacheMisses)), WarningStyle),
+		renderMetricBox("Hit Rate", fmt.Sprintf("%.1f%%", m.stats.CacheHitRate), InfoStyle),
+	)
+	sections = append(sections, cacheMetrics)
+	sections = append(sections, "")
+
+	// Progress bar for hit rate
+	sections = append(sections, TextMutedStyle.Render("Cache Efficiency:"))
+	sections = append(sections, renderProgressBar(m.stats.CacheHitRate, 100, 60, ColorSuccess))
+	sections = append(sections, "")
+
+	// Command distribution
+	if len(m.topCommands) > 0 {
+		sections = append(sections, TextSecondaryStyle.Render("COMMAND DISTRIBUTION"))
+		sections = append(sections, "")
+		sections = append(sections, m.cmdTable.View())
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		m.cmdTable.View(),
-		"",
-		TextMutedStyle.Render("Press '/' to search, 'r' to refresh"),
-	)
+	return BoxSuccess.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderCache() string {
-	header := HeaderPrimary.Render(" CACHE STATISTICS ")
+func (m DashboardModel) renderLayers() string {
+	var sections []string
 
-	hits := StatValueStyle.Render(formatNumber(m.stats.CacheHits))
-	misses := StatValueStyle.Render(formatNumber(m.stats.CacheMisses))
-
-	hitBox := BoxStyle.Render(
-		StatLabelStyle.Render("CACHE HITS") + "\n" + hits,
-	)
-
-	missBox := BoxStyle.Render(
-		StatLabelStyle.Render("CACHE MISSES") + "\n" + misses,
-	)
-
-	total := m.stats.CacheHits + m.stats.CacheMisses
-	hitRate := 0.0
-	if total > 0 {
-		hitRate = float64(m.stats.CacheHits) / float64(total) * 100
-	}
-
-	rateBox := BoxStyle.Render(
-		StatLabelStyle.Render("HIT RATE") + "\n" +
-			StatValueStyle.Render(fmt.Sprintf("%.1f%%", hitRate)),
-	)
-
-	// Visual bar
-	bar := m.renderProgressBar("Cache Efficiency", int64(hitRate), 100)
-
-	// Cache features - uniform accent
-	features := []string{
-		SuccessStyle.Render("[OK]") + " Semantic caching enabled",
-		AccentStyle.Render("[*]") + " KV cache alignment",
-		AccentStyle.Render("[*]") + " Fingerprint-based deduplication",
-		AccentStyle.Render("[*]") + " Automatic cleanup (90 days)",
-	}
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		lipgloss.JoinHorizontal(lipgloss.Top, hitBox, missBox, rateBox),
-		"",
-		bar,
-		"",
-		BoxStyle.Render(strings.Join(features, "\n")),
-	)
-}
-
-func (m Model) renderFilterLayers() string {
-	header := HeaderPrimary.Render(" 20-LAYER FILTER PIPELINE ")
+	sections = append(sections, HeaderInfo.Render(" 20-LAYER FILTER PIPELINE "))
+	sections = append(sections, "")
 
 	if len(m.layers) == 0 {
-		return lipgloss.JoinVertical(lipgloss.Left,
-			header,
-			"",
-			BoxStyle.Render("Loading filter layers..."),
-		)
+		sections = append(sections, TextMutedStyle.Render("Loading filter layers..."))
+		return BoxInfo.Render(strings.Join(sections, "\n"))
 	}
 
-	// Layer statistics
-	var enabledCount int
-	var totalSaved int64
+	// Layer stats
+	activeCount := 0
+	totalSaved := int64(0)
 	for _, l := range m.layers {
 		if l.Enabled {
-			enabledCount++
+			activeCount++
 		}
-		totalSaved += l.Stats.Saved
+		totalSaved += l.TokensSaved
 	}
 
-	statusBox := BoxStyle.Render(
-		StatLabelStyle.Render("LAYERS ACTIVE") + "\n" +
-			StatValueStyle.Render(fmt.Sprintf("%d/%d", enabledCount, len(m.layers))),
+	statusLine := lipgloss.JoinHorizontal(lipgloss.Left,
+		TextMutedStyle.Render("Active Layers: "),
+		AccentStyle.Render(fmt.Sprintf("%d/%d", activeCount, len(m.layers))),
+		TextMutedStyle.Render("  |  "),
+		TextMutedStyle.Render("Total Saved: "),
+		SuccessStyle.Render(formatTokens(int(totalSaved))),
 	)
+	sections = append(sections, statusLine)
+	sections = append(sections, "")
 
-	savedBox := BoxStyle.Render(
-		StatLabelStyle.Render("TOKENS SAVED") + "\n" +
-			StatValueStyle.Render(formatTokens(int(totalSaved))),
-	)
+	// Layer table
+	sections = append(sections, TextMutedStyle.Render("Press [space] to toggle layers"))
+	sections = append(sections, "")
 
-	// Legend
-	legend := TextMutedStyle.Render("Space: toggle | Enter: details | r: reset all")
+	var layerRows []string
+	for _, layer := range m.layers {
+		status := "○"
+		statusColor := TextDimStyle
+		if layer.Enabled {
+			status = "●"
+			statusColor = SuccessStyle
+		}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		lipgloss.JoinHorizontal(lipgloss.Top, statusBox, savedBox),
-		"",
-		m.layerList.View(),
-		"",
-		legend,
-	)
+		efficiency := renderMiniBar(layer.Efficiency, 20)
+
+		row := fmt.Sprintf("%s %s %s %s %s %s",
+			statusColor.Render(status),
+			TextPrimaryStyle.Render(fmt.Sprintf("%-3d", layer.ID)),
+			AccentStyle.Render(fmt.Sprintf("%-20s", layer.Name)),
+			TextMutedStyle.Render(fmt.Sprintf("%-15s", layer.Research)),
+			efficiency,
+			SuccessStyle.Render(fmt.Sprintf("%10s", formatTokens(int(layer.TokensSaved)))),
+		)
+		layerRows = append(layerRows, row)
+	}
+
+	sections = append(sections, strings.Join(layerRows, "\n"))
+
+	return BoxInfo.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderAnalytics() string {
-	header := HeaderPrimary.Render(" ANALYTICS & INSIGHTS ")
+func (m DashboardModel) renderAnalytics() string {
+	var sections []string
 
-	// Simple ASCII bar chart for top commands - uniform primary color
-	var chart strings.Builder
-	chart.WriteString(AccentStyle.Render("Top Commands:\n\n"))
+	sections = append(sections, HeaderWarning.Render(" ANALYTICS & INSIGHTS "))
+	sections = append(sections, "")
 
-	maxCount := 0
-	for _, cmd := range m.topCommands {
-		if cmd.Count > maxCount {
-			maxCount = cmd.Count
+	// Daily trend bar chart
+	if len(m.dailyTrend) > 0 {
+		sections = append(sections, TextSecondaryStyle.Render("DAILY SAVINGS TREND"))
+		sections = append(sections, "")
+		sections = append(sections, renderBarChart(m.dailyTrend, 40))
+		sections = append(sections, "")
+	}
+
+	// Top commands with bars
+	if len(m.topCommands) > 0 {
+		sections = append(sections, TextSecondaryStyle.Render("TOP COMMANDS BY USAGE"))
+		sections = append(sections, "")
+
+		maxCount := 0
+		for _, cmd := range m.topCommands {
+			if cmd.Count > maxCount {
+				maxCount = cmd.Count
+			}
+		}
+
+		for _, cmd := range m.topCommands {
+			barWidth := 0
+			if maxCount > 0 {
+				barWidth = (cmd.Count * 30) / maxCount
+			}
+			bar := BarSuccess.Render(strings.Repeat("█", barWidth))
+
+			row := fmt.Sprintf("%-15s %s %5d  %s",
+				TextPrimaryStyle.Render(cmd.Command),
+				bar,
+				cmd.Count,
+				SuccessStyle.Render(formatTokens(int(cmd.TokensSaved))),
+			)
+			sections = append(sections, row)
 		}
 	}
 
-	for _, cmd := range m.topCommands {
-		barWidth := 0
-		if maxCount > 0 {
-			barWidth = (cmd.Count * 20) / maxCount
-		}
-		bar := BarPrimary.Render(strings.Repeat("█", barWidth))
-		chart.WriteString(fmt.Sprintf("%-15s %s %d\n", cmd.Command, bar, cmd.Count))
-	}
-
-	// Daily savings chart - uniform primary color
-	var dailyChart strings.Builder
-	dailyChart.WriteString(AccentStyle.Render("\nDaily Savings (last 7 days):\n\n"))
-
-	maxDaily := int64(0)
-	for _, d := range m.dailySavings {
-		if d.Value > maxDaily {
-			maxDaily = d.Value
-		}
-	}
-
-	for _, d := range m.dailySavings {
-		barWidth := 0
-		if maxDaily > 0 {
-			barWidth = int((d.Value * 20) / maxDaily)
-		}
-		bar := BarPrimary.Render(strings.Repeat("█", barWidth))
-		dailyChart.WriteString(fmt.Sprintf("%-10s %s %s\n", d.Label, bar, formatTokens(int(d.Value))))
-	}
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		BoxStyle.Render(chart.String()),
-		BoxStyle.Render(dailyChart.String()),
-	)
+	return BoxWarning.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderSessions() string {
-	header := HeaderPrimary.Render(" SESSION MANAGEMENT ")
+func (m DashboardModel) renderSessions() string {
+	var sections []string
+
+	sections = append(sections, HeaderSuccessDim.Render(" SESSION MANAGEMENT "))
+	sections = append(sections, "")
 
 	if len(m.sessions) == 0 {
-		return lipgloss.JoinVertical(lipgloss.Left,
-			header,
-			"",
-			BoxStyle.Render("No active sessions"),
+		sections = append(sections, TextMutedStyle.Render("No active sessions"))
+		return BoxDim.Render(strings.Join(sections, "\n"))
+	}
+
+	// Session count
+	sections = append(sections, fmt.Sprintf("%s %s",
+		TextMutedStyle.Render("Active Sessions:"),
+		AccentStyle.Render(fmt.Sprintf("%d", len(m.sessions)))))
+	sections = append(sections, "")
+
+	// Session list
+	for _, s := range m.sessions {
+		statusColor := SuccessStyle
+		if s.Status == "idle" {
+			statusColor = WarningStyle
+		}
+
+		row := fmt.Sprintf("%s %s  %s  %s  %s  %s",
+			statusColor.Render("●"),
+			TextPrimaryStyle.Render(s.ID),
+			TextMutedStyle.Render(s.StartTime.Format("15:04")),
+			TextSecondaryStyle.Render(fmt.Sprintf("%3d cmds", s.CommandCount)),
+			SuccessStyle.Render(fmt.Sprintf("%8s", formatTokens(int(s.TokensSaved)))),
+			TextDimStyle.Render(fmt.Sprintf("(%s)", s.Agent)),
 		)
+		sections = append(sections, row)
 	}
 
-	stats := BoxStyle.Render(
-		StatLabelStyle.Render("ACTIVE SESSIONS") + "\n" +
-			StatValueStyle.Render(fmt.Sprintf("%d", len(m.sessions))),
-	)
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		stats,
-		"",
-		m.sessionTable.View(),
-	)
+	return BoxSuccess.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderEconomics() string {
-	header := HeaderPrimary.Render(" COST ANALYSIS ")
+func (m DashboardModel) renderEconomics() string {
+	var sections []string
 
-	// Cost breakdown - uniform style
-	totalSaved := BoxStyle.Render(
-		StatLabelStyle.Render("TOTAL COST SAVED") + "\n" +
-			StatValueStyle.Render(fmt.Sprintf("$%.2f", m.stats.TotalCostSaved)),
+	sections = append(sections, HeaderWarningDim.Render(" COST ANALYSIS "))
+	sections = append(sections, "")
+
+	// Cost savings
+	sections = append(sections, TextSecondaryStyle.Render("COST SAVINGS"))
+	sections = append(sections, "")
+
+	costBox := lipgloss.JoinHorizontal(lipgloss.Top,
+		renderStatBox("Total Saved", fmt.Sprintf("$%.2f", m.stats.TotalCostSaved), ColorSuccess),
+		renderStatBox("Per Command", fmt.Sprintf("$%.4f", m.stats.TotalCostSaved/float64(max(1, m.stats.TotalCommands))), ColorInfo),
 	)
+	sections = append(sections, costBox)
+	sections = append(sections, "")
 
-	avgPerCmd := 0.0
-	if m.stats.TotalCommands > 0 {
-		avgPerCmd = m.stats.TotalCostSaved / float64(m.stats.TotalCommands)
+	// Pricing tiers
+	sections = append(sections, TextSecondaryStyle.Render("PRICING REFERENCE"))
+	sections = append(sections, "")
+	sections = append(sections, fmt.Sprintf("  %s ~$0.03/1K tokens", TextMutedStyle.Render("GPT-4/Claude:")))
+	sections = append(sections, fmt.Sprintf("  %s ~$0.002/1K tokens", TextMutedStyle.Render("GPT-3.5:")))
+	sections = append(sections, fmt.Sprintf("  %s $0 (compute only)", TextMutedStyle.Render("Local LLM:")))
+	sections = append(sections, "")
+
+	// Savings summary
+	sections = append(sections, SuccessStyle.Render(
+		fmt.Sprintf("✓ Saved %s tokens worth $%.2f",
+			formatTokens(int(m.stats.TotalSaved)),
+			m.stats.TotalCostSaved)))
+
+	return BoxWarning.Render(strings.Join(sections, "\n"))
+}
+
+func (m DashboardModel) renderConfig() string {
+	var sections []string
+
+	sections = append(sections, HeaderInfoDim.Render(" CONFIGURATION "))
+	sections = append(sections, "")
+
+	// Pipeline settings
+	sections = append(sections, TextSecondaryStyle.Render("PIPELINE SETTINGS"))
+	sections = append(sections, "")
+	sections = append(sections, fmt.Sprintf("  %s %s", TextMutedStyle.Render("Max Context:"), AccentStyle.Render("2M tokens")))
+	sections = append(sections, fmt.Sprintf("  %s %s", TextMutedStyle.Render("Chunk Size:"), AccentStyle.Render("100K tokens")))
+	sections = append(sections, fmt.Sprintf("  %s %s", TextMutedStyle.Render("Stream Threshold:"), AccentStyle.Render("500K tokens")))
+	sections = append(sections, "")
+
+	// Feature flags
+	sections = append(sections, TextSecondaryStyle.Render("FEATURES"))
+	sections = append(sections, "")
+	sections = append(sections, fmt.Sprintf("  %s %s", SuccessStyle.Render("[✓]"), TextPrimaryStyle.Render("Semantic caching")))
+	sections = append(sections, fmt.Sprintf("  %s %s", SuccessStyle.Render("[✓]"), TextPrimaryStyle.Render("LLM compaction")))
+	sections = append(sections, fmt.Sprintf("  %s %s", SuccessStyle.Render("[✓]"), TextPrimaryStyle.Render("SIMD optimizations")))
+	sections = append(sections, fmt.Sprintf("  %s %s", SuccessStyle.Render("[✓]"), TextPrimaryStyle.Render("20-layer pipeline")))
+	sections = append(sections, "")
+
+	// Paths
+	sections = append(sections, TextSecondaryStyle.Render("PATHS"))
+	sections = append(sections, "")
+	sections = append(sections, fmt.Sprintf("  %s %s", TextMutedStyle.Render("Config:"), TextDimStyle.Render("~/.config/tokman/config.toml")))
+	sections = append(sections, fmt.Sprintf("  %s %s", TextMutedStyle.Render("Database:"), TextDimStyle.Render("~/.local/share/tokman/tokman.db")))
+
+	return BoxInfo.Render(strings.Join(sections, "\n"))
+}
+
+func (m DashboardModel) renderLogs() string {
+	var sections []string
+
+	sections = append(sections, HeaderErrorDim.Render(" SYSTEM LOGS "))
+	sections = append(sections, "")
+
+	if len(m.logs) == 0 {
+		sections = append(sections, TextMutedStyle.Render("No recent log entries"))
+		return BoxDim.Render(strings.Join(sections, "\n"))
 	}
 
-	avgCost := BoxStyle.Render(
-		StatLabelStyle.Render("AVG PER COMMAND") + "\n" +
-			StatValueStyle.Render(fmt.Sprintf("$%.4f", avgPerCmd)),
-	)
+	for _, log := range m.logs {
+		levelColor := TextDimStyle
+		switch log.Level {
+		case "SUCCESS":
+			levelColor = SuccessStyle
+		case "WARN":
+			levelColor = WarningStyle
+		case "ERROR":
+			levelColor = ErrorStyle
+		case "INFO":
+			levelColor = InfoStyle
+		}
 
-	// Pricing tiers - uniform primary accent
-	tiers := []string{
-		HeaderPrimary.Render(" PRICING TIERS "),
-		"",
-		AccentStyle.Render("GPT-4/Claude 3:") + " ~$0.03/1K tokens",
-		AccentStyle.Render("GPT-3.5:") + " ~$0.002/1K tokens",
-		SuccessStyle.Render("Local LLM:") + " $0 (compute only)",
-		"",
-		HeaderPrimary.Render(" YOUR SAVINGS "),
-		"",
-		SuccessStyle.Render(fmt.Sprintf("✓ Saved %s tokens", formatTokens(int(m.stats.TotalSaved)))),
-		SuccessStyle.Render(fmt.Sprintf("✓ Equivalent to $%.2f", m.stats.TotalCostSaved)),
+		row := fmt.Sprintf("%s %s %s: %s",
+			TextDimStyle.Render(log.Time.Format("15:04:05")),
+			levelColor.Render(fmt.Sprintf("[%s]", log.Level)),
+			TextMutedStyle.Render(log.Source),
+			TextPrimaryStyle.Render(log.Message),
+		)
+		sections = append(sections, row)
 	}
 
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		lipgloss.JoinHorizontal(lipgloss.Top, totalSaved, avgCost),
-		"",
-		BoxStyle.Render(strings.Join(tiers, "\n")),
-	)
+	return BoxDim.Render(strings.Join(sections, "\n"))
 }
 
-func (m Model) renderConfig() string {
-	header := HeaderPrimary.Render(" CONFIGURATION ")
-
-	// Config sections - uniform primary accent
-	sections := []string{
-		HeaderPrimary.Render(" PIPELINE SETTINGS "),
-		"",
-		AccentStyle.Render("Max Context:") + " 2M tokens",
-		AccentStyle.Render("Chunk Size:") + " 100K tokens",
-		AccentStyle.Render("Stream Threshold:") + " 500K tokens",
-		"",
-		HeaderPrimary.Render(" FEATURE FLAGS "),
-		"",
-		SuccessStyle.Render("✓") + " Semantic caching",
-		AccentStyle.Render("✓") + " LLM compaction",
-		AccentStyle.Render("✓") + " SIMD optimizations",
-		AccentStyle.Render("✓") + " Telemetry batching",
-		"",
-		HeaderPrimary.Render(" PATHS "),
-		"",
-		TextSecondaryStyle.Render("Config:") + " ~/.config/tokman/config.toml",
-		TextSecondaryStyle.Render("Database:") + " ~/.local/share/tokman/tokman.db",
-		TextSecondaryStyle.Render("Cache:") + " ~/.cache/tokman/",
-	}
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		BoxStyle.Render(strings.Join(sections, "\n")),
-	)
-}
-
-func (m Model) renderLogs() string {
-	header := HeaderPrimary.Render(" REAL-TIME LOGS ")
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		BoxStyle.Render(m.logViewport.View()),
-	)
-}
-
-func (m Model) renderSystem() string {
-	header := HeaderPrimary.Render(" SYSTEM INFORMATION ")
-
-	// System info - uniform primary accent
-	info := []string{
-		HeaderPrimary.Render(" VERSION "),
-		"",
-		AccentStyle.Render("TokMan:") + " v0.28.0",
-		AccentStyle.Render("Go Version:") + " 1.26",
-		AccentStyle.Render("Platform:") + " " + os.Getenv("GOOS") + "/" + os.Getenv("GOARCH"),
-		"",
-		HeaderPrimary.Render(" PERFORMANCE "),
-		"",
-		SuccessStyle.Render("✓") + " Caching enabled",
-		AccentStyle.Render("✓") + " Telemetry batching",
-		AccentStyle.Render("✓") + " SIMD optimizations",
-		AccentStyle.Render("✓") + " 20-layer pipeline active",
-		"",
-		HeaderPrimary.Render(" RESEARCH FOUNDATION "),
-		"",
-		TextSecondaryStyle.Render("Based on 120+ papers from:"),
-		AccentStyle.Render("•") + " Microsoft Research (LLMLingua, LongLLMLingua)",
-		AccentStyle.Render("•") + " Stanford/Berkeley (Gist Compression)",
-		AccentStyle.Render("•") + " Princeton/MIT (AutoCompressor)",
-		AccentStyle.Render("•") + " UC Berkeley (MemGPT)",
-		AccentStyle.Render("•") + " NeurIPS 2023 (H2O Filter)",
-	}
-
-	return lipgloss.JoinVertical(lipgloss.Left,
-		header,
-		"",
-		BoxStyle.Render(strings.Join(info, "\n")),
-	)
-}
-
-func (m Model) renderProgressBar(label string, value, max int64) string {
-	pct := float64(value) / float64(max)
-	if pct > 1 {
-		pct = 1
-	}
-
-	bar := m.progress.ViewAs(pct)
-	return lipgloss.JoinVertical(lipgloss.Left,
-		TextSecondaryStyle.Render(label),
-		bar,
-		TextMutedStyle.Render(fmt.Sprintf("%s / %s", formatNumber(value), formatNumber(max))),
-	)
-}
-
-func (m Model) renderFooter() string {
-	// Help view
+func (m DashboardModel) renderFooter() string {
 	helpView := m.help.View(m.keys)
-
 	timeStr := m.lastUpdate.Format("15:04:05")
 	if m.lastUpdate.IsZero() {
 		timeStr = "--:--:--"
 	}
 
-	return FooterStyle.Render(
-		helpView +
-			"  |  " + TextMutedStyle.Render("Updated: "+timeStr),
+	status := fmt.Sprintf("%s  |  Updated: %s",
+		helpView,
+		TextDimStyle.Render(timeStr),
 	)
+
+	return FooterStyle.Render(status)
 }
 
-// layerItem for the list
-type layerItem struct {
-	title       string
-	description string
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+func renderStatBox(label, value, color string) string {
+	box := lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(color)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2).
+		Width(20).
+		Align(lipgloss.Center)
+
+	content := fmt.Sprintf("%s\n%s",
+		TextMutedStyle.Render(label),
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(color)).Render(value),
+	)
+
+	return box.Render(content)
 }
 
-func (i layerItem) Title() string       { return i.title }
-func (i layerItem) Description() string { return i.description }
-func (i layerItem) FilterValue() string { return i.title }
+func renderMetricBox(label, value string, style lipgloss.Style) string {
+	return fmt.Sprintf("%-12s %s", TextMutedStyle.Render(label), style.Render(value))
+}
 
-// Commands
+func renderProgressBar(value, max float64, width int, color string) string {
+	pct := value / max
+	if pct > 1 {
+		pct = 1
+	}
+	if pct < 0 {
+		pct = 0
+	}
+
+	filled := int(pct * float64(width))
+	empty := width - filled
+
+	bar := lipgloss.NewStyle().Foreground(lipgloss.Color(color)).Render(strings.Repeat("█", filled)) +
+		TextDimStyle.Render(strings.Repeat("░", empty))
+
+	return fmt.Sprintf("[%s] %.1f%%", bar, value)
+}
+
+func renderMiniBar(percentage float64, width int) string {
+	filled := int(percentage / 100 * float64(width))
+	if filled > width {
+		filled = width
+	}
+	empty := width - filled
+
+	color := ColorSuccess
+	if percentage < 50 {
+		color = ColorWarning
+	}
+	if percentage < 25 {
+		color = ColorError
+	}
+
+	return lipgloss.NewStyle().Foreground(lipgloss.Color(color)).Render(strings.Repeat("█", filled)) +
+		TextDimStyle.Render(strings.Repeat("░", empty))
+}
+
+func renderSparkline(data []TimeSeriesPoint, width int) string {
+	if len(data) == 0 {
+		return ""
+	}
+
+	// Find max
+	maxVal := int64(0)
+	for _, p := range data {
+		if p.Value > maxVal {
+			maxVal = p.Value
+		}
+	}
+	if maxVal == 0 {
+		maxVal = 1
+	}
+
+	// Characters for sparkline (low to high)
+	chars := []string{"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
+
+	var result strings.Builder
+	for _, p := range data {
+		idx := int(float64(p.Value) / float64(maxVal) * float64(len(chars)-1))
+		if idx >= len(chars) {
+			idx = len(chars) - 1
+		}
+		result.WriteString(chars[idx])
+	}
+
+	return BarSuccess.Render(result.String())
+}
+
+func renderBarChart(data []TimeSeriesPoint, maxWidth int) string {
+	if len(data) == 0 {
+		return ""
+	}
+
+	// Find max
+	maxVal := int64(0)
+	for _, p := range data {
+		if p.Value > maxVal {
+			maxVal = p.Value
+		}
+	}
+	if maxVal == 0 {
+		maxVal = 1
+	}
+
+	var rows []string
+	for _, p := range data {
+		label := p.Time.Format("Mon")
+		barWidth := int(float64(p.Value) / float64(maxVal) * float64(maxWidth))
+		bar := BarPrimary.Render(strings.Repeat("█", barWidth))
+
+		row := fmt.Sprintf("%-4s %s %s",
+			TextMutedStyle.Render(label),
+			bar,
+			TextSecondaryStyle.Render(formatTokens(int(p.Value))),
+		)
+		rows = append(rows, row)
+	}
+
+	return strings.Join(rows, "\n")
+}
+
+// ============================================================================
+// COMMANDS & MESSAGES
+// ============================================================================
+
+type tickMsg time.Time
+type dashboardUpdateMsg struct {
+	stats         DashboardStats
+	dailyTrend    []TimeSeriesPoint
+	hourlyTrend   []TimeSeriesPoint
+	topCommands   []CommandStat
+	layers        []FilterLayerInfo
+	sessions      []SessionInfo
+	logs          []LogEntryInfo
+}
+
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
 }
 
-func fetchDataCmd() tea.Cmd {
+func fetchDashboardDataCmd() tea.Cmd {
 	return func() tea.Msg {
 		// Generate demo data
-		stats := Stats{
-			TotalCommands:   1234,
+		stats := DashboardStats{
+			TotalCommands:   12345,
 			TotalSaved:      5678900,
 			TodaySaved:      45000,
+			AvgSavings:      82.5,
+			CommandsPerHour: 45.2,
 			CacheHits:       10000,
 			CacheMisses:     500,
-			HitRate:         95.2,
+			CacheHitRate:    95.2,
 			ActiveSessions:  3,
 			TopCommand:      "git status",
-			AvgSavings:      82.5,
 			TotalCostSaved:  170.37,
-			CommandsPerHour: 45.2,
 		}
 
-		commands := []CommandEntry{
-			{Time: "10:42", Command: "git status", Input: "2.1K", Output: "420", Saved: "1.7K", Percent: "81%", Agent: "Claude"},
-			{Time: "10:41", Command: "cargo test", Input: "45K", Output: "5K", Saved: "40K", Percent: "89%", Agent: "Claude"},
-			{Time: "10:40", Command: "npm ls", Input: "12K", Output: "2K", Saved: "10K", Percent: "83%", Agent: "Cursor"},
-			{Time: "10:38", Command: "docker ps", Input: "3.5K", Output: "700", Saved: "2.8K", Percent: "80%", Agent: "Claude"},
-			{Time: "10:35", Command: "ls -la", Input: "800", Output: "160", Saved: "640", Percent: "80%", Agent: "Copilot"},
+		// Daily trend
+		dailyTrend := []TimeSeriesPoint{
+			{Time: time.Now().AddDate(0, 0, -6), Value: 42000},
+			{Time: time.Now().AddDate(0, 0, -5), Value: 58000},
+			{Time: time.Now().AddDate(0, 0, -4), Value: 35000},
+			{Time: time.Now().AddDate(0, 0, -3), Value: 72000},
+			{Time: time.Now().AddDate(0, 0, -2), Value: 45000},
+			{Time: time.Now().AddDate(0, 0, -1), Value: 28000},
+			{Time: time.Now(), Value: 45000},
 		}
 
-		// Filter layers based on the 20-layer pipeline
-		layers := []FilterLayer{
-			{ID: 1, Name: "Entropy Filtering", Description: "Remove low-information tokens (Mila 2023)", Enabled: true, Research: "Selective Context"},
-			{ID: 2, Name: "Perplexity Pruning", Description: "Iterative token removal (Microsoft/Tsinghua)", Enabled: true, Research: "LLMLingua"},
-			{ID: 3, Name: "Goal-Driven Selection", Description: "CRF-style line scoring (Shanghai Jiao Tong)", Enabled: true, Research: "SWE-Pruner"},
-			{ID: 4, Name: "AST Preservation", Description: "Syntax-aware compression (NUS)", Enabled: true, Research: "LongCodeZip"},
-			{ID: 5, Name: "Contrastive Ranking", Description: "Question-relevance scoring (Microsoft)", Enabled: true, Research: "LongLLMLingua"},
-			{ID: 6, Name: "N-gram Abbreviation", Description: "Lossless pattern compression", Enabled: true, Research: "CompactPrompt"},
-			{ID: 7, Name: "Evaluator Heads", Description: "Early-layer attention sim (Tsinghua/Huawei)", Enabled: true, Research: "EHPC"},
-			{ID: 8, Name: "Gist Compression", Description: "Virtual token embedding (Stanford/Berkeley)", Enabled: true, Research: "Gist"},
-			{ID: 9, Name: "Hierarchical Summary", Description: "Recursive summarization (Princeton/MIT)", Enabled: true, Research: "AutoCompressor"},
-			{ID: 10, Name: "Budget Enforcement", Description: "Strict token limits", Enabled: true, Research: "Industry"},
-			{ID: 11, Name: "Compaction", Description: "Semantic compression (UC Berkeley)", Enabled: true, Research: "MemGPT"},
-			{ID: 12, Name: "Attribution Filter", Description: "78% pruning (LinkedIn)", Enabled: true, Research: "ProCut"},
-			{ID: 13, Name: "H2O Filter", Description: "30x+ compression (NeurIPS 2023)", Enabled: true, Research: "H2O"},
-			{ID: 14, Name: "Attention Sink", Description: "Infinite context stability", Enabled: true, Research: "StreamingLLM"},
-			{ID: 15, Name: "Meta-Token", Description: "27% lossless compression", Enabled: true, Research: "arXiv:2506.00307"},
-			{ID: 16, Name: "Semantic Chunk", Description: "Context-aware boundaries", Enabled: true, Research: "ChunkKV"},
-			{ID: 17, Name: "Semantic Cache", Description: "Reuse similar-context compression", Enabled: true, Research: "KVReviver"},
-			{ID: 18, Name: "Lazy Pruner", Description: "2.34x speedup", Enabled: true, Research: "LazyLLM"},
-			{ID: 19, Name: "Semantic Anchor", Description: "Context preservation", Enabled: true, Research: "Attention Gradient"},
-			{ID: 20, Name: "Agent Memory", Description: "Knowledge graph extraction", Enabled: true, Research: "Focus"},
-		}
-
-		sessions := []Session{
-			{ID: "sess_abc123", StartTime: time.Now().Add(-2 * time.Hour), CommandCount: 45, TokensSaved: 125000, Status: "active"},
-			{ID: "sess_def456", StartTime: time.Now().Add(-5 * time.Hour), CommandCount: 128, TokensSaved: 340000, Status: "active"},
-			{ID: "sess_ghi789", StartTime: time.Now().Add(-1 * time.Hour), CommandCount: 12, TokensSaved: 28000, Status: "active"},
-		}
-
-		logs := []LogEntry{
-			{Time: time.Now().Add(-2 * time.Minute), Level: "INFO", Message: "Compressed git status: 2.1K -> 420 tokens (80% reduction)"},
-			{Time: time.Now().Add(-3 * time.Minute), Level: "SUCCESS", Message: "Cache hit for fingerprint: abc123"},
-			{Time: time.Now().Add(-5 * time.Minute), Level: "INFO", Message: "Layer 13 (H2O) saved 450 tokens"},
-			{Time: time.Now().Add(-8 * time.Minute), Level: "WARN", Message: "High memory usage: 85%"},
-			{Time: time.Now().Add(-10 * time.Minute), Level: "INFO", Message: "Session sess_abc123 started"},
-		}
-
-		// Daily savings data
-		dailyData := []DataPoint{
-			{Label: "Mon", Value: 42000},
-			{Label: "Tue", Value: 58000},
-			{Label: "Wed", Value: 35000},
-			{Label: "Thu", Value: 72000},
-			{Label: "Fri", Value: 45000},
-			{Label: "Sat", Value: 28000},
-			{Label: "Sun", Value: 39000},
+		// Hourly trend
+		hourlyTrend := []TimeSeriesPoint{}
+		for i := 0; i < 24; i++ {
+			hourlyTrend = append(hourlyTrend, TimeSeriesPoint{
+				Time:  time.Now().Add(time.Duration(-23+i) * time.Hour),
+				Value: int64(1000 + i*100),
+			})
 		}
 
 		// Top commands
-		topCmds := []CommandStat{
-			{Command: "git status", Count: 234, Saved: 450000},
-			{Command: "cargo test", Count: 156, Saved: 890000},
-			{Command: "npm ls", Count: 89, Saved: 234000},
-			{Command: "docker ps", Count: 67, Saved: 123000},
-			{Command: "ls -la", Count: 45, Saved: 34000},
+		topCommands := []CommandStat{
+			{Command: "git status", Count: 234, TokensSaved: 450000, Trend: 0.2},
+			{Command: "cargo test", Count: 156, TokensSaved: 890000, Trend: 0.1},
+			{Command: "npm ls", Count: 89, TokensSaved: 234000, Trend: -0.1},
+			{Command: "docker ps", Count: 67, TokensSaved: 123000, Trend: 0.0},
+			{Command: "ls -la", Count: 45, TokensSaved: 34000, Trend: -0.2},
 		}
 
-		// Sort by count
-		sort.Slice(topCmds, func(i, j int) bool {
-			return topCmds[i].Count > topCmds[j].Count
-		})
+		// Filter layers
+		layers := []FilterLayerInfo{
+			{ID: 1, Name: "Entropy Filtering", Research: "Mila 2023", Enabled: true, Efficiency: 85, TokensSaved: 450000},
+			{ID: 2, Name: "Perplexity Pruning", Research: "MS/Tsinghua", Enabled: true, Efficiency: 92, TokensSaved: 890000},
+			{ID: 3, Name: "Goal-Driven Selection", Research: "SJTU 2025", Enabled: true, Efficiency: 78, TokensSaved: 234000},
+			{ID: 4, Name: "AST Preservation", Research: "NUS 2025", Enabled: true, Efficiency: 88, TokensSaved: 123000},
+			{ID: 5, Name: "Contrastive Ranking", Research: "MS 2024", Enabled: true, Efficiency: 90, TokensSaved: 34000},
+		}
 
-		return updateMsg{
-			stats:     stats,
-			commands:  commands,
-			layers:    layers,
-			sessions:  sessions,
-			logs:      logs,
-			dailyData: dailyData,
-			topCmds:   topCmds,
+		// Sessions
+		sessions := []SessionInfo{
+			{ID: "sess_abc123", StartTime: time.Now().Add(-2 * time.Hour), Duration: 2 * time.Hour, CommandCount: 45, TokensSaved: 125000, Agent: "Claude", Status: "active"},
+			{ID: "sess_def456", StartTime: time.Now().Add(-5 * time.Hour), Duration: 5 * time.Hour, CommandCount: 128, TokensSaved: 340000, Agent: "Cursor", Status: "active"},
+			{ID: "sess_ghi789", StartTime: time.Now().Add(-1 * time.Hour), Duration: 1 * time.Hour, CommandCount: 12, TokensSaved: 28000, Agent: "Copilot", Status: "idle"},
+		}
+
+		// Logs
+		logs := []LogEntryInfo{
+			{Time: time.Now().Add(-2 * time.Minute), Level: "INFO", Source: "filter", Message: "Compressed git status: 2.1K → 420 tokens"},
+			{Time: time.Now().Add(-3 * time.Minute), Level: "SUCCESS", Source: "cache", Message: "Cache hit for fingerprint: abc123"},
+			{Time: time.Now().Add(-5 * time.Minute), Level: "INFO", Source: "layer13", Message: "H2O filter saved 450 tokens"},
+			{Time: time.Now().Add(-8 * time.Minute), Level: "WARN", Source: "memory", Message: "High memory usage: 85%"},
+			{Time: time.Now().Add(-10 * time.Minute), Level: "INFO", Source: "session", Message: "Session sess_abc123 started"},
+		}
+
+		return dashboardUpdateMsg{
+			stats:       stats,
+			dailyTrend:  dailyTrend,
+			hourlyTrend: hourlyTrend,
+			topCommands: topCommands,
+			layers:      layers,
+			sessions:    sessions,
+			logs:        logs,
 		}
 	}
 }
 
-// New creates a new TUI model
-func New() Model {
+// ============================================================================
+// CONSTRUCTOR
+// ============================================================================
+
+func NewDashboard() DashboardModel {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPrimary))
@@ -1005,34 +1050,21 @@ func New() Model {
 
 	h := help.New()
 
-	// Initialize search input
-	ti := textinput.New()
-	ti.Placeholder = "Search commands..."
-	ti.CharLimit = 50
-
-	return Model{
-		tabs: []string{
-			"Overview", "Commands", "Cache", "Layers",
-			"Analytics", "Sessions", "Economics", "Config", "Logs", "System",
-		},
-		spinner:     s,
-		progress:    p,
-		help:        h,
-		keys:        newKeyMap(),
-		loading:     true,
-		searchInput: ti,
+	return DashboardModel{
+		spinner:  s,
+		progress: p,
+		help:     h,
+		keys:     newKeyMap(),
+		loading:  true,
 	}
 }
 
-// Run starts the TUI
-func Run() error {
-	// Check if we have a TTY
+func RunDashboard() error {
 	if termenv.NewOutput(os.Stdout).ColorProfile() == termenv.Ascii {
-		// No color support, use basic mode
 		fmt.Println("TokMan Dashboard (Basic Mode)")
-		fmt.Println("═════════════════════════════")
+		fmt.Println("=============================")
 		fmt.Println()
-		fmt.Println("Total Commands: 1,234")
+		fmt.Println("Total Commands: 12,345")
 		fmt.Println("Tokens Saved: 5.7M")
 		fmt.Println("Cache Hit Rate: 95.2%")
 		fmt.Println()
@@ -1041,7 +1073,7 @@ func Run() error {
 		return nil
 	}
 
-	m := New()
+	m := NewDashboard()
 	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		return err
@@ -1049,7 +1081,10 @@ func Run() error {
 	return nil
 }
 
-// Helper functions
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
 func formatTokens(n int) string {
 	if n >= 1_000_000 {
 		return fmt.Sprintf("%.1fM", float64(n)/1_000_000)
@@ -1068,4 +1103,11 @@ func formatNumber(n int64) string {
 		return fmt.Sprintf("%.1fK", float64(n)/1_000)
 	}
 	return fmt.Sprintf("%d", n)
+}
+
+func max(a, b int64) int64 {
+	if a > b {
+		return a
+	}
+	return b
 }
