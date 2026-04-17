@@ -464,8 +464,16 @@ func (m DashboardModel) renderHeader() string {
 		Align(lipgloss.Center).
 		Render(status)
 
-	// Add 2 spaces from top
-	return "\n\n" + centered
+	// Welcome message centered above status
+	welcome := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorPrimary)).
+		Align(lipgloss.Center).
+		Width(m.width).
+		Render("Welcome To Tokman")
+
+	// Add welcome + 2 spaces + status
+	return "\n" + welcome + "\n\n" + centered
 }
 
 func (m DashboardModel) renderMainContent() string {
