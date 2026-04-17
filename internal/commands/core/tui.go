@@ -47,9 +47,6 @@ func init() {
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
-	fmt.Println("[+] Launching TokMan World-Class Dashboard...")
-	fmt.Println("Press 'q' to quit\n")
-
 	if err := tui.RunDashboard(); err != nil {
 		return fmt.Errorf("failed to run TUI: %w", err)
 	}
