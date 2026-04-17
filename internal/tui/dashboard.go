@@ -435,7 +435,8 @@ func (m DashboardModel) renderHeader() string {
 		m.stats.CacheHitRate,
 	)
 
-	return status
+	// Add 2 spaces from top
+	return "\n\n" + status
 }
 
 func (m DashboardModel) renderMainContent() string {
