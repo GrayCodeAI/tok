@@ -464,10 +464,11 @@ func (m DashboardModel) renderHeader() string {
 		Align(lipgloss.Center).
 		Render(status)
 
-	// Welcome message centered above status
+	// Welcome message centered above status (black background)
 	welcome := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorPrimary)).
+		Background(lipgloss.Color(ColorBg)).
 		Align(lipgloss.Center).
 		Width(m.width).
 		Render("Welcome To Tokman")
