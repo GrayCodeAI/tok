@@ -418,24 +418,49 @@ func (m DashboardModel) renderLoading() string {
 }
 
 func (m DashboardModel) renderHeader() string {
-	// Title bar with status
-	title := TitleStyle.Render(" TOKMAN DASHBOARD ")
+	// Title
+	title := TitleStyle.Render(" TOKMAN ")
 
-	// Status indicators
-	status := []string{
-		SuccessStyle.Render("●"),
-		TextSecondaryStyle.Render("Active"),
-		TextMutedStyle.Render("|"),
-		InfoStyle.Render(fmt.Sprintf("%d", m.stats.ActiveSessions)),
-		TextMutedStyle.Render("sessions"),
-		TextMutedStyle.Render("|"),
-		AccentStyle.Render(fmt.Sprintf("%s", formatTokens(int(m.stats.TodaySaved)))),
-		TextMutedStyle.Render("saved today"),
+	// Status indicator with color coding
+	statusColor := SuccessStyle
+	statusText := "ONLINE"
+	if m.stats.CacheHitRate < 50 {
+		statusColor = WarningStyle
+		statusText = "WARN"
 	}
 
-	statusBar := lipgloss.JoinHorizontal(lipgloss.Left, status...)
+	// Build status bar sections
+	sections := []string{
+		// Status
+		statusColor.Render("[" + statusText + "]"),
+		TextMutedStyle.Render("│"),
+		
+		// Sessions
+		InfoStyle.Render(fmt.Sprintf("◉ %d", m.stats.ActiveSessions)),
+		TextMutedStyle.Render("sessions"),
+		TextMutedStyle.Render("│"),
+		
+		// Today's savings
+		SuccessStyle.Render("▼"),
+		AccentStyle.Render(formatTokens(int(m.stats.TodaySaved))),
+		TextMutedStyle.Render("today"),
+		TextMutedStyle.Render("│"),
+		
+		// Total savings
+		SuccessStyle.Render("∑"),
+		AccentStyle.Render(formatTokens(int(m.stats.TotalSaved))),
+		TextMutedStyle.Render("total"),
+		TextMutedStyle.Render("│"),
+		
+		// Cache hit rate
+		InfoStyle.Render(fmt.Sprintf("⚡ %.0f%%", m.stats.CacheHitRate)),
+		TextMutedStyle.Render("cache"),
+	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Left, title, "  ", statusBar)
+	statusBar := lipgloss.JoinHorizontal(lipgloss.Left, sections...)
+
+	// Combine title and status
+	return lipgloss.JoinHorizontal(lipgloss.Left, title, " ", statusBar)
 }
 
 func (m DashboardModel) renderMainContent() string {
