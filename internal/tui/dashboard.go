@@ -911,23 +911,24 @@ func (m DashboardModel) renderFooter() string {
 	}
 
 	// Build footer with different colors for each key (all black background)
+	separator := lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(ColorBg)).Render("•")
 	keys := []string{
 		// tab - cyan on black
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Background(lipgloss.Color(ColorBg)).Render("tab"),
 		" ", TextMutedStyle.Render("next"),
-		"  ", TextMutedStyle.Render("•"), "  ",
+		"  ", separator, "  ",
 		// r - green on black
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Background(lipgloss.Color(ColorBg)).Render("r"),
 		" ", TextMutedStyle.Render("refresh"),
-		"  ", TextMutedStyle.Render("•"), "  ",
+		"  ", separator, "  ",
 		// / - yellow on black
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Background(lipgloss.Color(ColorBg)).Render("/"),
 		" ", TextMutedStyle.Render("search"),
-		"  ", TextMutedStyle.Render("•"), "  ",
+		"  ", separator, "  ",
 		// ? - purple on black
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Background(lipgloss.Color(ColorBg)).Render("?"),
 		" ", TextMutedStyle.Render("help"),
-		"  ", TextMutedStyle.Render("•"), "  ",
+		"  ", separator, "  ",
 		// q - red on black
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Background(lipgloss.Color(ColorBg)).Render("q"),
 		" ", TextMutedStyle.Render("quit"),
@@ -940,12 +941,17 @@ func (m DashboardModel) renderFooter() string {
 		TextDimStyle.Render(timeStr),
 	)
 
-	// Pure black background footer
+	// Wrap entire footer in black background box
+	footerContent := lipgloss.NewStyle().
+		Background(lipgloss.Color(ColorBg)).
+		Render(status)
+
+	// Fill entire footer area with black
 	return lipgloss.NewStyle().
 		Background(lipgloss.Color(ColorBg)).
-		Padding(0, 1).
 		Width(m.width).
-		Render(status)
+		Height(1).
+		Render(footerContent)
 }
 
 // ============================================================================
