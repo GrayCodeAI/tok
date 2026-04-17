@@ -905,20 +905,33 @@ func (m DashboardModel) renderLogs() string {
 }
 
 func (m DashboardModel) renderFooter() string {
-	helpView := m.help.View(m.keys)
 	timeStr := m.lastUpdate.Format("15:04:05")
 	if m.lastUpdate.IsZero() {
 		timeStr = "--:--:--"
 	}
 
+	// Build footer without help component (to avoid gray bg)
+	keys := []string{
+		KeyStyle.Render("tab"), TextMutedStyle.Render("next"),
+		TextMutedStyle.Render("•"),
+		KeyStyle.Render("r"), TextMutedStyle.Render("refresh"),
+		TextMutedStyle.Render("•"),
+		KeyStyle.Render("/"), TextMutedStyle.Render("search"),
+		TextMutedStyle.Render("•"),
+		KeyStyle.Render("?"), TextMutedStyle.Render("help"),
+		TextMutedStyle.Render("•"),
+		KeyStyle.Render("q"), TextMutedStyle.Render("quit"),
+	}
+
+	helpBar := lipgloss.JoinHorizontal(lipgloss.Left, keys...)
+
 	status := fmt.Sprintf("%s  |  Updated: %s",
-		helpView,
+		helpBar,
 		TextDimStyle.Render(timeStr),
 	)
 
-	// Ensure black background in footer
+	// Pure black background footer
 	return lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextDim)).
 		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 1).
 		Width(m.width).
