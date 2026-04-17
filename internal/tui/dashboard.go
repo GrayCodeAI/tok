@@ -910,27 +910,27 @@ func (m DashboardModel) renderFooter() string {
 		timeStr = "--:--:--"
 	}
 
-	// Build footer with different colors for each key
+	// Build footer with different colors for each key (with proper spacing)
 	keys := []string{
 		// tab - cyan
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Render("tab"),
-		TextMutedStyle.Render("next"),
-		TextMutedStyle.Render("•"),
+		" ", TextMutedStyle.Render("next"),
+		"  ", TextMutedStyle.Render("•"), "  ",
 		// r - green  
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Render("r"),
-		TextMutedStyle.Render("refresh"),
-		TextMutedStyle.Render("•"),
+		" ", TextMutedStyle.Render("refresh"),
+		"  ", TextMutedStyle.Render("•"), "  ",
 		// / - yellow
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Render("/"),
-		TextMutedStyle.Render("search"),
-		TextMutedStyle.Render("•"),
+		" ", TextMutedStyle.Render("search"),
+		"  ", TextMutedStyle.Render("•"), "  ",
 		// ? - purple
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Render("?"),
-		TextMutedStyle.Render("help"),
-		TextMutedStyle.Render("•"),
+		" ", TextMutedStyle.Render("help"),
+		"  ", TextMutedStyle.Render("•"), "  ",
 		// q - red
 		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Render("q"),
-		TextMutedStyle.Render("quit"),
+		" ", TextMutedStyle.Render("quit"),
 	}
 
 	helpBar := lipgloss.JoinHorizontal(lipgloss.Left, keys...)
