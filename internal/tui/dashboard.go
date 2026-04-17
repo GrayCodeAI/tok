@@ -147,12 +147,13 @@ type LogEntryInfo struct {
 
 type DashboardModel struct {
 	// Core state
-	width      int
-	height     int
-	activeTab  Tab
-	ready      bool
-	loading    bool
-	lastUpdate time.Time
+	width       int
+	height      int
+	activeTab   Tab
+	sidebarSel  int // Sidebar selection index
+	ready       bool
+	loading     bool
+	lastUpdate  time.Time
 
 	// Components
 	spinner  spinner.Model
@@ -180,6 +181,10 @@ type DashboardModel struct {
 }
 
 type keyMap struct {
+	Up       key.Binding
+	Down     key.Binding
+	Left     key.Binding
+	Right    key.Binding
 	Tab      key.Binding
 	ShiftTab key.Binding
 	Refresh  key.Binding
@@ -190,13 +195,29 @@ type keyMap struct {
 
 func newKeyMap() keyMap {
 	return keyMap{
+		Up: key.NewBinding(
+			key.WithKeys("up", "k"),
+			key.WithHelp("↑/k", "up"),
+		),
+		Down: key.NewBinding(
+			key.WithKeys("down", "j"),
+			key.WithHelp("↓/j", "down"),
+		),
+		Left: key.NewBinding(
+			key.WithKeys("left", "h"),
+			key.WithHelp("←/h", "left"),
+		),
+		Right: key.NewBinding(
+			key.WithKeys("right", "l"),
+			key.WithHelp("→/l", "right"),
+		),
 		Tab: key.NewBinding(
-			key.WithKeys("tab", "right"),
-			key.WithHelp("tab/→", "next tab"),
+			key.WithKeys("tab"),
+			key.WithHelp("tab", "next"),
 		),
 		ShiftTab: key.NewBinding(
-			key.WithKeys("shift+tab", "left"),
-			key.WithHelp("shift+tab/←", "prev tab"),
+			key.WithKeys("shift+tab"),
+			key.WithHelp("shift+tab", "prev"),
 		),
 		Refresh: key.NewBinding(
 			key.WithKeys("r"),
@@ -248,10 +269,30 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
+		case key.Matches(msg, m.keys.Up):
+			// Navigate up in sidebar
+			if m.sidebarSel > 0 {
+				m.sidebarSel--
+				m.activeTab = Tab(m.sidebarSel)
+			}
+		case key.Matches(msg, m.keys.Down):
+			// Navigate down in sidebar
+			if m.sidebarSel < int(TabCount)-1 {
+				m.sidebarSel++
+				m.activeTab = Tab(m.sidebarSel)
+			}
+		case key.Matches(msg, m.keys.Right):
+			m.activeTab = Tab((int(m.activeTab) + 1) % int(TabCount))
+			m.sidebarSel = int(m.activeTab)
+		case key.Matches(msg, m.keys.Left):
+			m.activeTab = Tab((int(m.activeTab) - 1 + int(TabCount)) % int(TabCount))
+			m.sidebarSel = int(m.activeTab)
 		case key.Matches(msg, m.keys.Tab):
 			m.activeTab = Tab((int(m.activeTab) + 1) % int(TabCount))
+			m.sidebarSel = int(m.activeTab)
 		case key.Matches(msg, m.keys.ShiftTab):
 			m.activeTab = Tab((int(m.activeTab) - 1 + int(TabCount)) % int(TabCount))
+			m.sidebarSel = int(m.activeTab)
 		case key.Matches(msg, m.keys.Refresh):
 			cmds = append(cmds, fetchDashboardDataCmd())
 		case key.Matches(msg, m.keys.Help):
@@ -261,20 +302,28 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			switch msg.String() {
 			case "o":
 				m.activeTab = OverviewTab
+				m.sidebarSel = 0
 			case "m":
 				m.activeTab = MetricsTab
+				m.sidebarSel = 1
 			case "l":
 				m.activeTab = LayersTab
+				m.sidebarSel = 2
 			case "a":
 				m.activeTab = AnalyticsTab
+				m.sidebarSel = 3
 			case "s":
 				m.activeTab = SessionsTab
+				m.sidebarSel = 4
 			case "e":
 				m.activeTab = EconomicsTab
+				m.sidebarSel = 5
 			case "c":
 				m.activeTab = ConfigTab
+				m.sidebarSel = 6
 			case "g":
 				m.activeTab = LogsTab
+				m.sidebarSel = 7
 			}
 		}
 
