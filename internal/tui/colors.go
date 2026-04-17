@@ -213,45 +213,45 @@ var (
 	TabSuccessDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorSuccess)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		MarginRight(1)
 
 	TabWarningDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorWarning)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		MarginRight(1)
 
 	TabErrorDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorError)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		MarginRight(1)
 
 	TabInfoDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorInfo)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		MarginRight(1)
 
 	TabInactive = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorTextMuted)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		MarginRight(1)
 
 	TabActiveStyle = TabActive
 	TabInactiveStyle = TabInactive
 
-	// TEXT - Content colors by purpose
-	TextPrimary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextPrimary))
-	TextSecondary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextSecondary))
-	TextMuted = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted))
-	TextDim = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextDim))
+	// TEXT - Content colors by purpose (with black background)
+	TextPrimary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextPrimary)).Background(lipgloss.Color(ColorBg))
+	TextSecondary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextSecondary)).Background(lipgloss.Color(ColorBg))
+	TextMuted = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(ColorBg))
+	TextDim = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextDim)).Background(lipgloss.Color(ColorBg))
 
 	TextPrimaryStyle = TextPrimary
 	TextSecondaryStyle = TextSecondary
