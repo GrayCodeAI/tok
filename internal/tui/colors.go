@@ -68,7 +68,7 @@ var (
 	TitleStyle = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorPrimaryBright)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2).
 		BorderStyle(lipgloss.RoundedBorder()).
 		BorderForeground(lipgloss.Color(ColorPrimary)).
@@ -108,25 +108,25 @@ var (
 	HeaderSuccessDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorSuccess)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2)
 
 	HeaderWarningDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorWarning)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2)
 
 	HeaderErrorDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorError)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2)
 
 	HeaderInfoDim = lipgloss.NewStyle().
 		Bold(true).
 		Foreground(lipgloss.Color(ColorInfo)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 2)
 
 	// BOXES - All pure black backgrounds
@@ -279,7 +279,7 @@ var (
 	// FOOTER - Status bar
 	FooterStyle = lipgloss.NewStyle().
 		Foreground(lipgloss.Color(ColorTextDim)).
-		Background(lipgloss.Color(ColorBgSurface)).
+		Background(lipgloss.Color(ColorBg)).
 		Padding(0, 1).
 		MarginTop(1)
 
