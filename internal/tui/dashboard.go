@@ -1090,7 +1090,7 @@ type dashboardUpdateMsg struct {
 }
 
 func tickCmd() tea.Cmd {
-	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second*30, func(t time.Time) tea.Msg {
 		return tickMsg(t)
 	})
 }
