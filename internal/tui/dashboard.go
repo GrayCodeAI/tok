@@ -153,7 +153,6 @@ type DashboardModel struct {
 	sidebarSel  int // Sidebar selection index
 	ready       bool
 	loading     bool
-	showWelcome bool // Show welcome screen
 	lastUpdate  time.Time
 
 	// Components
@@ -259,7 +258,6 @@ func (m DashboardModel) Init() tea.Cmd {
 		m.spinner.Tick,
 		tickCmd(),
 		fetchDashboardDataCmd(),
-		dismissWelcomeCmd(),
 	)
 }
 
@@ -338,9 +336,6 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tickMsg:
 		cmds = append(cmds, tickCmd(), fetchDashboardDataCmd())
 
-	case dismissWelcomeMsg:
-		m.showWelcome = false
-
 	case dashboardUpdateMsg:
 		m.stats = msg.stats
 		m.dailyTrend = msg.dailyTrend
@@ -402,11 +397,6 @@ func (m DashboardModel) View() string {
 		return m.renderLoading()
 	}
 
-	// Show welcome screen first
-	if m.showWelcome {
-		return m.renderWelcome()
-	}
-
 	var b strings.Builder
 
 	// Header
@@ -425,26 +415,6 @@ func (m DashboardModel) View() string {
 
 func (m DashboardModel) renderLoading() string {
 	return "\n  " + m.spinner.View() + " Loading TokMan Dashboard..."
-}
-
-func (m DashboardModel) renderWelcome() string {
-	var b strings.Builder
-
-	// Empty lines for vertical centering
-	for i := 0; i < m.height/3; i++ {
-		b.WriteString("\n")
-	}
-
-	// Simple centered welcome
-	welcome := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(lipgloss.Color(ColorPrimaryBright)).
-		Align(lipgloss.Center).
-		Width(m.width)
-
-	b.WriteString(welcome.Render("Welcome to Tokman"))
-
-	return b.String()
 }
 
 func (m DashboardModel) renderHeader() string {
@@ -1030,14 +1000,6 @@ func tickCmd() tea.Cmd {
 	})
 }
 
-type dismissWelcomeMsg struct{}
-
-func dismissWelcomeCmd() tea.Cmd {
-	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg {
-		return dismissWelcomeMsg{}
-	})
-}
-
 func fetchDashboardDataCmd() tea.Cmd {
 	return func() tea.Msg {
 		// Generate demo data
@@ -1138,12 +1100,11 @@ func NewDashboard() DashboardModel {
 	h := help.New()
 
 	return DashboardModel{
-		spinner:     s,
-		progress:    p,
-		help:        h,
-		keys:        newKeyMap(),
-		loading:     true,
-		showWelcome: true,
+		spinner:  s,
+		progress: p,
+		help:     h,
+		keys:     newKeyMap(),
+		loading:  true,
 	}
 }
 
