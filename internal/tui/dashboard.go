@@ -434,7 +434,7 @@ func (m *Model) updateComponents() {
 		case "WARN":
 			levelStyle = WarningStyle
 		case "INFO":
-			levelStyle = InfoStyle
+			levelStyle = AccentStyle
 		case "SUCCESS":
 			levelStyle = SuccessStyle
 		}
@@ -540,7 +540,7 @@ func (m Model) renderOverview() string {
 }
 
 func (m Model) renderCommands() string {
-	header := HeaderStyle.Render(" RECENT COMMANDS ")
+	header := HeaderCyan.Render(" RECENT COMMANDS ")
 
 	if len(m.commands) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -560,7 +560,7 @@ func (m Model) renderCommands() string {
 }
 
 func (m Model) renderCache() string {
-	header := HeaderStyle.Render(" CACHE STATISTICS ")
+	header := HeaderCyan.Render(" CACHE STATISTICS ")
 
 	hits := StatValueStyle.Render(formatNumber(m.stats.CacheHits))
 	misses := StatValueStyle.Render(formatNumber(m.stats.CacheMisses))
@@ -569,7 +569,7 @@ func (m Model) renderCache() string {
 		StatLabelStyle.Render("CACHE HITS") + "\n" + hits,
 	)
 
-	missBox := BoxDimStyle.Render(
+	missBox := BoxStyle.Render(
 		StatLabelStyle.Render("CACHE MISSES") + "\n" + misses,
 	)
 
@@ -579,7 +579,7 @@ func (m Model) renderCache() string {
 		hitRate = float64(m.stats.CacheHits) / float64(total) * 100
 	}
 
-	rateBox := BoxActiveStyle.Render(
+	rateBox := BoxStyle.Render(
 		StatLabelStyle.Render("HIT RATE") + "\n" +
 			StatValueStyle.Render(fmt.Sprintf("%.1f%%", hitRate)),
 	)
@@ -587,12 +587,12 @@ func (m Model) renderCache() string {
 	// Visual bar
 	bar := m.renderProgressBar("Cache Efficiency", int64(hitRate), 100)
 
-	// Cache features - uniform primary accent
+	// Cache features - uniform accent
 	features := []string{
-		SuccessStyle.Render("✓") + " Semantic caching enabled",
-		PrimaryStyle.Render("✓") + " KV cache alignment",
-		PrimaryStyle.Render("✓") + " Fingerprint-based deduplication",
-		PrimaryStyle.Render("✓") + " Automatic cleanup (90 days)",
+		SuccessStyle.Render("[OK]") + " Semantic caching enabled",
+		AccentStyle.Render("[*]") + " KV cache alignment",
+		AccentStyle.Render("[*]") + " Fingerprint-based deduplication",
+		AccentStyle.Render("[*]") + " Automatic cleanup (90 days)",
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left,
@@ -607,7 +607,7 @@ func (m Model) renderCache() string {
 }
 
 func (m Model) renderFilterLayers() string {
-	header := HeaderStyle.Render(" 20-LAYER FILTER PIPELINE ")
+	header := HeaderCyan.Render(" 20-LAYER FILTER PIPELINE ")
 
 	if len(m.layers) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
@@ -632,7 +632,7 @@ func (m Model) renderFilterLayers() string {
 			StatValueStyle.Render(fmt.Sprintf("%d/%d", enabledCount, len(m.layers))),
 	)
 
-	savedBox := BoxActiveStyle.Render(
+	savedBox := BoxStyle.Render(
 		StatLabelStyle.Render("TOKENS SAVED") + "\n" +
 			StatValueStyle.Render(formatTokens(int(totalSaved))),
 	)
@@ -652,11 +652,11 @@ func (m Model) renderFilterLayers() string {
 }
 
 func (m Model) renderAnalytics() string {
-	header := HeaderStyle.Render(" ANALYTICS & INSIGHTS ")
+	header := HeaderCyan.Render(" ANALYTICS & INSIGHTS ")
 
 	// Simple ASCII bar chart for top commands - uniform primary color
 	var chart strings.Builder
-	chart.WriteString(PrimaryStyle.Render("Top Commands:\n\n"))
+	chart.WriteString(AccentStyle.Render("Top Commands:\n\n"))
 
 	maxCount := 0
 	for _, cmd := range m.topCommands {
@@ -670,13 +670,13 @@ func (m Model) renderAnalytics() string {
 		if maxCount > 0 {
 			barWidth = (cmd.Count * 20) / maxCount
 		}
-		bar := BarFullStyle.Render(strings.Repeat("█", barWidth))
+		bar := BarCyan.Render(strings.Repeat("█", barWidth))
 		chart.WriteString(fmt.Sprintf("%-15s %s %d\n", cmd.Command, bar, cmd.Count))
 	}
 
 	// Daily savings chart - uniform primary color
 	var dailyChart strings.Builder
-	dailyChart.WriteString(PrimaryStyle.Render("\nDaily Savings (last 7 days):\n\n"))
+	dailyChart.WriteString(AccentStyle.Render("\nDaily Savings (last 7 days):\n\n"))
 
 	maxDaily := int64(0)
 	for _, d := range m.dailySavings {
@@ -690,7 +690,7 @@ func (m Model) renderAnalytics() string {
 		if maxDaily > 0 {
 			barWidth = int((d.Value * 20) / maxDaily)
 		}
-		bar := BarFullStyle.Render(strings.Repeat("█", barWidth))
+		bar := BarCyan.Render(strings.Repeat("█", barWidth))
 		dailyChart.WriteString(fmt.Sprintf("%-10s %s %s\n", d.Label, bar, formatTokens(int(d.Value))))
 	}
 
@@ -703,17 +703,17 @@ func (m Model) renderAnalytics() string {
 }
 
 func (m Model) renderSessions() string {
-	header := HeaderStyle.Render(" SESSION MANAGEMENT ")
+	header := HeaderCyan.Render(" SESSION MANAGEMENT ")
 
 	if len(m.sessions) == 0 {
 		return lipgloss.JoinVertical(lipgloss.Left,
 			header,
 			"",
-			BoxDimStyle.Render("No active sessions"),
+			BoxStyle.Render("No active sessions"),
 		)
 	}
 
-	stats := BoxActiveStyle.Render(
+	stats := BoxStyle.Render(
 		StatLabelStyle.Render("ACTIVE SESSIONS") + "\n" +
 			StatValueStyle.Render(fmt.Sprintf("%d", len(m.sessions))),
 	)
@@ -728,7 +728,7 @@ func (m Model) renderSessions() string {
 }
 
 func (m Model) renderEconomics() string {
-	header := HeaderStyle.Render(" COST ANALYSIS ")
+	header := HeaderCyan.Render(" COST ANALYSIS ")
 
 	// Cost breakdown - uniform style
 	totalSaved := BoxStyle.Render(
@@ -741,20 +741,20 @@ func (m Model) renderEconomics() string {
 		avgPerCmd = m.stats.TotalCostSaved / float64(m.stats.TotalCommands)
 	}
 
-	avgCost := BoxActiveStyle.Render(
+	avgCost := BoxStyle.Render(
 		StatLabelStyle.Render("AVG PER COMMAND") + "\n" +
 			StatValueStyle.Render(fmt.Sprintf("$%.4f", avgPerCmd)),
 	)
 
 	// Pricing tiers - uniform primary accent
 	tiers := []string{
-		HeaderStyle.Render(" PRICING TIERS "),
+		HeaderCyan.Render(" PRICING TIERS "),
 		"",
-		PrimaryStyle.Render("GPT-4/Claude 3:") + " ~$0.03/1K tokens",
-		PrimaryStyle.Render("GPT-3.5:") + " ~$0.002/1K tokens",
+		AccentStyle.Render("GPT-4/Claude 3:") + " ~$0.03/1K tokens",
+		AccentStyle.Render("GPT-3.5:") + " ~$0.002/1K tokens",
 		SuccessStyle.Render("Local LLM:") + " $0 (compute only)",
 		"",
-		HeaderStyle.Render(" YOUR SAVINGS "),
+		HeaderCyan.Render(" YOUR SAVINGS "),
 		"",
 		SuccessStyle.Render(fmt.Sprintf("✓ Saved %s tokens", formatTokens(int(m.stats.TotalSaved)))),
 		SuccessStyle.Render(fmt.Sprintf("✓ Equivalent to $%.2f", m.stats.TotalCostSaved)),
@@ -770,24 +770,24 @@ func (m Model) renderEconomics() string {
 }
 
 func (m Model) renderConfig() string {
-	header := HeaderStyle.Render(" CONFIGURATION ")
+	header := HeaderCyan.Render(" CONFIGURATION ")
 
 	// Config sections - uniform primary accent
 	sections := []string{
-		HeaderStyle.Render(" PIPELINE SETTINGS "),
+		HeaderCyan.Render(" PIPELINE SETTINGS "),
 		"",
-		PrimaryStyle.Render("Max Context:") + " 2M tokens",
-		PrimaryStyle.Render("Chunk Size:") + " 100K tokens",
-		PrimaryStyle.Render("Stream Threshold:") + " 500K tokens",
+		AccentStyle.Render("Max Context:") + " 2M tokens",
+		AccentStyle.Render("Chunk Size:") + " 100K tokens",
+		AccentStyle.Render("Stream Threshold:") + " 500K tokens",
 		"",
-		HeaderStyle.Render(" FEATURE FLAGS "),
+		HeaderCyan.Render(" FEATURE FLAGS "),
 		"",
 		SuccessStyle.Render("✓") + " Semantic caching",
-		PrimaryStyle.Render("✓") + " LLM compaction",
-		PrimaryStyle.Render("✓") + " SIMD optimizations",
-		PrimaryStyle.Render("✓") + " Telemetry batching",
+		AccentStyle.Render("✓") + " LLM compaction",
+		AccentStyle.Render("✓") + " SIMD optimizations",
+		AccentStyle.Render("✓") + " Telemetry batching",
 		"",
-		HeaderStyle.Render(" PATHS "),
+		HeaderCyan.Render(" PATHS "),
 		"",
 		TextSecondaryStyle.Render("Config:") + " ~/.config/tokman/config.toml",
 		TextSecondaryStyle.Render("Database:") + " ~/.local/share/tokman/tokman.db",
@@ -802,7 +802,7 @@ func (m Model) renderConfig() string {
 }
 
 func (m Model) renderLogs() string {
-	header := HeaderStyle.Render(" REAL-TIME LOGS ")
+	header := HeaderCyan.Render(" REAL-TIME LOGS ")
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
@@ -812,31 +812,31 @@ func (m Model) renderLogs() string {
 }
 
 func (m Model) renderSystem() string {
-	header := HeaderStyle.Render(" SYSTEM INFORMATION ")
+	header := HeaderCyan.Render(" SYSTEM INFORMATION ")
 
 	// System info - uniform primary accent
 	info := []string{
-		HeaderStyle.Render(" VERSION "),
+		HeaderCyan.Render(" VERSION "),
 		"",
-		PrimaryStyle.Render("TokMan:") + " v0.28.0",
-		PrimaryStyle.Render("Go Version:") + " 1.26",
-		PrimaryStyle.Render("Platform:") + " " + os.Getenv("GOOS") + "/" + os.Getenv("GOARCH"),
+		AccentStyle.Render("TokMan:") + " v0.28.0",
+		AccentStyle.Render("Go Version:") + " 1.26",
+		AccentStyle.Render("Platform:") + " " + os.Getenv("GOOS") + "/" + os.Getenv("GOARCH"),
 		"",
-		HeaderStyle.Render(" PERFORMANCE "),
+		HeaderCyan.Render(" PERFORMANCE "),
 		"",
 		SuccessStyle.Render("✓") + " Caching enabled",
-		PrimaryStyle.Render("✓") + " Telemetry batching",
-		PrimaryStyle.Render("✓") + " SIMD optimizations",
-		PrimaryStyle.Render("✓") + " 20-layer pipeline active",
+		AccentStyle.Render("✓") + " Telemetry batching",
+		AccentStyle.Render("✓") + " SIMD optimizations",
+		AccentStyle.Render("✓") + " 20-layer pipeline active",
 		"",
-		HeaderStyle.Render(" RESEARCH FOUNDATION "),
+		HeaderCyan.Render(" RESEARCH FOUNDATION "),
 		"",
 		TextSecondaryStyle.Render("Based on 120+ papers from:"),
-		PrimaryStyle.Render("•") + " Microsoft Research (LLMLingua, LongLLMLingua)",
-		PrimaryStyle.Render("•") + " Stanford/Berkeley (Gist Compression)",
-		PrimaryStyle.Render("•") + " Princeton/MIT (AutoCompressor)",
-		PrimaryStyle.Render("•") + " UC Berkeley (MemGPT)",
-		PrimaryStyle.Render("•") + " NeurIPS 2023 (H2O Filter)",
+		AccentStyle.Render("•") + " Microsoft Research (LLMLingua, LongLLMLingua)",
+		AccentStyle.Render("•") + " Stanford/Berkeley (Gist Compression)",
+		AccentStyle.Render("•") + " Princeton/MIT (AutoCompressor)",
+		AccentStyle.Render("•") + " UC Berkeley (MemGPT)",
+		AccentStyle.Render("•") + " NeurIPS 2023 (H2O Filter)",
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left,
@@ -996,7 +996,7 @@ func fetchDataCmd() tea.Cmd {
 func New() Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
-	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPrimary))
+	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue1))
 
 	p := progress.New(
 		progress.WithDefaultGradient(),
