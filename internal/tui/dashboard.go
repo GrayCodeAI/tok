@@ -910,32 +910,22 @@ func (m DashboardModel) renderFooter() string {
 		timeStr = "--:--:--"
 	}
 
-	// Build footer with unique colors for each key
+	// Build footer without help component (to avoid gray bg)
 	keys := []string{
-		// tab - cyan
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPrimary)).Render("tab"),
-		TextMutedStyle.Render("next"),
+		KeyStyle.Render("tab"), TextMutedStyle.Render("next"),
 		TextMutedStyle.Render("•"),
-		// r - green
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSuccess)).Render("r"),
-		TextMutedStyle.Render("refresh"),
+		KeyStyle.Render("r"), TextMutedStyle.Render("refresh"),
 		TextMutedStyle.Render("•"),
-		// / - yellow
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorWarning)).Render("/"),
-		TextMutedStyle.Render("search"),
+		KeyStyle.Render("/"), TextMutedStyle.Render("search"),
 		TextMutedStyle.Render("•"),
-		// ? - purple
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorInfo)).Render("?"),
-		TextMutedStyle.Render("help"),
+		KeyStyle.Render("?"), TextMutedStyle.Render("help"),
 		TextMutedStyle.Render("•"),
-		// q - red
-		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorError)).Render("q"),
-		TextMutedStyle.Render("quit"),
+		KeyStyle.Render("q"), TextMutedStyle.Render("quit"),
 	}
 
 	helpBar := lipgloss.JoinHorizontal(lipgloss.Left, keys...)
 
-	status := fmt.Sprintf("%s  │  Data: %s",
+	status := fmt.Sprintf("%s  |  Updated: %s",
 		helpBar,
 		TextDimStyle.Render(timeStr),
 	)
