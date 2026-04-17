@@ -910,27 +910,26 @@ func (m DashboardModel) renderFooter() string {
 		timeStr = "--:--:--"
 	}
 
-	// Build footer with different colors for each key (gray background)
-	keyBg := "#333333" // Dark gray
+	// Build footer with different colors for each key (all black background)
 	keys := []string{
-		// tab - cyan on gray
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Background(lipgloss.Color(keyBg)).Render("tab"),
+		// tab - cyan on black
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Background(lipgloss.Color(ColorBg)).Render("tab"),
 		" ", TextMutedStyle.Render("next"),
 		"  ", TextMutedStyle.Render("•"), "  ",
-		// r - green on gray
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Background(lipgloss.Color(keyBg)).Render("r"),
+		// r - green on black
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Background(lipgloss.Color(ColorBg)).Render("r"),
 		" ", TextMutedStyle.Render("refresh"),
 		"  ", TextMutedStyle.Render("•"), "  ",
-		// / - yellow on gray
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Background(lipgloss.Color(keyBg)).Render("/"),
+		// / - yellow on black
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Background(lipgloss.Color(ColorBg)).Render("/"),
 		" ", TextMutedStyle.Render("search"),
 		"  ", TextMutedStyle.Render("•"), "  ",
-		// ? - purple on gray
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Background(lipgloss.Color(keyBg)).Render("?"),
+		// ? - purple on black
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Background(lipgloss.Color(ColorBg)).Render("?"),
 		" ", TextMutedStyle.Render("help"),
 		"  ", TextMutedStyle.Render("•"), "  ",
-		// q - red on gray
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Background(lipgloss.Color(keyBg)).Render("q"),
+		// q - red on black
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Background(lipgloss.Color(ColorBg)).Render("q"),
 		" ", TextMutedStyle.Render("quit"),
 	}
 
