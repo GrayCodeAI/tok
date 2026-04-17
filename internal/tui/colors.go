@@ -2,172 +2,226 @@ package tui
 
 import "github.com/charmbracelet/lipgloss"
 
-// Professional Dashboard Color Palette - 20+ SOLID colors, HIGH CONTRAST
-// No gradients, pure solid colors only
+// World-Class TUI Color System - Purpose-Driven Colors
+// Based on research of k9s, lazygit, grafana, and top monitoring tools
+// Each color has a SPECIFIC PURPOSE - no random usage
+
 const (
-	// Row 1: Blues & Cyans (cool)
-	ColorBlue1   = "#00D4FF" // Cyan
-	ColorBlue2   = "#0099CC" // Deep Blue
-	ColorBlue3   = "#0066AA" // Navy
-	ColorBlue4   = "#33CCFF" // Sky
-	ColorTeal    = "#00D4AA" // Teal
+	// PRIMARY INTERACTION - Cyan/Teal
+	// Used for: Active elements, selected items, borders of focused components
+	ColorPrimary      = "#00D4AA" // Bright teal/cyan
+	ColorPrimaryDim   = "#00A884" // Dimmer for secondary emphasis
+	ColorPrimaryBright = "#00FFD4" // Bright for highlights
 
-	// Row 2: Greens (nature)
-	ColorGreen1  = "#00FF66" // Neon Green
-	ColorGreen2  = "#66CC00" // Lime
-	ColorGreen3  = "#00AA44" // Forest
-	ColorGreen4  = "#88FF00" // Chartreuse
+	// SUCCESS/HEALTHY - Green
+	// Used for: Success messages, healthy status, positive trends, savings
+	ColorSuccess      = "#4ADE80" // Soft green
+	ColorSuccessDim   = "#22C55E" // Dimmer green
+	ColorSuccessBright = "#86EFAC" // Bright green
 
-	// Row 3: Yellows & Oranges (warm)
-	ColorYellow1 = "#FFDD00" // Gold
-	ColorYellow2 = "#FFAA00" // Amber
-	ColorOrange1 = "#FF7700" // Orange
-	ColorOrange2 = "#FF4400" // Deep Orange
+	// WARNING/ATTENTION - Yellow/Orange
+	// Used for: Warnings, medium priority, attention needed, cache misses
+	ColorWarning      = "#FBBF24" // Amber
+	ColorWarningDim   = "#F59E0B" // Darker amber
+	ColorWarningBright = "#FCD34D" // Light amber
 
-	// Row 4: Reds & Pinks (hot)
-	ColorRed1    = "#FF0044" // Red
-	ColorRed2    = "#CC0066" // Crimson
-	ColorPink1   = "#FF66AA" // Pink
-	ColorPink2   = "#FF00CC" // Magenta
+	// ERROR/CRITICAL - Red
+	// Used for: Errors, critical issues, failed status, high memory
+	ColorError        = "#F87171" // Soft red
+	ColorErrorDim     = "#EF4444" // Standard red
+	ColorErrorBright  = "#FCA5A5" // Light red
 
-	// Row 5: Purples & Violets
-	ColorPurple1 = "#9900FF" // Purple
-	ColorPurple2 = "#6600CC" // Deep Purple
-	ColorViolet  = "#CC66FF" // Violet
-	ColorIndigo  = "#4444FF" // Indigo
+	// INFO/SPECIAL - Purple
+	// Used for: Informational highlights, special features, research references
+	ColorInfo         = "#A78BFA" // Soft purple
+	ColorInfoDim      = "#8B5CF6" // Standard purple
+	ColorInfoBright   = "#C4B5FD" // Light purple
 
-	// Row 6: Neutrals & Grays (contrast)
-	ColorWhite   = "#FFFFFF"
-	ColorGray1   = "#CCCCCC"
-	ColorGray2   = "#888888"
-	ColorGray3   = "#444444"
-	ColorBlack   = "#0A0A0A"
+	// DATA VISUALIZATION - Blue Scale
+	// Used for: Charts, graphs, bar visualizations, cool metrics
+	ColorData1        = "#60A5FA" // Blue
+	ColorData2        = "#3B82F6" // Darker blue
+	ColorData3        = "#93C5FD" // Lighter blue
 
-	// Backgrounds
-	ColorBg      = "#0F0F0F" // Main background
-	ColorBgPanel = "#1A1A1A" // Panel
-	ColorBgDark  = "#050505" // Darker
+	// NEUTRAL TEXT - Grayscale
+	// Used for: Text content based on importance
+	ColorTextPrimary  = "#F9FAFB" // Almost white - primary text
+	ColorTextSecondary = "#D1D5DB" // Light gray - secondary text
+	ColorTextMuted    = "#9CA3AF" // Medium gray - labels, hints
+	ColorTextDim      = "#6B7280" // Dark gray - disabled, very muted
 
-	// Semantic shortcuts
-	ColorSuccess = ColorGreen1
-	ColorWarning = ColorYellow1
-	ColorError   = ColorRed1
-	ColorInfo    = ColorBlue1
+	// BACKGROUNDS - Dark theme
+	ColorBg           = "#0B0B0B" // Main background (near black)
+	ColorBgSurface    = "#141414" // Cards, panels
+	ColorBgElevated   = "#1F1F1F" // Elevated elements, hover states
+	ColorBgBorder     = "#262626" // Subtle borders
+
+	// SPECIAL UI ELEMENTS
+	ColorBorderActive = ColorPrimary  // Active component borders
+	ColorBorderNormal = "#333333"     // Inactive borders
+	ColorHeaderBg     = "#1A1A1A"     // Header background
 )
 
-// Professional Dashboard Styles - 20+ SOLID colors
+// World-Class TUI Styles - Purpose-Driven Design
 var (
-	// Title - Cyan
+	// TITLE - Application header
 	TitleStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color(ColorBlue1)).
-		Background(lipgloss.Color(ColorBgPanel)).
-		Padding(1, 2).
+		Foreground(lipgloss.Color(ColorPrimaryBright)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2).
 		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorBlue1)).
+		BorderForeground(lipgloss.Color(ColorPrimary)).
 		MarginBottom(1)
 
-	// Headers - Different colors
-	HeaderCyan   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorBlue1)).Padding(0, 2)
-	HeaderGreen  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorGreen1)).Padding(0, 2)
-	HeaderYellow = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorYellow1)).Padding(0, 2)
-	HeaderOrange = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorOrange1)).Padding(0, 2)
-	HeaderRed    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWhite)).Background(lipgloss.Color(ColorRed1)).Padding(0, 2)
-	HeaderPurple = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWhite)).Background(lipgloss.Color(ColorPurple1)).Padding(0, 2)
+	// HEADERS - Section headers with specific purposes
+	HeaderPrimary = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorPrimary)).
+		Padding(0, 2)
 
-	// Box styles - 20 different colored borders
-	BoxCyan   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorBlue1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxBlue   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorBlue2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxNavy   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorBlue3)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxSky    = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorBlue4)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxTeal   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorTeal)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxGreen  = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorGreen1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxLime   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorGreen2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxForest = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorGreen3)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxChart  = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorGreen4)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxGold   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorYellow1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxAmber  = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorYellow2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxOrange = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorOrange1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxDeepO  = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorOrange2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxRed    = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorRed1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxCrim   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorRed2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxPink   = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorPink1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxMagent = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorPink2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxPurple = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorPurple1)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxDeepP  = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorPurple2)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxViolet = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorViolet)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
-	BoxIndigo = lipgloss.NewStyle().BorderStyle(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color(ColorIndigo)).Background(lipgloss.Color(ColorBgPanel)).Padding(1, 2).Margin(0, 1)
+	HeaderSuccess = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorSuccess)).
+		Padding(0, 2)
 
-	// Default box (cyan)
-	BoxStyle = BoxCyan
+	HeaderWarning = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorWarning)).
+		Padding(0, 2)
 
-	// Tab styles - colorful
-	TabCyan   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorBlue1)).Padding(0, 2).MarginRight(1)
-	TabGreen  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorGreen1)).Padding(0, 2).MarginRight(1)
-	TabYellow = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorYellow1)).Padding(0, 2).MarginRight(1)
-	TabOrange = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorOrange1)).Padding(0, 2).MarginRight(1)
-	TabRed    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWhite)).Background(lipgloss.Color(ColorRed1)).Padding(0, 2).MarginRight(1)
-	TabPurple = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWhite)).Background(lipgloss.Color(ColorPurple1)).Padding(0, 2).MarginRight(1)
-	TabPink   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorPink1)).Padding(0, 2).MarginRight(1)
-	TabBlue   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorBlue2)).Padding(0, 2).MarginRight(1)
-	TabTeal   = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorTeal)).Padding(0, 2).MarginRight(1)
-	TabIndigo = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWhite)).Background(lipgloss.Color(ColorIndigo)).Padding(0, 2).MarginRight(1)
+	HeaderError = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorTextPrimary)).
+		Background(lipgloss.Color(ColorError)).
+		Padding(0, 2)
 
-	TabActiveStyle   = TabCyan
-	TabInactiveStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray2)).Background(lipgloss.Color(ColorBgPanel)).Padding(0, 2).MarginRight(1)
+	HeaderInfo = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorInfo)).
+		Padding(0, 2)
 
-	// Text colors - all 20 colors available
-	TextCyan   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue1))
-	TextBlue   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue2))
-	TextGreen  = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGreen1))
-	TextLime   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGreen2))
-	TextYellow = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorYellow1))
-	TextOrange = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorOrange1))
-	TextRed    = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorRed1))
-	TextPink   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPink1))
-	TextPurple = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPurple1))
-	TextViolet = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorViolet))
-	TextWhite  = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorWhite))
-	TextGray   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray1))
-	TextMuted  = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray2))
-	TextDim    = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray3))
+	// BOXES - Container styles
+	BoxPrimary = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorPrimary)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	TextPrimaryStyle   = TextWhite
-	TextSecondaryStyle = TextGray
-	TextMutedStyle     = TextMuted
+	BoxSuccess = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorSuccess)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	// Status
-	SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGreen1))
-	WarningStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorYellow1))
-	ErrorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorRed1))
-	InfoStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue1))
+	BoxWarning = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorWarning)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	// Accent (cyan)
-	AccentStyle = TextCyan
+	BoxError = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorError)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	// Stats
-	StatValueStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlue1)).Background(lipgloss.Color(ColorBlack)).Padding(0, 1)
-	StatLabelStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray2))
+	BoxInfo = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorInfo)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	// Footer
-	FooterStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray3)).Background(lipgloss.Color(ColorBgPanel)).Padding(0, 1).MarginTop(1)
+	BoxDim = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorBgBorder)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(1, 2)
 
-	// Key
-	KeyStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorBlack)).Background(lipgloss.Color(ColorBlue1)).Padding(0, 1)
+	BoxActive = lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorPrimaryBright)).
+		Background(lipgloss.Color(ColorBgElevated)).
+		Padding(1, 2)
 
-	// Help
-	HelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGray2))
+	BoxStyle = BoxPrimary // Default
 
-	// Bar colors - all 20
-	BarCyan   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue1))
-	BarBlue   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorBlue2))
-	BarGreen  = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGreen1))
-	BarLime   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorGreen2))
-	BarYellow = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorYellow1))
-	BarOrange = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorOrange1))
-	BarRed    = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorRed1))
-	BarPink   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPink1))
-	BarPurple = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPurple1))
-	BarViolet = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorViolet))
-	BarTeal   = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTeal))
+	// TABS - Navigation
+	TabActive = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorPrimary)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabInactive = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextMuted)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 2).
+		MarginRight(1)
+
+	TabActiveStyle = TabActive
+	TabInactiveStyle = TabInactive
+
+	// TEXT - Content colors by purpose
+	TextPrimary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextPrimary))
+	TextSecondary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextSecondary))
+	TextMuted = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted))
+	TextDim = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextDim))
+
+	TextPrimaryStyle = TextPrimary
+	TextSecondaryStyle = TextSecondary
+	TextMutedStyle = TextMuted
+
+	// STATUS INDICATORS - Semantic colors
+	SuccessStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSuccess))
+	WarningStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorWarning))
+	ErrorStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorError))
+	InfoStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorInfo))
+
+	// ACCENT - Primary highlight
+	AccentStyle = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary))
+
+	// STATS - Data display
+	StatValueStyle = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorPrimaryBright)).
+		Background(lipgloss.Color(ColorBg)).
+		Padding(0, 1)
+
+	StatLabelStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted))
+
+	// FOOTER - Status bar
+	FooterStyle = lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextDim)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(0, 1).
+		MarginTop(1)
+
+	// KEYBOARD SHORTCUTS
+	KeyStyle = lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(ColorPrimary)).
+		Padding(0, 1)
+
+	// HELP
+	HelpStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted))
+
+	// DATA VISUALIZATION - Charts and bars
+	BarPrimary = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorPrimary))
+	BarSuccess = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSuccess))
+	BarWarning = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorWarning))
+	BarError = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorError))
+	BarInfo = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorInfo))
+	BarData1 = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorData1))
+	BarData2 = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorData2))
+	BarData3 = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorData3))
+
+	// SPARKLINE - Mini charts
+	SparklineStyle = lipgloss.NewStyle().Foreground(lipgloss.Color(ColorSuccess))
 )
