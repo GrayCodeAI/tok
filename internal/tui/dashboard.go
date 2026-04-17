@@ -153,6 +153,7 @@ type DashboardModel struct {
 	sidebarSel  int // Sidebar selection index
 	ready       bool
 	loading     bool
+	showWelcome bool // Show welcome screen
 	lastUpdate  time.Time
 
 	// Components
@@ -266,6 +267,12 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// Dismiss welcome screen on any key
+		if m.showWelcome {
+			m.showWelcome = false
+			return m, nil
+		}
+		
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -397,6 +404,11 @@ func (m DashboardModel) View() string {
 		return m.renderLoading()
 	}
 
+	// Show welcome screen first
+	if m.showWelcome {
+		return m.renderWelcome()
+	}
+
 	var b strings.Builder
 
 	// Header
@@ -415,6 +427,60 @@ func (m DashboardModel) View() string {
 
 func (m DashboardModel) renderLoading() string {
 	return "\n  " + m.spinner.View() + " Loading TokMan Dashboard..."
+}
+
+func (m DashboardModel) renderWelcome() string {
+	var b strings.Builder
+
+	// Empty lines for vertical centering
+	for i := 0; i < m.height/4; i++ {
+		b.WriteString("\n")
+	}
+
+	// Welcome title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(lipgloss.Color(ColorPrimaryBright)).
+		Background(lipgloss.Color(ColorBgSurface)).
+		Padding(2, 4).
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorPrimary)).
+		Align(lipgloss.Center)
+
+	b.WriteString(title.Render("WELCOME TO TOKMAN"))
+	b.WriteString("\n\n")
+
+	// Subtitle
+	subtitle := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextSecondary)).
+		Align(lipgloss.Center)
+
+	b.WriteString(subtitle.Render("Token-Aware CLI Proxy"))
+	b.WriteString("\n\n")
+
+	// Stats preview
+	stats := []string{
+		fmt.Sprintf("Total Commands: %s", AccentStyle.Render(fmt.Sprintf("%d", m.stats.TotalCommands))),
+		fmt.Sprintf("Tokens Saved: %s", SuccessStyle.Render(formatTokens(int(m.stats.TotalSaved)))),
+		fmt.Sprintf("Cache Hit Rate: %s", InfoStyle.Render(fmt.Sprintf("%.1f%%", m.stats.CacheHitRate))),
+	}
+
+	statsBox := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextPrimary)).
+		Align(lipgloss.Center)
+
+	b.WriteString(statsBox.Render(strings.Join(stats, "  •  ")))
+	b.WriteString("\n\n\n")
+
+	// Press any key
+	hint := lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextMuted)).
+		Italic(true).
+		Align(lipgloss.Center)
+
+	b.WriteString(hint.Render("Press any key to start..."))
+
+	return b.String()
 }
 
 func (m DashboardModel) renderHeader() string {
@@ -1125,11 +1191,12 @@ func NewDashboard() DashboardModel {
 	h := help.New()
 
 	return DashboardModel{
-		spinner:  s,
-		progress: p,
-		help:     h,
-		keys:     newKeyMap(),
-		loading:  true,
+		spinner:     s,
+		progress:    p,
+		help:        h,
+		keys:        newKeyMap(),
+		loading:     true,
+		showWelcome: true,
 	}
 }
 
