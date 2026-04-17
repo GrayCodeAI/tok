@@ -397,35 +397,43 @@ func (m DashboardModel) View() string {
 		return m.renderLoading()
 	}
 
-	// Build content
-	var content strings.Builder
+	// Build main layout
+	var layout strings.Builder
 
-	// Header
-	content.WriteString(m.renderHeader())
+	// Header with spacing
+	layout.WriteString(m.renderHeader())
+	layout.WriteString("\n")
 
-	// Main content area - fill remaining height
+	// Main content area (sidebar + content)
 	mainContent := m.renderMainContent()
-	content.WriteString(mainContent)
+	layout.WriteString(mainContent)
 
-	// Fill remaining space to push footer to bottom
-	footer := m.renderFooter()
-	contentHeight := strings.Count(content.String(), "\n") + 1
-	footerHeight := 1
-	availableHeight := m.height - contentHeight - footerHeight - 2 // -2 for padding
+	// Calculate remaining space and fill with black
+	currentLines := strings.Count(layout.String(), "\n") + 1
+	footerLines := 1
+	remainingLines := m.height - currentLines - footerLines
 
-	if availableHeight > 0 {
-		content.WriteString(strings.Repeat("\n", availableHeight))
+	if remainingLines > 0 {
+		// Fill remaining space with black background lines
+		blackLine := lipgloss.NewStyle().
+			Background(lipgloss.Color(ColorBg)).
+			Width(m.width).
+			Render(" ")
+		for i := 0; i < remainingLines; i++ {
+			layout.WriteString(blackLine)
+			layout.WriteString("\n")
+		}
 	}
 
-	// Footer at bottom
-	content.WriteString(footer)
+	// Footer
+	layout.WriteString(m.renderFooter())
 
-	// Wrap in full-screen black background
+	// Ensure full black background across entire terminal
 	return lipgloss.NewStyle().
 		Background(lipgloss.Color(ColorBg)).
 		Width(m.width).
 		Height(m.height).
-		Render(content.String())
+		Render(layout.String())
 }
 
 func (m DashboardModel) renderLoading() string {
@@ -474,7 +482,8 @@ func (m DashboardModel) renderMainContent() string {
 	sidebar := m.renderSidebar(availableHeight)
 	content := m.renderContent(availableHeight)
 
-	return lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
+	// Join with black background
+	return lipgloss.JoinHorizontal(lipgloss.Top, sidebar, "", content)
 }
 
 func (m DashboardModel) renderSidebar(height int) string {
@@ -521,7 +530,14 @@ func (m DashboardModel) renderSidebar(height int) string {
 
 	content := strings.Join(items, "\n")
 
-	return BoxDim.Render(content)
+	// Ensure pure black background in sidebar
+	return lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorPrimaryDim)).
+		Background(lipgloss.Color(ColorBg)).
+		Padding(1, 2).
+		Height(height).
+		Render(content)
 }
 
 func (m DashboardModel) renderContent(height int) string {
@@ -547,14 +563,25 @@ func (m DashboardModel) renderContent(height int) string {
 		content = m.renderOverview()
 	}
 
-	// Fill remaining height with empty space
+	// Fill remaining height with black space
 	contentLines := strings.Count(content, "\n") + 1
 	remaining := height - contentLines - 2 // -2 for box padding
 	if remaining > 0 {
-		content += strings.Repeat("\n", remaining)
+		blackFill := lipgloss.NewStyle().
+			Background(lipgloss.Color(ColorBg)).
+			Render(strings.Repeat(" ", 50))
+		for i := 0; i < remaining; i++ {
+			content += "\n" + blackFill
+		}
 	}
 
-	return content
+	// Wrap in black background box
+	return lipgloss.NewStyle().
+		BorderStyle(lipgloss.RoundedBorder()).
+		BorderForeground(lipgloss.Color(ColorPrimary)).
+		Background(lipgloss.Color(ColorBg)).
+		Height(height).
+		Render(content)
 }
 
 // ============================================================================
@@ -898,7 +925,13 @@ func (m DashboardModel) renderFooter() string {
 		TextDimStyle.Render(timeStr),
 	)
 
-	return FooterStyle.Render(status)
+	// Ensure black background in footer
+	return lipgloss.NewStyle().
+		Foreground(lipgloss.Color(ColorTextDim)).
+		Background(lipgloss.Color(ColorBg)).
+		Padding(0, 1).
+		Width(m.width).
+		Render(status)
 }
 
 // ============================================================================
