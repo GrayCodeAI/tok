@@ -910,45 +910,46 @@ func (m DashboardModel) renderFooter() string {
 		timeStr = "--:--:--"
 	}
 
-	// Build footer with different colors for each key (all black background)
-	separator := lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(ColorBg)).Render("•")
+	// Build footer with different colors for each key (all gray background)
+	grayBg := "#333333"
+	separator := lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("•")
 	keys := []string{
-		// tab - cyan on black
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Background(lipgloss.Color(ColorBg)).Render("tab"),
-		" ", TextMutedStyle.Render("next"),
+		// tab - cyan on gray
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorPrimary)).Background(lipgloss.Color(grayBg)).Render("tab"),
+		" ", lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("next"),
 		"  ", separator, "  ",
-		// r - green on black
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Background(lipgloss.Color(ColorBg)).Render("r"),
-		" ", TextMutedStyle.Render("refresh"),
+		// r - green on gray
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorSuccess)).Background(lipgloss.Color(grayBg)).Render("r"),
+		" ", lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("refresh"),
 		"  ", separator, "  ",
-		// / - yellow on black
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Background(lipgloss.Color(ColorBg)).Render("/"),
-		" ", TextMutedStyle.Render("search"),
+		// / - yellow on gray
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorWarning)).Background(lipgloss.Color(grayBg)).Render("/"),
+		" ", lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("search"),
 		"  ", separator, "  ",
-		// ? - purple on black
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Background(lipgloss.Color(ColorBg)).Render("?"),
-		" ", TextMutedStyle.Render("help"),
+		// ? - purple on gray
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorInfo)).Background(lipgloss.Color(grayBg)).Render("?"),
+		" ", lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("help"),
 		"  ", separator, "  ",
-		// q - red on black
-		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Background(lipgloss.Color(ColorBg)).Render("q"),
-		" ", TextMutedStyle.Render("quit"),
+		// q - red on gray
+		lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color(ColorError)).Background(lipgloss.Color(grayBg)).Render("q"),
+		" ", lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextMuted)).Background(lipgloss.Color(grayBg)).Render("quit"),
 	}
 
 	helpBar := lipgloss.JoinHorizontal(lipgloss.Left, keys...)
 
 	status := fmt.Sprintf("%s  |  Last refresh: %s",
 		helpBar,
-		TextDimStyle.Render(timeStr),
+		lipgloss.NewStyle().Foreground(lipgloss.Color(ColorTextDim)).Background(lipgloss.Color(grayBg)).Render(timeStr),
 	)
 
-	// Wrap entire footer in black background box
+	// Wrap entire footer in gray background box
 	footerContent := lipgloss.NewStyle().
-		Background(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(grayBg)).
 		Render(status)
 
-	// Fill entire footer area with black
+	// Fill entire footer area with gray
 	return lipgloss.NewStyle().
-		Background(lipgloss.Color(ColorBg)).
+		Background(lipgloss.Color(grayBg)).
 		Width(m.width).
 		Height(1).
 		Render(footerContent)
