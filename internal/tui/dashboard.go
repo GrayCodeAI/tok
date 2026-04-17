@@ -259,6 +259,7 @@ func (m DashboardModel) Init() tea.Cmd {
 		m.spinner.Tick,
 		tickCmd(),
 		fetchDashboardDataCmd(),
+		dismissWelcomeCmd(),
 	)
 }
 
@@ -267,12 +268,6 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Dismiss welcome screen on any key
-		if m.showWelcome {
-			m.showWelcome = false
-			return m, nil
-		}
-		
 		switch {
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -342,6 +337,9 @@ func (m DashboardModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tickMsg:
 		cmds = append(cmds, tickCmd(), fetchDashboardDataCmd())
+
+	case dismissWelcomeMsg:
+		m.showWelcome = false
 
 	case dashboardUpdateMsg:
 		m.stats = msg.stats
@@ -445,15 +443,6 @@ func (m DashboardModel) renderWelcome() string {
 		Width(m.width)
 
 	b.WriteString(welcome.Render("Welcome to Tokman"))
-	b.WriteString("\n\n")
-
-	// Press any key hint
-	hint := lipgloss.NewStyle().
-		Foreground(lipgloss.Color(ColorTextMuted)).
-		Align(lipgloss.Center).
-		Width(m.width)
-
-	b.WriteString(hint.Render("Press any key to start..."))
 
 	return b.String()
 }
@@ -1038,6 +1027,14 @@ type dashboardUpdateMsg struct {
 func tickCmd() tea.Cmd {
 	return tea.Tick(time.Second*3, func(t time.Time) tea.Msg {
 		return tickMsg(t)
+	})
+}
+
+type dismissWelcomeMsg struct{}
+
+func dismissWelcomeCmd() tea.Cmd {
+	return tea.Tick(time.Second*2, func(t time.Time) tea.Msg {
+		return dismissWelcomeMsg{}
 	})
 }
 
