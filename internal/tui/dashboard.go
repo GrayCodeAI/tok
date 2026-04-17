@@ -397,20 +397,35 @@ func (m DashboardModel) View() string {
 		return m.renderLoading()
 	}
 
-	var b strings.Builder
+	// Build content
+	var content strings.Builder
 
 	// Header
-	b.WriteString(m.renderHeader())
-	b.WriteString("\n")
+	content.WriteString(m.renderHeader())
 
-	// Main content area
-	b.WriteString(m.renderMainContent())
+	// Main content area - fill remaining height
+	mainContent := m.renderMainContent()
+	content.WriteString(mainContent)
 
-	// Footer
-	b.WriteString("\n")
-	b.WriteString(m.renderFooter())
+	// Fill remaining space to push footer to bottom
+	footer := m.renderFooter()
+	contentHeight := strings.Count(content.String(), "\n") + 1
+	footerHeight := 1
+	availableHeight := m.height - contentHeight - footerHeight - 2 // -2 for padding
 
-	return b.String()
+	if availableHeight > 0 {
+		content.WriteString(strings.Repeat("\n", availableHeight))
+	}
+
+	// Footer at bottom
+	content.WriteString(footer)
+
+	// Wrap in full-screen black background
+	return lipgloss.NewStyle().
+		Background(lipgloss.Color(ColorBg)).
+		Width(m.width).
+		Height(m.height).
+		Render(content.String())
 }
 
 func (m DashboardModel) renderLoading() string {
@@ -446,14 +461,23 @@ func (m DashboardModel) renderHeader() string {
 }
 
 func (m DashboardModel) renderMainContent() string {
-	// Sidebar + Content layout
-	sidebar := m.renderSidebar()
-	content := m.renderContent()
+	// Calculate heights
+	headerHeight := 3 // 2 empty lines + status bar
+	footerHeight := 1
+	availableHeight := m.height - headerHeight - footerHeight - 2 // -2 for margins
+
+	if availableHeight < 10 {
+		availableHeight = 10
+	}
+
+	// Sidebar + Content layout with full height
+	sidebar := m.renderSidebar(availableHeight)
+	content := m.renderContent(availableHeight)
 
 	return lipgloss.JoinHorizontal(lipgloss.Top, sidebar, content)
 }
 
-func (m DashboardModel) renderSidebar() string {
+func (m DashboardModel) renderSidebar(height int) string {
 	var items []string
 
 	// Navigation menu
@@ -488,32 +512,49 @@ func (m DashboardModel) renderSidebar() string {
 		TextMutedStyle.Render("Cache:"),
 		InfoStyle.Render(fmt.Sprintf("%.1f%%", m.stats.CacheHitRate))))
 
+	// Fill remaining height
+	contentHeight := len(items) + 4 // +4 for box padding
+	remaining := height - contentHeight
+	if remaining > 0 {
+		items = append(items, strings.Repeat("\n", remaining))
+	}
+
 	content := strings.Join(items, "\n")
 
 	return BoxDim.Render(content)
 }
 
-func (m DashboardModel) renderContent() string {
+func (m DashboardModel) renderContent(height int) string {
+	var content string
 	switch m.activeTab {
 	case OverviewTab:
-		return m.renderOverview()
+		content = m.renderOverview()
 	case MetricsTab:
-		return m.renderMetrics()
+		content = m.renderMetrics()
 	case LayersTab:
-		return m.renderLayers()
+		content = m.renderLayers()
 	case AnalyticsTab:
-		return m.renderAnalytics()
+		content = m.renderAnalytics()
 	case SessionsTab:
-		return m.renderSessions()
+		content = m.renderSessions()
 	case EconomicsTab:
-		return m.renderEconomics()
+		content = m.renderEconomics()
 	case ConfigTab:
-		return m.renderConfig()
+		content = m.renderConfig()
 	case LogsTab:
-		return m.renderLogs()
+		content = m.renderLogs()
 	default:
-		return m.renderOverview()
+		content = m.renderOverview()
 	}
+
+	// Fill remaining height with empty space
+	contentLines := strings.Count(content, "\n") + 1
+	remaining := height - contentLines - 2 // -2 for box padding
+	if remaining > 0 {
+		content += strings.Repeat("\n", remaining)
+	}
+
+	return content
 }
 
 // ============================================================================
@@ -1130,7 +1171,10 @@ func RunDashboard() error {
 	}
 
 	m := NewDashboard()
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m,
+		tea.WithAltScreen(),
+		tea.WithMouseCellMotion(),
+	)
 	if _, err := p.Run(); err != nil {
 		return err
 	}

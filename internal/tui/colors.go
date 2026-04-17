@@ -50,11 +50,11 @@ const (
 	ColorTextMuted    = "#9CA3AF" // Medium gray - labels, hints
 	ColorTextDim      = "#6B7280" // Dark gray - disabled, very muted
 
-	// BACKGROUNDS - Dark theme
-	ColorBg           = "#0B0B0B" // Main background (near black)
-	ColorBgSurface    = "#141414" // Cards, panels
-	ColorBgElevated   = "#1F1F1F" // Elevated elements, hover states
-	ColorBgBorder     = "#262626" // Subtle borders
+	// BACKGROUNDS - Pure black theme
+	ColorBg           = "#000000" // Pure black background
+	ColorBgSurface    = "#0A0A0A" // Cards, panels
+	ColorBgElevated   = "#141414" // Elevated elements, hover states
+	ColorBgBorder     = "#1A1A1A" // Subtle borders
 
 	// SPECIAL UI ELEMENTS
 	ColorBorderActive = ColorPrimary  // Active component borders
