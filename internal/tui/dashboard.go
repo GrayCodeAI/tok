@@ -530,10 +530,8 @@ func (m DashboardModel) renderSidebar(height int) string {
 
 	content := strings.Join(items, "\n")
 
-	// Ensure pure black background in sidebar
+	// Pure black sidebar without border
 	return lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimaryDim)).
 		Background(lipgloss.Color(ColorBg)).
 		Padding(1, 2).
 		Height(height).
@@ -565,20 +563,13 @@ func (m DashboardModel) renderContent(height int) string {
 
 	// Fill remaining height with black space
 	contentLines := strings.Count(content, "\n") + 1
-	remaining := height - contentLines - 2 // -2 for box padding
+	remaining := height - contentLines
 	if remaining > 0 {
-		blackFill := lipgloss.NewStyle().
-			Background(lipgloss.Color(ColorBg)).
-			Render(strings.Repeat(" ", 50))
-		for i := 0; i < remaining; i++ {
-			content += "\n" + blackFill
-		}
+		content += strings.Repeat("\n", remaining)
 	}
 
-	// Wrap in black background box
+	// No outer box - just content with black background
 	return lipgloss.NewStyle().
-		BorderStyle(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color(ColorPrimary)).
 		Background(lipgloss.Color(ColorBg)).
 		Height(height).
 		Render(content)
