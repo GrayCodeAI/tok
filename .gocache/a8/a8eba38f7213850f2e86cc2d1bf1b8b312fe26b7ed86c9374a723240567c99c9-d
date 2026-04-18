@@ -1,0 +1,12 @@
+# test log
+getenv GOTMPDIR
+getenv TMPDIR
+getenv XDG_DATA_HOME
+getenv TOKMAN_AUDIT_DIR
+getenv XDG_DATA_HOME
+open /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T
+getenv GOTMPDIR
+getenv TMPDIR
+getenv TOKMAN_AUDIT_DIR
+getenv TOKMAN_AUDIT_DIR
+open /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T

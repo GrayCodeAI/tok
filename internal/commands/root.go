@@ -15,6 +15,7 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/integrity"
+	"github.com/GrayCodeAI/tokman/internal/telemetry"
 	"github.com/GrayCodeAI/tokman/internal/utils"
 
 	// CLI commands
@@ -193,6 +194,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 					return err
 				}
 			}
+			trackCommandInvocation(cmd)
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -518,6 +520,21 @@ func isOperationalCommand(cmd *cobra.Command) bool {
 	}
 
 	return true
+}
+
+func trackCommandInvocation(cmd *cobra.Command) {
+	commandPath := strings.TrimSpace(cmd.CommandPath())
+	if commandPath == "" {
+		commandPath = "tokman"
+	}
+	category := "operational"
+	if !isOperationalCommand(cmd) {
+		category = "meta"
+	}
+	_ = telemetry.TrackFeatureUsage("command_invocation", map[string]interface{}{
+		"command_path": commandPath,
+		"category":     category,
+	})
 }
 
 // showPowerfulWelcome displays a helpful welcome message for the CLI

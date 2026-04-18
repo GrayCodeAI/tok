@@ -1,0 +1,13 @@
+./doc.go
+./dotnet.go
+./dotnet_trx.go
+./go.go
+./gradle.go
+./maven.go
+./mix.go
+./ruby.go
+./ruby_bundle.go
+./ruby_rails.go
+./ruby_rake.go
+./ruby_rspec.go
+./ruby_rubocop.go

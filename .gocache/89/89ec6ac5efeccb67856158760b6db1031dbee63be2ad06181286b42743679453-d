@@ -1,0 +1,4 @@
+./ansible.go
+./doc.go
+./helm.go
+./terraform.go

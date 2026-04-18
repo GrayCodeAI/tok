@@ -87,6 +87,11 @@ type EconomicsReport struct {
 	SavingsPercent float64       `json:"savingsPercent"`
 }
 
+type ccusageInvocation struct {
+	Path     string
+	BaseArgs []string
+}
+
 func runCcEconomics(cmd *cobra.Command, args []string) error {
 	// Determine granularity
 	granularities := []string{"daily"}
@@ -114,7 +119,7 @@ func runCcEconomics(cmd *cobra.Command, args []string) error {
 	}
 
 	// Generate reports
-	reports := generateEconomicsReports(ccusageData, ccusageData, tokmanData)
+	reports := generateEconomicsReports(ccusageData, tokmanData)
 
 	// Output
 	switch ccEconFormat {
@@ -131,13 +136,13 @@ func fetchCcusageData(granularities []string) (map[string][]CcUsagePeriod, error
 	result := make(map[string][]CcUsagePeriod)
 
 	// Check if ccusage is available
-	ccusagePath, err := findCcusage()
+	invocation, err := findCcusage()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, g := range granularities {
-		cmd := exec.Command(ccusagePath, g, "--json", "--since", "20250101")
+		cmd := exec.Command(invocation.Path, buildCcusageArgs(invocation, g)...)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			continue // Skip unavailable granularities
@@ -153,18 +158,24 @@ func fetchCcusageData(granularities []string) (map[string][]CcUsagePeriod, error
 	return result, nil
 }
 
-func findCcusage() (string, error) {
+func findCcusage() (ccusageInvocation, error) {
 	if _, err := exec.LookPath("ccusage"); err == nil {
-		return "ccusage", nil
+		return ccusageInvocation{Path: "ccusage"}, nil
 	}
 	// Try npx
 	npxCheck := exec.Command("npx", "ccusage", "--help")
 	npxCheck.Stdout = nil
 	npxCheck.Stderr = nil
 	if err := npxCheck.Run(); err == nil {
-		return "npx ccusage", nil
+		return ccusageInvocation{Path: "npx", BaseArgs: []string{"ccusage"}}, nil
 	}
-	return "", fmt.Errorf("ccusage not found")
+	return ccusageInvocation{}, fmt.Errorf("ccusage not found")
+}
+
+func buildCcusageArgs(invocation ccusageInvocation, granularity string) []string {
+	args := append([]string{}, invocation.BaseArgs...)
+	args = append(args, granularity, "--json", "--since", "20250101")
+	return args
 }
 
 func parseCcusageOutput(jsonStr, granularity string) ([]CcUsagePeriod, error) {
@@ -265,8 +276,13 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 			var daily []TokManSavings
 			for rows.Next() {
 				var s TokManSavings
-				rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize)
+				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
+					return nil, fmt.Errorf("scan daily TokMan savings: %w", err)
+				}
 				daily = append(daily, s)
+			}
+			if err := rows.Err(); err != nil {
+				return nil, fmt.Errorf("iterate daily TokMan savings: %w", err)
 			}
 			result["daily"] = daily
 		}
@@ -291,8 +307,13 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 			var weekly []TokManSavings
 			for rows.Next() {
 				var s TokManSavings
-				rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize)
+				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
+					return nil, fmt.Errorf("scan weekly TokMan savings: %w", err)
+				}
 				weekly = append(weekly, s)
+			}
+			if err := rows.Err(); err != nil {
+				return nil, fmt.Errorf("iterate weekly TokMan savings: %w", err)
 			}
 			result["weekly"] = weekly
 		}
@@ -317,8 +338,13 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 			var monthly []TokManSavings
 			for rows.Next() {
 				var s TokManSavings
-				rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize)
+				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
+					return nil, fmt.Errorf("scan monthly TokMan savings: %w", err)
+				}
 				monthly = append(monthly, s)
+			}
+			if err := rows.Err(); err != nil {
+				return nil, fmt.Errorf("iterate monthly TokMan savings: %w", err)
 			}
 			result["monthly"] = monthly
 		}
@@ -336,7 +362,7 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
-func generateEconomicsReports(ccusageData, tokmanData map[string][]CcUsagePeriod, tokmanSavings map[string][]TokManSavings) []EconomicsReport {
+func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, tokmanSavings map[string][]TokManSavings) []EconomicsReport {
 	var reports []EconomicsReport
 
 	// Combine data by period
@@ -459,7 +485,7 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 			fmt.Printf("  CC Spend: $%.2f (%s tokens)\n", totalCcCost, formatTokens(totalCcTokens))
 		}
 		fmt.Printf("  TokMan Savings: %s tokens\n", formatTokens(totalTokManTokens))
-		if totalCcCost > 0 && totalTokManTokens > 0 {
+		if totalCcCost > 0 && totalTokManTokens > 0 && totalCcTokens > 0 {
 			efficiency := float64(totalTokManTokens) / float64(totalCcTokens) * 100
 			fmt.Printf("  Efficiency: %s tokens saved per token spent\n",
 				green(fmt.Sprintf("%.2fx", efficiency)))

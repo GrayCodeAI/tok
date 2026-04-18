@@ -42,11 +42,11 @@ func init() {
 
 // SessionSummary represents a summarized session for display
 type SessionSummary struct {
-	ID            string
-	Date          string
-	TotalCmds     int
-	TokManCmds    int
-	OutputTokens  int
+	ID           string
+	Date         string
+	TotalCmds    int
+	TokManCmds   int
+	OutputTokens int
 }
 
 func (s *SessionSummary) AdoptionPct() float64 {
@@ -58,21 +58,21 @@ func (s *SessionSummary) AdoptionPct() float64 {
 
 // ClaudeJSONLMessage represents the structure of Claude Code JSONL files
 type ClaudeJSONLMessage struct {
-	Type    string          `json:"type"`
-	Message ClaudeMessage   `json:"message"`
+	Type    string        `json:"type"`
+	Message ClaudeMessage `json:"message"`
 }
 
 type ClaudeMessage struct {
-	Role    string            `json:"role"`
-	Content []ClaudeContent   `json:"content"`
+	Role    string          `json:"role"`
+	Content []ClaudeContent `json:"content"`
 }
 
 type ClaudeContent struct {
-	Type   string                 `json:"type"`
-	ID     string                 `json:"id,omitempty"`
-	Name   string                 `json:"name,omitempty"`
-	Input  map[string]interface{} `json:"input,omitempty"`
-	ToolUseID string              `json:"tool_use_id,omitempty"`
+	Type      string                 `json:"type"`
+	ID        string                 `json:"id,omitempty"`
+	Name      string                 `json:"name,omitempty"`
+	Input     map[string]interface{} `json:"input,omitempty"`
+	ToolUseID string                 `json:"tool_use_id,omitempty"`
 }
 
 func runAdoption(cmd *cobra.Command, args []string) error {
@@ -149,7 +149,7 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 	fmt.Println(color.New(color.Bold).Sprint("TokMan Adoption Overview"))
 	fmt.Println(strings.Repeat("─", 70))
 	fmt.Printf("%-12s %-12s %5s %5s %9s %-7s %8s\n",
-		"Session", "Date", "Cmds", "RTK", "Adoption", "", "Output")
+		"Session", "Date", "Cmds", "TokM", "Adoption", "", "Output")
 	fmt.Println(strings.Repeat("─", 70))
 
 	var totalCmds, totalTokMan int
@@ -272,7 +272,7 @@ func countTokManCommands(commands []string) (total, tokman int) {
 func splitCommandChain(cmd string) []string {
 	var parts []string
 	separators := []string{" && ", ";", " || "}
-	
+
 	remaining := cmd
 	for _, sep := range separators {
 		if strings.Contains(remaining, sep) {
@@ -286,7 +286,7 @@ func splitCommandChain(cmd string) []string {
 			return parts
 		}
 	}
-	
+
 	// No chaining found
 	return []string{strings.TrimSpace(cmd)}
 }

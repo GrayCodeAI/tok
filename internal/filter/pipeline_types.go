@@ -29,6 +29,13 @@ type PipelineCoordinator struct {
 	runtimeQueryIntent string
 	layerRegistry      *LayerRegistry
 	layerGate          *LayerGate
+	resultCache        *cache.FingerprintCache
+	cacheEnabled       bool
+	layerCache         *LayerCache
+	qualityGuardrail   *QualityGuardrail
+
+	// Progress tracking for status line
+	processedLayers int
 
 	// Layer 0: QuantumLock (KV-cache alignment)
 	quantumLockFilter *QuantumLockFilter
@@ -97,41 +104,35 @@ type PipelineCoordinator struct {
 	// Layer 20: Agent Memory Mode (Focus-inspired)
 	agentMemoryFilter *AgentMemoryFilter
 
-	// NEW: Inter-Layer Feedback Mechanism
-	feedback *InterLayerFeedback
+	// Unified research layers
+	edgeCaseFilter  *EdgeCaseFilter
+	reasoningFilter *ReasoningFilter
+	advancedFilter  *AdvancedFilter
 
-	// NEW: Quality Estimator for feedback
-	qualityEstimator *QualityEstimator
-
-	// TOML Filter Integration (declarative filters)
-	tomlFilterWrapper Filter
-
-	// Optional guardrail
-	qualityGuardrail *QualityGuardrail
-
-	// Unified L14-L16: Consolidated experimental filters
-	edgeCaseFilter      *EdgeCaseFilter      // L14: merges L21-L25
-	reasoningFilter     *ReasoningFilter     // L15: merges L26-L30
-	advancedFilter      *AdvancedFilter      // L16: merges L31-L45
-	contextCrunchFilter *ContextCrunchFilter // Merged LogCrunch + DiffCrunch
-	searchCrunchFilter  *SearchCrunchFilter
-	structuralCollapse  *StructuralCollapseFilter
-
-	// Phase 2: SmallKV Model Compensation (2025)
+	// Post-processing / compatibility
 	smallKVCompensator *SmallKVCompensator
+	tomlFilterWrapper  Filter
 
-	// Phase 2: Pipeline result cache for repeated inputs
-	resultCache  *cache.FingerprintCache
-	cacheEnabled bool
+	// NEW: Inter-Layer Feedback Mechanism
+	interLayerFeedback *InterLayerFeedback
+	feedback           *InterLayerFeedback
+	qualityEstimator   *QualityEstimator
+	adaptiveLearning   *AdaptiveLearningFilter
+	crunchBench        *CrunchBench
+}
 
-	// Phase 2: Layer result cache for individual filter results
-	layerCache *LayerCache
-
-	// Layer 50: AdaptiveLearning (merged EngramLearner + TieredSummary)
-	adaptiveLearning *AdaptiveLearningFilter
-
-	// New: CrunchBench for benchmarking
-	crunchBench *CrunchBench
+// reportProgress emits a progress event if a callback is registered.
+func (p *PipelineCoordinator) reportProgress(layer string, originalTokens, currentTokens int) {
+	if ProgressCallback != nil {
+		// Compute progress percentage based on layers processed
+		total := len(p.layers)
+		if total > 0 {
+			progress := float64(p.processedLayers) / float64(total) * 100
+			ProgressCallback(layer, originalTokens, currentTokens, progress)
+		} else {
+			ProgressCallback(layer, originalTokens, currentTokens, 0)
+		}
+	}
 }
 
 // CoreLayersConfig groups Layer 1-9 shared settings.

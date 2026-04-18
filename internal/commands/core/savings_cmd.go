@@ -27,7 +27,7 @@ var (
 	gainFormat    string
 	gainFailures  bool
 	gainSinceDays int
-	gainQuota     string // RTK: quota estimation tier (pro, 5x, 20x)
+	gainQuota     string // quota estimation tier (pro, 5x, 20x)
 )
 
 var gainCmd = &cobra.Command{
@@ -90,7 +90,7 @@ func runGain(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get gain summary: %w", err)
 	}
 
-	// Handle quota estimation (RTK feature)
+	// Handle quota estimation
 	if gainQuota != "" {
 		return printQuotaEstimation(summary, gainQuota)
 	}
@@ -112,7 +112,7 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 	if opts.ProjectPath != "" {
 		title = "TokMan Token Savings (Project Scope)"
 	}
-	
+
 	fmt.Println()
 	fmt.Println(color.New(color.Bold).Sprint(title))
 	fmt.Println(strings.Repeat("═", 60))
@@ -125,8 +125,16 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 	printKPI("Total commands", fmt.Sprintf("%d", summary.TotalCommands))
 	printKPI("Input tokens", formatTokensInt(summary.TotalInput))
 	printKPI("Output tokens", formatTokensInt(summary.TotalOutput))
-	printKPI("Tokens saved", fmt.Sprintf("%s (%.1f%%)", 
+	printKPI("Tokens saved", fmt.Sprintf("%s (%.1f%%)",
 		formatTokensInt(summary.TotalSaved), summary.AvgSavingsPct))
+
+	// Calculate cost savings (using default Claude Sonnet pricing)
+	if summary.TotalSaved > 0 {
+		estimator := tracking.NewCostEstimator("claude-3-sonnet")
+		costSaved := estimator.EstimateSavings(summary.TotalSaved).EstimatedSavings
+		printKPI("Cost saved", fmt.Sprintf("$%.2f USD", costSaved))
+	}
+
 	printKPI("Total exec time", formatDuration(summary.TotalExecTimeMs))
 	printEfficiencyMeter(summary.AvgSavingsPct)
 	fmt.Println()
@@ -135,7 +143,7 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 	if len(summary.ByCommand) > 0 {
 		fmt.Println(color.New(color.Bold).Sprint("By Command"))
 		fmt.Println(strings.Repeat("─", 60))
-		
+
 		for _, cmd := range summary.ByCommand {
 			impact := ""
 			if cmd.SavingsPct >= 80 {
@@ -145,7 +153,7 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 			} else {
 				impact = color.RedString("low")
 			}
-			
+
 			fmt.Printf("  %-24s %4d  %8s  %s\n",
 				truncate(cmd.Command, 24),
 				cmd.Count,
@@ -190,7 +198,7 @@ func printEfficiencyMeter(pct float64) {
 		filled = width
 	}
 	empty := width - filled
-	
+
 	bar := strings.Repeat("█", filled) + strings.Repeat("░", empty)
 	fmt.Printf("  Efficiency: [%s] %.0f%%\n", bar, pct)
 }
@@ -199,10 +207,10 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 	if len(stats) == 0 {
 		return
 	}
-	
+
 	fmt.Println(color.New(color.Bold).Sprint("Daily Savings (Last 30 Days)"))
 	fmt.Println(strings.Repeat("─", 60))
-	
+
 	// Find max for scaling
 	maxSaved := 0
 	for _, s := range stats {
@@ -213,23 +221,23 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 	if maxSaved == 0 {
 		maxSaved = 1
 	}
-	
+
 	// Print graph (last 14 days only for display)
 	startIdx := 0
 	if len(stats) > 14 {
 		startIdx = len(stats) - 14
 	}
-	
+
 	for i := len(stats) - 1; i >= startIdx; i-- {
 		s := stats[i]
 		barLen := int((float64(s.SavedTokens) / float64(maxSaved)) * 30)
 		bar := strings.Repeat("█", barLen)
-		
+
 		dateLabel := s.Period
 		if len(dateLabel) > 10 {
 			dateLabel = dateLabel[5:] // Remove year
 		}
-		
+
 		fmt.Printf("  %s  %-30s  %s\n", dateLabel, bar, formatTokensInt(s.SavedTokens))
 	}
 	fmt.Println()
@@ -279,21 +287,21 @@ func showFailures(tracker *tracking.Tracker) error {
 
 	fmt.Println(color.New(color.Bold).Sprint("Recent Failures"))
 	fmt.Println(strings.Repeat("─", 60))
-	
+
 	found := false
 	for _, cmd := range commands {
 		if !cmd.ParseSuccess {
 			found = true
-			fmt.Printf("  %s  %s\n", 
+			fmt.Printf("  %s  %s\n",
 				cmd.Timestamp.Format("Jan 02 15:04"),
 				cmd.Command)
 		}
 	}
-	
+
 	if !found {
 		fmt.Println("  No recent failures found.")
 	}
-	
+
 	return nil
 }
 
@@ -335,18 +343,18 @@ func shortenPath(path string) string {
 	return path
 }
 
-// printQuotaEstimation shows subscription tier usage estimation (RTK feature)
+// printQuotaEstimation shows subscription tier usage estimation.
 func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint("Quota Estimation (RTK-Style)"))
+	fmt.Println(color.New(color.Bold).Sprint("Quota Estimation"))
 	fmt.Println(strings.Repeat("═", 60))
 
 	// Define tier limits (approximate token limits per tier)
 	tierLimits := map[string]int{
-		"free":    1_000_000,    // 1M tokens
-		"pro":     5_000_000,    // 5M tokens
-		"5x":      25_000_000,   // 25M tokens
-		"20x":     100_000_000,  // 100M tokens
+		"free":      1_000_000,   // 1M tokens
+		"pro":       5_000_000,   // 5M tokens
+		"5x":        25_000_000,  // 25M tokens
+		"20x":       100_000_000, // 100M tokens
 		"unlimited": 999_999_999, // Effectively unlimited
 	}
 

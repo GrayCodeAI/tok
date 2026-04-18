@@ -28,6 +28,7 @@ type Config struct {
 	Dashboard DashboardConfig `mapstructure:"dashboard"`
 	Alerts    AlertsConfig    `mapstructure:"alerts"`
 	Export    ExportConfig    `mapstructure:"export"`
+	Edit      EditConfig      `mapstructure:"edit"` // Edit batching configuration
 }
 
 // PipelineConfig controls the 20-layer compression pipeline.
@@ -37,6 +38,9 @@ type PipelineConfig struct {
 	// Context limits
 	MaxContextTokens int `mapstructure:"max_context_tokens"` // Max input context (default: 2M)
 	ChunkSize        int `mapstructure:"chunk_size"`         // Processing chunk size for large inputs
+
+	// Agent preset selection
+	Preset string `mapstructure:"preset"` // fast, balanced, full, T90, ultra, research
 
 	// Layer enable/disable
 	EnableEntropy      bool `mapstructure:"enable_entropy"`
@@ -218,6 +222,19 @@ type HooksConfig struct {
 	ExcludedCommands []string `mapstructure:"excluded_commands"`
 	AuditDir         string   `mapstructure:"audit_dir"` // Directory for hook audit logs
 	TeeDir           string   `mapstructure:"tee_dir"`   // Directory for failure tee logs
+}
+
+// EditConfig controls edit batching behavior.
+type EditConfig struct {
+	BatchEnabled    bool     `mapstructure:"batch_enabled"`         // Enable batching of edit operations
+	BatchSize       int      `mapstructure:"batch_size"`            // Max edits per batch (default: 10)
+	BatchTimeoutMs  int      `mapstructure:"batch_timeout_ms"`      // Timeout for batch collection (default: 500ms)
+	DryRun          bool     `mapstructure:"edit_dry_run"`          // Show what would be changed without writing
+	CreateBackups   bool     `mapstructure:"create_backups"`        // Create .bak files before editing
+	AtomicWrites    bool     `mapstructure:"atomic_writes"`         // Use atomic file replacement
+	MaxFileSize     int      `mapstructure:"max_edit_file_size"`    // Maximum file size for editing (bytes, 0=unlimited)
+	AllowedPatterns []string `mapstructure:"allowed_edit_patterns"` // Glob patterns of files allowed to edit
+	DeniedPatterns  []string `mapstructure:"denied_edit_patterns"`  // Glob patterns of files denied
 }
 
 // DashboardConfig controls dashboard behavior.
@@ -456,6 +473,17 @@ func Defaults() *Config {
 			ExcludedCommands: []string{},
 			AuditDir:         "",
 			TeeDir:           "",
+		},
+		Edit: EditConfig{
+			BatchEnabled:    true,
+			BatchSize:       10,
+			BatchTimeoutMs:  500,
+			DryRun:          false,
+			CreateBackups:   true,
+			AtomicWrites:    true,
+			MaxFileSize:     10 * 1024 * 1024, // 10MB
+			AllowedPatterns: []string{"*.go", "*.py", "*.js", "*.ts", "*.java", "*.c", "*.cpp", "*.h", "*.hpp", "*.rs", "*.rb"},
+			DeniedPatterns:  []string{"*.min.js", "*.min.css", "*.lock", "*.generated.go"},
 		},
 		Dashboard: DashboardConfig{
 			Port:           8080,

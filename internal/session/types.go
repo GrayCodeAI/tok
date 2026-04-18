@@ -74,6 +74,73 @@ type SessionListResult struct {
 	HasMore  bool      `json:"has_more"`
 }
 
+// SessionStoreSummary describes persisted session-store state for diagnostics and dashboards.
+type SessionStoreSummary struct {
+	TotalSessions   int64      `json:"total_sessions"`
+	ActiveSessions  int64      `json:"active_sessions"`
+	SnapshotCount   int64      `json:"snapshot_count"`
+	LastActivity    *time.Time `json:"last_activity,omitempty"`
+	TopAgent        string     `json:"top_agent,omitempty"`
+	TopAgentCount   int64      `json:"top_agent_count,omitempty"`
+	ActiveSessionID string     `json:"active_session_id,omitempty"`
+}
+
+// SessionOverview is a dashboard-oriented summary of one session.
+type SessionOverview struct {
+	ID                string     `json:"id"`
+	Agent             string     `json:"agent"`
+	ProjectPath       string     `json:"project_path"`
+	StartedAt         time.Time  `json:"started_at"`
+	LastActivity      time.Time  `json:"last_activity"`
+	IsActive          bool       `json:"is_active"`
+	TotalTurns        int        `json:"total_turns"`
+	TotalTokens       int        `json:"total_tokens"`
+	CompressionRatio  float64    `json:"compression_ratio"`
+	ContextBlockCount int        `json:"context_block_count"`
+	SnapshotCount     int64      `json:"snapshot_count"`
+	LastSnapshotAt    *time.Time `json:"last_snapshot_at,omitempty"`
+}
+
+// SessionOverviewList contains a paginated dashboard session list.
+type SessionOverviewList struct {
+	Sessions []SessionOverview `json:"sessions"`
+	Total    int64             `json:"total"`
+	HasMore  bool              `json:"has_more"`
+}
+
+// SessionSnapshotSummary groups snapshot history by session.
+type SessionSnapshotSummary struct {
+	SessionID        string     `json:"session_id"`
+	Agent            string     `json:"agent,omitempty"`
+	ProjectPath      string     `json:"project_path,omitempty"`
+	SnapshotCount    int64      `json:"snapshot_count"`
+	LastSnapshotAt   *time.Time `json:"last_snapshot_at,omitempty"`
+	LatestTokenCount int        `json:"latest_token_count"`
+}
+
+// ActiveSessionContextMetrics describes the active session's current context state.
+type ActiveSessionContextMetrics struct {
+	SessionID         string         `json:"session_id"`
+	Agent             string         `json:"agent"`
+	ProjectPath       string         `json:"project_path"`
+	LastActivity      *time.Time     `json:"last_activity,omitempty"`
+	Focus             string         `json:"focus,omitempty"`
+	NextAction        string         `json:"next_action,omitempty"`
+	TotalTurns        int            `json:"total_turns"`
+	TotalTokens       int            `json:"total_tokens"`
+	CompressionRatio  float64        `json:"compression_ratio"`
+	ContextBlockCount int            `json:"context_block_count"`
+	BlockTypeCounts   map[string]int `json:"block_type_counts,omitempty"`
+}
+
+// SessionAnalyticsSnapshot is the canonical session analytics payload for dashboards/TUIs.
+type SessionAnalyticsSnapshot struct {
+	StoreSummary    SessionStoreSummary          `json:"store_summary"`
+	RecentSessions  []SessionOverview            `json:"recent_sessions"`
+	SnapshotHistory []SessionSnapshotSummary     `json:"snapshot_history"`
+	ActiveContext   *ActiveSessionContextMetrics `json:"active_context,omitempty"`
+}
+
 // PreCompactOptions contains options for PreCompact operation
 type PreCompactOptions struct {
 	MaxTokens       int

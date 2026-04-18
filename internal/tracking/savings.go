@@ -455,15 +455,25 @@ func (t *Tracker) GetDailySavings(projectPath string, days int) ([]struct {
 			COALESCE(SUM(original_tokens), 0) as original,
 			COUNT(*) as commands
 		FROM commands
-		WHERE (project_path GLOB ? OR project_path = ?)
-		  AND timestamp >= DATE('now', ?)
+	`
+	args := []any{}
+	filters := []string{"timestamp >= DATE('now', ?)"}
+	daysStr := fmt.Sprintf("-%d days", days)
+	args = append(args, daysStr)
+
+	if projectPath != "" {
+		filters = append(filters, "(project_path GLOB ? OR project_path = ?)")
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
+	}
+
+	query += " WHERE " + strings.Join(filters, " AND ")
+	query += `
 		GROUP BY DATE(timestamp)
 		ORDER BY date DESC
 	`
 
-	pattern := escapeGLOB(projectPath) + "/%"
-	daysStr := fmt.Sprintf("-%d days", days)
-	rows, err := t.db.Query(query, pattern, projectPath, daysStr)
+	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get daily savings: %w", err)
 	}

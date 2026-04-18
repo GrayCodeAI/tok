@@ -1,55 +1,69 @@
 package core
 
 import (
-	"fmt"
+	"time"
 
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/tui"
+	appui "github.com/GrayCodeAI/tokman/internal/tui"
+)
+
+var (
+	tuiRefresh  string
+	tuiDays     int
+	tuiProject  string
+	tuiAgent    string
+	tuiProvider string
+	tuiModel    string
+	tuiSession  string
 )
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
-	Short: "Launch beautiful real-time TUI dashboard",
-	Long: `Launch an interactive terminal UI with real-time metrics and statistics.
+	Short: "Launch the TokMan token intelligence TUI",
+	Long: `Launch the new TokMan terminal dashboard.
 
-The TUI provides a beautiful, real-time view of:
-- Command usage statistics
-- Token savings metrics
-- Cache performance
-- Active sessions
-- Recent commands with filtering
+Phase 1 includes:
+- shared Bubble Tea shell
+- real workspace snapshot loading
+- Home dashboard
+- section navigation and refresh
 
-Features:
-- Real-time updates every 5 seconds
-- Multiple tabs: Overview, Commands, Cache, Stats
-- Beautiful color schemes and progress bars
-- Interactive navigation with keyboard shortcuts
-
-Keyboard Shortcuts:
-  tab         Switch to next tab
-  shift+tab   Switch to previous tab
-  r           Refresh data manually
-  q/esc       Quit
-
-Examples:
-  tokman tui                    # Launch the dashboard
-  tokman tui --refresh 10       # Refresh every 10 seconds`,
+Additional screens are being implemented incrementally on top of the same data layer.`,
 	RunE: runTUI,
 }
 
-var tuiRefreshRate int
-
 func init() {
 	registry.Add(func() { registry.Register(tuiCmd) })
-	tuiCmd.Flags().IntVarP(&tuiRefreshRate, "refresh", "r", 5, "Refresh rate in seconds")
+
+	tuiCmd.Flags().StringVar(&tuiRefresh, "refresh", "20s", "Refresh interval, e.g. 10s, 30s, 1m")
+	tuiCmd.Flags().IntVar(&tuiDays, "days", 30, "Active dashboard window in days")
+	tuiCmd.Flags().StringVar(&tuiProject, "project", "", "Filter to a project path")
+	tuiCmd.Flags().StringVar(&tuiAgent, "agent", "", "Filter to an agent")
+	tuiCmd.Flags().StringVar(&tuiProvider, "provider", "", "Filter to a provider")
+	tuiCmd.Flags().StringVar(&tuiModel, "model", "", "Filter to a model")
+	tuiCmd.Flags().StringVar(&tuiSession, "session", "", "Filter to a session ID")
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
-	if err := tui.RunDashboard(); err != nil {
-		return fmt.Errorf("failed to run TUI: %w", err)
+	refreshInterval, err := time.ParseDuration(tuiRefresh)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	model := appui.NewModel(appui.Options{
+		RefreshInterval: refreshInterval,
+		Days:            tuiDays,
+		ProjectPath:     tuiProject,
+		AgentName:       tuiAgent,
+		Provider:        tuiProvider,
+		ModelName:       tuiModel,
+		SessionID:       tuiSession,
+	})
+
+	program := tea.NewProgram(model, tea.WithAltScreen())
+	_, err = program.Run()
+	return err
 }

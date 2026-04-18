@@ -208,6 +208,10 @@ func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stat
 		p.layerCache.Put(layer.name, input, p.config.Mode, output, saved)
 	}
 
+	// Increment processed layer counter and report progress
+	p.processedLayers++
+	p.reportProgress(layer.name, stats.OriginalTokens, core.EstimateTokens(output))
+
 	return output
 }
 

@@ -1,0 +1,5 @@
+./doc.go
+./scanner.go
+./security_121_130.go
+./scanner_bench_test.go
+./scanner_test.go

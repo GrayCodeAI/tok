@@ -3,6 +3,11 @@
 // These stub types and functions maintain API compatibility.
 package llm
 
+// IsStub reports whether this package is a placeholder implementation.
+func IsStub() bool {
+	return true
+}
+
 // Summarizer provides LLM-based text summarization (stub).
 type Summarizer struct {
 	Provider string

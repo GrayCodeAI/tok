@@ -13,7 +13,8 @@ func setupTestEngine(t *testing.T) (*PatternDiscoveryEngine, func()) {
 	}
 
 	// Override data path
-	dataDir = tmpDir
+	oldDataPath := os.Getenv("XDG_DATA_HOME")
+	os.Setenv("XDG_DATA_HOME", tmpDir)
 
 	engine, err := NewPatternDiscoveryEngine()
 	if err != nil {
@@ -24,13 +25,11 @@ func setupTestEngine(t *testing.T) (*PatternDiscoveryEngine, func()) {
 	cleanup := func() {
 		engine.Close()
 		os.RemoveAll(tmpDir)
+		os.Setenv("XDG_DATA_HOME", oldDataPath)
 	}
 
 	return engine, cleanup
 }
-
-// dataDir is used to override config data path in tests
-var dataDir string
 
 func TestNewPatternDiscoveryEngine(t *testing.T) {
 	engine, cleanup := setupTestEngine(t)
@@ -79,6 +78,23 @@ func TestPatternDiscoveryEngine_StartStop(t *testing.T) {
 
 	// Multiple stops should not panic
 	engine.Stop()
+}
+
+func TestPatternDiscoveryEngine_RestartAfterStop(t *testing.T) {
+	engine, cleanup := setupTestEngine(t)
+	defer cleanup()
+
+	engine.Start()
+	engine.Stop()
+	engine.Start()
+	defer engine.Stop()
+
+	if !engine.running {
+		t.Fatal("expected engine to be running after restart")
+	}
+
+	engine.SubmitSample("2024-01-15 INFO restarted", "restart.log")
+	time.Sleep(50 * time.Millisecond)
 }
 
 func TestPatternDiscoveryEngine_SubmitSample(t *testing.T) {

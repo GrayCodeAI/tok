@@ -17,11 +17,11 @@ import (
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 )
 
-// genericTestCmd provides RTK-style generic test wrapper
+// genericTestCmd provides a generic test wrapper
 // Auto-detects and runs appropriate test runner for the project
 var genericTestCmd = &cobra.Command{
 	Use:   "test-runner <command> [args...]",
-	Short: "Auto-detect and run project tests (RTK-style)",
+	Short: "Auto-detect and run project tests",
 	Long: `Run tests with automatic test runner detection.
 
 This command detects the appropriate test runner for your project
@@ -40,17 +40,8 @@ Examples:
 	RunE:               runGenericTest,
 }
 
-// testAlias provides a shorter alias like 'rtk test'
-var testAlias = &cobra.Command{
-	Use:    "rtk-test [args...]",
-	Short:  "Alias for test-runner (RTK compatibility)",
-	Hidden: true,
-	RunE:   runGenericTest,
-}
-
 func init() {
 	registry.Add(func() { registry.Register(genericTestCmd) })
-	registry.Add(func() { registry.Register(testAlias) })
 }
 
 // TestRunner represents a detected test runner

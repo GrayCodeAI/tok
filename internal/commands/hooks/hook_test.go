@@ -1,6 +1,8 @@
 package hooks
 
 import (
+	"encoding/json"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -201,10 +203,99 @@ func TestDetectCopilotFormat(t *testing.T) {
 	}
 }
 
+func TestRunClaudeInner_RewritesCommand(t *testing.T) {
+	input := `{"tool_name":"Bash","tool_input":{"command":"git status"}}`
+
+	output := runClaudeInner(input)
+	if output == "" {
+		t.Fatal("runClaudeInner() returned empty output")
+	}
+	if !strings.Contains(output, `"updatedInput":{"command":"tokman git status"}`) {
+		t.Fatalf("runClaudeInner() = %s", output)
+	}
+}
+
+func TestRunCursorInner_RewritesCommand(t *testing.T) {
+	input := `{"tool_input":{"command":"git status"}}`
+
+	output := runCursorInner(input)
+	if output == "{}" {
+		t.Fatal("runCursorInner() returned empty response")
+	}
+	if !strings.Contains(output, `"updated_input":{"command":"tokman git status"}`) {
+		t.Fatalf("runCursorInner() = %s", output)
+	}
+}
+
+func TestProcessGeminiPayload_DenyRule(t *testing.T) {
+	original := checkCommandPermissions
+	t.Cleanup(func() { checkCommandPermissions = original })
+	checkCommandPermissions = func(cmd string) PermissionVerdict {
+		return PermissionDeny
+	}
+
+	payload := map[string]any{
+		"tool_name": "run_shell_command",
+		"tool_input": map[string]any{
+			"command": "git status",
+		},
+	}
+
+	output, action, originalCmd, rewritten := processGeminiPayload(payload)
+	if action != "skip:deny_rule" {
+		t.Fatalf("action = %q, want skip:deny_rule", action)
+	}
+	if originalCmd != "git status" {
+		t.Fatalf("originalCmd = %q, want git status", originalCmd)
+	}
+	if rewritten != "" {
+		t.Fatalf("rewritten = %q, want empty", rewritten)
+	}
+	if decision, _ := output["decision"].(string); decision != "deny" {
+		t.Fatalf("decision = %q, want deny", decision)
+	}
+}
+
+func TestRecordHookAudit(t *testing.T) {
+	dataHome := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", dataHome)
+	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
+
+	recordHookAudit("rewrite", "git status", "tokman git status")
+
+	content, err := os.ReadFile(getAuditLogPath())
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	line := strings.TrimSpace(string(content))
+	entry := parseAuditLine(line)
+	if entry == nil {
+		t.Fatalf("parseAuditLine(%q) returned nil", line)
+	}
+	if entry.Action != "rewrite" {
+		t.Fatalf("entry.Action = %q, want rewrite", entry.Action)
+	}
+}
+
+func TestRecordHookAuditEscapesFields(t *testing.T) {
+	dataHome := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", dataHome)
+	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
+
+	recordHookAudit("rewrite", "git status | head -n 1", "tokman git status\n")
+
+	content, err := os.ReadFile(getAuditLogPath())
+	if err != nil {
+		t.Fatalf("ReadFile() error = %v", err)
+	}
+	if strings.Contains(string(content), " | head -n 1 | tokman git status\n") {
+		t.Fatal("audit content should escape separators and newlines")
+	}
+}
+
 // ── handleCopilotVsCode ────────────────────────────────────────
 
 func TestHandleCopilotVsCode_RewriteLogic(t *testing.T) {
-	t.Skip("requires full discover.RewriteCommand implementation (currently stub)")
 	// Test that the discover.RewriteCommand logic works for commands
 	// that would be handled by handleCopilotVsCode
 	tests := []struct {
@@ -220,7 +311,7 @@ func TestHandleCopilotVsCode_RewriteLogic(t *testing.T) {
 		{
 			name:    "cargo test rewrite",
 			cmd:     "cargo test",
-			wantOut: "tokman cargo test",
+			wantOut: "tokman test-runner cargo test",
 		},
 	}
 	for _, tt := range tests {
@@ -240,7 +331,6 @@ func TestHandleCopilotVsCode_RewriteLogic(t *testing.T) {
 // ── handleCopilotCli ───────────────────────────────────────────
 
 func TestHandleCopilotCli_RewriteLogic(t *testing.T) {
-	t.Skip("requires full discover.RewriteCommand implementation (currently stub)")
 	// Test that the discover.RewriteCommand logic works for commands
 	// that would be handled by handleCopilotCli
 	tests := []struct {
@@ -282,6 +372,20 @@ func TestGeminiHookOutput(t *testing.T) {
 	}
 	if len(allowed) < 10 {
 		t.Errorf("allow output too short: %q", allowed)
+	}
+}
+
+func TestBuildCopilotVSCodeResponse_Ask(t *testing.T) {
+	original := checkCommandPermissions
+	t.Cleanup(func() { checkCommandPermissions = original })
+	checkCommandPermissions = func(cmd string) PermissionVerdict {
+		return PermissionAsk
+	}
+
+	output := buildCopilotVSCodeResponse("git status", "tokman git status")
+	payload, _ := output["hookSpecificOutput"].(map[string]any)
+	if decision, _ := payload["permissionDecision"].(string); decision != "ask" {
+		t.Fatalf("permissionDecision = %q, want ask", decision)
 	}
 }
 
@@ -510,5 +614,14 @@ func BenchmarkBaseCommand(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		baseCommand(cmd)
+	}
+}
+
+func TestRunClaudeInnerProducesValidJSON(t *testing.T) {
+	input := `{"tool_name":"Bash","tool_input":{"command":"git status"}}`
+	output := runClaudeInner(input)
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(output), &parsed); err != nil {
+		t.Fatalf("json.Unmarshal() error = %v", err)
 	}
 }

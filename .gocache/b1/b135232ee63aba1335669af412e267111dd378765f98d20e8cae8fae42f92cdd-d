@@ -1,0 +1,4 @@
+./doc.go
+./docker.go
+./kubectl.go
+./psql.go

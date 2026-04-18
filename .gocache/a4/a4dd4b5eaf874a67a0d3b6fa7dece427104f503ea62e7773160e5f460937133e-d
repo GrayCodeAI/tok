@@ -1,0 +1,8 @@
+./config.go
+./config_cmds.go
+./config_diff.go
+./config_get.go
+./config_validate.go
+./doc.go
+./migrate_cmd.go
+./paths.go

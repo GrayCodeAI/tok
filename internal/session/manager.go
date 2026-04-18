@@ -151,11 +151,11 @@ func (sm *SessionManager) CreateSession(agent, projectPath string) (*Session, er
 // GetSession retrieves a session by ID
 func (sm *SessionManager) GetSession(id string) (*Session, error) {
 	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-
 	if session, ok := sm.sessions[id]; ok {
+		sm.mu.RUnlock()
 		return session, nil
 	}
+	sm.mu.RUnlock()
 
 	// Try to load from database
 	session, err := sm.loadSession(id)
@@ -163,7 +163,9 @@ func (sm *SessionManager) GetSession(id string) (*Session, error) {
 		return nil, err
 	}
 
+	sm.mu.Lock()
 	sm.sessions[id] = session
+	sm.mu.Unlock()
 	return session, nil
 }
 
@@ -396,16 +398,25 @@ func (sm *SessionManager) executeHooks(ctx context.Context, hookType HookType, s
 
 // persistSession saves a session to the database
 func (sm *SessionManager) persistSession(session *Session) error {
-	contextBlocks, _ := json.Marshal(session.ContextBlocks)
-	state, _ := json.Marshal(session.State)
-	metadata, _ := json.Marshal(session.Metadata)
+	contextBlocks, err := json.Marshal(session.ContextBlocks)
+	if err != nil {
+		return fmt.Errorf("marshal context blocks: %w", err)
+	}
+	state, err := json.Marshal(session.State)
+	if err != nil {
+		return fmt.Errorf("marshal session state: %w", err)
+	}
+	metadata, err := json.Marshal(session.Metadata)
+	if err != nil {
+		return fmt.Errorf("marshal session metadata: %w", err)
+	}
 
-	_, err := sm.db.Exec(`
+	_, err = sm.db.Exec(`
 		INSERT OR REPLACE INTO sessions 
-		(id, agent, project_path, started_at, last_activity, context_blocks, state, metadata, is_active)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+		(id, agent, project_path, started_at, last_activity, context_blocks, state, metadata, expires_at, is_active)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`, session.ID, session.Agent, session.ProjectPath, session.StartedAt,
-		session.LastActivity, contextBlocks, state, metadata, session.IsActive)
+		session.LastActivity, contextBlocks, state, metadata, session.ExpiresAt, session.IsActive)
 
 	return err
 }
@@ -416,18 +427,30 @@ func (sm *SessionManager) loadSession(id string) (*Session, error) {
 	var contextBlocks, state, metadata []byte
 
 	err := sm.db.QueryRow(`
-		SELECT id, agent, project_path, started_at, last_activity, context_blocks, state, metadata, is_active
+		SELECT id, agent, project_path, started_at, last_activity, context_blocks, state, metadata, expires_at, is_active
 		FROM sessions WHERE id = ?
 	`, id).Scan(&session.ID, &session.Agent, &session.ProjectPath, &session.StartedAt,
-		&session.LastActivity, &contextBlocks, &state, &metadata, &session.IsActive)
+		&session.LastActivity, &contextBlocks, &state, &metadata, &session.ExpiresAt, &session.IsActive)
 
 	if err != nil {
 		return nil, err
 	}
 
-	json.Unmarshal(contextBlocks, &session.ContextBlocks)
-	json.Unmarshal(state, &session.State)
-	json.Unmarshal(metadata, &session.Metadata)
+	if len(contextBlocks) > 0 {
+		if err := json.Unmarshal(contextBlocks, &session.ContextBlocks); err != nil {
+			return nil, fmt.Errorf("unmarshal context blocks: %w", err)
+		}
+	}
+	if len(state) > 0 {
+		if err := json.Unmarshal(state, &session.State); err != nil {
+			return nil, fmt.Errorf("unmarshal session state: %w", err)
+		}
+	}
+	if len(metadata) > 0 {
+		if err := json.Unmarshal(metadata, &session.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshal session metadata: %w", err)
+		}
+	}
 
 	return &session, nil
 }
@@ -438,14 +461,329 @@ func (sm *SessionManager) CleanupExpired() error {
 	return err
 }
 
+// GetSummary returns persisted session-store metrics for diagnostics and dashboards.
+func (sm *SessionManager) GetSummary() (*SessionStoreSummary, error) {
+	summary := &SessionStoreSummary{}
+	var lastActivityEpoch sql.NullInt64
+
+	err := sm.db.QueryRow(`
+		SELECT
+			COUNT(*) AS total_sessions,
+			COALESCE(SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END), 0) AS active_sessions,
+			CAST(strftime('%s', MAX(last_activity)) AS INTEGER) AS last_activity
+		FROM sessions
+	`).Scan(&summary.TotalSessions, &summary.ActiveSessions, &lastActivityEpoch)
+	if err != nil {
+		return nil, fmt.Errorf("query session summary: %w", err)
+	}
+	if lastActivityEpoch.Valid && lastActivityEpoch.Int64 > 0 {
+		ts := time.Unix(lastActivityEpoch.Int64, 0)
+		summary.LastActivity = &ts
+	}
+
+	if err := sm.db.QueryRow(`SELECT COUNT(*) FROM session_snapshots`).Scan(&summary.SnapshotCount); err != nil {
+		return nil, fmt.Errorf("query session snapshots: %w", err)
+	}
+
+	var agent sql.NullString
+	var count sql.NullInt64
+	err = sm.db.QueryRow(`
+		SELECT agent, COUNT(*) AS cnt
+		FROM sessions
+		WHERE TRIM(COALESCE(agent, '')) <> ''
+		GROUP BY agent
+		ORDER BY cnt DESC, agent ASC
+		LIMIT 1
+	`).Scan(&agent, &count)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("query top session agent: %w", err)
+	}
+	if agent.Valid {
+		summary.TopAgent = agent.String
+	}
+	if count.Valid {
+		summary.TopAgentCount = count.Int64
+	}
+
+	sm.mu.RLock()
+	summary.ActiveSessionID = sm.activeSession
+	sm.mu.RUnlock()
+
+	return summary, nil
+}
+
+// ListSessionOverviews returns recent persisted sessions with snapshot counts and totals.
+func (sm *SessionManager) ListSessionOverviews(opts SessionListOptions) (*SessionOverviewList, error) {
+	limit := opts.Limit
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 200 {
+		limit = 200
+	}
+	offset := opts.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	where, args := buildSessionFilters(opts)
+
+	countQuery := `SELECT COUNT(*) FROM sessions WHERE ` + where
+	var total int64
+	if err := sm.db.QueryRow(countQuery, args...).Scan(&total); err != nil {
+		return nil, fmt.Errorf("count sessions: %w", err)
+	}
+
+	query := `
+		SELECT
+			s.id,
+			s.agent,
+			s.project_path,
+			s.started_at,
+			s.last_activity,
+			s.is_active,
+			s.context_blocks,
+			s.metadata,
+			COALESCE(ss.snapshot_count, 0) AS snapshot_count,
+			ss.last_snapshot_at
+		FROM sessions s
+		LEFT JOIN (
+			SELECT
+				session_id,
+				COUNT(*) AS snapshot_count,
+				MAX(created_at) AS last_snapshot_at
+			FROM session_snapshots
+			GROUP BY session_id
+		) ss ON ss.session_id = s.id
+		WHERE ` + where + `
+		ORDER BY s.last_activity DESC, s.started_at DESC
+		LIMIT ? OFFSET ?`
+
+	queryArgs := append(append([]any{}, args...), limit, offset)
+	rows, err := sm.db.Query(query, queryArgs...)
+	if err != nil {
+		return nil, fmt.Errorf("query session overviews: %w", err)
+	}
+	defer rows.Close()
+
+	result := &SessionOverviewList{}
+	for rows.Next() {
+		var item SessionOverview
+		var contextBlocksRaw, metadataRaw []byte
+		var lastSnapshot sql.NullString
+		if err := rows.Scan(
+			&item.ID,
+			&item.Agent,
+			&item.ProjectPath,
+			&item.StartedAt,
+			&item.LastActivity,
+			&item.IsActive,
+			&contextBlocksRaw,
+			&metadataRaw,
+			&item.SnapshotCount,
+			&lastSnapshot,
+		); err != nil {
+			return nil, fmt.Errorf("scan session overview: %w", err)
+		}
+		if lastSnapshot.Valid {
+			ts, err := parseSessionTimestamp(lastSnapshot.String)
+			if err != nil {
+				return nil, fmt.Errorf("parse session overview snapshot time: %w", err)
+			}
+			item.LastSnapshotAt = &ts
+		}
+
+		if len(contextBlocksRaw) > 0 {
+			var blocks []ContextBlock
+			if err := json.Unmarshal(contextBlocksRaw, &blocks); err != nil {
+				return nil, fmt.Errorf("unmarshal session context blocks: %w", err)
+			}
+			item.ContextBlockCount = len(blocks)
+		}
+		if len(metadataRaw) > 0 {
+			var metadata SessionMetadata
+			if err := json.Unmarshal(metadataRaw, &metadata); err != nil {
+				return nil, fmt.Errorf("unmarshal session metadata: %w", err)
+			}
+			item.TotalTurns = metadata.TotalTurns
+			item.TotalTokens = metadata.TotalTokens
+			item.CompressionRatio = metadata.CompressionRatio
+		}
+
+		result.Sessions = append(result.Sessions, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate session overviews: %w", err)
+	}
+
+	result.Total = total
+	result.HasMore = int64(offset+len(result.Sessions)) < total
+	return result, nil
+}
+
+// ListSnapshotSummaries returns snapshot history aggregated by session.
+func (sm *SessionManager) ListSnapshotSummaries(limit int) ([]SessionSnapshotSummary, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 200 {
+		limit = 200
+	}
+
+	query := `
+		SELECT
+			s.id,
+			COALESCE(s.agent, ''),
+			COALESCE(s.project_path, ''),
+			COUNT(ss.id) AS snapshot_count,
+			MAX(ss.created_at) AS last_snapshot_at,
+			COALESCE(MAX(ss.token_count), 0) AS latest_token_count
+		FROM sessions s
+		INNER JOIN session_snapshots ss ON ss.session_id = s.id
+		GROUP BY s.id, s.agent, s.project_path
+		ORDER BY last_snapshot_at DESC, snapshot_count DESC
+		LIMIT ?`
+
+	rows, err := sm.db.Query(query, limit)
+	if err != nil {
+		return nil, fmt.Errorf("query snapshot summaries: %w", err)
+	}
+	defer rows.Close()
+
+	var summaries []SessionSnapshotSummary
+	for rows.Next() {
+		var item SessionSnapshotSummary
+		var lastSnapshot sql.NullString
+		if err := rows.Scan(
+			&item.SessionID,
+			&item.Agent,
+			&item.ProjectPath,
+			&item.SnapshotCount,
+			&lastSnapshot,
+			&item.LatestTokenCount,
+		); err != nil {
+			return nil, fmt.Errorf("scan snapshot summary: %w", err)
+		}
+		if lastSnapshot.Valid {
+			ts, err := parseSessionTimestamp(lastSnapshot.String)
+			if err != nil {
+				return nil, fmt.Errorf("parse snapshot summary time: %w", err)
+			}
+			item.LastSnapshotAt = &ts
+		}
+		summaries = append(summaries, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate snapshot summaries: %w", err)
+	}
+	return summaries, nil
+}
+
+// GetActiveContextMetrics returns context metrics for the active session.
+func (sm *SessionManager) GetActiveContextMetrics() (*ActiveSessionContextMetrics, error) {
+	active := sm.GetActiveSession()
+	if active == nil {
+		return nil, nil
+	}
+
+	metrics := &ActiveSessionContextMetrics{
+		SessionID:         active.ID,
+		Agent:             active.Agent,
+		ProjectPath:       active.ProjectPath,
+		Focus:             active.State.Focus,
+		NextAction:        active.State.NextAction,
+		TotalTurns:        active.Metadata.TotalTurns,
+		TotalTokens:       active.Metadata.TotalTokens,
+		CompressionRatio:  active.Metadata.CompressionRatio,
+		ContextBlockCount: len(active.ContextBlocks),
+		BlockTypeCounts:   make(map[string]int),
+	}
+	lastActivity := active.LastActivity
+	metrics.LastActivity = &lastActivity
+
+	for _, block := range active.ContextBlocks {
+		metrics.BlockTypeCounts[string(block.Type)]++
+	}
+
+	return metrics, nil
+}
+
+// GetAnalyticsSnapshot returns the canonical session analytics payload for dashboards/TUIs.
+func (sm *SessionManager) GetAnalyticsSnapshot(opts SessionListOptions, snapshotLimit int) (*SessionAnalyticsSnapshot, error) {
+	summary, err := sm.GetSummary()
+	if err != nil {
+		return nil, err
+	}
+	recent, err := sm.ListSessionOverviews(opts)
+	if err != nil {
+		return nil, err
+	}
+	snapshots, err := sm.ListSnapshotSummaries(snapshotLimit)
+	if err != nil {
+		return nil, err
+	}
+	active, err := sm.GetActiveContextMetrics()
+	if err != nil {
+		return nil, err
+	}
+
+	return &SessionAnalyticsSnapshot{
+		StoreSummary:    *summary,
+		RecentSessions:  recent.Sessions,
+		SnapshotHistory: snapshots,
+		ActiveContext:   active,
+	}, nil
+}
+
 // Close closes the session manager
 func (sm *SessionManager) Close() error {
 	return sm.db.Close()
 }
 
+func buildSessionFilters(opts SessionListOptions) (string, []any) {
+	filters := []string{"1=1"}
+	args := make([]any, 0, 4)
+
+	if value := strings.TrimSpace(opts.Agent); value != "" {
+		filters = append(filters, "agent = ?")
+		args = append(args, value)
+	}
+	if value := strings.TrimSpace(opts.ProjectPath); value != "" {
+		filters = append(filters, "project_path = ?")
+		args = append(args, value)
+	}
+	if opts.ActiveOnly {
+		filters = append(filters, "is_active = 1")
+	}
+
+	return strings.Join(filters, " AND "), args
+}
+
+func parseSessionTimestamp(value string) (time.Time, error) {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return time.Time{}, fmt.Errorf("empty timestamp")
+	}
+	layouts := []string{
+		time.RFC3339Nano,
+		time.RFC3339,
+		"2006-01-02 15:04:05.999999999-07:00",
+		"2006-01-02 15:04:05.999999999",
+		"2006-01-02 15:04:05",
+	}
+	for _, layout := range layouts {
+		if ts, err := time.Parse(layout, value); err == nil {
+			return ts, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unsupported timestamp format %q", value)
+}
+
 // generateSessionID generates a unique session ID
 func generateSessionID() string {
 	b := make([]byte, 16)
-	rand.Read(b)
+	if _, err := rand.Read(b); err != nil {
+		return fmt.Sprintf("%d", time.Now().UnixNano())
+	}
 	return hex.EncodeToString(b)
 }

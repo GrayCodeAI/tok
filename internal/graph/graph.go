@@ -5,6 +5,11 @@ package graph
 
 import "fmt"
 
+// IsStub reports whether this package is a placeholder implementation.
+func IsStub() bool {
+	return true
+}
+
 // ProjectGraph represents a project graph (stub).
 type ProjectGraph struct {
 	Path string

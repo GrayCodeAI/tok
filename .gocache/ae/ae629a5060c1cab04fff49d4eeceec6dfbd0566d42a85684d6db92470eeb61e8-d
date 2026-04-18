@@ -1,0 +1,13 @@
+# test log
+getenv XDG_CACHE_HOME
+getenv HOME
+getenv XDG_CACHE_HOME
+getenv HOME
+getenv XDG_CACHE_HOME
+getenv HOME
+getenv XDG_CACHE_HOME
+getenv HOME
+getenv XDG_CACHE_HOME
+getenv HOME
+getenv XDG_CACHE_HOME
+getenv HOME

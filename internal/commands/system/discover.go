@@ -57,8 +57,8 @@ func init() {
 
 // ClaudeJSONLMessage represents the structure of Claude Code JSONL files
 type ClaudeJSONLMessage struct {
-	Type    string          `json:"type"`
-	Message ClaudeMessage   `json:"message"`
+	Type    string        `json:"type"`
+	Message ClaudeMessage `json:"message"`
 }
 
 type ClaudeMessage struct {
@@ -82,6 +82,7 @@ type DiscoveredCommand struct {
 	TokManEquiv  string  `json:"tokman_equivalent,omitempty"`
 	EstSavings   float64 `json:"estimated_savings_pct"`
 	TokensSaved  int     `json:"tokens_saved,omitempty"`
+	SupportLevel string  `json:"support_level,omitempty"`
 }
 
 // DiscoverResult represents the discovery results
@@ -90,13 +91,14 @@ type DiscoverResult struct {
 	TotalCommands     int                 `json:"total_commands"`
 	AlreadyTokMan     int                 `json:"already_tokman"`
 	SupportedMissed   []DiscoveredCommand `json:"supported_missed"`
+	PassthroughMissed []DiscoveredCommand `json:"passthrough_missed,omitempty"`
 	Unsupported       []DiscoveredCommand `json:"unsupported,omitempty"`
 	ParseErrors       int                 `json:"parse_errors"`
 	TokManBypassCount int                 `json:"tokman_bypass_count,omitempty"`
 	TokManBypassCmds  []string            `json:"tokman_bypass_commands,omitempty"`
 }
 
-// runDiscoverEnhanced is the RTK-style discover that scans Claude Code JSONL files
+// runDiscoverEnhanced scans Claude Code JSONL files for missed TokMan usage.
 func runDiscoverEnhanced() error {
 	sessions, err := findClaudeSessions()
 	if err != nil {
@@ -130,12 +132,14 @@ func runDiscoverEnhanced() error {
 
 	// Categorize commands
 	result := &DiscoverResult{
-		SessionsScanned: len(sessions),
-		SupportedMissed: []DiscoveredCommand{},
-		Unsupported:     []DiscoveredCommand{},
+		SessionsScanned:   len(sessions),
+		SupportedMissed:   []DiscoveredCommand{},
+		PassthroughMissed: []DiscoveredCommand{},
+		Unsupported:       []DiscoveredCommand{},
 	}
 
 	supportedMap := make(map[string]*DiscoveredCommand)
+	passthroughMap := make(map[string]*DiscoveredCommand)
 	unsupportedMap := make(map[string]*DiscoveredCommand)
 	tokmanBypassMap := make(map[string]int)
 
@@ -167,9 +171,9 @@ func runDiscoverEnhanced() error {
 					continue
 				}
 
-				// Check if supported
-				rewritten, changed := discover.RewriteCommand(part, nil)
-				if changed && rewritten != part {
+				rewritten, supportLevel := discover.ClassifyCommand(part)
+				switch supportLevel {
+				case discover.SupportOptimized:
 					slug := getCommandSlug(part)
 					cat := categorizeCommand(slug)
 					savings := estimateSavings(cat)
@@ -179,23 +183,39 @@ func runDiscoverEnhanced() error {
 						entry.TokensSaved += estimateTokens(part) * int(savings) / 100
 					} else {
 						supportedMap[slug] = &DiscoveredCommand{
-							Command:     part,
-							Count:       1,
-							Category:    cat,
-							TokManEquiv: rewritten,
-							EstSavings:  savings,
-							TokensSaved: estimateTokens(part) * int(savings) / 100,
+							Command:      part,
+							Count:        1,
+							Category:     cat,
+							TokManEquiv:  rewritten,
+							EstSavings:   savings,
+							TokensSaved:  estimateTokens(part) * int(savings) / 100,
+							SupportLevel: string(discover.SupportOptimized),
 						}
 					}
-				} else {
+				case discover.SupportPassthrough:
+					slug := getCommandSlug(part)
+					cat := categorizeCommand(slug)
+					if entry, ok := passthroughMap[slug]; ok {
+						entry.Count++
+					} else {
+						passthroughMap[slug] = &DiscoveredCommand{
+							Command:      part,
+							Count:        1,
+							Category:     cat,
+							TokManEquiv:  rewritten,
+							SupportLevel: string(discover.SupportPassthrough),
+						}
+					}
+				default:
 					slug := getCommandSlug(part)
 					if entry, ok := unsupportedMap[slug]; ok {
 						entry.Count++
 					} else {
 						unsupportedMap[slug] = &DiscoveredCommand{
-							Command:  part,
-							Count:    1,
-							Category: "unknown",
+							Command:      part,
+							Count:        1,
+							Category:     "unknown",
+							SupportLevel: string(discover.SupportUnsupported),
 						}
 					}
 				}
@@ -206,6 +226,9 @@ func runDiscoverEnhanced() error {
 	// Convert maps to slices
 	for _, v := range supportedMap {
 		result.SupportedMissed = append(result.SupportedMissed, *v)
+	}
+	for _, v := range passthroughMap {
+		result.PassthroughMissed = append(result.PassthroughMissed, *v)
 	}
 	for _, v := range unsupportedMap {
 		result.Unsupported = append(result.Unsupported, *v)
@@ -218,6 +241,9 @@ func runDiscoverEnhanced() error {
 	sort.Slice(result.Unsupported, func(i, j int) bool {
 		return result.Unsupported[i].Count > result.Unsupported[j].Count
 	})
+	sort.Slice(result.PassthroughMissed, func(i, j int) bool {
+		return result.PassthroughMissed[i].Count > result.PassthroughMissed[j].Count
+	})
 
 	// Get top bypass commands
 	for cmd, count := range tokmanBypassMap {
@@ -228,6 +254,9 @@ func runDiscoverEnhanced() error {
 	// Limit results
 	if len(result.SupportedMissed) > discoverLimit {
 		result.SupportedMissed = result.SupportedMissed[:discoverLimit]
+	}
+	if len(result.PassthroughMissed) > discoverLimit {
+		result.PassthroughMissed = result.PassthroughMissed[:discoverLimit]
 	}
 	if len(result.Unsupported) > discoverLimit {
 		result.Unsupported = result.Unsupported[:discoverLimit]
@@ -356,21 +385,21 @@ func categorizeCommand(slug string) string {
 	base := parts[0]
 
 	categories := map[string]string{
-		"git":       "git",
-		"gh":        "git",
-		"cargo":     "rust",
-		"npm":       "js",
-		"pnpm":      "js",
-		"npx":       "js",
-		"go":        "go",
-		"docker":    "container",
-		"kubectl":   "container",
-		"aws":       "cloud",
-		"pytest":    "python",
-		"ruff":      "python",
-		"ls":        "system",
-		"tree":      "system",
-		"find":      "system",
+		"git":     "git",
+		"gh":      "git",
+		"cargo":   "rust",
+		"npm":     "js",
+		"pnpm":    "js",
+		"npx":     "js",
+		"go":      "go",
+		"docker":  "container",
+		"kubectl": "container",
+		"aws":     "cloud",
+		"pytest":  "python",
+		"ruff":    "python",
+		"ls":      "system",
+		"tree":    "system",
+		"find":    "system",
 	}
 
 	if cat, ok := categories[base]; ok {
@@ -431,6 +460,22 @@ func printDiscoverText(result *DiscoverResult) error {
 		fmt.Println()
 	}
 
+	if len(result.PassthroughMissed) > 0 {
+		fmt.Printf("%s\n", cyan("Passthrough Coverage"))
+		fmt.Println(strings.Repeat("─", 60))
+		fmt.Printf("%-24s %4s %12s %12s\n", "Command", "Cnt", "Category", "Equivalent")
+		fmt.Println(strings.Repeat("─", 60))
+		for _, cmd := range result.PassthroughMissed {
+			fmt.Printf("%-24s %4d %12s %12s\n",
+				shared.Truncate(cmd.Command, 24),
+				cmd.Count,
+				cmd.Category,
+				shared.Truncate(cmd.TokManEquiv, 12),
+			)
+		}
+		fmt.Println()
+	}
+
 	if result.TokManBypassCount > 0 {
 		fmt.Printf("%s %d\n", yellow("⚠️  TOKMAN_DISABLED bypasses detected:"), result.TokManBypassCount)
 		for _, cmd := range result.TokManBypassCmds {
@@ -448,7 +493,7 @@ func printDiscoverText(result *DiscoverResult) error {
 		fmt.Println()
 	}
 
-	if len(result.SupportedMissed) == 0 && result.TokManBypassCount == 0 {
+	if len(result.SupportedMissed) == 0 && len(result.PassthroughMissed) == 0 && result.TokManBypassCount == 0 {
 		fmt.Printf("%s\n", green("✓ All commands are optimized!"))
 	}
 
@@ -568,10 +613,10 @@ func runDiscover() error {
 		// Check if it's a known wrapper opportunity
 		if category, ok := tokmanWrappers[baseCmd]; ok {
 			result.Opportunities = append(result.Opportunities, DiscoveredCommand{
-				Command:    stat.Command,
-				Count:      stat.ExecutionCount,
-				Category:   category,
-				EstSavings: stat.ReductionPct,
+				Command:     stat.Command,
+				Count:       stat.ExecutionCount,
+				Category:    category,
+				EstSavings:  stat.ReductionPct,
 				TokensSaved: stat.TotalSaved,
 			})
 		} else if stat.TotalSaved == 0 && stat.ExecutionCount >= 3 {

@@ -1,0 +1,8 @@
+./doc.go
+./helpers.go
+./lint.go
+./markdownlint.go
+./mypy.go
+./prettier.go
+./rubocop.go
+./ruff.go

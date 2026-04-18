@@ -60,7 +60,7 @@ tokman test-runner pytest -v
 tokman test-runner go test ./...
 ```
 
-### With auto-rewrite (RTK-style)
+### With auto-rewrite
 
 When using TokMan's auto-rewrite hook, test commands are automatically converted:
 

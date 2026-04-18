@@ -272,7 +272,7 @@ TokMan has built-in filters for **97+ development tools**:
 
 [**See full list →**](./docs/TOML_FILTERS.md)
 
-## 🆕 New Features (RTK-Compatible)
+## 🆕 New Features
 
 ### Generic Test Runner
 Auto-detect and run project tests with a single command:
@@ -430,25 +430,6 @@ make check          # Run all checks
 - [ ] Real-time collaboration features
 - [ ] Advanced ML-based compression
 
-## 🏆 How TokMan Compares
-
-| Feature | TokMan | RTK | OMNI | Snip | Token-MCP |
-|---------|--------|-----|------|------|-----------|
-| **Language** | Go | Rust | Rust | Go | TypeScript |
-| **Compression Layers** | **20 practical** | ~15 | Semantic | YAML | Cache |
-| **Token Reduction** | 60-90% | 60-90% | ~90% | 60-90% | 60-90% |
-| **Quality Metrics** | ✅ 6 metrics | ❌ | ❌ | ❌ | ❌ |
-| **Research-Backed** | ✅ 120+ papers | ❌ | ❌ | ❌ | ❌ |
-| **Multi-File** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **TOML Filters** | ✅ 97+ | ❌ | ✅ | ❌ | ❌ |
-| **Dashboard** | ✅ | ❌ | ✅ | ❌ | ❌ |
-| **Cost Analysis** | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Standalone Binary** | ✅ | ✅ | ✅ | ✅ | ❌ |
-
-> TokMan focuses on a practical 20-layer stack tuned for real-world usefulness and quality retention.
-
----
-
 ## ❓ FAQ
 
 <details>
@@ -485,12 +466,6 @@ Yes! Create `.toml` filter files in `~/.config/tokman/filters/`. See the [filter
 <summary><b>Is my data safe?</b></summary>
 
 TokMan processes everything locally. No data is sent externally. Telemetry is opt-in and never collects file contents. See [SECURITY.md](SECURITY.md).
-</details>
-
-<details>
-<summary><b>How does it compare to RTK?</b></summary>
-
-RTK is a Rust-based competitor with ~15 filtering strategies. TokMan has a practical 20-layer stack, quality metrics, multi-file intelligence, and cost analysis that RTK lacks.
 </details>
 
 <details>

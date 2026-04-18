@@ -1,0 +1,3 @@
+./manager.go
+./types.go
+./manager_test.go

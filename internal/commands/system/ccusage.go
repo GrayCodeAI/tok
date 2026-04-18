@@ -64,7 +64,7 @@ func runCcusage(cmd *cobra.Command, args []string) error {
 	}
 
 	// Build command args
-	cmdArgs := []string{granularity, "--json", "--since", "20250101"}
+	cmdArgs := buildCcusageArgs(granularity)
 	ccusageCmd.Args = append(ccusageCmd.Args, cmdArgs...)
 
 	if shared.Verbose > 0 {
@@ -120,7 +120,7 @@ func runCcusageAll() error {
 			return err
 		}
 
-		cmdArgs := []string{g, "--json", "--since", "20250101"}
+		cmdArgs := buildCcusageArgs(g)
 		ccusageCmd.Args = append(ccusageCmd.Args, cmdArgs...)
 
 		output, err := ccusageCmd.CombinedOutput()
@@ -160,11 +160,24 @@ type CcusagePeriod struct {
 	TotalCost           float64 `json:"totalCost"`
 }
 
+type ccusageInvocation struct {
+	Path     string
+	BaseArgs []string
+}
+
 // buildCcusageCommand creates a command to run ccusage (direct or via npx).
 func buildCcusageCommand() (*exec.Cmd, error) {
+	invocation, err := resolveCcusageInvocation()
+	if err != nil {
+		return nil, err
+	}
+	return exec.Command(invocation.Path, invocation.BaseArgs...), nil
+}
+
+func resolveCcusageInvocation() (ccusageInvocation, error) {
 	// Try direct ccusage first
 	if _, err := exec.LookPath("ccusage"); err == nil {
-		return exec.Command("ccusage"), nil
+		return ccusageInvocation{Path: "ccusage"}, nil
 	}
 
 	// Try npx ccusage
@@ -172,10 +185,15 @@ func buildCcusageCommand() (*exec.Cmd, error) {
 	npxCheck.Stdout = nil
 	npxCheck.Stderr = nil
 	if err := npxCheck.Run(); err == nil {
-		return exec.Command("npx", "ccusage"), nil
+		return ccusageInvocation{Path: "npx", BaseArgs: []string{"ccusage"}}, nil
 	}
 
-	return nil, fmt.Errorf("ccusage not found. Install with: npm i -g ccusage")
+	return ccusageInvocation{}, fmt.Errorf("ccusage not found. Install with: npm i -g ccusage")
+}
+
+func buildCcusageArgs(granularity string) []string {
+	args := []string{granularity, "--json", "--since", "20250101"}
+	return args
 }
 
 // parseCcusageJSON parses ccusage JSON output.

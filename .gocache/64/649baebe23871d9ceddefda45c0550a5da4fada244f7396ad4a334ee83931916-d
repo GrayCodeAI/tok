@@ -1,0 +1,15 @@
+./doc.go
+./jest.go
+./playwright.go
+./pytest.go
+./rake.go
+./rspec.go
+./test.go
+./test_compress.go
+./vitest.go
+./exit_status_test.go
+./generic_test.go
+./generic_test_test.go
+./integration_test.go
+./rake_test.go
+./rspec_test.go

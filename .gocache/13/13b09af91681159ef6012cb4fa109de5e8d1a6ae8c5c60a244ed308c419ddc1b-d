@@ -1,0 +1,5 @@
+./detectors.go
+./report.go
+./detectors_test.go
+./regression_test.go
+./report_test.go
