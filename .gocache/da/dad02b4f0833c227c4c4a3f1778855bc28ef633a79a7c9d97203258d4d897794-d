@@ -1,0 +1,10 @@
+./bundle.go
+./cargo.go
+./doc.go
+./helpers.go
+./npm.go
+./npx.go
+./pip.go
+./pip_outdated.go
+./pnpm.go
+./bundle_test.go

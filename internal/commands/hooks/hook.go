@@ -5,11 +5,14 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/discover"
 )
 
@@ -20,17 +23,35 @@ var hookCmd = &cobra.Command{
 rewritten commands for various AI coding agent platforms.
 
 Supported platforms:
+  claude   — Claude Code PreToolUse hook
+  cursor   — Cursor preToolUse hook
   gemini   — Gemini CLI BeforeTool hook
   copilot  — GitHub Copilot (VS Code Chat + Copilot CLI)`,
 }
 
 func init() {
 	registry.Add(func() { registry.Register(hookCmd) })
+	hookCmd.AddCommand(hookClaudeCmd)
+	hookCmd.AddCommand(hookCursorCmd)
 	hookCmd.AddCommand(hookGeminiCmd)
 	hookCmd.AddCommand(hookCopilotCmd)
 }
 
-// ── Gemini CLI hook ───────────────────────────────────────────
+var hookClaudeCmd = &cobra.Command{
+	Use:   "claude",
+	Short: "Process Claude Code PreToolUse hook",
+	Run: func(cmd *cobra.Command, args []string) {
+		runClaudeHook()
+	},
+}
+
+var hookCursorCmd = &cobra.Command{
+	Use:   "cursor",
+	Short: "Process Cursor preToolUse hook",
+	Run: func(cmd *cobra.Command, args []string) {
+		runCursorHook()
+	},
+}
 
 var hookGeminiCmd = &cobra.Command{
 	Use:   "gemini",
@@ -44,74 +65,6 @@ Used as a Gemini CLI BeforeTool hook — install with: tokman init -g --gemini`,
 		runGeminiHook()
 	},
 }
-
-func runGeminiHook() {
-	input, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return
-	}
-
-	inputStr := strings.TrimSpace(string(input))
-	if inputStr == "" {
-		printGeminiAllow()
-		return
-	}
-
-	var v map[string]any
-	if err := json.Unmarshal([]byte(inputStr), &v); err != nil {
-		printGeminiAllow()
-		return
-	}
-
-	toolName, _ := v["tool_name"].(string)
-	if toolName != "run_shell_command" {
-		printGeminiAllow()
-		return
-	}
-
-	toolInput, ok := v["tool_input"].(map[string]any)
-	if !ok {
-		printGeminiAllow()
-		return
-	}
-
-	cmdStr, _ := toolInput["command"].(string)
-	if cmdStr == "" {
-		printGeminiAllow()
-		return
-	}
-
-	rewritten, changed := discover.RewriteCommand(cmdStr, nil)
-	if !changed {
-		printGeminiAllow()
-		return
-	}
-
-	printGeminiRewrite(rewritten)
-}
-
-func printGeminiAllow() {
-	fmt.Println(`{"decision":"allow"}`)
-}
-
-func printGeminiRewrite(cmd string) {
-	output := map[string]any{
-		"decision": "allow",
-		"hookSpecificOutput": map[string]any{
-			"tool_input": map[string]any{
-				"command": cmd,
-			},
-		},
-	}
-	data, err := json.Marshal(output)
-	if err != nil {
-		printGeminiAllow()
-		return
-	}
-	fmt.Println(string(data))
-}
-
-// ── Copilot hook (VS Code + Copilot CLI) ──────────────────────
 
 type copilotHookFormat int
 
@@ -134,34 +87,98 @@ Used as a Copilot preToolUse hook — install with: tokman init -g --copilot`,
 	},
 }
 
+func runClaudeHook() {
+	input, ok := readHookJSON()
+	if !ok {
+		return
+	}
+
+	output, action, rewritten, ok := processClaudePayload(input)
+	if !ok {
+		return
+	}
+
+	recordHookAudit(action, hookCommandFromPayload(input), rewritten)
+	writeHookJSON(output)
+}
+
+func runCursorHook() {
+	input, ok := readHookJSON()
+	if !ok {
+		fmt.Println("{}")
+		return
+	}
+
+	output, action, rewritten := processCursorPayload(input)
+	recordHookAudit(action, hookCommandFromPayload(input), rewritten)
+	if output == nil {
+		fmt.Println("{}")
+		return
+	}
+	writeHookJSON(output)
+}
+
+func runGeminiHook() {
+	input, ok := readHookJSON()
+	if !ok {
+		printGeminiAllow()
+		return
+	}
+
+	output, action, original, rewritten := processGeminiPayload(input)
+	recordHookAudit(action, original, rewritten)
+	if output == nil {
+		printGeminiAllow()
+		return
+	}
+	writeHookJSON(output)
+}
+
 func runCopilotHook() {
-	input, err := io.ReadAll(os.Stdin)
-	if err != nil {
+	input, ok := readHookJSON()
+	if !ok {
 		return
 	}
 
-	inputStr := strings.TrimSpace(string(input))
-	if inputStr == "" {
-		return
-	}
-
-	var v map[string]any
-	if err := json.Unmarshal([]byte(inputStr), &v); err != nil {
-		fmt.Fprintln(os.Stderr, "[tokman hook] Failed to parse JSON input:", err)
-		return
-	}
-
-	format, command := detectCopilotFormat(v)
+	format, command := detectCopilotFormat(input)
 	switch format {
 	case copilotFormatVsCode:
-		handleCopilotVsCode(command)
+		output, action, rewritten, ok := processVSCodeCommand(command)
+		if !ok {
+			return
+		}
+		recordHookAudit(action, command, rewritten)
+		writeHookJSON(output)
 	case copilotFormatCli:
-		handleCopilotCli(command)
+		output, action, rewritten := processCopilotCLICommand(command)
+		recordHookAudit(action, command, rewritten)
+		if output == nil {
+			fmt.Println("{}")
+			return
+		}
+		writeHookJSON(output)
 	}
 }
 
+func readHookJSON() (map[string]any, bool) {
+	input, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return nil, false
+	}
+	inputStr := strings.TrimSpace(string(input))
+	if inputStr == "" {
+		return nil, false
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(inputStr), &payload); err != nil {
+		fmt.Fprintln(os.Stderr, "[tokman hook] Failed to parse JSON input:", err)
+		return nil, false
+	}
+	return payload, true
+}
+
 func detectCopilotFormat(v map[string]any) (copilotHookFormat, string) {
-	// VS Code Copilot Chat / Claude Code: snake_case keys
 	if toolName, ok := v["tool_name"].(string); ok {
 		switch toolName {
 		case "runTerminalCommand", "Bash", "bash":
@@ -174,7 +191,6 @@ func detectCopilotFormat(v map[string]any) (copilotHookFormat, string) {
 		return copilotFormatPassThrough, ""
 	}
 
-	// Copilot CLI: camelCase keys, toolArgs is a JSON-encoded string
 	if toolName, ok := v["toolName"].(string); ok && toolName == "bash" {
 		if toolArgsStr, ok := v["toolArgs"].(string); ok {
 			var toolArgs map[string]any
@@ -190,22 +206,197 @@ func detectCopilotFormat(v map[string]any) (copilotHookFormat, string) {
 	return copilotFormatPassThrough, ""
 }
 
-func handleCopilotVsCode(cmd string) {
-	rewritten, changed := discover.RewriteCommand(cmd, nil)
-	if !changed {
-		return
+func processClaudePayload(payload map[string]any) (map[string]any, string, string, bool) {
+	command := hookCommandFromPayload(payload)
+	if command == "" {
+		return nil, "", "", false
+	}
+	return processVSCodeCommand(command)
+}
+
+func processCursorPayload(payload map[string]any) (map[string]any, string, string) {
+	command := hookCommandFromPayload(payload)
+	if command == "" {
+		return nil, "skip:ignored", ""
 	}
 
-	output := map[string]any{
+	decision := checkCommandPermissions(command)
+	if decision == PermissionDeny {
+		return nil, "skip:deny_rule", ""
+	}
+
+	rewritten, changed := rewriteHookCommand(command)
+	if !changed {
+		return nil, "skip:no_match", ""
+	}
+
+	permission := "ask"
+	if decision == PermissionAllow {
+		permission = "allow"
+	}
+	return map[string]any{
+		"permission": permission,
+		"updated_input": map[string]any{
+			"command": rewritten,
+		},
+	}, "rewrite", rewritten
+}
+
+func processGeminiPayload(payload map[string]any) (map[string]any, string, string, string) {
+	toolName, _ := payload["tool_name"].(string)
+	if toolName != "run_shell_command" {
+		return nil, "skip:ignored", "", ""
+	}
+
+	command := hookCommandFromPayload(payload)
+	if command == "" {
+		return nil, "skip:ignored", "", ""
+	}
+
+	if checkCommandPermissions(command) == PermissionDeny {
+		return map[string]any{
+			"decision": "deny",
+			"reason":   "Blocked by TokMan permission rule",
+		}, "skip:deny_rule", command, ""
+	}
+
+	rewritten, changed := rewriteHookCommand(command)
+	if !changed {
+		return nil, "skip:no_match", command, ""
+	}
+
+	return map[string]any{
+		"decision": "allow",
 		"hookSpecificOutput": map[string]any{
-			"hookEventName":            "PreToolUse",
-			"permissionDecision":       "allow",
-			"permissionDecisionReason": "TokMan auto-rewrite",
-			"updatedInput": map[string]any{
+			"tool_input": map[string]any{
 				"command": rewritten,
 			},
 		},
+	}, "rewrite", command, rewritten
+}
+
+func processVSCodeCommand(command string) (map[string]any, string, string, bool) {
+	decision := checkCommandPermissions(command)
+	if decision == PermissionDeny {
+		return map[string]any{
+			"hookSpecificOutput": map[string]any{
+				"hookEventName":            "PreToolUse",
+				"permissionDecision":       "deny",
+				"permissionDecisionReason": "Command denied by TokMan permission rules",
+			},
+		}, "skip:deny_rule", "", true
 	}
+
+	rewritten, changed := rewriteHookCommand(command)
+	if !changed {
+		return nil, "skip:no_match", "", false
+	}
+
+	return buildCopilotVSCodeResponse(command, rewritten), "rewrite", rewritten, true
+}
+
+func processCopilotCLICommand(command string) (map[string]any, string, string) {
+	if checkCommandPermissions(command) == PermissionDeny {
+		return map[string]any{
+			"permissionDecision":       "deny",
+			"permissionDecisionReason": "Blocked by TokMan permission rule",
+		}, "skip:deny_rule", ""
+	}
+
+	rewritten, changed := rewriteHookCommand(command)
+	if !changed {
+		return nil, "skip:no_match", ""
+	}
+
+	return map[string]any{
+		"permissionDecision":       "deny",
+		"permissionDecisionReason": fmt.Sprintf("Token savings: use `%s` instead (tokman saves 60-90%% tokens)", rewritten),
+	}, "rewrite", rewritten
+}
+
+func rewriteHookCommand(command string) (string, bool) {
+	if isHookExcluded(command) {
+		return "", false
+	}
+	rewritten, changed := discover.RewriteCommand(command, nil)
+	if !changed || rewritten == command {
+		return "", false
+	}
+	return rewritten, true
+}
+
+func isHookExcluded(command string) bool {
+	cfg, err := config.Load("")
+	if err != nil || cfg == nil {
+		return false
+	}
+	trimmed := strings.TrimSpace(command)
+	for _, excluded := range cfg.Hooks.ExcludedCommands {
+		excluded = strings.TrimSpace(excluded)
+		if excluded == "" {
+			continue
+		}
+		if trimmed == excluded || strings.HasPrefix(trimmed, excluded+" ") {
+			return true
+		}
+	}
+	return false
+}
+
+func hookCommandFromPayload(payload map[string]any) string {
+	toolInput, _ := payload["tool_input"].(map[string]any)
+	command, _ := toolInput["command"].(string)
+	return strings.TrimSpace(command)
+}
+
+func buildCopilotVSCodeResponse(originalCmd, rewritten string) map[string]any {
+	decision := checkCommandPermissions(originalCmd)
+	reason := "TokMan auto-rewrite"
+
+	switch decision {
+	case PermissionDeny:
+		return map[string]any{
+			"hookSpecificOutput": map[string]any{
+				"hookEventName":            "PreToolUse",
+				"permissionDecision":       "deny",
+				"permissionDecisionReason": "Command denied by TokMan permission rules",
+			},
+		}
+	case PermissionAsk, PermissionDefault:
+		if decision == PermissionDefault {
+			reason = "TokMan rewrite prepared; confirm command under default least-privilege policy"
+		} else {
+			reason = "TokMan rewrite prepared; command matches ask rule"
+		}
+		return map[string]any{
+			"hookSpecificOutput": map[string]any{
+				"hookEventName":            "PreToolUse",
+				"permissionDecision":       "ask",
+				"permissionDecisionReason": reason,
+				"updatedInput": map[string]any{
+					"command": rewritten,
+				},
+			},
+		}
+	default:
+		return map[string]any{
+			"hookSpecificOutput": map[string]any{
+				"hookEventName":            "PreToolUse",
+				"permissionDecision":       "allow",
+				"permissionDecisionReason": reason,
+				"updatedInput": map[string]any{
+					"command": rewritten,
+				},
+			},
+		}
+	}
+}
+
+func printGeminiAllow() {
+	fmt.Println(`{"decision":"allow"}`)
+}
+
+func writeHookJSON(output map[string]any) {
 	data, err := json.Marshal(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[tokman hook] Failed to marshal output: %v\n", err)
@@ -214,21 +405,66 @@ func handleCopilotVsCode(cmd string) {
 	fmt.Println(string(data))
 }
 
-func handleCopilotCli(cmd string) {
-	rewritten, changed := discover.RewriteCommand(cmd, nil)
-	if !changed {
-		fmt.Println("{}")
+func recordHookAudit(action, originalCmd, rewrittenCmd string) {
+	auditEnabled := strings.EqualFold(os.Getenv("TOKMAN_HOOK_AUDIT"), "1") ||
+		strings.EqualFold(os.Getenv("TOKMAN_HOOK_AUDIT"), "true")
+	if !auditEnabled || action == "" || originalCmd == "" {
 		return
 	}
 
-	output := map[string]any{
-		"permissionDecision":       "deny",
-		"permissionDecisionReason": fmt.Sprintf("Token savings: use `%s` instead (tokman saves 60-90%% tokens)", rewritten),
+	logPath := getAuditLogPath()
+	if err := os.MkdirAll(filepath.Dir(logPath), 0755); err != nil {
+		return
+	}
+
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	line := fmt.Sprintf(
+		"%s | %s | %s | %s\n",
+		time.Now().UTC().Format("2006-01-02T15:04:05Z"),
+		sanitizeAuditField(action),
+		sanitizeAuditField(originalCmd),
+		sanitizeAuditField(rewrittenCmd),
+	)
+	_, _ = file.WriteString(line)
+}
+
+func sanitizeAuditField(value string) string {
+	return strings.NewReplacer("\\", "\\\\", "|", "\\|", "\n", "\\n", "\r", "\\r").Replace(value)
+}
+
+func runClaudeInner(input string) string {
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(input), &payload); err != nil {
+		return ""
+	}
+	output, _, _, ok := processClaudePayload(payload)
+	if !ok || output == nil {
+		return ""
 	}
 	data, err := json.Marshal(output)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[tokman hook] Failed to marshal output: %v\n", err)
-		return
+		return ""
 	}
-	fmt.Println(string(data))
+	return string(data)
+}
+
+func runCursorInner(input string) string {
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(input), &payload); err != nil {
+		return "{}"
+	}
+	output, _, _ := processCursorPayload(payload)
+	if output == nil {
+		return "{}"
+	}
+	data, err := json.Marshal(output)
+	if err != nil {
+		return "{}"
+	}
+	return string(data)
 }

@@ -59,6 +59,10 @@ tokman discover
 
 # View current status
 tokman status
+
+# Inspect or delete local telemetry data
+tokman telemetry --status
+tokman telemetry --forget
 ```
 
 ## How It Works
@@ -85,6 +89,9 @@ tokman init --claude
 # Cursor
 tokman init --cursor
 
+# Remove an integration cleanly
+tokman init --claude --uninstall
+
 # Windsurf
 tokman init --windsurf
 
@@ -105,7 +112,7 @@ tokman doctor — diagnosing setup
   ✓ Binary: /usr/local/bin/tokman
   ✓ Config Dir: /home/user/.config/tokman
   ✓ Database: /home/user/.local/share/tokman/tracking.db
-  ✓ Shell Hook: /home/user/.claude/hooks/tokman.sh
+  ✓ Shell Hook: /home/user/.claude/hooks/tokman-rewrite.sh
   ✓ PATH: /usr/local/bin/tokman
   ✓ Platform: linux/amd64 Go go1.26.0
   ✓ Tokenizer: tiktoken-go (embedded)

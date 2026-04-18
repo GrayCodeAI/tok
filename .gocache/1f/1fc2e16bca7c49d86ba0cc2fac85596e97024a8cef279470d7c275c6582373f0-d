@@ -1,0 +1,3 @@
+./discover.go
+./discover_bench_test.go
+./discover_test.go

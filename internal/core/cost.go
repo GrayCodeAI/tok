@@ -1,6 +1,9 @@
 package core
 
-import "sync"
+import (
+	"strings"
+	"sync"
+)
 
 // ModelPricing holds per-token pricing for a model.
 type ModelPricing struct {
@@ -63,9 +66,14 @@ var CommonModelPricing = map[string]ModelPricing{
 
 var pricingMu sync.RWMutex
 
+func normalizeModelPricingKey(model string) string {
+	return strings.ToLower(strings.TrimSpace(model))
+}
+
 // RegisterModelPricing adds or overwrites pricing for a model at runtime.
 // This allows users and plugins to keep pricing current without code changes.
 func RegisterModelPricing(model string, input, output float64) {
+	model = normalizeModelPricingKey(model)
 	pricingMu.Lock()
 	CommonModelPricing[model] = ModelPricing{
 		Model:            model,
@@ -77,12 +85,22 @@ func RegisterModelPricing(model string, input, output float64) {
 
 // GetModelPricing returns the pricing for a model, or the default if unknown.
 func GetModelPricing(model string) ModelPricing {
+	model = normalizeModelPricingKey(model)
 	pricingMu.RLock()
 	defer pricingMu.RUnlock()
 	if p, ok := CommonModelPricing[model]; ok {
 		return p
 	}
 	return CommonModelPricing["gpt-4o-mini"]
+}
+
+// HasModelPricing reports whether a model has an explicit pricing entry.
+func HasModelPricing(model string) bool {
+	model = normalizeModelPricingKey(model)
+	pricingMu.RLock()
+	defer pricingMu.RUnlock()
+	_, ok := CommonModelPricing[model]
+	return ok
 }
 
 // CalculateSavings computes dollar savings from token reduction.

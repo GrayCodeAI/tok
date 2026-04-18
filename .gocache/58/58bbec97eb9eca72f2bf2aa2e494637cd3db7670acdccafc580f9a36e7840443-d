@@ -1,0 +1,9 @@
+./doc.go
+./jest.go
+./playwright.go
+./pytest.go
+./rake.go
+./rspec.go
+./test.go
+./test_compress.go
+./vitest.go

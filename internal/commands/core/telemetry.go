@@ -12,13 +12,16 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/GrayCodeAI/tokman/internal/commands/shared"
 	"github.com/GrayCodeAI/tokman/internal/config"
+	telemetrylib "github.com/GrayCodeAI/tokman/internal/telemetry"
 )
 
 var (
 	telemetryStatus  bool
 	telemetryEnable  bool
 	telemetryDisable bool
+	telemetryForget  bool
 	telemetryExport  string
 	telemetryFormat  string
 )
@@ -45,6 +48,7 @@ Examples:
   tokman telemetry --status     # Check current telemetry status
   tokman telemetry --enable     # Enable telemetry
   tokman telemetry --disable    # Disable telemetry
+  tokman telemetry --forget     # Delete local telemetry data and consent
   tokman telemetry --export data.json  # Export collected data`,
 	Annotations: map[string]string{
 		"tokman:skip_integrity": "true",
@@ -57,13 +61,14 @@ func init() {
 	telemetryCmd.Flags().BoolVar(&telemetryStatus, "status", false, "Show telemetry status")
 	telemetryCmd.Flags().BoolVar(&telemetryEnable, "enable", false, "Enable telemetry collection")
 	telemetryCmd.Flags().BoolVar(&telemetryDisable, "disable", false, "Disable telemetry collection")
+	telemetryCmd.Flags().BoolVar(&telemetryForget, "forget", false, "Delete local telemetry data and consent")
 	telemetryCmd.Flags().StringVar(&telemetryExport, "export", "", "Export telemetry data to file")
 	telemetryCmd.Flags().StringVar(&telemetryFormat, "format", "json", "Export format (json, csv)")
 }
 
 func runTelemetry(cmd *cobra.Command, args []string) error {
 	// Default to showing status if no flags provided
-	if !telemetryStatus && !telemetryEnable && !telemetryDisable && telemetryExport == "" {
+	if !telemetryStatus && !telemetryEnable && !telemetryDisable && !telemetryForget && telemetryExport == "" {
 		telemetryStatus = true
 	}
 
@@ -73,6 +78,10 @@ func runTelemetry(cmd *cobra.Command, args []string) error {
 
 	if telemetryDisable {
 		return disableTelemetry()
+	}
+
+	if telemetryForget {
+		return forgetTelemetry()
 	}
 
 	if telemetryExport != "" {
@@ -222,6 +231,18 @@ func showTelemetryStatus() error {
 	if dataSize > 0 {
 		fmt.Printf("Data size:   %d KB\n", dataSize/1024)
 	}
+	if stats, err := telemetrylib.GetLocalEventStats(); err == nil && stats.TotalEvents > 0 {
+		fmt.Printf("Events:      %d\n", stats.TotalEvents)
+		if stats.LastEventAt != "" {
+			fmt.Printf("Last event:  %s\n", stats.LastEventAt)
+		}
+		if len(stats.TopCommands) > 0 {
+			fmt.Printf("Top cmds:    %s\n", strings.Join(stats.TopCommands, ", "))
+		}
+		if len(stats.TopTestRunners) > 0 {
+			fmt.Printf("Test use:    %s\n", strings.Join(stats.TopTestRunners, ", "))
+		}
+	}
 
 	fmt.Println()
 	fmt.Println("GDPR Compliance:")
@@ -233,8 +254,23 @@ func showTelemetryStatus() error {
 	fmt.Println("Commands:")
 	fmt.Println("  tokman telemetry --enable    Enable telemetry")
 	fmt.Println("  tokman telemetry --disable   Disable telemetry")
+	fmt.Println("  tokman telemetry --forget    Delete local telemetry data")
 	fmt.Println("  tokman telemetry --export    Export your data")
 
+	return nil
+}
+
+func forgetTelemetry() error {
+	if err := telemetrylib.ForgetConsent(); err != nil {
+		return fmt.Errorf("failed to delete local telemetry data: %w", err)
+	}
+	if err := os.Remove(telemetryConfigPath()); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to delete telemetry config: %w", err)
+	}
+
+	green := color.New(color.FgGreen).SprintFunc()
+	fmt.Printf("%s Local telemetry data deleted\n", green("✓"))
+	fmt.Println("Telemetry consent has been cleared.")
 	return nil
 }
 
@@ -261,6 +297,9 @@ func exportTelemetry(outputPath, format string) error {
 		"telemetry":   cfg,
 		"summary":     collectTelemetrySummary(),
 	}
+	if events, err := telemetrylib.RecentLocalEvents(1000); err == nil && len(events) > 0 {
+		data["events"] = events
+	}
 
 	var output []byte
 	if format == "csv" {
@@ -283,13 +322,15 @@ func exportTelemetry(outputPath, format string) error {
 }
 
 func collectTelemetrySummary() map[string]interface{} {
-	// This is a placeholder - in a real implementation, this would
-	// read from the telemetry database
-	return map[string]interface{}{
-		"note":               "Telemetry data collection is a stub implementation",
-		"commands_tracked":   0,
-		"tokens_saved_total": 0,
+	tracker, err := shared.OpenTracker()
+	if err != nil {
+		return map[string]interface{}{
+			"tracking_error": err.Error(),
+		}
 	}
+	defer tracker.Close()
+
+	return telemetrylib.BuildExportSummary(tracker)
 }
 
 func exportAsCSV(data map[string]interface{}) string {

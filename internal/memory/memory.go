@@ -5,6 +5,11 @@ package memory
 
 import "time"
 
+// IsStub reports whether this package is a placeholder implementation.
+func IsStub() bool {
+	return true
+}
+
 // MemoryItem represents an item in the memory store (stub).
 type MemoryItem struct {
 	Content   string

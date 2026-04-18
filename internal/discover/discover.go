@@ -1,5 +1,5 @@
 // Package discover provides command discovery and auto-rewrite functionality.
-// This package implements RTK-style command rewriting for transparent tokman integration.
+// It implements transparent TokMan command rewriting for supported shells and agents.
 package discover
 
 import (
@@ -39,7 +39,16 @@ type CommandPattern struct {
 	Priority    int // Higher priority patterns are checked first
 }
 
-// Common rewrite patterns for RTK-style auto-rewrite
+// SupportLevel describes how well TokMan handles a command family.
+type SupportLevel string
+
+const (
+	SupportOptimized   SupportLevel = "optimized"
+	SupportPassthrough SupportLevel = "passthrough"
+	SupportUnsupported SupportLevel = "unsupported"
+)
+
+// Common rewrite patterns for TokMan auto-rewrite
 var rewritePatterns = []CommandPattern{
 	// Test runners - high priority
 	{Name: "cargo test", Pattern: regexp.MustCompile(`^cargo\s+test`), Rewrite: "tokman cargo test", Description: "Rust tests", Priority: 100},
@@ -107,9 +116,11 @@ type RewriteOptions struct {
 	PreferExplicit bool
 	// DisableCache disables caching for this rewrite
 	DisableCache bool
+	// SkipTelemetry disables rewrite telemetry emission
+	SkipTelemetry bool
 }
 
-// RewriteCommand rewrites a command using tokman equivalents (RTK-style).
+// RewriteCommand rewrites a command using TokMan equivalents.
 // Returns the rewritten command and true if a rewrite occurred.
 // Results are cached for performance.
 func RewriteCommand(cmd string, opts interface{}) (string, bool) {
@@ -165,6 +176,9 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 				rewriteCache.Unlock()
 			}
 
+			if !options.SkipTelemetry {
+				telemetry.TrackRewrite(cmd, rewritten, isTestCommand(trimmed))
+			}
 			return rewritten, true
 		}
 	}
@@ -181,7 +195,9 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 				rewriteCache.Unlock()
 			}
 
-			telemetry.TrackRewrite(cmd, rewritten, true)
+			if !options.SkipTelemetry {
+				telemetry.TrackRewrite(cmd, rewritten, true)
+			}
 			return rewritten, true
 		}
 	}
@@ -194,6 +210,22 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 	}
 
 	return cmd, false
+}
+
+// ClassifyCommand returns TokMan support level and the recommended TokMan equivalent when known.
+func ClassifyCommand(cmd string) (string, SupportLevel) {
+	rewritten, changed := RewriteCommand(cmd, &RewriteOptions{
+		DisableCache:      true,
+		DisableTestRunner: false,
+		SkipTelemetry:     true,
+	})
+	if changed && rewritten != cmd {
+		return rewritten, SupportOptimized
+	}
+	if rewritten, ok := detectPassthroughCommand(cmd); ok {
+		return rewritten, SupportPassthrough
+	}
+	return cmd, SupportUnsupported
 }
 
 // GetCacheStats returns cache hit/miss statistics
@@ -257,22 +289,8 @@ func detectTestRunner(cmd string) string {
 
 // DetectCommand detects if a command is known and can be rewritten.
 func DetectCommand(cmd string) bool {
-	if cmd == "" {
-		return false
-	}
-
-	trimmed := strings.TrimSpace(cmd)
-	if strings.HasPrefix(trimmed, "tokman ") {
-		return false
-	}
-
-	for _, pattern := range rewritePatterns {
-		if pattern.Pattern.MatchString(trimmed) {
-			return true
-		}
-	}
-
-	return false
+	_, level := ClassifyCommand(cmd)
+	return level != SupportUnsupported
 }
 
 // KnownCommands returns list of known command patterns.
@@ -300,4 +318,40 @@ func ShouldRewriteFile(filename string) bool {
 		return true
 	}
 	return false
+}
+
+func detectPassthroughCommand(cmd string) (string, bool) {
+	fields := strings.Fields(strings.TrimSpace(cmd))
+	if len(fields) < 2 {
+		return "", false
+	}
+
+	if !isKnownPassthroughRoot(fields[0]) {
+		return "", false
+	}
+	if fields[0] == "git" && isExplicitGitOptimization(fields[1]) {
+		return "", false
+	}
+	return "tokman " + strings.TrimSpace(cmd), true
+}
+
+func isKnownPassthroughRoot(root string) bool {
+	switch root {
+	case "git", "gh", "docker", "kubectl", "aws", "npm", "pnpm", "npx", "pip", "go",
+		"cargo", "ruff", "terraform", "helm", "ansible", "make", "gradle", "mvn", "mix",
+		"bundle", "rake", "rspec", "next", "prisma", "tsc", "curl", "wget", "jq",
+		"ls", "grep", "find", "tree", "wc", "df", "du", "mise", "just":
+		return true
+	default:
+		return false
+	}
+}
+
+func isExplicitGitOptimization(subcommand string) bool {
+	switch subcommand {
+	case "status", "log", "diff", "add", "commit", "push", "pull", "show", "branch", "fetch", "stash", "worktree":
+		return true
+	default:
+		return false
+	}
 }

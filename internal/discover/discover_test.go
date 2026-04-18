@@ -126,9 +126,9 @@ func TestRewriteCommandWithOptions(t *testing.T) {
 			wantBool: true,
 		},
 		{
-			name: "prefer explicit",
-			cmd:  "npm test",
-			opts: &RewriteOptions{PreferExplicit: true},
+			name:     "prefer explicit",
+			cmd:      "npm test",
+			opts:     &RewriteOptions{PreferExplicit: true},
 			wantCmd:  "tokman npm test",
 			wantBool: true,
 		},
@@ -172,6 +172,11 @@ func TestDetectCommand(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "passthrough command - terraform plan",
+			cmd:  "terraform plan",
+			want: true,
+		},
+		{
 			name: "unknown command",
 			cmd:  "unknown-cmd",
 			want: false,
@@ -192,6 +197,46 @@ func TestDetectCommand(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := DetectCommand(tt.cmd); got != tt.want {
 				t.Errorf("DetectCommand() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClassifyCommand(t *testing.T) {
+	tests := []struct {
+		name      string
+		cmd       string
+		wantCmd   string
+		wantLevel SupportLevel
+	}{
+		{
+			name:      "optimized command",
+			cmd:       "git status",
+			wantCmd:   "tokman git status",
+			wantLevel: SupportOptimized,
+		},
+		{
+			name:      "passthrough command",
+			cmd:       "terraform plan",
+			wantCmd:   "tokman terraform plan",
+			wantLevel: SupportPassthrough,
+		},
+		{
+			name:      "unsupported command",
+			cmd:       "unknown-cmd foo",
+			wantCmd:   "unknown-cmd foo",
+			wantLevel: SupportUnsupported,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotCmd, gotLevel := ClassifyCommand(tt.cmd)
+			if gotCmd != tt.wantCmd {
+				t.Fatalf("ClassifyCommand() cmd = %q, want %q", gotCmd, tt.wantCmd)
+			}
+			if gotLevel != tt.wantLevel {
+				t.Fatalf("ClassifyCommand() level = %q, want %q", gotLevel, tt.wantLevel)
 			}
 		})
 	}

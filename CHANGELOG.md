@@ -15,10 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub issue templates (bug report, feature request)
 - Pull request template with detailed checklist
 - MASTER_TASK_LIST.md with 1100+ development tasks
-- Competitive analysis documentation:
-  - `docs/DEEP_COMPETITIVE_ANALYSIS.md` - Complete analysis of RTK, OMNI, Snip, Token-MCP
-  - `docs/COMPETITOR_SUMMARY.md` - Executive summary with roadmap
-  - Updated `docs/COMPREHENSIVE_OSS_COMPETITORS.md` with all 15+ verified competitors
+- market and ecosystem research documentation
 
 ### Changed
 
@@ -26,9 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
-- Created comprehensive competitive landscape analysis
-- Documented 4 major competitors and 11+ minor ones
-- Identified critical gaps and created 6-month roadmap
+- Created broader product research and roadmap notes
 
 ## [0.28.2] - 2026-04-03
 

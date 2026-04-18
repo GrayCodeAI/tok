@@ -1,0 +1,6 @@
+./doc.go
+./golangci.go
+./make.go
+./next.go
+./prisma.go
+./tsc.go

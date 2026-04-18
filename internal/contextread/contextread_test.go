@@ -1,150 +1,83 @@
 package contextread
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestOptions(t *testing.T) {
-	opts := Options{
-		Mode:              "full",
-		Level:             "debug",
-		MaxLines:          100,
-		MaxTokens:         1000,
-		LineNumbers:       true,
-		StartLine:         10,
-		EndLine:           50,
-		SaveSnapshot:      true,
-		RelatedFilesCount: 5,
-	}
+func TestBuildSignaturesAndLineNumbers(t *testing.T) {
+	dataHome := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	if opts.Mode != "full" {
-		t.Error("Mode not set correctly")
+	content := strings.Join([]string{
+		"package main",
+		"",
+		"// comment",
+		"type User struct{}",
+		"func main() {",
+		`  fmt.Println("hello")`,
+		"}",
+	}, "\n")
+
+	out, orig, filt, err := Build("main.go", content, "", Options{
+		Mode:        "signatures",
+		LineNumbers: true,
+	})
+	if err != nil {
+		t.Fatalf("Build() error = %v", err)
 	}
-	if opts.MaxLines != 100 {
-		t.Error("MaxLines not set correctly")
+	if orig <= 0 || filt <= 0 {
+		t.Fatalf("unexpected token counts: orig=%d filt=%d", orig, filt)
 	}
-	if !opts.LineNumbers {
-		t.Error("LineNumbers not set correctly")
+	if !strings.Contains(out, "package main") || !strings.Contains(out, "type User struct{}") {
+		t.Fatalf("signature output missing expected lines:\n%s", out)
+	}
+	if !strings.Contains(out, "   1 |") {
+		t.Fatalf("expected line numbers in output:\n%s", out)
 	}
 }
 
-func TestTrackedCommandPatternsForKind(t *testing.T) {
-	patterns := TrackedCommandPatternsForKind("test")
-	// Stub returns nil
-	if patterns != nil {
-		t.Errorf("expected nil, got %v", patterns)
+func TestBuildDeltaUsesSnapshots(t *testing.T) {
+	dataHome := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", dataHome)
+
+	path := filepath.Join(t.TempDir(), "main.go")
+	initial := "package main\nfunc main() {}\n"
+	if _, _, _, err := Build(path, initial, "", Options{Mode: "auto", SaveSnapshot: true}); err != nil {
+		t.Fatalf("initial Build() error = %v", err)
 	}
 
-	// Test with different kinds
-	patterns = TrackedCommandPatternsForKind("")
-	if patterns != nil {
-		t.Error("expected nil for empty kind")
+	updated := "package main\nfunc main() {\n  println(\"changed\")\n}\n"
+	out, _, _, err := Build(path, updated, "", Options{Mode: "delta", SaveSnapshot: false})
+	if err != nil {
+		t.Fatalf("delta Build() error = %v", err)
+	}
+	if !strings.Contains(out, "# Delta for") || !strings.Contains(out, "~ ") {
+		t.Fatalf("unexpected delta output:\n%s", out)
 	}
 }
 
 func TestTrackedCommandPatterns(t *testing.T) {
 	patterns := TrackedCommandPatterns()
-	// Stub returns nil
-	if patterns != nil {
-		t.Errorf("expected nil, got %v", patterns)
+	if len(patterns) == 0 {
+		t.Fatal("TrackedCommandPatterns() should not be empty")
+	}
+	if got := TrackedCommandPatternsForKind("read"); len(got) == 0 {
+		t.Fatal("TrackedCommandPatternsForKind(read) should not be empty")
 	}
 }
 
-func TestBuild(t *testing.T) {
-	content := "line1\nline2\nline3"
-	opts := Options{
-		MaxLines:  10,
-		MaxTokens: 100,
-	}
+func TestBuildSavesSnapshot(t *testing.T) {
+	dataHome := t.TempDir()
+	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	result, tokens, lines, err := Build("/test/file.go", content, "go", opts)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
+	path := filepath.Join(t.TempDir(), "sample.txt")
+	if _, _, _, err := Build(path, "hello\nworld\n", "", Options{SaveSnapshot: true}); err != nil {
+		t.Fatalf("Build() error = %v", err)
 	}
-
-	// Stub returns content unchanged
-	if result != content {
-		t.Errorf("expected content unchanged, got '%s'", result)
-	}
-
-	// Tokens should be len/4
-	expectedTokens := len(content) / 4
-	if tokens != expectedTokens {
-		t.Errorf("expected tokens=%d, got %d", expectedTokens, tokens)
-	}
-
-	if lines != expectedTokens {
-		t.Errorf("expected lines=%d, got %d", expectedTokens, lines)
-	}
-}
-
-func TestBuild_EmptyContent(t *testing.T) {
-	opts := Options{}
-	result, tokens, lines, err := Build("/test/file.go", "", "go", opts)
-	if err != nil {
-		t.Errorf("unexpected error: %v", err)
-	}
-	if result != "" {
-		t.Error("expected empty result for empty input")
-	}
-	if tokens != 0 {
-		t.Errorf("expected 0 tokens for empty input, got %d", tokens)
-	}
-	if lines != 0 {
-		t.Errorf("expected 0 lines for empty input, got %d", lines)
-	}
-}
-
-func TestAnalyze(t *testing.T) {
-	content := "test content to analyze"
-	result := Analyze(content)
-
-	// Stub returns content unchanged
-	if result != content {
-		t.Errorf("expected '%s', got '%s'", content, result)
-	}
-}
-
-func TestDescribe(t *testing.T) {
-	tests := []struct {
-		path     string
-		expected string
-	}{
-		{
-			path:     "/home/user/project/main.go",
-			expected: "main.go",
-		},
-		{
-			path:     "relative/path/file.txt",
-			expected: "file.txt",
-		},
-		{
-			path:     "simple.txt",
-			expected: "simple.txt",
-		},
-		{
-			path:     "",
-			expected: "",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.path, func(t *testing.T) {
-			result := Describe(tt.path)
-			if result != tt.expected {
-				t.Errorf("Describe('%s') = '%s', want '%s'", tt.path, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestDescribe_WindowsPath(t *testing.T) {
-	// Test Windows-style paths
-	path := "C:\\Users\\test\\file.go"
-	result := Describe(path)
-	// Should handle backslash or return full path
-	if result != "file.go" && !strings.Contains(result, "file.go") {
-		t.Errorf("Describe('%s') = '%s', expected 'file.go' or containing it", path, result)
+	if _, err := os.Stat(snapshotPath(path)); err != nil {
+		t.Fatalf("snapshot not written: %v", err)
 	}
 }

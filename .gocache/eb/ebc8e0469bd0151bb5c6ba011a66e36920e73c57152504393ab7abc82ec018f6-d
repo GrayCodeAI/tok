@@ -1,0 +1,4 @@
+./doc.go
+./hook.go
+./hook_audit.go
+./permissions.go

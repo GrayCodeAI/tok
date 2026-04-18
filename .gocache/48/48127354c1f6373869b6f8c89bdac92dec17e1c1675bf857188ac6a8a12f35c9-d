@@ -1,0 +1,14 @@
+# test log
+getenv PATH
+stat /opt/homebrew/Cellar/go/1.26.1/libexec/bin/sh
+stat /Library/Frameworks/Python.framework/Versions/3.11/bin/sh
+stat /opt/homebrew/bin/sh
+stat /opt/homebrew/sbin/sh
+stat /usr/local/bin/sh
+stat /System/Cryptexes/App/usr/bin/sh
+stat /usr/bin/sh
+stat /bin/sh
+open /dev/null
+open /dev/null
+open /dev/null
+open /bin/sh

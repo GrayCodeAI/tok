@@ -250,8 +250,8 @@ func TestFormatHint(t *testing.T) {
 			expected: "[full output: ~/.local/share/tokman/tee/test.log]",
 		},
 		{
-			path:     "/tmp/rtk/tee/123_cargo_test.log",
-			expected: "[full output: /tmp/rtk/tee/123_cargo_test.log]",
+			path:     "/tmp/tokman/tee/123_cargo_test.log",
+			expected: "[full output: /tmp/tokman/tee/123_cargo_test.log]",
 		},
 	}
 

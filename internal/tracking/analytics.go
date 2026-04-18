@@ -28,45 +28,48 @@ type CommandBreakdown struct {
 
 // GainSummary represents the full gain output summary.
 type GainSummary struct {
-	TotalCommands   int                 `json:"total_commands"`
-	TotalInput      int                 `json:"total_input"`
-	TotalOutput     int                 `json:"total_output"`
-	TotalSaved      int                 `json:"total_saved"`
-	AvgSavingsPct   float64             `json:"avg_savings_pct"`
-	TotalExecTimeMs int64               `json:"total_exec_time_ms"`
-	AvgExecTimeMs   int64               `json:"avg_exec_time_ms"`
-	ByCommand       []CommandBreakdown  `json:"by_command"`
-	DailyStats      []PeriodStats       `json:"daily_stats,omitempty"`
-	WeeklyStats     []PeriodStats       `json:"weekly_stats,omitempty"`
-	MonthlyStats    []PeriodStats       `json:"monthly_stats,omitempty"`
-	RecentCommands  []CommandRecord     `json:"recent_commands,omitempty"`
+	TotalCommands   int                `json:"total_commands"`
+	TotalInput      int                `json:"total_input"`
+	TotalOutput     int                `json:"total_output"`
+	TotalSaved      int                `json:"total_saved"`
+	AvgSavingsPct   float64            `json:"avg_savings_pct"`
+	TotalExecTimeMs int64              `json:"total_exec_time_ms"`
+	AvgExecTimeMs   int64              `json:"avg_exec_time_ms"`
+	ByCommand       []CommandBreakdown `json:"by_command"`
+	DailyStats      []PeriodStats      `json:"daily_stats,omitempty"`
+	WeeklyStats     []PeriodStats      `json:"weekly_stats,omitempty"`
+	MonthlyStats    []PeriodStats      `json:"monthly_stats,omitempty"`
+	RecentCommands  []CommandRecord    `json:"recent_commands,omitempty"`
 }
 
 // GetDailyStats returns daily statistics for the last N days.
 func (t *Tracker) GetDailyStats(days int, projectPath string) ([]PeriodStats, error) {
+	projectPath = normalizeProjectPath(projectPath)
+
 	query := `
 		SELECT 
 			DATE(timestamp) as period,
 			COUNT(*) as commands,
-			SUM(original_tokens) as input_tokens,
-			SUM(filtered_tokens) as output_tokens,
-			SUM(saved_tokens) as saved_tokens,
-			SUM(exec_time_ms) as exec_time_ms
-		FROM command_history
+			COALESCE(SUM(original_tokens), 0) as input_tokens,
+			COALESCE(SUM(filtered_tokens), 0) as output_tokens,
+			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
+			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
+		FROM commands
 		WHERE timestamp >= DATE('now', '-%d days')
 	`
 	args := []interface{}{}
-	
+
 	if projectPath != "" {
-		query += ` AND (project_path = ? OR project_path LIKE ?)`
-		args = append(args, projectPath, projectPath+"/%")
+		query += ` AND (project_path GLOB ? OR project_path = ?)`
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
 	}
-	
+
 	query += `
 		GROUP BY DATE(timestamp)
 		ORDER BY period DESC
 	`
-	
+
 	query = fmt.Sprintf(query, days)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
@@ -79,29 +82,32 @@ func (t *Tracker) GetDailyStats(days int, projectPath string) ([]PeriodStats, er
 
 // GetWeeklyStats returns weekly statistics for the last N weeks.
 func (t *Tracker) GetWeeklyStats(weeks int, projectPath string) ([]PeriodStats, error) {
+	projectPath = normalizeProjectPath(projectPath)
+
 	query := `
 		SELECT 
 			strftime('%Y-W%W', timestamp) as period,
 			COUNT(*) as commands,
-			SUM(original_tokens) as input_tokens,
-			SUM(filtered_tokens) as output_tokens,
-			SUM(saved_tokens) as saved_tokens,
-			SUM(exec_time_ms) as exec_time_ms
-		FROM command_history
+			COALESCE(SUM(original_tokens), 0) as input_tokens,
+			COALESCE(SUM(filtered_tokens), 0) as output_tokens,
+			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
+			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
+		FROM commands
 		WHERE timestamp >= DATE('now', '-%d days')
 	`
 	args := []interface{}{}
-	
+
 	if projectPath != "" {
-		query += ` AND (project_path = ? OR project_path LIKE ?)`
-		args = append(args, projectPath, projectPath+"/%")
+		query += ` AND (project_path GLOB ? OR project_path = ?)`
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
 	}
-	
+
 	query += `
 		GROUP BY strftime('%Y-W%W', timestamp)
 		ORDER BY period DESC
 	`
-	
+
 	query = fmt.Sprintf(query, weeks*7)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
@@ -114,29 +120,32 @@ func (t *Tracker) GetWeeklyStats(weeks int, projectPath string) ([]PeriodStats, 
 
 // GetMonthlyStats returns monthly statistics for the last N months.
 func (t *Tracker) GetMonthlyStats(months int, projectPath string) ([]PeriodStats, error) {
+	projectPath = normalizeProjectPath(projectPath)
+
 	query := `
 		SELECT 
 			strftime('%Y-%m', timestamp) as period,
 			COUNT(*) as commands,
-			SUM(original_tokens) as input_tokens,
-			SUM(filtered_tokens) as output_tokens,
-			SUM(saved_tokens) as saved_tokens,
-			SUM(exec_time_ms) as exec_time_ms
-		FROM command_history
+			COALESCE(SUM(original_tokens), 0) as input_tokens,
+			COALESCE(SUM(filtered_tokens), 0) as output_tokens,
+			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
+			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
+		FROM commands
 		WHERE timestamp >= DATE('now', '-%d months')
 	`
 	args := []interface{}{}
-	
+
 	if projectPath != "" {
-		query += ` AND (project_path = ? OR project_path LIKE ?)`
-		args = append(args, projectPath, projectPath+"/%")
+		query += ` AND (project_path GLOB ? OR project_path = ?)`
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
 	}
-	
+
 	query += `
 		GROUP BY strftime('%Y-%m', timestamp)
 		ORDER BY period DESC
 	`
-	
+
 	query = fmt.Sprintf(query, months)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
@@ -149,30 +158,33 @@ func (t *Tracker) GetMonthlyStats(months int, projectPath string) ([]PeriodStats
 
 // GetCommandBreakdown returns statistics grouped by command.
 func (t *Tracker) GetCommandBreakdown(limit int, projectPath string) ([]CommandBreakdown, error) {
+	projectPath = normalizeProjectPath(projectPath)
+
 	query := `
 		SELECT 
 			command,
 			COUNT(*) as count,
-			SUM(original_tokens) as input_tokens,
-			SUM(filtered_tokens) as output_tokens,
-			SUM(saved_tokens) as saved_tokens
-		FROM command_history
+			COALESCE(SUM(original_tokens), 0) as input_tokens,
+			COALESCE(SUM(filtered_tokens), 0) as output_tokens,
+			COALESCE(SUM(saved_tokens), 0) as saved_tokens
+		FROM commands
 		WHERE 1=1
 	`
 	args := []interface{}{}
-	
+
 	if projectPath != "" {
-		query += ` AND (project_path = ? OR project_path LIKE ?)`
-		args = append(args, projectPath, projectPath+"/%")
+		query += ` AND (project_path GLOB ? OR project_path = ?)`
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
 	}
-	
+
 	query += `
 		GROUP BY command
 		ORDER BY saved_tokens DESC
 		LIMIT ?
 	`
 	args = append(args, limit)
-	
+
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -195,6 +207,9 @@ func (t *Tracker) GetCommandBreakdown(limit int, projectPath string) ([]CommandB
 		}
 		results = append(results, cb)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return results, nil
 }
@@ -216,14 +231,16 @@ func (t *Tracker) GetFullGainSummary(opts GainSummaryOptions) (*GainSummary, err
 	summary.AvgSavingsPct = savings.ReductionPct
 
 	// Get total execution time
-	query := `SELECT COALESCE(SUM(exec_time_ms), 0) FROM command_history WHERE 1=1`
+	query := `SELECT COALESCE(SUM(exec_time_ms), 0) FROM commands WHERE 1=1`
 	args := []interface{}{}
-	
+
 	if opts.ProjectPath != "" {
-		query += ` AND (project_path = ? OR project_path LIKE ?)`
-		args = append(args, opts.ProjectPath, opts.ProjectPath+"/%")
+		projectPath := normalizeProjectPath(opts.ProjectPath)
+		query += ` AND (project_path GLOB ? OR project_path = ?)`
+		pattern := escapeGLOB(projectPath) + "/%"
+		args = append(args, pattern, projectPath)
 	}
-	
+
 	var totalExecTime int64
 	err = t.db.QueryRow(query, args...).Scan(&totalExecTime)
 	if err != nil {

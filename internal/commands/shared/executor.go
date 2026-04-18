@@ -10,6 +10,7 @@ import (
 
 	"github.com/GrayCodeAI/tokman/internal/config"
 	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/GrayCodeAI/tokman/internal/filter" // NEW: for progress callback
 	"github.com/GrayCodeAI/tokman/internal/tee"
 	"github.com/GrayCodeAI/tokman/internal/tracking"
 	"github.com/GrayCodeAI/tokman/internal/utils"
@@ -77,8 +78,43 @@ func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 // Returns an error instead of calling os.Exit so callers control exit behavior.
 func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 	startTime := time.Now()
+
+	// Start status line
+	status := GetStatusLine()
+	statusEnabled := IsEnabled()
+	if statusEnabled {
+		status.Start(name)
+
+		// Install pipeline progress callback
+		originalCb := filter.ProgressCallback
+		filter.ProgressCallback = func(layer string, inTokens, outTokens int, progress float64) {
+			ev := StatusEvent{
+				Command:      name,
+				Stage:        "compressing",
+				Layer:        layer,
+				InputTokens:  inTokens,
+				OutputTokens: outTokens,
+				ProgressPct:  progress,
+				Timestamp:    time.Now(),
+			}
+			status.Publish(ev)
+		}
+		defer func() { filter.ProgressCallback = originalCb }()
+	}
+
 	raw, filtered, err := fn()
 	execTime := time.Since(startTime).Milliseconds()
+
+	// Clear status before printing output
+	if statusEnabled {
+		status.Done()
+	}
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Print(filtered)
 
 	if err != nil {
 		return err

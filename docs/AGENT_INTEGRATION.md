@@ -5,7 +5,7 @@
 | Rank | Agent | Platform | Hook Support | Shell Integration | Config Location |
 |------|-------|----------|--------------|-------------------|-----------------|
 | 1 | **Claude Code** | CLI/Terminal | PreToolUse, PostToolUse, Notification | Child process via shell | `~/.claude/settings.json` |
-| 2 | **Cursor** | VSCode/IDE | PreToolUse, PostToolUse | VSCode Terminal API | `~/.cursor/settings.json` |
+| 2 | **Cursor** | VSCode/IDE | preToolUse | VSCode Terminal API | `~/.cursor/hooks.json` |
 | 3 | **Aider** | CLI/Terminal | Git hooks only | Direct shell exec | `~/.aider.conf.yml` |
 | 4 | **Cline** | VSCode Extension | Hooks (v3.36+) | VSCode Terminal API | `~/.vscode/extensions/...` |
 | 5 | **OpenCode** | CLI/Terminal (Go) | Custom tools/middleware | Go exec.Command | `~/.config/opencode/config.toml` |
@@ -21,7 +21,7 @@
 
 ### Hook-Based Integration (Claude Code / Cursor)
 
-TokMan uses a **thin delegator** pattern with Claude Code's `PreToolUse` hook:
+TokMan uses a thin delegator script plus native `tokman hook <agent>` processors for Claude Code and Cursor:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -40,7 +40,7 @@ TokMan uses a **thin delegator** pattern with Claude Code's `PreToolUse` hook:
 │  │  INPUT: {"tool_input": {"command": "git status"}}   │    │
 │  │            │                                         │    │
 │  │            ▼                                         │    │
-│  │  REWRITTEN=$(tokman rewrite "$CMD") || exit 0       │    │
+│  │  exec tokman hook claude                            │    │
 │  │            │                                         │    │
 │  │            ▼                                         │    │
 │  │  OUTPUT: {"updatedInput": {"command": "tokman git status"}}│ │
@@ -60,7 +60,7 @@ TokMan uses a **thin delegator** pattern with Claude Code's `PreToolUse` hook:
 
 ### TokMan Hook Installation (`tokman init -g`)
 
-1. **Creates hook file**: `~/.claude/hooks/tokman-rewrite.sh` (45 lines)
+1. **Creates hook file**: `~/.claude/hooks/tokman-rewrite.sh`
 2. **Patches settings.json**: Adds PreToolUse hook entry
 3. **Creates TOKMAN.md**: Instructions for Claude to understand tokman commands
 4. **Patches CLAUDE.md**: Adds `@TOKMAN.md` reference
@@ -134,16 +134,17 @@ tokman init -g
 
 ### 2. Cursor (Full Support)
 
-**Method**: Same PreToolUse hook as Claude Code
-**Integration**: Configure in `~/.cursor/settings.json`
+**Method**: Native Cursor `preToolUse` hook
+**Integration**: Automatic with `tokman init --cursor`, which patches `~/.cursor/hooks.json`
 
 ```json
 {
+  "version": 1,
   "hooks": {
-    "PreToolUse": [
+    "preToolUse": [
       {
-        "matcher": "Bash",
-        "hooks": [{ "type": "command", "command": "~/.claude/hooks/tokman-rewrite.sh" }]
+        "matcher": "Shell",
+        "command": "~/.cursor/hooks/tokman-rewrite.sh"
       }
     ]
   }
@@ -165,29 +166,28 @@ alias rg='tokman grep'
 
 ### 4. Cline (VSCode Terminal)
 
-**Method**: Configure default shell with tokman
-**Integration**: VSCode settings
+**Method**: Workspace rules file
+**Integration**: `./.clinerules`
 
-```json
-{
-  "terminal.integrated.defaultProfile.linux": "bash",
-  "terminal.integrated.profiles.linux": {
-    "bash": {
-      "path": "/bin/bash",
-      "args": ["-c", "source ~/.local/share/tokman/hooks/tokman-rewrite.sh && exec bash"]
-    }
-  }
-}
+```md
+<!-- tokman:cline:start -->
+# TokMan Rules for Cline
+
+Prefer `tokman`-prefixed shell commands so large terminal output is reduced before it reaches the model.
+<!-- tokman:cline:end -->
 ```
 
 ### 5. OpenCode (Custom Tool)
 
-**Method**: Custom tool wrapper in config
-**Integration**: `~/.config/opencode/config.toml`
+**Method**: Global OpenCode plugin
+**Integration**: `~/.config/opencode/plugins/tokman.ts`
 
-```toml
-[tools.shell]
-command = "tokman proxy"
+```ts
+export const TokmanOpenCodePlugin = async ({ $ }) => ({
+  "tool.execute.before": async (input, output) => {
+    // rewrite shell commands through tokman
+  },
+})
 ```
 
 ### 6. Kiro (Lifecycle Hooks)
@@ -220,8 +220,8 @@ export TOKMAN_AUTO_REWRITE=1
 | **P0** | Claude Code | PreToolUse hook | Low | 100% |
 | **P0** | Cursor | PreToolUse hook | Low | 100% |
 | **P1** | Aider | Shell aliases | Medium | 80% |
-| **P1** | Cline | Terminal profile | Medium | 70% |
-| **P2** | OpenCode | Custom tool | Medium | 60% |
+| **P1** | Cline | Workspace rules | Low | 85% |
+| **P1** | OpenCode | Global plugin | Low | 90% |
 | **P2** | Kiro | Lifecycle hooks | Medium | 60% |
 | **P3** | Continue | Environment | Low | 30% |
 | **P3** | Others | Shell wrapper | Medium | Varies |
@@ -230,24 +230,10 @@ export TOKMAN_AUTO_REWRITE=1
 
 ## TokMan Integration TODO
 
-1. **tokman init -g** command enhancement:
-   - Auto-patch `~/.claude/settings.json`
-   - Create `~/.claude/hooks/tokman-rewrite.sh`
-   - Create `~/.claude/TOKMAN.md` instructions
-   - Add `@TOKMAN.md` to `~/.claude/CLAUDE.md`
-
-2. **Multi-agent support**:
-   - Detect which agent is running
-   - Apply appropriate integration method
-   - Support `--agent=cursor`, `--agent=aider` flags
-
-3. **Dashboard integration**:
-   - Track per-agent token savings
-   - Show integration status per agent
-
-4. **Uninstall command**:
-   - `tokman init -g --uninstall`
-   - Remove all artifacts cleanly
+1. Add explicit parity for secondary agents that still use generic hook installs instead of native config patching.
+2. Track install-state and hook adoption per agent in the future dashboard.
+3. Add richer per-agent telemetry rollups from the persisted local event history.
+4. Keep agent docs aligned with battle-tested paths instead of placeholder examples.
 
 ---
 

@@ -25,6 +25,9 @@ const HashFilename = ".tokman-hook.sha256"
 // HookFilename is the expected hook script filename
 const HookFilename = "tokman-rewrite.sh"
 
+// CurrentHookVersion is the minimum supported generated hook version.
+const CurrentHookVersion = 1
+
 // IntegrityStatus represents the result of hook integrity verification
 type IntegrityStatus int
 
@@ -39,6 +42,8 @@ const (
 	StatusNotInstalled
 	// StatusOrphanedHash indicates hash file exists but hook was deleted
 	StatusOrphanedHash
+	// StatusOutdated indicates hook exists but is older than the current generated version
+	StatusOutdated
 )
 
 // String returns a human-readable status name
@@ -54,6 +59,8 @@ func (s IntegrityStatus) String() string {
 		return "NOT_INSTALLED"
 	case StatusOrphanedHash:
 		return "ORPHANED_HASH"
+	case StatusOutdated:
+		return "OUTDATED"
 	default:
 		return "UNKNOWN"
 	}
@@ -61,11 +68,13 @@ func (s IntegrityStatus) String() string {
 
 // VerificationResult contains detailed verification results
 type VerificationResult struct {
-	Status   IntegrityStatus
-	Expected string // Expected hash (for StatusTampered)
-	Actual   string // Actual hash (for StatusTampered)
-	HookPath string // Path to the hook file
-	HashPath string // Path to the hash file
+	Status          IntegrityStatus
+	Expected        string // Expected hash (for StatusTampered)
+	Actual          string // Actual hash (for StatusTampered)
+	HookPath        string // Path to the hook file
+	HashPath        string // Path to the hash file
+	HookVersion     int
+	RequiredVersion int
 }
 
 // ComputeHash computes SHA-256 hash of a file, returned as lowercase hex
@@ -199,8 +208,9 @@ func VerifyHookAt(hookPath string) (*VerificationResult, error) {
 	hashExists := fileExists(hashFile)
 
 	result := &VerificationResult{
-		HookPath: hookPath,
-		HashPath: hashFile,
+		HookPath:        hookPath,
+		HashPath:        hashFile,
+		RequiredVersion: CurrentHookVersion,
 	}
 
 	switch {
@@ -209,6 +219,14 @@ func VerifyHookAt(hookPath string) (*VerificationResult, error) {
 	case !hookExists && hashExists:
 		result.Status = StatusOrphanedHash
 	case hookExists && !hashExists:
+		version, err := readHookVersion(hookPath)
+		if err == nil {
+			result.HookVersion = version
+			if version < CurrentHookVersion {
+				result.Status = StatusOutdated
+				break
+			}
+		}
 		result.Status = StatusNoBaseline
 	default:
 		// Both exist - compare hashes
@@ -221,9 +239,17 @@ func VerifyHookAt(hookPath string) (*VerificationResult, error) {
 		if err != nil {
 			return nil, err
 		}
+		version, err := readHookVersion(hookPath)
+		if err == nil {
+			result.HookVersion = version
+		}
 
 		if stored == actual {
-			result.Status = StatusVerified
+			if result.HookVersion < CurrentHookVersion {
+				result.Status = StatusOutdated
+			} else {
+				result.Status = StatusVerified
+			}
 		} else {
 			result.Status = StatusTampered
 			result.Expected = stored
@@ -263,6 +289,19 @@ func RuntimeCheck() error {
 		// All good, proceed
 		return nil
 
+	case StatusOutdated:
+		return fmt.Errorf(`hook version is outdated
+  Installed version: %d
+  Required version:  %d
+
+  The hook at ~/.claude/hooks/tokman-rewrite.sh is from an older TokMan install.
+  Re-run TokMan setup before executing commands.
+
+  To restore:  tokman init --claude
+  To inspect:  tokman verify`,
+			result.HookVersion,
+			result.RequiredVersion)
+
 	case StatusTampered:
 		return fmt.Errorf(`hook integrity check FAILED
   Expected hash: %s...
@@ -299,4 +338,26 @@ func truncateHash(hash string, maxLen int) string {
 		return hash
 	}
 	return hash[:maxLen]
+}
+
+func readHookVersion(path string) (int, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read hook file %s: %w", path, err)
+	}
+	for _, line := range strings.Split(string(content), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "# tokman-hook-version:") {
+			var version int
+			_, err := fmt.Sscanf(line, "# tokman-hook-version: %d", &version)
+			if err != nil {
+				return 0, fmt.Errorf("invalid hook version marker in %s: %w", path, err)
+			}
+			return version, nil
+		}
+	}
+	return 0, nil
 }

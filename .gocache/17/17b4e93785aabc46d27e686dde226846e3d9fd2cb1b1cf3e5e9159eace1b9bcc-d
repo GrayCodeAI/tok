@@ -1,0 +1,12 @@
+# test log
+getenv GOTMPDIR
+getenv TMPDIR
+getenv HOME
+stat /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T/TestConfigSetCreatesFile3697984462/001/.config/tokman
+stat /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T/TestConfigSetCreatesFile3697984462/001/.config
+stat /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T/TestConfigSetCreatesFile3697984462/001
+open /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T/TestConfigSetCreatesFile3697984462/001/.config/tokman/config.toml
+open /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T
+getenv GOTMPDIR
+getenv TMPDIR
+open /var/folders/ly/x4mpjq8j1z5gfmf7pl999k280000gn/T

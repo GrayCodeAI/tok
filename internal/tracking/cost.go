@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	corepricing "github.com/GrayCodeAI/tokman/internal/core"
 )
 
 // CostEstimator estimates API costs based on token usage.
@@ -32,8 +34,13 @@ var ModelPricing = map[string]CostEstimator{
 
 // NewCostEstimator creates a new cost estimator.
 func NewCostEstimator(model string) *CostEstimator {
+	model = strings.ToLower(strings.TrimSpace(model))
 	if pricing, ok := ModelPricing[model]; ok {
 		return &CostEstimator{pricing.inputCostPer1M, pricing.outputCostPer1M, pricing.currency}
+	}
+	if corepricing.HasModelPricing(model) {
+		pricing := corepricing.GetModelPricing(model)
+		return &CostEstimator{pricing.InputPerMillion, pricing.OutputPerMillion, "USD"}
 	}
 	p := ModelPricing["default"]
 	return &CostEstimator{p.inputCostPer1M, p.outputCostPer1M, p.currency}
@@ -107,6 +114,10 @@ type CostProjection struct {
 
 // GenerateCostReport generates a comprehensive cost report.
 func (t *Tracker) GenerateCostReport(model string, days int) (*CostReport, error) {
+	if days <= 0 {
+		days = 30
+	}
+
 	estimator := NewCostEstimator(model)
 
 	// Get daily savings
@@ -129,7 +140,10 @@ func (t *Tracker) GenerateCostReport(model string, days int) (*CostReport, error
 	}
 
 	// Calculate projections based on average daily savings
-	avgDaily := float64(totalSaved) / float64(len(dailySavings))
+	avgDaily := 0.0
+	if len(dailySavings) > 0 {
+		avgDaily = float64(totalSaved) / float64(len(dailySavings))
+	}
 	monthlyEstimate := estimator.EstimateCost(int(avgDaily * 30))
 	yearlyEstimate := monthlyEstimate * 12
 
@@ -260,16 +274,22 @@ func (t *Tracker) CheckAlert(threshold AlertThreshold) ([]Alert, error) {
 
 	// Check daily limits
 	today := time.Now().Format("2006-01-02")
-	todayRecord, err := t.GetDailySavings(today, 1)
+	todayRecord, err := t.GetDailySavings("", 1)
 	if err == nil && len(todayRecord) > 0 {
-		tokens := int64(todayRecord[0].Saved)
-		if tokens > threshold.DailyTokenLimit {
-			alerts = append(alerts, Alert{
-				Type:      "daily_tokens",
-				Severity:  "warning",
-				Message:   fmt.Sprintf("Daily token limit exceeded: %d > %d", tokens, threshold.DailyTokenLimit),
-				Timestamp: time.Now(),
-			})
+		for _, day := range todayRecord {
+			if day.Date != today {
+				continue
+			}
+			tokens := int64(day.Saved)
+			if tokens > threshold.DailyTokenLimit {
+				alerts = append(alerts, Alert{
+					Type:      "daily_tokens",
+					Severity:  "warning",
+					Message:   fmt.Sprintf("Daily token limit exceeded: %d > %d", tokens, threshold.DailyTokenLimit),
+					Timestamp: time.Now(),
+				})
+			}
+			break
 		}
 	}
 

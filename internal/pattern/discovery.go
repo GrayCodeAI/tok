@@ -136,6 +136,7 @@ func (pde *PatternDiscoveryEngine) Start() {
 		return
 	}
 
+	pde.stopChan = make(chan struct{})
 	pde.running = true
 	go pde.samplingWorker()
 
@@ -405,9 +406,12 @@ func (pde *PatternDiscoveryEngine) consolidatePatterns() {
 
 // savePattern saves a pattern to database
 func (pde *PatternDiscoveryEngine) savePattern(p *DiscoveredPattern) error {
-	sourceFilesJSON, _ := json.Marshal(p.SourceFiles)
+	sourceFilesJSON, err := json.Marshal(p.SourceFiles)
+	if err != nil {
+		return fmt.Errorf("marshal pattern source files: %w", err)
+	}
 
-	_, err := pde.db.Exec(`
+	_, err = pde.db.Exec(`
 		INSERT OR REPLACE INTO discovered_patterns
 		(id, pattern, type, regex, frequency, confidence, first_seen, last_seen, source_files, status)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -438,7 +442,11 @@ func (pde *PatternDiscoveryEngine) loadPatterns() error {
 			continue
 		}
 
-		json.Unmarshal(sourceFilesJSON, &p.SourceFiles)
+		if len(sourceFilesJSON) > 0 {
+			if err := json.Unmarshal(sourceFilesJSON, &p.SourceFiles); err != nil {
+				return fmt.Errorf("unmarshal pattern source files for %s: %w", p.ID, err)
+			}
+		}
 		pde.patterns[p.ID] = &p
 	}
 

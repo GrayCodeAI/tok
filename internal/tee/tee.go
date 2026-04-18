@@ -3,8 +3,6 @@
 // The tee system saves unfiltered command output to disk when commands fail,
 // allowing LLMs to access the full output without re-executing the command.
 // This is especially useful for debugging failed tests or builds.
-//
-// Based on RTK's tee system, ported to Go for TokMan.
 package tee
 
 import (

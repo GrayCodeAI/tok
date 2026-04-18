@@ -37,8 +37,8 @@ func TestDetectAgentsRecognizesLegacyQuickstartHook(t *testing.T) {
 		if !agent.Configured {
 			t.Fatal("legacy quickstart hook should mark Claude Code as configured")
 		}
-		if filepath.Base(agent.HookPath) != "tokman-rewrite.sh" {
-			t.Fatalf("HookPath = %q, want tokman-rewrite.sh", agent.HookPath)
+		if filepath.Base(agent.MarkerPath) != "tokman-rewrite.sh" {
+			t.Fatalf("MarkerPath = %q, want tokman-rewrite.sh", agent.MarkerPath)
 		}
 		return
 	}

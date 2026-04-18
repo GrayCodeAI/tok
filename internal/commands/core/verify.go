@@ -93,6 +93,13 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "%s  hash file exists but hook is missing\n", yellow("WARN"))
 		fmt.Fprintln(os.Stderr, "      Run `tokman init` to reinstall.")
 		allPassed = false
+
+	case integrity.StatusOutdated:
+		fmt.Printf("%s  hook is outdated\n", yellow("WARN"))
+		fmt.Printf("      Installed version: %d\n", result.HookVersion)
+		fmt.Printf("      Required version:  %d\n", result.RequiredVersion)
+		fmt.Println("      Run `tokman init --claude` to refresh the generated hook.")
+		allPassed = false
 	}
 
 	// If --require-all, also check config and filters

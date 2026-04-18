@@ -383,7 +383,7 @@ Use the feature request template. Include:
 - Problem statement
 - Proposed solution
 - Real-world use cases
-- Competitive analysis (how do RTK/OMNI handle it?)
+- Prior art or comparable tools if relevant
 
 ## Style Guide
 

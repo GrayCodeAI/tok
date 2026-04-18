@@ -1,0 +1,186 @@
+# Task 131: Dockerfile
+FROM golang:1.26-alpine AS builder
+WORKDIR /app
+COPY . .
+RUN go build -o tokman ./cmd/tokman
+
+FROM alpine:latest
+COPY --from=builder /app/tokman /usr/local/bin/
+ENTRYPOINT ["tokman"]
+
+---
+# Task 132-133: Kubernetes & Helm
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokman
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tokman
+  template:
+    metadata:
+      labels:
+        app: tokman
+    spec:
+      containers:
+      - name: tokman
+        image: tokman:latest
+        ports:
+        - containerPort: 8080
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+
+---
+# Task 134: systemd service
+[Unit]
+Description=TokMan Compression Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/tokman server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+---
+# Task 135: Ansible playbook
+- name: Deploy TokMan
+  hosts: all
+  tasks:
+    - name: Install TokMan
+      get_url:
+        url: https://github.com/GrayCodeAI/tokman/releases/latest/download/tokman
+        dest: /usr/local/bin/tokman
+        mode: '0755'
+
+---
+# Task 136: Terraform module
+resource "aws_instance" "tokman" {
+  ami           = "ami-12345678"
+  instance_type = "t3.micro"
+  
+  user_data = <<-EOF
+    #!/bin/bash
+    curl -fsSL https://tokman.dev/install.sh | sh
+  EOF
+}
+
+---
+# Task 137: Serverless (AWS Lambda)
+resource "aws_lambda_function" "tokman" {
+  filename      = "tokman.zip"
+  function_name = "tokman-compress"
+  role          = aws_iam_role.lambda.arn
+  handler       = "bootstrap"
+  runtime       = "provided.al2"
+}
+
+---
+# Task 138: CloudFormation
+AWSTemplateFormatVersion: '2010-09-09'
+Resources:
+  TokManInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-12345678
+      InstanceType: t3.micro
+
+---
+# Task 139: GCP Deployment Manager
+resources:
+- name: tokman-vm
+  type: compute.v1.instance
+  properties:
+    zone: us-central1-a
+    machineType: zones/us-central1-a/machineTypes/n1-standard-1
+
+---
+# Task 140: Azure ARM Template
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "resources": [{
+    "type": "Microsoft.Compute/virtualMachines",
+    "name": "tokman-vm"
+  }]
+}
+
+---
+# Task 141: GitHub Actions
+name: CI
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+      - run: go build ./...
+      - run: go test ./...
+
+---
+# Task 142: GitLab CI
+stages:
+  - build
+  - test
+build:
+  stage: build
+  script:
+    - go build ./...
+test:
+  stage: test
+  script:
+    - go test ./...
+
+---
+# Task 143: CircleCI
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: golang:1.26
+    steps:
+      - checkout
+      - run: go build ./...
+      - run: go test ./...
+
+---
+# Task 144: Jenkinsfile
+pipeline {
+  agent any
+  stages {
+    stage('Build') {
+      steps {
+        sh 'go build ./...'
+      }
+    }
+    stage('Test') {
+      steps {
+        sh 'go test ./...'
+      }
+    }
+  }
+}
+
+---
+# Task 145: Release automation
+name: Release
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: goreleaser/goreleaser-action@v2

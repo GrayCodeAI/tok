@@ -1,0 +1,10 @@
+./filter.go
+./jit.go
+./loader.go
+./parser.go
+./safety.go
+./test.go
+./filter_test.go
+./loader_test.go
+./parser_test.go
+./safety_test.go

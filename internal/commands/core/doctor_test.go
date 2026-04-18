@@ -44,11 +44,11 @@ func TestCheckDatabase(t *testing.T) {
 
 func TestCheckShellHook(t *testing.T) {
 	r := checkShellHook()
-	if r.Name != "Shell Hook" {
-		t.Errorf("name = %q, want %q", r.Name, "Shell Hook")
+	if r.Name != "Agent Hooks" {
+		t.Errorf("name = %q, want %q", r.Name, "Agent Hooks")
 	}
-	// Shell hook likely not present in test env
-	if r.Status == "warn" && strings.Contains(r.Message, "no shell hook found") {
+	// Agent hooks likely not present in test env
+	if r.Status == "warn" && strings.Contains(r.Message, "no agent integrations found") {
 		// Expected in test environment
 		return
 	}
@@ -123,5 +123,37 @@ func TestCheckTierSystem(t *testing.T) {
 	r := checkTierSystem()
 	if r.Status != "ok" && r.Status != "warn" {
 		t.Errorf("status = %q, want ok or warn", r.Status)
+	}
+}
+
+func TestCheckAgentIntegrations(t *testing.T) {
+	results := checkAgentIntegrations()
+	if len(results) == 0 {
+		t.Fatal("expected integration results")
+	}
+}
+
+func TestShouldRepairAgentIntegration(t *testing.T) {
+	tests := []struct {
+		name   string
+		status string
+		detail string
+		want   bool
+	}{
+		{name: "partial", status: "partial", want: true},
+		{name: "broken", status: "broken", want: true},
+		{name: "legacy", status: "legacy", want: true},
+		{name: "configured-outdated", status: "configured", detail: "settings.json patched, outdated hook", want: true},
+		{name: "configured-no-baseline", status: "configured", detail: "hook installed, no integrity baseline", want: true},
+		{name: "configured-healthy", status: "configured", detail: "integrity verified", want: false},
+		{name: "detected", status: "detected", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := shouldRepairAgentIntegration(tt.status, tt.detail); got != tt.want {
+				t.Fatalf("shouldRepairAgentIntegration(%q, %q) = %v, want %v", tt.status, tt.detail, got, tt.want)
+			}
+		})
 	}
 }

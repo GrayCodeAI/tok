@@ -1,0 +1,4 @@
+./app.go
+./loader.go
+./theme.go
+./view_home.go

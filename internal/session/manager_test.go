@@ -14,11 +14,8 @@ func setupTestManager(t *testing.T) (*SessionManager, func()) {
 	}
 
 	// Set data path for test
-	oldDataPath := os.Getenv("TOKMAN_DATA_PATH")
-	os.Setenv("TOKMAN_DATA_PATH", tmpDir)
-
-	// Update config data path
-	dataDir = tmpDir
+	oldDataPath := os.Getenv("XDG_DATA_HOME")
+	os.Setenv("XDG_DATA_HOME", tmpDir)
 
 	sm, err := NewSessionManager()
 	if err != nil {
@@ -29,14 +26,11 @@ func setupTestManager(t *testing.T) (*SessionManager, func()) {
 	cleanup := func() {
 		sm.Close()
 		os.RemoveAll(tmpDir)
-		os.Setenv("TOKMAN_DATA_PATH", oldDataPath)
+		os.Setenv("XDG_DATA_HOME", oldDataPath)
 	}
 
 	return sm, cleanup
 }
-
-// dataDir is used to override config data path in tests
-var dataDir string
 
 func TestNewSessionManager(t *testing.T) {
 	sm, cleanup := setupTestManager(t)
@@ -109,6 +103,18 @@ func TestSessionManager_GetSession(t *testing.T) {
 
 	if retrieved.ID != created.ID {
 		t.Error("expected to retrieve same session")
+	}
+
+	sm.mu.Lock()
+	delete(sm.sessions, created.ID)
+	sm.mu.Unlock()
+
+	reloaded, err := sm.GetSession(created.ID)
+	if err != nil {
+		t.Fatalf("failed to reload session from database: %v", err)
+	}
+	if reloaded.ID != created.ID {
+		t.Error("expected reloaded session to match created session")
 	}
 
 	// Try to get non-existent session
@@ -238,6 +244,165 @@ func TestSessionManager_CleanupExpired(t *testing.T) {
 	err := sm.CleanupExpired()
 	if err != nil {
 		t.Errorf("cleanup failed: %v", err)
+	}
+}
+
+func TestSessionManager_PersistsExpiresAt(t *testing.T) {
+	sm, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	session, err := sm.CreateSession("agent", "/project")
+	if err != nil {
+		t.Fatalf("CreateSession: %v", err)
+	}
+
+	expiresAt := time.Now().Add(2 * time.Hour).Round(time.Second)
+	session.ExpiresAt = &expiresAt
+	if err := sm.persistSession(session); err != nil {
+		t.Fatalf("persistSession: %v", err)
+	}
+
+	sm.mu.Lock()
+	delete(sm.sessions, session.ID)
+	sm.mu.Unlock()
+
+	reloaded, err := sm.GetSession(session.ID)
+	if err != nil {
+		t.Fatalf("GetSession: %v", err)
+	}
+	if reloaded.ExpiresAt == nil {
+		t.Fatal("expected ExpiresAt to be persisted")
+	}
+	if !reloaded.ExpiresAt.Equal(expiresAt) {
+		t.Fatalf("ExpiresAt = %v, want %v", reloaded.ExpiresAt, expiresAt)
+	}
+}
+
+func TestSessionManager_GetSessionFailsOnCorruptStoredJSON(t *testing.T) {
+	sm, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	session, err := sm.CreateSession("agent", "/project")
+	if err != nil {
+		t.Fatalf("CreateSession: %v", err)
+	}
+
+	_, err = sm.db.Exec(`UPDATE sessions SET metadata = ? WHERE id = ?`, "{not-json", session.ID)
+	if err != nil {
+		t.Fatalf("corrupt metadata update: %v", err)
+	}
+
+	sm.mu.Lock()
+	delete(sm.sessions, session.ID)
+	sm.mu.Unlock()
+
+	_, err = sm.GetSession(session.ID)
+	if err == nil {
+		t.Fatal("expected GetSession to fail on corrupt stored JSON")
+	}
+}
+
+func TestSessionManager_GetSummary(t *testing.T) {
+	sm, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	first, err := sm.CreateSession("Claude Code", "/project-a")
+	if err != nil {
+		t.Fatalf("CreateSession(first): %v", err)
+	}
+	second, err := sm.CreateSession("Claude Code", "/project-b")
+	if err != nil {
+		t.Fatalf("CreateSession(second): %v", err)
+	}
+	second.IsActive = false
+	if err := sm.persistSession(second); err != nil {
+		t.Fatalf("persistSession(second): %v", err)
+	}
+	if _, err := sm.CreateSnapshot(first.ID); err != nil {
+		t.Fatalf("CreateSnapshot(): %v", err)
+	}
+
+	summary, err := sm.GetSummary()
+	if err != nil {
+		t.Fatalf("GetSummary(): %v", err)
+	}
+	if summary.TotalSessions != 2 {
+		t.Fatalf("TotalSessions = %d, want 2", summary.TotalSessions)
+	}
+	if summary.ActiveSessions != 1 {
+		t.Fatalf("ActiveSessions = %d, want 1", summary.ActiveSessions)
+	}
+	if summary.SnapshotCount != 1 {
+		t.Fatalf("SnapshotCount = %d, want 1", summary.SnapshotCount)
+	}
+	if summary.TopAgent != "Claude Code" {
+		t.Fatalf("TopAgent = %q, want Claude Code", summary.TopAgent)
+	}
+	if summary.TopAgentCount != 2 {
+		t.Fatalf("TopAgentCount = %d, want 2", summary.TopAgentCount)
+	}
+	if summary.ActiveSessionID == "" {
+		t.Fatal("expected ActiveSessionID to be set")
+	}
+}
+
+func TestSessionManager_GetAnalyticsSnapshot(t *testing.T) {
+	sm, cleanup := setupTestManager(t)
+	defer cleanup()
+
+	first, err := sm.CreateSession("Claude Code", "/project-a")
+	if err != nil {
+		t.Fatalf("CreateSession(first): %v", err)
+	}
+	if err := sm.AddContextBlock(BlockTypeUserQuery, "open file", 40); err != nil {
+		t.Fatalf("AddContextBlock(user): %v", err)
+	}
+	if err := sm.AddContextBlock(BlockTypeToolResult, "file contents", 60); err != nil {
+		t.Fatalf("AddContextBlock(tool): %v", err)
+	}
+	if _, err := sm.CreateSnapshot(first.ID); err != nil {
+		t.Fatalf("CreateSnapshot(first): %v", err)
+	}
+
+	second, err := sm.CreateSession("Cursor", "/project-b")
+	if err != nil {
+		t.Fatalf("CreateSession(second): %v", err)
+	}
+	second.IsActive = false
+	if err := sm.persistSession(second); err != nil {
+		t.Fatalf("persistSession(second): %v", err)
+	}
+
+	snapshot, err := sm.GetAnalyticsSnapshot(SessionListOptions{Limit: 10}, 10)
+	if err != nil {
+		t.Fatalf("GetAnalyticsSnapshot(): %v", err)
+	}
+	if snapshot.StoreSummary.TotalSessions != 2 {
+		t.Fatalf("StoreSummary.TotalSessions = %d, want 2", snapshot.StoreSummary.TotalSessions)
+	}
+	if len(snapshot.RecentSessions) != 2 {
+		t.Fatalf("len(RecentSessions) = %d, want 2", len(snapshot.RecentSessions))
+	}
+	foundSnapshot := false
+	for _, item := range snapshot.RecentSessions {
+		if item.ID == first.ID && item.SnapshotCount == 1 {
+			foundSnapshot = true
+		}
+	}
+	if !foundSnapshot {
+		t.Fatalf("expected recent session overview to include snapshot count for %q: %+v", first.ID, snapshot.RecentSessions)
+	}
+	if len(snapshot.SnapshotHistory) != 1 {
+		t.Fatalf("len(SnapshotHistory) = %d, want 1", len(snapshot.SnapshotHistory))
+	}
+	if snapshot.SnapshotHistory[0].SessionID != first.ID {
+		t.Fatalf("SnapshotHistory[0].SessionID = %q, want %q", snapshot.SnapshotHistory[0].SessionID, first.ID)
+	}
+	if snapshot.ActiveContext == nil {
+		t.Fatal("expected ActiveContext")
+	}
+	if snapshot.ActiveContext.SessionID != second.ID {
+		t.Fatalf("ActiveContext.SessionID = %q, want %q", snapshot.ActiveContext.SessionID, second.ID)
 	}
 }
 

@@ -1,0 +1,15 @@
+./batch_cmd.go
+./benchmark_cmd.go
+./compress_cmd.go
+./doc.go
+./engram_cmd.go
+./filter_bench.go
+./filter_create.go
+./filter_test_cmd.go
+./filter_validate.go
+./layers.go
+./pipeline_cmd.go
+./summarize_cmd.go
+./tests.go
+./validate.go
+./watch_cmd.go

@@ -1,0 +1,3 @@
+./brotli.go
+./compare.go
+./brotli_test.go
