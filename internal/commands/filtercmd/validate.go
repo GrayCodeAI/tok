@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -72,14 +73,14 @@ func runValidate(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(filesToValidate) == 0 {
-		fmt.Println("No filter files found to validate")
+		out.Global().Println("No filter files found to validate")
 		return nil
 	}
 
 	// Print header
 	cyan := color.New(color.FgCyan).SprintFunc()
-	fmt.Printf("%s\n", cyan(fmt.Sprintf("Validating %d filter file(s)...", len(filesToValidate))))
-	fmt.Println()
+	out.Global().Printf("%s\n", cyan(fmt.Sprintf("Validating %d filter file(s)...", len(filesToValidate))))
+	out.Global().Println()
 
 	// Validate each file
 	results := make([]ValidationResult, 0, len(filesToValidate))
@@ -248,49 +249,49 @@ func printValidationResults(results []ValidationResult) {
 
 		if result.Valid {
 			totalValid++
-			fmt.Printf("%s %s", green("✓"), fileName)
+			out.Global().Printf("%s %s", green("✓"), fileName)
 			if result.FilterName != "" {
-				fmt.Printf(" [%s]", result.FilterName)
+				out.Global().Printf(" [%s]", result.FilterName)
 			}
 			if result.TestCount > 0 {
-				fmt.Printf(" (%d test%s)", result.TestCount, pluralize(result.TestCount))
+				out.Global().Printf(" (%d test%s)", result.TestCount, pluralize(result.TestCount))
 			}
-			fmt.Println()
+			out.Global().Println()
 		} else {
-			fmt.Printf("%s %s", red("✗"), fileName)
+			out.Global().Printf("%s %s", red("✗"), fileName)
 			if result.FilterName != "" {
-				fmt.Printf(" [%s]", result.FilterName)
+				out.Global().Printf(" [%s]", result.FilterName)
 			}
-			fmt.Println()
+			out.Global().Println()
 		}
 
 		// Print errors
 		for _, err := range result.Errors {
-			fmt.Printf("  %s %s\n", red("✗"), err)
+			out.Global().Printf("  %s %s\n", red("✗"), err)
 			totalErrors++
 		}
 
 		// Print warnings
 		for _, warning := range result.Warnings {
-			fmt.Printf("  %s %s\n", yellow("⚠"), warning)
+			out.Global().Printf("  %s %s\n", yellow("⚠"), warning)
 			totalWarnings++
 		}
 
 		if len(result.Errors) > 0 || len(result.Warnings) > 0 {
-			fmt.Println()
+			out.Global().Println()
 		}
 	}
 
 	// Print summary
-	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	out.Global().Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 	if totalErrors == 0 {
-		fmt.Printf("%s\n", green(fmt.Sprintf("All %d filter(s) valid!", len(results))))
+		out.Global().Printf("%s\n", green(fmt.Sprintf("All %d filter(s) valid!", len(results))))
 	} else {
-		fmt.Printf("%s\n", red(fmt.Sprintf("%d filter(s) with errors", len(results)-totalValid)))
+		out.Global().Printf("%s\n", red(fmt.Sprintf("%d filter(s) with errors", len(results)-totalValid)))
 	}
 
 	if totalWarnings > 0 {
-		fmt.Printf("%s\n", yellow(fmt.Sprintf("%d warning(s)", totalWarnings)))
+		out.Global().Printf("%s\n", yellow(fmt.Sprintf("%d warning(s)", totalWarnings)))
 	}
 }
 

@@ -1,8 +1,8 @@
-# TokMan TUI Product Spec
+# Tok TUI Product Spec
 
 ## Purpose
 
-This document is the implementation target for the new TokMan terminal UI.
+This document is the implementation target for the new Tok terminal UI.
 
 It is stricter than the rebuild plan and should be treated as the product/source-of-truth document for the first TUI build.
 
@@ -19,7 +19,7 @@ The TUI should be built as a world-class terminal product for token reduction, t
 
 ## Product Definition
 
-TokMan sits between:
+Tok sits between:
 
 - coding agent CLI/TUI
 - IDE/editor/plugin integrations
@@ -37,8 +37,8 @@ It is not:
 
 It should answer:
 
-- how many tokens TokMan reduced
-- how much cost TokMan saved
+- how many tokens Tok reduced
+- how much cost Tok saved
 - where savings came from
 - where waste still exists
 - which providers/models/agents/projects/sessions/commands matter most
@@ -47,7 +47,7 @@ It should answer:
 
 ## Core Product Thesis
 
-TokMan’s TUI should feel like a token intelligence cockpit.
+Tok’s TUI should feel like a token intelligence cockpit.
 
 Primary product pillars:
 
@@ -110,7 +110,7 @@ The product should always show data freshness, data quality, and integration hea
 
 Answer:
 
-- what did TokMan save today / this week / this month
+- what did Tok save today / this week / this month
 - what did it cost before and after
 - are we on pace or slipping
 - what is the biggest win and the biggest problem
@@ -172,7 +172,7 @@ Recommended nav labels in the UI:
 Purpose:
 
 - overall token intelligence dashboard
-- fastest path to “is TokMan helping?”
+- fastest path to “is Tok helping?”
 
 Must show:
 
@@ -366,7 +366,7 @@ Primary data:
 
 - `DashboardSnapshot.TopAgents`
 - agent-aware `doctor`
-- `tokman init --show`
+- `tok init --show`
 
 Success criteria:
 
@@ -455,7 +455,7 @@ Primary data:
 
 Success criteria:
 
-- user can quickly find which commands TokMan should optimize better
+- user can quickly find which commands Tok should optimize better
 
 ### 9. Pipeline
 
@@ -564,8 +564,8 @@ Must show:
 Primary sources:
 
 - config package
-- `tokman doctor`
-- `tokman init --show`
+- `tok doctor`
+- `tok init --show`
 - `DashboardDataQuality`
 
 Success criteria:
@@ -675,7 +675,7 @@ Not every screen needs every filter visible all the time, but the state model sh
 
 Preferred root payload:
 
-- [internal/tracking/workspace_snapshot.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/workspace_snapshot.go:1)
+- [internal/tracking/workspace_snapshot.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/workspace_snapshot.go:1)
 
 This combines:
 
@@ -687,7 +687,7 @@ This combines:
 
 Use:
 
-- [internal/tracking/dashboard.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/dashboard.go:1)
+- [internal/tracking/dashboard.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/dashboard.go:1)
 
 Important fields:
 
@@ -713,7 +713,7 @@ Important fields:
 
 Use:
 
-- [internal/tracking/data_quality.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/data_quality.go:1)
+- [internal/tracking/data_quality.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/data_quality.go:1)
 
 Important fields:
 
@@ -728,8 +728,8 @@ Important fields:
 
 Use:
 
-- [internal/session/types.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/session/types.go:77)
-- [internal/session/manager.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/session/manager.go:515)
+- [internal/session/types.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/session/types.go:77)
+- [internal/session/manager.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/session/manager.go:515)
 
 Important fields:
 
@@ -988,12 +988,12 @@ Before implementation starts:
 
 The TUI should be built on:
 
-- [internal/tracking/dashboard.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/dashboard.go:1)
-- [internal/tracking/data_quality.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/data_quality.go:1)
-- [internal/tracking/workspace_snapshot.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/tracking/workspace_snapshot.go:1)
-- [internal/session/manager.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/internal/session/manager.go:515)
-- agent-aware diagnostics from `tokman doctor`
-- real integration state from `tokman init --show`
+- [internal/tracking/dashboard.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/dashboard.go:1)
+- [internal/tracking/data_quality.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/data_quality.go:1)
+- [internal/tracking/workspace_snapshot.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/tracking/workspace_snapshot.go:1)
+- [internal/session/manager.go](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/session/manager.go:515)
+- agent-aware diagnostics from `tok doctor`
+- real integration state from `tok init --show`
 
 ## Approval Target
 

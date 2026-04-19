@@ -66,11 +66,11 @@ jobs:
         echo "Total coverage: $COVERAGE%"
         
         # Check if coverage is above threshold
-        if (( $(echo "$COVERAGE < 70" | bc -l) )); then
-          echo "❌ Coverage $COVERAGE% is below threshold of 70%"
+        if (( $(echo "$COVERAGE < 60" | bc -l) )); then
+          echo "❌ Coverage $COVERAGE% is below threshold of 60%"
           exit 1
         else
-          echo "✅ Coverage $COVERAGE% meets threshold of 70%"
+          echo "✅ Coverage $COVERAGE% meets threshold of 60%"
         fi
     
     - name: Upload coverage

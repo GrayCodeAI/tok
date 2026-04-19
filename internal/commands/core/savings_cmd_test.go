@@ -22,9 +22,9 @@ func TestGetTierForTokens(t *testing.T) {
 		expected string
 	}{
 		{500_000, "free"},
-		{1_000_000, "pro"},  // At boundary, should go up
+		{1_000_000, "pro"}, // At boundary, should go up
 		{3_000_000, "pro"},
-		{5_000_000, "5x"},   // At boundary
+		{5_000_000, "5x"}, // At boundary
 		{10_000_000, "5x"},
 		{25_000_000, "20x"}, // At boundary
 		{50_000_000, "20x"},
@@ -91,8 +91,8 @@ func TestFormatDuration(t *testing.T) {
 
 func TestTruncate(t *testing.T) {
 	tests := []struct {
-		s       string
-		maxLen  int
+		s        string
+		maxLen   int
 		expected string
 	}{
 		{"hello", 10, "hello"},
@@ -241,12 +241,12 @@ func TestProgressBarGeneration(t *testing.T) {
 func TestTruncateEdgeCases(t *testing.T) {
 	// Test truncate with edge cases
 	tests := []struct {
-		s       string
-		maxLen  int
+		s      string
+		maxLen int
 	}{
-		{"", 10},                    // empty string
+		{"", 10},                        // empty string
 		{strings.Repeat("a", 1000), 50}, // very long string
-		{"test", 5},                 // normal case
+		{"test", 5},                     // normal case
 	}
 
 	for _, tt := range tests {

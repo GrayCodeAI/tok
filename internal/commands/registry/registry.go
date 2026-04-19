@@ -1,7 +1,7 @@
 package registry
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -20,7 +20,7 @@ func Register(cmd *cobra.Command) {
 				// Keep first registration deterministically and ignore subsequent duplicates.
 				// Avoid noisy startup warnings when optional command packs overlap.
 				if os.Getenv("TOK_DEBUG_REGISTRY") == "1" {
-					fmt.Fprintf(os.Stderr, "registry debug: duplicate command %q skipped\n", cmd.Name())
+					out.Global().Errorf("registry debug: duplicate command %q skipped\n", cmd.Name())
 				}
 				return
 			}

@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -42,8 +43,8 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 
 	originalTokens := core.EstimateTokens(rawOutput)
 
-	fmt.Printf("Testing: %s\n", strings.Join(args, " "))
-	fmt.Printf("Original: ~%d tokens\n\n", originalTokens)
+	out.Global().Printf("Testing: %s\n", strings.Join(args, " "))
+	out.Global().Printf("Original: ~%d tokens\n\n", originalTokens)
 
 	equiv := filter.NewSemanticEquivalence()
 
@@ -66,12 +67,12 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 			passed++
 		}
 
-		fmt.Printf("  %s %-12s saved=%d (%.1f%%) quality=%.0f%% errors=%v nums=%v\n",
+		out.Global().Printf("  %s %-12s saved=%d (%.1f%%) quality=%.0f%% errors=%v nums=%v\n",
 			status, preset, stats.TotalSaved, stats.ReductionPercent,
 			report.Score*100, report.ErrorPreserved, report.NumbersPreserved)
 	}
 
-	fmt.Printf("\nResults: %d passed, %d failed\n", passed, failed)
+	out.Global().Printf("\nResults: %d passed, %d failed\n", passed, failed)
 
 	if failed > 0 {
 		return fmt.Errorf("compression quality test failed")

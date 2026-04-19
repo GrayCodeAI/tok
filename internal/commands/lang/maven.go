@@ -2,7 +2,7 @@ package lang
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -58,7 +58,7 @@ func runMavenBuild(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mvn %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mvn %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mvn", args...)
@@ -73,7 +73,7 @@ func runMavenBuild(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -149,7 +149,7 @@ func runMavenTest(args []string) error {
 
 	fullArgs := append([]string{"test"}, args...)
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mvn %s\n", strings.Join(fullArgs, " "))
+		out.Global().Errorf("Running: mvn %s\n", strings.Join(fullArgs, " "))
 	}
 
 	execCmd := exec.Command("mvn", fullArgs...)
@@ -164,7 +164,7 @@ func runMavenTest(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -232,7 +232,7 @@ func runMavenDependency(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mvn %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mvn %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mvn", args...)
@@ -247,7 +247,7 @@ func runMavenDependency(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -303,7 +303,7 @@ func runMavenPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mvn %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mvn %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mvn", args...)
@@ -318,7 +318,7 @@ func runMavenPassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

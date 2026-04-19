@@ -96,11 +96,11 @@ func TestDataPath(t *testing.T) {
 }
 
 func TestDatabasePath(t *testing.T) {
-	orig := os.Getenv("TOKMAN_DATABASE_PATH")
-	defer os.Setenv("TOKMAN_DATABASE_PATH", orig)
+	orig := os.Getenv("TOK_DATABASE_PATH")
+	defer os.Setenv("TOK_DATABASE_PATH", orig)
 
 	t.Run("custom path", func(t *testing.T) {
-		os.Setenv("TOKMAN_DATABASE_PATH", "/custom/db.sqlite")
+		os.Setenv("TOK_DATABASE_PATH", "/custom/db.sqlite")
 		result := DatabasePath()
 		if result != "/custom/db.sqlite" {
 			t.Errorf("DatabasePath() = %q, want /custom/db.sqlite", result)
@@ -108,7 +108,7 @@ func TestDatabasePath(t *testing.T) {
 	})
 
 	t.Run("default path", func(t *testing.T) {
-		os.Unsetenv("TOKMAN_DATABASE_PATH")
+		os.Unsetenv("TOK_DATABASE_PATH")
 		result := DatabasePath()
 		if !filepath.IsAbs(result) {
 			t.Errorf("DatabasePath() = %q, expected absolute path", result)

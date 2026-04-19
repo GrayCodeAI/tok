@@ -1,4 +1,4 @@
-# TokMan Dashboard Data Layer
+# Tok Dashboard Data Layer
 
 ## Purpose
 
@@ -93,7 +93,7 @@ Unknown or empty values are normalized to:
 
 ## Cost Semantics
 
-Cost fields are estimated from tracked token counts plus TokMan's current model pricing table in `internal/tracking/cost.go`.
+Cost fields are estimated from tracked token counts plus Tok's current model pricing table in `internal/tracking/cost.go`.
 
 Current cost fields:
 
@@ -104,7 +104,7 @@ Current cost fields:
 Important limitation:
 
 - pricing coverage is still only as good as the current model pricing table
-- unsupported or unknown models fall back to TokMan's default estimator
+- unsupported or unknown models fall back to Tok's default estimator
 
 ## Current Scope
 

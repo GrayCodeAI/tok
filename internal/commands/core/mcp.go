@@ -1,7 +1,7 @@
 package core
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -51,7 +51,7 @@ Usage:
         "command": "tok",
         "args": ["mcp"],
         "env": {
-          "TOKMAN_MODE": "balanced"
+          "TOK_MODE": "balanced"
         }
       }
     }
@@ -69,7 +69,7 @@ Usage:
 
 		// Run stdio server (blocking)
 		if err := server.RunStdio(); err != nil {
-			fmt.Fprintf(os.Stderr, "MCP server error: %v\n", err)
+			out.Global().Errorf("MCP server error: %v\n", err)
 			os.Exit(1)
 		}
 	},

@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -54,7 +55,7 @@ func NewFallbackHandler() *FallbackHandler {
 
 	registry, err := loader.LoadAll(projectDir)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to load TOML filters: %v\n", err)
+		out.Global().Errorf("Warning: failed to load TOML filters: %v\n", err)
 		registry = toml.NewFilterRegistry()
 	}
 
@@ -94,7 +95,7 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 	}
 
 	if IsVerbose() {
-		fmt.Fprintf(os.Stderr, "[TOML filter: %s/%s]\n", filename, filterName)
+		out.Global().Errorf("[TOML filter: %s/%s]\n", filename, filterName)
 	}
 
 	start := time.Now()
@@ -135,11 +136,11 @@ func (h *FallbackHandler) rawPassthrough(args []string) (string, bool, error) {
 		filtered, saved, rerr := RemoteCompress(output, string(mode), GetTokenBudget())
 		if rerr == nil {
 			if IsVerbose() && saved > 0 {
-				fmt.Fprintf(os.Stderr, "[remote compression: %d tokens saved]\n", saved)
+				out.Global().Errorf("[remote compression: %d tokens saved]\n", saved)
 			}
 			output = filtered
 		} else if IsVerbose() {
-			fmt.Fprintf(os.Stderr, "[remote compression failed: %v]\n", rerr)
+			out.Global().Errorf("[remote compression failed: %v]\n", rerr)
 		}
 	}
 
@@ -177,10 +178,10 @@ func (h *FallbackHandler) recordCommand(command, originalOutput, filteredOutput 
 		ExecTimeMs:     execTime.Milliseconds(),
 		Timestamp:      start,
 		ParseSuccess:   parseSuccess,
-		AgentName:      os.Getenv("TOKMAN_AGENT"),
-		ModelName:      os.Getenv("TOKMAN_MODEL"),
-		Provider:       os.Getenv("TOKMAN_PROVIDER"),
-		ModelFamily:    utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
+		AgentName:      os.Getenv("TOK_AGENT"),
+		ModelName:      os.Getenv("TOK_MODEL"),
+		Provider:       os.Getenv("TOK_PROVIDER"),
+		ModelFamily:    utils.GetModelFamily(os.Getenv("TOK_MODEL")),
 	}
 	if err := h.tracker.Record(record); err != nil {
 		slog.Warn("failed to record command", "error", err, "command", command)
@@ -295,7 +296,7 @@ func (h *FallbackHandler) rotateTeeFiles() {
 	if len(entries) > 20 {
 		for i := 0; i < len(entries)-20; i++ {
 			if err := os.Remove(filepath.Join(h.teeDir, entries[i].Name())); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: failed to remove tee file %s: %v\n", entries[i].Name(), err)
+				out.Global().Errorf("warning: failed to remove tee file %s: %v\n", entries[i].Name(), err)
 			}
 		}
 	}
@@ -312,12 +313,12 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		filtered, saved, err := RemoteCompress(output, string(mode), GetTokenBudget())
 		if err != nil {
 			if IsVerbose() {
-				fmt.Fprintf(os.Stderr, "[remote compression failed: %v, falling back to local]\n", err)
+				out.Global().Errorf("[remote compression failed: %v, falling back to local]\n", err)
 			}
 			// Fall through to local processing
 		} else {
 			if IsVerbose() && saved > 0 {
-				fmt.Fprintf(os.Stderr, "[remote pipeline: %d tokens saved]\n", saved)
+				out.Global().Errorf("[remote pipeline: %d tokens saved]\n", saved)
 			}
 			return filtered
 		}
@@ -410,7 +411,7 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 	filtered, stats := pipeline.Process(output)
 
 	if IsVerbose() && stats.TotalSaved > 0 {
-		fmt.Fprintf(os.Stderr, "[pipeline: %d -> %d tokens, %.1f%% saved]\n",
+		out.Global().Errorf("[pipeline: %d -> %d tokens, %.1f%% saved]\n",
 			stats.OriginalTokens, stats.FinalTokens, stats.ReductionPercent)
 	}
 
@@ -422,7 +423,7 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		}
 		hash := store.Store("", output, filtered, string(mode), GetTokenBudget(), layerStats)
 		if !IsQuietMode() {
-			fmt.Fprintf(os.Stderr, "[reversible: %s] ", hash)
+			out.Global().Errorf("[reversible: %s] ", hash)
 		}
 	}
 

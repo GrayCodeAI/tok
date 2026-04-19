@@ -3,6 +3,7 @@ package filtercmd
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -50,15 +51,15 @@ var engramStatsCmd = &cobra.Command{
 
 		if engramJSON {
 			data, _ := json.MarshalIndent(stats, "", "  ")
-			fmt.Println(string(data))
+			out.Global().Println(string(data))
 		} else {
-			fmt.Println("╔════════════════════════════════════════════════════╗")
-			fmt.Println("║           EngramLearner Statistics                 ║")
-			fmt.Println("╠════════════════════════════════════════════════════╣")
+			out.Global().Println("╔════════════════════════════════════════════════════╗")
+			out.Global().Println("║           EngramLearner Statistics                 ║")
+			out.Global().Println("╠════════════════════════════════════════════════════╣")
 			for key, val := range stats {
-				fmt.Printf("║ %-20s: %-28v ║\n", key, val)
+				out.Global().Printf("║ %-20s: %-28v ║\n", key, val)
 			}
-			fmt.Println("╚════════════════════════════════════════════════════╝")
+			out.Global().Println("╚════════════════════════════════════════════════════╝")
 		}
 
 		return nil
@@ -75,28 +76,28 @@ var engramRulesCmd = &cobra.Command{
 
 		if engramJSON {
 			data, _ := json.MarshalIndent(rules, "", "  ")
-			fmt.Println(string(data))
+			out.Global().Println(string(data))
 		} else {
 			if len(rules) == 0 {
-				fmt.Println("No rules learned yet.")
-				fmt.Println("Rules are generated automatically as the system processes content.")
+				out.Global().Println("No rules learned yet.")
+				out.Global().Println("Rules are generated automatically as the system processes content.")
 				return nil
 			}
 
-			fmt.Println("╔════════════════════════════════════════════════════╗")
-			fmt.Println("║              Learned Engram Rules                  ║")
-			fmt.Println("╠════════════════════════════════════════════════════╣")
+			out.Global().Println("╔════════════════════════════════════════════════════╗")
+			out.Global().Println("║              Learned Engram Rules                  ║")
+			out.Global().Println("╠════════════════════════════════════════════════════╣")
 			for _, rule := range rules {
-				fmt.Printf("║ ID:       %s\n", rule.ID)
-				fmt.Printf("║ Name:     %s\n", rule.Name)
-				fmt.Printf("║ Type:     %s\n", rule.Type)
-				fmt.Printf("║ Severity: %s\n", rule.Severity)
-				fmt.Printf("║ Pattern:  %s\n", truncateString(rule.Pattern, 40))
-				fmt.Printf("║ Confidence: %.2f\n", rule.Confidence)
-				fmt.Println("╠────────────────────────────────────────────────────╣")
+				out.Global().Printf("║ ID:       %s\n", rule.ID)
+				out.Global().Printf("║ Name:     %s\n", rule.Name)
+				out.Global().Printf("║ Type:     %s\n", rule.Type)
+				out.Global().Printf("║ Severity: %s\n", rule.Severity)
+				out.Global().Printf("║ Pattern:  %s\n", truncateString(rule.Pattern, 40))
+				out.Global().Printf("║ Confidence: %.2f\n", rule.Confidence)
+				out.Global().Println("╠────────────────────────────────────────────────────╣")
 			}
-			fmt.Printf("║ Total: %d rules\n", len(rules))
-			fmt.Println("╚════════════════════════════════════════════════════╝")
+			out.Global().Printf("║ Total: %d rules\n", len(rules))
+			out.Global().Println("╚════════════════════════════════════════════════════╝")
 		}
 
 		return nil
@@ -121,13 +122,13 @@ var engramAnalyzeCmd = &cobra.Command{
 
 		if engramJSON {
 			data, _ := json.MarshalIndent(rules, "", "  ")
-			fmt.Println(string(data))
+			out.Global().Println(string(data))
 		} else {
-			fmt.Printf("Analyzed: %s\n", args[0])
-			fmt.Printf("Applicable rules: %d\n\n", len(rules))
+			out.Global().Printf("Analyzed: %s\n", args[0])
+			out.Global().Printf("Applicable rules: %d\n\n", len(rules))
 
 			for _, rule := range rules {
-				fmt.Printf("• %s (%s): %s\n", rule.Name, rule.Severity, rule.Type)
+				out.Global().Printf("• %s (%s): %s\n", rule.Name, rule.Severity, rule.Type)
 			}
 		}
 
@@ -144,7 +145,7 @@ var engramResetCmd = &cobra.Command{
 		// Save empty rules
 		learner.SaveRules()
 
-		fmt.Println("All Engram rules have been reset.")
+		out.Global().Println("All Engram rules have been reset.")
 		return nil
 	},
 }

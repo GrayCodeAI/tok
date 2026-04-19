@@ -2,7 +2,7 @@ package pkgmgr
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -42,7 +42,7 @@ func runPnpm(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: pnpm %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: pnpm %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("pnpm", args...)
@@ -50,7 +50,7 @@ func runPnpm(cmd *cobra.Command, args []string) error {
 	raw := string(output)
 
 	filtered := filterPnpmOutput(raw, args)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

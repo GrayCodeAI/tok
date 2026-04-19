@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -52,7 +53,7 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 		if err := cfg.Save(config.ConfigPath()); err != nil {
 			return fmt.Errorf("failed to save config: %w", err)
 		}
-		fmt.Println(color.GreenString("✓"), "Attribution enabled")
+		out.Global().Println(color.GreenString("✓"), "Attribution enabled")
 		return nil
 	}
 
@@ -61,29 +62,29 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 		if err := cfg.Save(config.ConfigPath()); err != nil {
 			return fmt.Errorf("failed to save config: %w", err)
 		}
-		fmt.Println(color.GreenString("✓"), "Attribution disabled")
+		out.Global().Println(color.GreenString("✓"), "Attribution disabled")
 		return nil
 	}
 
 	if len(args) > 0 {
 		if args[0] == "set" && len(args) > 1 {
-			fmt.Printf("Custom author will be set: %s\n", args[1])
-			fmt.Println("(Custom author support coming soon)")
+			out.Global().Printf("Custom author will be set: %s\n", args[1])
+			out.Global().Println("(Custom author support coming soon)")
 			return nil
 		}
 	}
 
-	fmt.Println("Attribution Settings:")
+	out.Global().Println("Attribution Settings:")
 	if enabled {
-		fmt.Println("  Enabled:", color.GreenString("Yes"))
+		out.Global().Println("  Enabled:", color.GreenString("Yes"))
 	} else {
-		fmt.Println("  Enabled:", color.RedString("No"))
+		out.Global().Println("  Enabled:", color.RedString("No"))
 	}
-	fmt.Println("  Author:", author)
-	fmt.Println()
-	fmt.Println("Commands:")
-	fmt.Println("  tok attribution enable   - Enable Co-Authored-By")
-	fmt.Println("  tok attribution disable  - Disable attribution")
+	out.Global().Println("  Author:", author)
+	out.Global().Println()
+	out.Global().Println("Commands:")
+	out.Global().Println("  tok attribution enable   - Enable Co-Authored-By")
+	out.Global().Println("  tok attribution disable  - Disable attribution")
 
 	return nil
 }

@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"sort"
 	"strings"
@@ -167,7 +168,7 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	}
 
 	output := result.String()
-	fmt.Print(output)
+	out.Global().Print(output)
 
 	raw := strings.Join(vars, "\n")
 	originalTokens := filter.EstimateTokens(raw)

@@ -57,8 +57,8 @@ tok both        # Run both input and output
 
 ## Architecture
 
-- `tok input` - Native input compression engine (from tork)
-- `tok output` - Output filtering engine (from tokman)
+- `tok input` - Native input compression engine (from tok)
+- `tok output` - Output filtering engine (from tok)
 - Single binary, no external dependencies
 
 ## Config

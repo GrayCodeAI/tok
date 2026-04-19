@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -88,7 +89,7 @@ func runGrep(cmd *cobra.Command, args []string) error {
 	output, exitCode, err := shared.RunAndCapture("grep", grepArgs)
 
 	if err != nil && exitCode == 1 && output == "" {
-		fmt.Println("(no matches)")
+		out.Global().Println("(no matches)")
 		return nil
 	}
 
@@ -105,7 +106,7 @@ func runGrep(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

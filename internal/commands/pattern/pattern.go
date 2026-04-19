@@ -2,6 +2,7 @@ package pattern
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/fatih/color"
@@ -80,8 +81,8 @@ func runPatternList(cmd *cobra.Command, args []string) error {
 	patterns := engine.GetPatterns(patternMinConfidence)
 
 	if len(patterns) == 0 {
-		fmt.Println("\nNo patterns discovered yet.")
-		fmt.Println("Run 'tok pattern discover <file>' to analyze content.")
+		out.Global().Println("\nNo patterns discovered yet.")
+		out.Global().Println("Run 'tok pattern discover <file>' to analyze content.")
 		return nil
 	}
 
@@ -89,13 +90,13 @@ func runPatternList(cmd *cobra.Command, args []string) error {
 		patterns = patterns[:patternMaxResults]
 	}
 
-	fmt.Printf("\n%s (%d patterns found)\n\n",
+	out.Global().Printf("\n%s (%d patterns found)\n\n",
 		color.New(color.Bold).Sprint("Discovered Patterns"),
 		len(patterns))
 
-	fmt.Printf("%-16s %-20s %-12s %-10s %s\n",
+	out.Global().Printf("%-16s %-20s %-12s %-10s %s\n",
 		"ID", "TYPE", "CONFIDENCE", "FREQ", "PATTERN")
-	fmt.Println(string(make([]byte, 90)))
+	out.Global().Println(string(make([]byte, 90)))
 
 	for _, p := range patterns {
 		patternStr := p.Pattern
@@ -103,7 +104,7 @@ func runPatternList(cmd *cobra.Command, args []string) error {
 			patternStr = patternStr[:37] + "..."
 		}
 
-		fmt.Printf("%-16s %-20s %-12.2f %-10d %s\n",
+		out.Global().Printf("%-16s %-20s %-12.2f %-10d %s\n",
 			p.ID[:16],
 			p.Type,
 			p.Confidence,
@@ -111,7 +112,7 @@ func runPatternList(cmd *cobra.Command, args []string) error {
 			patternStr)
 	}
 
-	fmt.Println()
+	out.Global().Println()
 	return nil
 }
 
@@ -149,9 +150,9 @@ func runPatternDiscover(cmd *cobra.Command, args []string) error {
 	// Stop and consolidate
 	engine.Stop()
 
-	fmt.Printf("\n%s Analyzed %s\n\n", color.GreenString("✓"), source)
-	fmt.Println("Patterns have been submitted for analysis.")
-	fmt.Println("Run 'tok pattern list' to see discovered patterns.")
+	out.Global().Printf("\n%s Analyzed %s\n\n", color.GreenString("✓"), source)
+	out.Global().Println("Patterns have been submitted for analysis.")
+	out.Global().Println("Run 'tok pattern list' to see discovered patterns.")
 
 	return nil
 }
@@ -170,18 +171,18 @@ func runPatternShow(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("pattern not found: %s", patternID)
 	}
 
-	fmt.Printf("\n%s Pattern Details\n\n", color.New(color.Bold).Sprint("→"))
-	fmt.Printf("  ID:          %s\n", p.ID)
-	fmt.Printf("  Type:        %s\n", p.Type)
-	fmt.Printf("  Pattern:     %s\n", p.Pattern)
-	fmt.Printf("  Regex:       %s\n", p.Regex)
-	fmt.Printf("  Confidence:  %.2f\n", p.Confidence)
-	fmt.Printf("  Frequency:   %d\n", p.Frequency)
-	fmt.Printf("  First Seen:  %s\n", p.FirstSeen.Format("2006-01-02 15:04:05"))
-	fmt.Printf("  Last Seen:   %s\n", p.LastSeen.Format("2006-01-02 15:04:05"))
-	fmt.Printf("  Status:      %s\n", p.Status)
-	fmt.Printf("  Sources:     %v\n", p.SourceFiles)
-	fmt.Printf("\n  Generated Filter:\n    %s\n\n", p.GenerateFilter())
+	out.Global().Printf("\n%s Pattern Details\n\n", color.New(color.Bold).Sprint("→"))
+	out.Global().Printf("  ID:          %s\n", p.ID)
+	out.Global().Printf("  Type:        %s\n", p.Type)
+	out.Global().Printf("  Pattern:     %s\n", p.Pattern)
+	out.Global().Printf("  Regex:       %s\n", p.Regex)
+	out.Global().Printf("  Confidence:  %.2f\n", p.Confidence)
+	out.Global().Printf("  Frequency:   %d\n", p.Frequency)
+	out.Global().Printf("  First Seen:  %s\n", p.FirstSeen.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("  Last Seen:   %s\n", p.LastSeen.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("  Status:      %s\n", p.Status)
+	out.Global().Printf("  Sources:     %v\n", p.SourceFiles)
+	out.Global().Printf("\n  Generated Filter:\n    %s\n\n", p.GenerateFilter())
 
 	return nil
 }
@@ -199,6 +200,6 @@ func runPatternDelete(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to delete pattern: %w", err)
 	}
 
-	fmt.Printf("\n%s Deleted pattern %s\n\n", color.GreenString("✓"), patternID)
+	out.Global().Printf("\n%s Deleted pattern %s\n\n", color.GreenString("✓"), patternID)
 	return nil
 }

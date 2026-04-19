@@ -3,7 +3,7 @@ package lang
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -64,7 +64,7 @@ func runGoTestCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: go test %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: go test %s\n", strings.Join(args, " "))
 	}
 
 	// Use -json for structured output
@@ -82,7 +82,7 @@ func runGoTestCmd(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -95,7 +95,7 @@ func runGoBuildCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: go build %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: go build %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("go", append([]string{"build"}, args...)...)
@@ -111,7 +111,7 @@ func runGoBuildCmd(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -124,7 +124,7 @@ func runGoVet(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: go vet %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: go vet %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("go", append([]string{"vet"}, args...)...)
@@ -132,7 +132,7 @@ func runGoVet(args []string) error {
 	raw := string(output)
 
 	filtered := filterGoVetOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -145,7 +145,7 @@ func runGoPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: go %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: go %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("go", args...)
@@ -154,7 +154,7 @@ func runGoPassthrough(args []string) error {
 
 	// Basic filtering
 	filtered := filterGoOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -416,7 +416,7 @@ func runGoMod(args []string) error {
 	raw := string(output)
 
 	filtered := filterGoModOutput(raw, args)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -480,7 +480,7 @@ func runGoDoc(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -499,14 +499,14 @@ func runGoList(args []string) error {
 	lines := strings.Split(strings.TrimSpace(raw), "\n")
 	if len(lines) > 30 {
 		filtered := strings.Join(lines[:30], "\n") + fmt.Sprintf("\n... +%d more", len(lines)-30)
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tok go list", originalTokens, filteredTokens)
 		return err
 	}
 
-	fmt.Print(raw)
+	out.Global().Print(raw)
 	originalTokens := filter.EstimateTokens(raw)
 	timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tok go list", originalTokens, originalTokens)
 
@@ -530,7 +530,7 @@ func runGoEnv(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

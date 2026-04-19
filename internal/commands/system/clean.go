@@ -1,7 +1,7 @@
 package system
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"time"
@@ -52,22 +52,22 @@ func runClean(cmd *cobra.Command, args []string) error {
 			if cleanAll {
 				removed, _ := tracker.CleanupWithRetention(0)
 				totalRemoved += int(removed)
-				fmt.Printf("  Removed %d tracking records\n", removed)
+				out.Global().Printf("  Removed %d tracking records\n", removed)
 			} else {
 				removed, _ := tracker.CleanupWithRetention(cleanDays)
 				totalRemoved += int(removed)
-				fmt.Printf("  Removed %d tracking records (older than %d days)\n", removed, cleanDays)
+				out.Global().Printf("  Removed %d tracking records (older than %d days)\n", removed, cleanDays)
 			}
 
 			// Vacuum database
 			if err := tracker.Vacuum(); err == nil {
-				fmt.Println("  Database vacuumed")
+				out.Global().Println("  Database vacuumed")
 			}
 
 			// Show database size
 			if size, err := tracker.DatabaseSize(); err == nil {
 				sizeMB := float64(size) / 1024 / 1024
-				fmt.Printf("  Database size: %.1fMB\n", sizeMB)
+				out.Global().Printf("  Database size: %.1fMB\n", sizeMB)
 			}
 		}
 	}
@@ -80,13 +80,13 @@ func runClean(cmd *cobra.Command, args []string) error {
 			for _, e := range entries {
 				if !e.IsDir() {
 					if err := os.Remove(filepath.Join(teeDir, e.Name())); err != nil {
-						fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
+						out.Global().Errorf("warning: failed to remove %s: %v\n", e.Name(), err)
 					} else {
 						cleaned++
 					}
 				}
 			}
-			fmt.Printf("  Removed %d tee files\n", cleaned)
+			out.Global().Printf("  Removed %d tee files\n", cleaned)
 			totalRemoved += cleaned
 		}
 	}
@@ -100,7 +100,7 @@ func runClean(cmd *cobra.Command, args []string) error {
 			for _, e := range entries {
 				if cleanAll {
 					if err := os.Remove(filepath.Join(revDir, e.Name())); err != nil {
-						fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
+						out.Global().Errorf("warning: failed to remove %s: %v\n", e.Name(), err)
 					} else {
 						removed++
 					}
@@ -109,18 +109,18 @@ func runClean(cmd *cobra.Command, args []string) error {
 
 				if info, err := e.Info(); err == nil && info.ModTime().Before(cutoff) {
 					if err := os.Remove(filepath.Join(revDir, e.Name())); err != nil {
-						fmt.Fprintf(os.Stderr, "warning: failed to remove %s: %v\n", e.Name(), err)
+						out.Global().Errorf("warning: failed to remove %s: %v\n", e.Name(), err)
 					} else {
 						removed++
 					}
 				}
 			}
-			fmt.Printf("  Removed %d reversible entries\n", removed)
+			out.Global().Printf("  Removed %d reversible entries\n", removed)
 			totalRemoved += removed
 		}
 	}
 
-	fmt.Printf("\nTotal items removed: %d\n", totalRemoved)
+	out.Global().Printf("\nTotal items removed: %d\n", totalRemoved)
 	return nil
 }
 

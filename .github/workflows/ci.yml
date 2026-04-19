@@ -99,17 +99,17 @@ jobs:
         GOOS: ${{ matrix.os }}
         GOARCH: ${{ matrix.arch }}
       run: |
-        output="tokman-${{ matrix.os }}-${{ matrix.arch }}"
+        output="tok-${{ matrix.os }}-${{ matrix.arch }}"
         if [ "${{ matrix.os }}" = "windows" ]; then
           output="${output}.exe"
         fi
-        go build -ldflags="-s -w" -o "${output}" ./cmd/tokman
+        go build -ldflags="-s -w" -o "${output}" ./cmd/tok
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tokman-${{ matrix.os }}-${{ matrix.arch }}
-        path: tokman-*
+        name: tok-${{ matrix.os }}-${{ matrix.arch }}
+        path: tok-*
 
   coverage-threshold:
     name: Coverage Threshold
@@ -130,8 +130,8 @@ jobs:
       run: |
         coverage=$(go tool cover -func=coverage.out | grep total | awk '{print $3}' | sed 's/%//')
         echo "Total coverage: ${coverage}%"
-        if (( $(echo "$coverage < 50" | bc -l) )); then
-          echo "❌ Coverage ${coverage}% is below threshold of 50%"
+        if (( $(echo "$coverage < 60" | bc -l) )); then
+          echo "❌ Coverage ${coverage}% is below threshold of 60%"
           exit 1
         fi
         echo "✅ Coverage ${coverage}% meets threshold"
@@ -148,13 +148,13 @@ jobs:
         go-version: '1.26'
     
     - name: Build binary
-      run: go build -o tokman ./cmd/tokman
+      run: go build -o tok ./cmd/tok
     
     - name: Run integration tests
       run: go test -v ./test/integration/...
     
     - name: Test CLI commands
       run: |
-        ./tokman --version
-        ./tokman --help
-        echo "test content" | ./tokman filter
+        ./tok --version
+        ./tok --help
+        echo "test content" | ./tok filter

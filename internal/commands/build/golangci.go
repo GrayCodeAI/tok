@@ -2,7 +2,7 @@ package build
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -40,7 +40,7 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: golangci-lint %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: golangci-lint %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("golangci-lint", args...)
@@ -55,7 +55,7 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

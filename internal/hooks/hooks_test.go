@@ -9,11 +9,11 @@ import (
 func TestGetFlagPath(t *testing.T) {
 	// Test with env var
 	testDir := t.TempDir()
-	os.Setenv("TORK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TORK_CONFIG_DIR")
+	os.Setenv("TOK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TOK_CONFIG_DIR")
 	
 	path := GetFlagPath()
-	expected := filepath.Join(testDir, ".tork-active")
+	expected := filepath.Join(testDir, ".tok-active")
 	if path != expected {
 		t.Errorf("GetFlagPath() = %q, want %q", path, expected)
 	}
@@ -21,8 +21,8 @@ func TestGetFlagPath(t *testing.T) {
 
 func TestActivateDeactivate(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TORK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TORK_CONFIG_DIR")
+	os.Setenv("TOK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TOK_CONFIG_DIR")
 	
 	// Test activation
 	if err := Activate("full"); err != nil {
@@ -51,8 +51,8 @@ func TestActivateDeactivate(t *testing.T) {
 
 func TestGetStatusLine(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TORK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TORK_CONFIG_DIR")
+	os.Setenv("TOK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TOK_CONFIG_DIR")
 	
 	// Not active
 	if status := GetStatusLine(); status != "" {
@@ -61,21 +61,21 @@ func TestGetStatusLine(t *testing.T) {
 	
 	// Active with full mode
 	Activate("full")
-	if status := GetStatusLine(); status != "[TORK]" {
-		t.Errorf("GetStatusLine() full = %q, want [TORK]", status)
+	if status := GetStatusLine(); status != "[TOK]" {
+		t.Errorf("GetStatusLine() full = %q, want [TOK]", status)
 	}
 	
 	// Active with ultra mode
 	Activate("ultra")
-	if status := GetStatusLine(); status != "[TORK:ULTRA]" {
-		t.Errorf("GetStatusLine() ultra = %q, want [TORK:ULTRA]", status)
+	if status := GetStatusLine(); status != "[TOK:ULTRA]" {
+		t.Errorf("GetStatusLine() ultra = %q, want [TOK:ULTRA]", status)
 	}
 }
 
 func TestAutoActivateOnStartup(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TORK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TORK_CONFIG_DIR")
+	os.Setenv("TOK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TOK_CONFIG_DIR")
 	
 	// Without env var
 	Deactivate()
@@ -87,10 +87,10 @@ func TestAutoActivateOnStartup(t *testing.T) {
 	}
 	
 	// With env var
-	os.Setenv("TORK_AUTO_ACTIVATE", "1")
-	os.Setenv("TORK_DEFAULT_MODE", "lite")
-	defer os.Unsetenv("TORK_AUTO_ACTIVATE")
-	defer os.Unsetenv("TORK_DEFAULT_MODE")
+	os.Setenv("TOK_AUTO_ACTIVATE", "1")
+	os.Setenv("TOK_DEFAULT_MODE", "lite")
+	defer os.Unsetenv("TOK_AUTO_ACTIVATE")
+	defer os.Unsetenv("TOK_DEFAULT_MODE")
 	
 	if err := AutoActivateOnStartup(); err != nil {
 		t.Errorf("AutoActivateOnStartup() error = %v", err)
@@ -105,12 +105,12 @@ func TestAutoActivateOnStartup(t *testing.T) {
 
 func TestResolveDefaultMode(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TORK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TORK_CONFIG_DIR")
-	defer os.Unsetenv("TORK_DEFAULT_MODE")
+	os.Setenv("TOK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TOK_CONFIG_DIR")
+	defer os.Unsetenv("TOK_DEFAULT_MODE")
 
 	_ = Deactivate()
-	os.Setenv("TORK_DEFAULT_MODE", "ultra")
+	os.Setenv("TOK_DEFAULT_MODE", "ultra")
 	if got := ResolveDefaultMode(); got != "ultra" {
 		t.Errorf("ResolveDefaultMode() = %q, want ultra", got)
 	}

@@ -3,6 +3,7 @@ package output
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -63,7 +64,7 @@ func runJSON(cmd *cobra.Command, args []string) error {
 		filtered = generateSchema(v, 0, jsonDepth)
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(string(data))
 	filteredTokens := filter.EstimateTokens(filtered)

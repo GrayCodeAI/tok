@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"regexp"
@@ -58,7 +59,7 @@ func runRake(cmd *cobra.Command, args []string) error {
 
 	filtered := filterMinitestOutput(output)
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

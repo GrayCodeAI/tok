@@ -73,7 +73,7 @@ func TestIsStreamMode(t *testing.T) {
 }
 
 func TestGetQueryIntent(t *testing.T) {
-	os.Unsetenv("TOKMAN_QUERY")
+	os.Unsetenv("TOK_QUERY")
 
 	// Flag takes precedence
 	QueryIntent = "debug"
@@ -83,20 +83,20 @@ func TestGetQueryIntent(t *testing.T) {
 
 	// Falls back to env var
 	QueryIntent = ""
-	os.Setenv("TOKMAN_QUERY", "fix bug")
+	os.Setenv("TOK_QUERY", "fix bug")
 	if got := GetQueryIntent(); got != "fix bug" {
 		t.Errorf("expected 'fix bug', got %q", got)
 	}
 
 	// Empty when neither set
-	os.Unsetenv("TOKMAN_QUERY")
+	os.Unsetenv("TOK_QUERY")
 	if got := GetQueryIntent(); got != "" {
 		t.Errorf("expected empty, got %q", got)
 	}
 }
 
 func TestIsLLMEnabled(t *testing.T) {
-	os.Unsetenv("TOKMAN_LLM")
+	os.Unsetenv("TOK_LLM")
 
 	LLMEnabled = true
 	if !IsLLMEnabled() {
@@ -104,19 +104,19 @@ func TestIsLLMEnabled(t *testing.T) {
 	}
 
 	LLMEnabled = false
-	os.Setenv("TOKMAN_LLM", "true")
+	os.Setenv("TOK_LLM", "true")
 	if !IsLLMEnabled() {
-		t.Error("expected true when TOKMAN_LLM=true")
+		t.Error("expected true when TOK_LLM=true")
 	}
 
-	os.Unsetenv("TOKMAN_LLM")
+	os.Unsetenv("TOK_LLM")
 	if IsLLMEnabled() {
 		t.Error("expected false when neither flag nor env set")
 	}
 }
 
 func TestGetTokenBudget(t *testing.T) {
-	os.Unsetenv("TOKMAN_BUDGET")
+	os.Unsetenv("TOK_BUDGET")
 
 	// Flag takes precedence
 	TokenBudget = 1000
@@ -126,20 +126,20 @@ func TestGetTokenBudget(t *testing.T) {
 
 	// Falls back to env var
 	TokenBudget = 0
-	os.Setenv("TOKMAN_BUDGET", "2000")
+	os.Setenv("TOK_BUDGET", "2000")
 	if got := GetTokenBudget(); got != 2000 {
 		t.Errorf("expected 2000, got %d", got)
 	}
 
 	// Zero when neither set
-	os.Unsetenv("TOKMAN_BUDGET")
+	os.Unsetenv("TOK_BUDGET")
 	if got := GetTokenBudget(); got != 0 {
 		t.Errorf("expected 0, got %d", got)
 	}
 }
 
 func TestGetLayerPreset(t *testing.T) {
-	os.Unsetenv("TOKMAN_PRESET")
+	os.Unsetenv("TOK_PRESET")
 
 	LayerPreset = "fast"
 	if got := GetLayerPreset(); got != "fast" {
@@ -147,16 +147,16 @@ func TestGetLayerPreset(t *testing.T) {
 	}
 
 	LayerPreset = ""
-	os.Setenv("TOKMAN_PRESET", "balanced")
+	os.Setenv("TOK_PRESET", "balanced")
 	if got := GetLayerPreset(); got != "balanced" {
 		t.Errorf("expected 'balanced', got %q", got)
 	}
 
-	os.Unsetenv("TOKMAN_PRESET")
+	os.Unsetenv("TOK_PRESET")
 }
 
 func TestIsReversibleEnabled(t *testing.T) {
-	os.Unsetenv("TOKMAN_REVERSIBLE")
+	os.Unsetenv("TOK_REVERSIBLE")
 
 	ReversibleEnabled = true
 	if !IsReversibleEnabled() {
@@ -164,19 +164,19 @@ func TestIsReversibleEnabled(t *testing.T) {
 	}
 
 	ReversibleEnabled = false
-	os.Setenv("TOKMAN_REVERSIBLE", "true")
+	os.Setenv("TOK_REVERSIBLE", "true")
 	if !IsReversibleEnabled() {
-		t.Error("expected true when TOKMAN_REVERSIBLE=true")
+		t.Error("expected true when TOK_REVERSIBLE=true")
 	}
 
-	os.Unsetenv("TOKMAN_REVERSIBLE")
+	os.Unsetenv("TOK_REVERSIBLE")
 	if IsReversibleEnabled() {
 		t.Error("expected false when neither set")
 	}
 }
 
 func TestIsRemoteMode(t *testing.T) {
-	os.Unsetenv("TOKMAN_REMOTE")
+	os.Unsetenv("TOK_REMOTE")
 
 	RemoteMode = true
 	if !IsRemoteMode() {
@@ -184,19 +184,19 @@ func TestIsRemoteMode(t *testing.T) {
 	}
 
 	RemoteMode = false
-	os.Setenv("TOKMAN_REMOTE", "true")
+	os.Setenv("TOK_REMOTE", "true")
 	if !IsRemoteMode() {
-		t.Error("expected true when TOKMAN_REMOTE=true")
+		t.Error("expected true when TOK_REMOTE=true")
 	}
 
-	os.Unsetenv("TOKMAN_REMOTE")
+	os.Unsetenv("TOK_REMOTE")
 	if IsRemoteMode() {
 		t.Error("expected false when neither set")
 	}
 }
 
 func TestGetCompressionAddr(t *testing.T) {
-	os.Unsetenv("TOKMAN_COMPRESSION_ADDR")
+	os.Unsetenv("TOK_COMPRESSION_ADDR")
 
 	CompressionAddr = "localhost:9090"
 	if got := GetCompressionAddr(); got != "localhost:9090" {
@@ -204,16 +204,16 @@ func TestGetCompressionAddr(t *testing.T) {
 	}
 
 	CompressionAddr = ""
-	os.Setenv("TOKMAN_COMPRESSION_ADDR", "remote:9090")
+	os.Setenv("TOK_COMPRESSION_ADDR", "remote:9090")
 	if got := GetCompressionAddr(); got != "remote:9090" {
 		t.Errorf("expected 'remote:9090', got %q", got)
 	}
 
-	os.Unsetenv("TOKMAN_COMPRESSION_ADDR")
+	os.Unsetenv("TOK_COMPRESSION_ADDR")
 }
 
 func TestGetAnalyticsAddr(t *testing.T) {
-	os.Unsetenv("TOKMAN_ANALYTICS_ADDR")
+	os.Unsetenv("TOK_ANALYTICS_ADDR")
 
 	AnalyticsAddr = "localhost:9091"
 	if got := GetAnalyticsAddr(); got != "localhost:9091" {
@@ -221,12 +221,12 @@ func TestGetAnalyticsAddr(t *testing.T) {
 	}
 
 	AnalyticsAddr = ""
-	os.Setenv("TOKMAN_ANALYTICS_ADDR", "remote:9091")
+	os.Setenv("TOK_ANALYTICS_ADDR", "remote:9091")
 	if got := GetAnalyticsAddr(); got != "remote:9091" {
 		t.Errorf("expected 'remote:9091', got %q", got)
 	}
 
-	os.Unsetenv("TOKMAN_ANALYTICS_ADDR")
+	os.Unsetenv("TOK_ANALYTICS_ADDR")
 }
 
 func TestGetRemoteTimeout(t *testing.T) {
@@ -366,7 +366,7 @@ func TestSetFlags(t *testing.T) {
 }
 
 func TestGetLayerProfile(t *testing.T) {
-	os.Unsetenv("TOKMAN_PROFILE")
+	os.Unsetenv("TOK_PROFILE")
 
 	LayerProfile = "thread"
 	if got := GetLayerProfile(); got != "thread" {
@@ -374,12 +374,12 @@ func TestGetLayerProfile(t *testing.T) {
 	}
 
 	LayerProfile = ""
-	os.Setenv("TOKMAN_PROFILE", "log")
+	os.Setenv("TOK_PROFILE", "log")
 	if got := GetLayerProfile(); got != "log" {
 		t.Errorf("expected 'log', got %q", got)
 	}
 
-	os.Unsetenv("TOKMAN_PROFILE")
+	os.Unsetenv("TOK_PROFILE")
 }
 
 type testRootCmd struct {

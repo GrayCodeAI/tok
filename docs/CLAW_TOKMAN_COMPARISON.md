@@ -1,8 +1,8 @@
-# Claw Compactor vs TokMan Feature Comparison
+# Claw Compactor vs Tok Feature Comparison
 
 ## Overview
 
-| Aspect | Claw Compactor | TokMan |
+| Aspect | Claw Compactor | Tok |
 |--------|---------------|--------|
 | **Language** | Python | Go |
 | **Pipeline Stages** | 14 stages | 20+ layers (up to 49) |
@@ -17,9 +17,9 @@
 
 ## Stage-by-Stage Feature Mapping
 
-### Claw Compactor Stages → TokMan Implementation
+### Claw Compactor Stages → Tok Implementation
 
-| # | Claw Stage | Description | TokMan Equivalent | Status |
+| # | Claw Stage | Description | Tok Equivalent | Status |
 |---|------------|-------------|-------------------|--------|
 | 0 | **QuantumLock** | KV-cache alignment via content isolation | `QuantumLockFilter` (layer 0) | ✅ Implemented |
 | 1 | **Cortex** | Auto-detect 16 languages | Language detection in `filter.go` | ✅ Implemented |
@@ -38,9 +38,9 @@
 
 ---
 
-## TokMan Features Beyond Claw Compactor
+## Tok Features Beyond Claw Compactor
 
-| Feature | TokMan Layer | Description |
+| Feature | Tok Layer | Description |
 |---------|--------------|-------------|
 | **Entropy Filtering** | L1 | Shannon entropy-based token pruning |
 | **Perplexity Pruning** | L2 | LLMLingua-style perplexity ranking |
@@ -75,15 +75,15 @@
 
 ## Newly Implemented from Claw Compactor (Just Added)
 
-| Feature | TokMan File | CLI Command | Status |
+| Feature | Tok File | CLI Command | Status |
 |---------|-------------|-------------|--------|
-| **EngramLearner** | `engram_learner.go` | `tokman filter engram` | ✅ Implemented |
-| **TieredSummary** | `tiered_summary.go` | `tokman filter summarize` | ✅ Implemented |
-| **CrunchBench** | `crunch_bench.go` | `tokman filter benchmark` | ✅ Implemented |
+| **EngramLearner** | `engram_learner.go` | `tok filter engram` | ✅ Implemented |
+| **TieredSummary** | `tiered_summary.go` | `tok filter summarize` | ✅ Implemented |
+| **CrunchBench** | `crunch_bench.go` | `tok filter benchmark` | ✅ Implemented |
 
 ---
 
-## Unique Claw Compactor Features (Not in TokMan)
+## Unique Claw Compactor Features (Not in Tok)
 
 | Feature | Description | Status |
 |---------|-------------|--------|
@@ -93,9 +93,9 @@
 | **Workspace Commands** | `observe`, `dedup`, `estimate`, `audit`, `optimize` | ❌ Not implemented |
 | **HTML Reports** | CrunchBench HTML output | ❌ Not implemented |
 | **RewindHandler** | LLM tool call interception for reversible retrieval | Similar to `reversible.go` but with middleware |
-| **CrunchBench** | Multi-dimensional benchmark framework | TokMan has benchmarks but less comprehensive |
-| **Tiered Summaries** | L0/L1/L2 tiered summary generation | Could add to TokMan |
-| **Workspace Commands** | `mem_compress.py` with multiple commands | TokMan has CLI but fewer workspace commands |
+| **CrunchBench** | Multi-dimensional benchmark framework | Tok has benchmarks but less comprehensive |
+| **Tiered Summaries** | L0/L1/L2 tiered summary generation | Could add to Tok |
+| **Workspace Commands** | `mem_compress.py` with multiple commands | Tok has CLI but fewer workspace commands |
 | **Proxy Integration** | Node.js compression middleware | Could add HTTP proxy mode |
 | **FeedbackLoop** | Retrieval rate tracking with auto-adjustment | Consider adding telemetry feedback |
 
@@ -109,7 +109,7 @@ Input → QuantumLock → Cortex → Photon → RLE → SemanticDedup → Ionize
         LogCrunch → SearchCrunch → DiffCrunch → StructuralCollapse → 
         Neurosyntax → Nexus → TokenOpt → Abbrev → Output
 
-TokMan (20+ layers, research-backed):
+Tok (20+ layers, research-backed):
 Input → L0:QuantumLock → L1:Entropy → L2:Perplexity → L3:GoalDriven → 
         L4:ASTPreserve → L5:Contrastive → L6:Ngram → L7:Evaluator → 
         L8:Gist → L9:Hierarchical → L10:Budget → L11:Compaction → 
@@ -122,11 +122,11 @@ Input → L0:QuantumLock → L1:Entropy → L2:Perplexity → L3:GoalDriven →
 
 ## Summary
 
-### ✅ All Claw Compactor Features Present in TokMan
+### ✅ All Claw Compactor Features Present in Tok
 
-TokMan implements **all 14 stages** of Claw Compactor's Fusion Pipeline:
+Tok implements **all 14 stages** of Claw Compactor's Fusion Pipeline:
 
-| Claw Stage | TokMan Implementation File |
+| Claw Stage | Tok Implementation File |
 |------------|---------------------------|
 | QuantumLock | `quantum_lock.go` |
 | Cortex | `filter.go` (language detection) |
@@ -143,7 +143,7 @@ TokMan implements **all 14 stages** of Claw Compactor's Fusion Pipeline:
 | TokenOpt | `meta_token.go` |
 | Abbrev | `ngram.go` |
 
-### 🎯 TokMan Advantages
+### 🎯 Tok Advantages
 
 1. **More Layers**: 20-49 layers vs 14 stages
 2. **Research-Backed**: Based on 120+ papers (LLMLingua, H2O, StreamingLLM, etc.)
@@ -163,4 +163,4 @@ TokMan implements **all 14 stages** of Claw Compactor's Fusion Pipeline:
 
 ## Conclusion
 
-**TokMan has complete feature parity with Claw Compactor** and extends significantly beyond with 20+ research-backed compression layers. All 14 Claw stages are implemented in TokMan's filter pipeline.
+**Tok has complete feature parity with Claw Compactor** and extends significantly beyond with 20+ research-backed compression layers. All 14 Claw stages are implemented in Tok's filter pipeline.

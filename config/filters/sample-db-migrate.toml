@@ -1,5 +1,5 @@
 # Sample TOML Filter: Database Migration Tool
-# Copy this file to ~/.config/tokman/filters/ to use it
+# Copy this file to ~/.config/tok/filters/ to use it
 schema_version = 1
 
 [db_migrate]

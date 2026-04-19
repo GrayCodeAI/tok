@@ -532,11 +532,11 @@ func Load(cfgFile string) (*Config, error) {
 		v.SetConfigName("config")
 	}
 
-	// Environment variables: Viper handles automatic TOKMAN_* → config key mapping
-	// (e.g., TOKMAN_BUDGET → pipeline.budget). Manual aliases below exist for
+	// Environment variables: Viper handles automatic TOK_* → config key mapping
+	// (e.g., TOK_BUDGET → pipeline.budget). Manual aliases below exist for
 	// legacy/non-standard env var names that don't map to config keys directly.
 	v.AutomaticEnv()
-	v.SetEnvPrefix("TOKMAN")
+	v.SetEnvPrefix("TOK")
 
 	// Bind non-standard env var aliases (names that don't follow the config key pattern)
 	bindEnvAliases(v)
@@ -564,71 +564,71 @@ func Load(cfgFile string) (*Config, error) {
 }
 
 // bindEnvAliases maps non-standard env var names to their config keys.
-// Viper's AutomaticEnv handles standard TOKMAN_<CONFIG_KEY> mappings.
+// Viper's AutomaticEnv handles standard TOK_<CONFIG_KEY> mappings.
 // This function covers legacy/short env var names and values requiring transformation.
 func bindEnvAliases(v *viper.Viper) {
 	aliasMap := map[string]func(v *viper.Viper, val string){
-		"TOKMAN_DB_PATH": func(v *viper.Viper, val string) { v.Set("tracking.database_path", val) },
-		"TOKMAN_TELEMETRY_DISABLED": func(v *viper.Viper, val string) {
+		"TOK_DB_PATH": func(v *viper.Viper, val string) { v.Set("tracking.database_path", val) },
+		"TOK_TELEMETRY_DISABLED": func(v *viper.Viper, val string) {
 			if parsed, err := strconv.ParseBool(val); err == nil {
 				v.Set("tracking.telemetry", !parsed)
 			}
 		},
-		"TOKMAN_AUDIT_DIR":  func(v *viper.Viper, val string) { v.Set("hooks.audit_dir", val) },
-		"TOKMAN_TEE_DIR":    func(v *viper.Viper, val string) { v.Set("hooks.tee_dir", val) },
-		"TOKMAN_TEE":        func(v *viper.Viper, val string) { v.Set("hooks.tee_enabled", val == "true" || val == "1") },
-		"TOKMAN_HOOK_AUDIT": func(v *viper.Viper, val string) { v.Set("hooks.audit_enabled", val == "true" || val == "1") },
-		"TOKMAN_BUDGET": func(v *viper.Viper, val string) {
+		"TOK_AUDIT_DIR":  func(v *viper.Viper, val string) { v.Set("hooks.audit_dir", val) },
+		"TOK_TEE_DIR":    func(v *viper.Viper, val string) { v.Set("hooks.tee_dir", val) },
+		"TOK_TEE":        func(v *viper.Viper, val string) { v.Set("hooks.tee_enabled", val == "true" || val == "1") },
+		"TOK_HOOK_AUDIT": func(v *viper.Viper, val string) { v.Set("hooks.audit_enabled", val == "true" || val == "1") },
+		"TOK_BUDGET": func(v *viper.Viper, val string) {
 			if n, err := strconv.Atoi(val); err == nil {
 				v.Set("pipeline.default_budget", n)
 			}
 		},
-		"TOKMAN_MODE":   func(v *viper.Viper, val string) { v.Set("filter.mode", val) },
-		"TOKMAN_PRESET": func(v *viper.Viper, val string) { v.Set("pipeline.preset", val) },
-		"TOKMAN_MAX_CONTEXT": func(v *viper.Viper, val string) {
+		"TOK_MODE":   func(v *viper.Viper, val string) { v.Set("filter.mode", val) },
+		"TOK_PRESET": func(v *viper.Viper, val string) { v.Set("pipeline.preset", val) },
+		"TOK_MAX_CONTEXT": func(v *viper.Viper, val string) {
 			if n, err := strconv.Atoi(val); err == nil {
 				v.Set("pipeline.max_context_tokens", n)
 			}
 		},
-		"TOKMAN_CACHE_SIZE": func(v *viper.Viper, val string) {
+		"TOK_CACHE_SIZE": func(v *viper.Viper, val string) {
 			if n, err := strconv.Atoi(val); err == nil {
 				v.Set("pipeline.cache_max_size", n)
 			}
 		},
-		"TOKMAN_ENTROPY_THRESHOLD": func(v *viper.Viper, val string) {
+		"TOK_ENTROPY_THRESHOLD": func(v *viper.Viper, val string) {
 			if f, err := strconv.ParseFloat(val, 64); err == nil {
 				v.Set("pipeline.entropy_threshold", f)
 			}
 		},
-		"TOKMAN_COMPACTION":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_compaction", val == "true" || val == "1") },
-		"TOKMAN_H2O":            func(v *viper.Viper, val string) { v.Set("pipeline.enable_h2o", val == "true" || val == "1") },
-		"TOKMAN_ATTENTION_SINK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_attention_sink", val == "true" || val == "1") },
-		"TOKMAN_DIFF_ADAPT":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_difft_adapt", val == "true" || val == "1") },
-		"TOKMAN_EPIC":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_epic", val == "true" || val == "1") },
-		"TOKMAN_SSDP":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_ssdp", val == "true" || val == "1") },
-		"TOKMAN_AGENT_OCR":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_agent_ocr", val == "true" || val == "1") },
-		"TOKMAN_S2_MAD":         func(v *viper.Viper, val string) { v.Set("pipeline.enable_s2_mad", val == "true" || val == "1") },
-		"TOKMAN_ACON":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_acon", val == "true" || val == "1") },
-		"TOKMAN_LATENT_COLLAB":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_latent_collab", val == "true" || val == "1") },
-		"TOKMAN_GRAPH_COT":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_graph_cot", val == "true" || val == "1") },
-		"TOKMAN_ROLE_BUDGET":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_role_budget", val == "true" || val == "1") },
-		"TOKMAN_SWE_ADAPTIVE": func(v *viper.Viper, val string) {
+		"TOK_COMPACTION":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_compaction", val == "true" || val == "1") },
+		"TOK_H2O":            func(v *viper.Viper, val string) { v.Set("pipeline.enable_h2o", val == "true" || val == "1") },
+		"TOK_ATTENTION_SINK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_attention_sink", val == "true" || val == "1") },
+		"TOK_DIFF_ADAPT":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_difft_adapt", val == "true" || val == "1") },
+		"TOK_EPIC":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_epic", val == "true" || val == "1") },
+		"TOK_SSDP":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_ssdp", val == "true" || val == "1") },
+		"TOK_AGENT_OCR":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_agent_ocr", val == "true" || val == "1") },
+		"TOK_S2_MAD":         func(v *viper.Viper, val string) { v.Set("pipeline.enable_s2_mad", val == "true" || val == "1") },
+		"TOK_ACON":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_acon", val == "true" || val == "1") },
+		"TOK_LATENT_COLLAB":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_latent_collab", val == "true" || val == "1") },
+		"TOK_GRAPH_COT":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_graph_cot", val == "true" || val == "1") },
+		"TOK_ROLE_BUDGET":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_role_budget", val == "true" || val == "1") },
+		"TOK_SWE_ADAPTIVE": func(v *viper.Viper, val string) {
 			v.Set("pipeline.enable_swe_adaptive_loop", val == "true" || val == "1")
 		},
-		"TOKMAN_AGENT_OCR_HISTORY": func(v *viper.Viper, val string) {
+		"TOK_AGENT_OCR_HISTORY": func(v *viper.Viper, val string) {
 			v.Set("pipeline.enable_agent_ocr_history", val == "true" || val == "1")
 		},
-		"TOKMAN_PLAN_BUDGET":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_plan_budget", val == "true" || val == "1") },
-		"TOKMAN_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
-		"TOKMAN_PATH_SHORTEN":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_path_shorten", val == "true" || val == "1") },
-		"TOKMAN_JSON_SAMPLER":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_json_sampler", val == "true" || val == "1") },
-		"TOKMAN_LOG_CRUNCH":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_log_crunch", val == "true" || val == "1") },
-		"TOKMAN_SEARCH_CRUNCH": func(v *viper.Viper, val string) { v.Set("pipeline.enable_search_crunch", val == "true" || val == "1") },
-		"TOKMAN_DIFF_CRUNCH":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_diff_crunch", val == "true" || val == "1") },
-		"TOKMAN_STRUCTURAL_COLLAPSE": func(v *viper.Viper, val string) {
+		"TOK_PLAN_BUDGET":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_plan_budget", val == "true" || val == "1") },
+		"TOK_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
+		"TOK_PATH_SHORTEN":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_path_shorten", val == "true" || val == "1") },
+		"TOK_JSON_SAMPLER":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_json_sampler", val == "true" || val == "1") },
+		"TOK_LOG_CRUNCH":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_log_crunch", val == "true" || val == "1") },
+		"TOK_SEARCH_CRUNCH": func(v *viper.Viper, val string) { v.Set("pipeline.enable_search_crunch", val == "true" || val == "1") },
+		"TOK_DIFF_CRUNCH":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_diff_crunch", val == "true" || val == "1") },
+		"TOK_STRUCTURAL_COLLAPSE": func(v *viper.Viper, val string) {
 			v.Set("pipeline.enable_structural_collapse", val == "true" || val == "1")
 		},
-		"TOKMAN_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
+		"TOK_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
 	}
 	for env, setter := range aliasMap {
 		if val := os.Getenv(env); val != "" {

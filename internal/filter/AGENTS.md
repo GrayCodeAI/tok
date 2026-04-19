@@ -97,7 +97,7 @@ backed by published research (cited in file comments).
 | `columnar_json_encode.go` | TOON: columnar encoding for homogeneous JSON arrays |
 | `path_shim_injector.go` | PATH shim injector for auto-filtering subprocesses |
 | `image_compress.go` | PhotonFilter: detect & compress base64-encoded images |
-| `compression_stage_map.go` | FusionStageMap: maps Claw-style stages to TokMan layer IDs |
+| `compression_stage_map.go` | FusionStageMap: maps Claw-style stages to Tok layer IDs |
 | `coverage_check.go` | Coverage test runner script |
 | `reasoning_step_compress.go` | LightThinker: compress reasoning output per step |
 | `memory_augment_compress.go` | LightMem: replace repeated facts with short references |

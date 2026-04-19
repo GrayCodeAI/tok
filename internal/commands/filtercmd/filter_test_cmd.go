@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -52,12 +53,12 @@ func runFilterTest(cmd *cobra.Command, args []string) error {
 	filename, filterKey, config := registry.FindMatchingFilter(filterTestCommand)
 	if config == nil {
 		// Try to find by filter name directly
-		fmt.Fprintf(os.Stderr, "No filter matches command %q\n", filterTestCommand)
-		fmt.Fprintf(os.Stderr, "Available filters: %d\n", registry.Count())
+		out.Global().Errorf("No filter matches command %q\n", filterTestCommand)
+		out.Global().Errorf("Available filters: %d\n", registry.Count())
 		return fmt.Errorf("filter not found for command")
 	}
 
-	fmt.Printf("Filter: %s/%s\n", filename, filterKey)
+	out.Global().Printf("Filter: %s/%s\n", filename, filterKey)
 
 	// Get input
 	input := filterTestInput
@@ -77,18 +78,18 @@ func runFilterTest(cmd *cobra.Command, args []string) error {
 	originalTokens := len(input) / 4
 	filteredTokens := len(filtered) / 4
 
-	fmt.Printf("\n=== Original (%d chars, ~%d tokens) ===\n", len(input), originalTokens)
+	out.Global().Printf("\n=== Original (%d chars, ~%d tokens) ===\n", len(input), originalTokens)
 	if len(input) > 500 {
-		fmt.Printf("%s...\n", input[:500])
+		out.Global().Printf("%s...\n", input[:500])
 	} else {
-		fmt.Println(input)
+		out.Global().Println(input)
 	}
 
-	fmt.Printf("\n=== Filtered (%d chars, ~%d tokens) ===\n", len(filtered), filteredTokens)
+	out.Global().Printf("\n=== Filtered (%d chars, ~%d tokens) ===\n", len(filtered), filteredTokens)
 	if len(filtered) > 500 {
-		fmt.Printf("%s...\n", filtered[:500])
+		out.Global().Printf("%s...\n", filtered[:500])
 	} else {
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 	}
 
 	// Calculate savings
@@ -97,9 +98,9 @@ func runFilterTest(cmd *cobra.Command, args []string) error {
 		savingsPct = float64(tokensSaved) / float64(originalTokens) * 100
 	}
 
-	fmt.Printf("\n=== Summary ===\n")
-	fmt.Printf("Tokens saved: %d (%.1f%%)\n", tokensSaved, savingsPct)
-	fmt.Printf("Compression ratio: %.2fx\n", float64(originalTokens)/float64(max(filteredTokens, 1)))
+	out.Global().Printf("\n=== Summary ===\n")
+	out.Global().Printf("Tokens saved: %d (%.1f%%)\n", tokensSaved, savingsPct)
+	out.Global().Printf("Compression ratio: %.2fx\n", float64(originalTokens)/float64(max(filteredTokens, 1)))
 
 	return nil
 }

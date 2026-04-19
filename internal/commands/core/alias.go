@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,7 +54,7 @@ func init() {
 func getAliasPath() string {
 	dir := config.ConfigDir()
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
+		out.Global().Errorf("warning: failed to create directory: %v\n", err)
 	}
 	return filepath.Join(dir, "aliases.txt")
 }
@@ -96,13 +97,13 @@ func saveAliases(aliases map[string]string) error {
 func runAliasList(cmd *cobra.Command, args []string) error {
 	aliases := loadAliases()
 	if len(aliases) == 0 {
-		fmt.Println("No aliases configured.")
-		fmt.Println("Create one with: tok alias set <name> <command>")
+		out.Global().Println("No aliases configured.")
+		out.Global().Println("Create one with: tok alias set <name> <command>")
 		return nil
 	}
-	fmt.Println("Aliases:")
+	out.Global().Println("Aliases:")
 	for name, command := range aliases {
-		fmt.Printf("  %s → %s\n", name, command)
+		out.Global().Printf("  %s → %s\n", name, command)
 	}
 	return nil
 }
@@ -115,7 +116,7 @@ func runAliasSet(cmd *cobra.Command, args []string) error {
 	if err := saveAliases(aliases); err != nil {
 		return err
 	}
-	fmt.Printf("Alias '%s' → '%s' created.\n", name, command)
+	out.Global().Printf("Alias '%s' → '%s' created.\n", name, command)
 	return nil
 }
 
@@ -129,6 +130,6 @@ func runAliasRemove(cmd *cobra.Command, args []string) error {
 	if err := saveAliases(aliases); err != nil {
 		return err
 	}
-	fmt.Printf("Alias '%s' removed.\n", name)
+	out.Global().Printf("Alias '%s' removed.\n", name)
 	return nil
 }

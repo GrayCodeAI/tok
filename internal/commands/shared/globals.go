@@ -291,7 +291,7 @@ func GetLayerProfile() string {
 	if profile != "" {
 		return profile
 	}
-	return os.Getenv("TOKMAN_PROFILE")
+	return os.Getenv("TOK_PROFILE")
 }
 
 // IsQuietMode returns true if quiet mode is enabled.

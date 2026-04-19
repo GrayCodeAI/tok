@@ -1,8 +1,7 @@
 package system
 
 import (
-	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -39,7 +38,7 @@ func runJq(cmd *cobra.Command, args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: jq %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: jq %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("jq", args...)
@@ -54,7 +53,7 @@ func runJq(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

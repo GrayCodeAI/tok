@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -102,18 +103,18 @@ func runRewrite(cmd *cobra.Command, args []string) error {
 
 	// Check if requires user confirmation (ask rules)
 	if requiresConfirmation(baseCmd, parts) {
-		fmt.Println(rewritten)
+		out.Global().Println(rewritten)
 		os.Exit(ExitRewriteAsk)
 	}
 
 	// Check if resource-intensive
 	if isResourceIntensive(baseCmd, parts) {
-		fmt.Println(rewritten)
+		out.Global().Println(rewritten)
 		os.Exit(ExitResourceIntensive)
 	}
 
 	// Rewrite and auto-allow
-	fmt.Println(rewritten)
+	out.Global().Println(rewritten)
 
 	if shared.Verbose > 0 {
 		cyan := color.New(color.FgCyan).SprintFunc()

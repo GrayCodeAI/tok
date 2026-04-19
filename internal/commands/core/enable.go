@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 
@@ -37,7 +38,7 @@ Examples:
 
 		// Check if already enabled
 		if isEnabled() {
-			fmt.Printf("%s tok is already enabled\n", green("✓"))
+			out.Global().Printf("%s tok is already enabled\n", green("✓"))
 			return nil
 		}
 
@@ -46,10 +47,10 @@ Examples:
 			return fmt.Errorf("error enabling tok: %w", err)
 		}
 
-		fmt.Printf("%s tok enabled globally\n", green("✓"))
-		fmt.Println()
-		fmt.Println("All commands will now be automatically compressed.")
-		fmt.Println("Run 'tok disable' to turn off.")
+		out.Global().Printf("%s tok enabled globally\n", green("✓"))
+		out.Global().Println()
+		out.Global().Println("All commands will now be automatically compressed.")
+		out.Global().Println("Run 'tok disable' to turn off.")
 		return nil
 	},
 }
@@ -67,7 +68,7 @@ Use 'tok enable' to turn interception back on.`,
 		markerPath := getEnabledMarkerPath()
 
 		if !isEnabled() {
-			fmt.Printf("%s tok is already disabled\n", green("✓"))
+			out.Global().Printf("%s tok is already disabled\n", green("✓"))
 			return nil
 		}
 
@@ -75,10 +76,10 @@ Use 'tok enable' to turn interception back on.`,
 			return fmt.Errorf("error disabling tok: %w", err)
 		}
 
-		fmt.Printf("%s tok disabled\n", red("✗"))
-		fmt.Println()
-		fmt.Println("Commands will run normally without compression.")
-		fmt.Println("Run 'tok enable' to turn back on.")
+		out.Global().Printf("%s tok disabled\n", red("✗"))
+		out.Global().Println()
+		out.Global().Println("Commands will run normally without compression.")
+		out.Global().Println("Run 'tok enable' to turn back on.")
 		return nil
 	},
 }

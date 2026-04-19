@@ -1,17 +1,17 @@
-# TokMan vs Claw Compactor: Comprehensive Technical Comparison
+# Tok vs Claw Compactor: Comprehensive Technical Comparison
 
 **Date:** April 2026  
-**TokMan Version:** Current (20-layer pipeline)  
+**Tok Version:** Current (20-layer pipeline)  
 **Claw Compactor Version:** v7.1.0 (14-stage Fusion Pipeline)
 
 ---
 
 ## Executive Summary
 
-Both TokMan and Claw Compactor are research-backed LLM token compression engines designed to reduce context window usage for AI coding assistants. While they share similar goals and some overlapping techniques, they differ significantly in architecture, implementation language, and design philosophy.
+Both Tok and Claw Compactor are research-backed LLM token compression engines designed to reduce context window usage for AI coding assistants. While they share similar goals and some overlapping techniques, they differ significantly in architecture, implementation language, and design philosophy.
 
 **Key Verdict:**
-- **TokMan**: Go-based CLI proxy with 20 practical layers, CLI-first design, production-ready for terminal workflows
+- **Tok**: Go-based CLI proxy with 20 practical layers, CLI-first design, production-ready for terminal workflows
 - **Claw Compactor**: Python-based library with 14 fusion stages, API-first design, optimized for agent integration
 
 ---
@@ -20,7 +20,7 @@ Both TokMan and Claw Compactor are research-backed LLM token compression engines
 
 ### Core Design Philosophy
 
-| Aspect | TokMan | Claw Compactor |
+| Aspect | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Language** | Go 1.26+ | Python 3.9+ |
 | **Architecture** | Mutable pipeline with stage gates | Immutable data flow (frozen dataclasses) |
@@ -31,7 +31,7 @@ Both TokMan and Claw Compactor are research-backed LLM token compression engines
 
 ### Pipeline Structure
 
-#### TokMan (20 Layers)
+#### Tok (20 Layers)
 ```
 Input → TOML Pre-filter → Core (1-9) → Semantic (11-20) → Research (21-25) → Budget → Output
          ↓                  ↓              ↓                  ↓
@@ -65,22 +65,22 @@ Input → Cross-msg Dedup → Fusion Pipeline (order 3-45) → Output + RewindSt
 
 ### Overlapping Techniques
 
-| TokMan Layer | Claw Stage | Technique | Notes |
+| Tok Layer | Claw Stage | Technique | Notes |
 |--------------|------------|-----------|-------|
-| **Layer 4: AST Preservation** | **Neurosyntax (25)** | AST-aware code compression | TokMan: syntax preservation; Claw: tree-sitter with identifier shortening |
-| **Layer 13: H2O Filter** | *(Not present)* | Heavy-Hitter Oracle (30x compression) | TokMan-specific |
-| **Layer 14: Attention Sink** | *(Not present)* | StreamingLLM stability | TokMan-specific |
-| **Layer 11: Compaction** | **Nexus (35)** | Semantic compression | TokMan: MemGPT-style; Claw: ML token-level |
-| **Layer 6: N-gram** | **RLE (10)** | Pattern compression | TokMan: lossless n-gram; Claw: path/IP/enum |
-| **Layer 17: Sketch Store** | **Ionizer (15)** | Reversible compression | TokMan: KVReviver-style; Claw: JSON sampling + RewindStore |
+| **Layer 4: AST Preservation** | **Neurosyntax (25)** | AST-aware code compression | Tok: syntax preservation; Claw: tree-sitter with identifier shortening |
+| **Layer 13: H2O Filter** | *(Not present)* | Heavy-Hitter Oracle (30x compression) | Tok-specific |
+| **Layer 14: Attention Sink** | *(Not present)* | StreamingLLM stability | Tok-specific |
+| **Layer 11: Compaction** | **Nexus (35)** | Semantic compression | Tok: MemGPT-style; Claw: ML token-level |
+| **Layer 6: N-gram** | **RLE (10)** | Pattern compression | Tok: lossless n-gram; Claw: path/IP/enum |
+| **Layer 17: Sketch Store** | **Ionizer (15)** | Reversible compression | Tok: KVReviver-style; Claw: JSON sampling + RewindStore |
 | *(Not present)* | **QuantumLock (3)** | KV-cache alignment | Claw-specific |
-| *(Not present)* | **Cortex (5)** | Content-type detection | Claw-specific (TokMan uses inline detection) |
+| *(Not present)* | **Cortex (5)** | Content-type detection | Claw-specific (Tok uses inline detection) |
 | *(Not present)* | **Photon (8)** | Image/base64 compression | Claw-specific |
-| *(Not present)* | **LogCrunch (16)** | Log folding | Claw-specific (TokMan has general log handling) |
+| *(Not present)* | **LogCrunch (16)** | Log folding | Claw-specific (Tok has general log handling) |
 | *(Not present)* | **SearchCrunch (17)** | Search result dedup | Claw-specific |
 | *(Not present)* | **DiffCrunch (18)** | Diff context folding | Claw-specific |
 
-### Unique to TokMan
+### Unique to Tok
 
 | Layer | Technique | Research Paper | Purpose |
 |-------|-----------|----------------|---------|
@@ -120,7 +120,7 @@ Input → Cross-msg Dedup → Fusion Pipeline (order 3-45) → Output + RewindSt
 
 ### Benchmark Comparison
 
-#### TokMan (30-minute Claude Code session)
+#### Tok (30-minute Claude Code session)
 | Command | Uses | Before | After | Savings |
 |---------|------|--------|-------|---------|
 | `ls`/`tree` | 10× | 2,000 | 400 | **80%** |
@@ -144,7 +144,7 @@ Input → Cross-msg Dedup → Fusion Pipeline (order 3-45) → Output + RewindSt
 
 ### Analysis
 
-**TokMan Strengths:**
+**Tok Strengths:**
 - Higher compression on CLI commands (80% average)
 - Optimized for terminal output patterns
 - Better performance on test output (90%)
@@ -154,13 +154,13 @@ Input → Cross-msg Dedup → Fusion Pipeline (order 3-45) → Output + RewindSt
 - Better on search results (40.7%)
 - More consistent across content types
 
-**Verdict:** TokMan excels at CLI workflows; Claw Compactor excels at structured data and agent conversations.
+**Verdict:** Tok excels at CLI workflows; Claw Compactor excels at structured data and agent conversations.
 
 ---
 
 ## Reversible Compression
 
-### TokMan: Sketch Store (Layer 17)
+### Tok: Sketch Store (Layer 17)
 ```go
 // KVReviver-style semantic caching
 type SketchStoreFilter struct {
@@ -203,7 +203,7 @@ class RewindStore:
 
 **Comparison:**
 
-| Feature | TokMan Sketch Store | Claw RewindStore |
+| Feature | Tok Sketch Store | Claw RewindStore |
 |---------|---------------------|------------------|
 | **Storage** | In-memory map | In-memory map (optional persistent) |
 | **Key** | Custom hash | SHA-256 (16 chars) |
@@ -211,13 +211,13 @@ class RewindStore:
 | **Integration** | Single layer (17) | Multiple stages (6, 7, 8, 17) |
 | **LLM Access** | Manual | Tool call (`rewind_retrieve`) |
 
-**Verdict:** Claw's RewindStore is more mature and better integrated across stages. TokMan's Sketch Store is more experimental.
+**Verdict:** Claw's RewindStore is more mature and better integrated across stages. Tok's Sketch Store is more experimental.
 
 ---
 
 ## Content-Type Detection
 
-### TokMan: Inline Detection
+### Tok: Inline Detection
 - No dedicated layer
 - Detection happens within individual layers (e.g., AST layer detects code)
 - TOML filters provide declarative content matching
@@ -243,20 +243,20 @@ class Cortex(FusionStage):
 
 **Comparison:**
 
-| Aspect | TokMan | Claw Compactor |
+| Aspect | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Approach** | Distributed (per-layer) | Centralized (Cortex stage) |
 | **Languages** | Implicit (AST layer) | Explicit (16 languages) |
 | **Content Types** | TOML patterns | 6 types (code/json/log/diff/search/text) |
 | **Overhead** | Zero (no dedicated layer) | ~5ms (one-time cost) |
 
-**Verdict:** Claw's centralized detection is cleaner and more maintainable. TokMan's distributed approach is more flexible but harder to debug.
+**Verdict:** Claw's centralized detection is cleaner and more maintainable. Tok's distributed approach is more flexible but harder to debug.
 
 ---
 
 ## Stage Gating (Early Exit)
 
-### TokMan: Stage Gates
+### Tok: Stage Gates
 ```go
 func (p *PipelineCoordinator) shouldSkipEntropy(output string) bool {
     return len(output) < 50  // Skip if too short
@@ -301,20 +301,20 @@ class MyStage(FusionStage):
 
 **Comparison:**
 
-| Feature | TokMan | Claw Compactor |
+| Feature | Tok | Claw Compactor |
 |---------|--------|----------------|
 | **Gate Location** | Coordinator method | Stage method |
 | **Early Exit** | Yes (budget-based) | No (all stages run) |
 | **Gate Cost** | O(1) checks | O(1) checks |
 | **Flexibility** | Centralized logic | Distributed logic |
 
-**Verdict:** TokMan's early-exit is more efficient for budget-constrained scenarios. Claw's per-stage gates are cleaner architecturally.
+**Verdict:** Tok's early-exit is more efficient for budget-constrained scenarios. Claw's per-stage gates are cleaner architecturally.
 
 ---
 
 ## Immutability
 
-### TokMan: Mutable Pipeline
+### Tok: Mutable Pipeline
 ```go
 func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
     output := input  // Mutable string
@@ -358,7 +358,7 @@ class FusionResult:
 
 **Comparison:**
 
-| Aspect | TokMan | Claw Compactor |
+| Aspect | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Mutability** | Mutable | Immutable |
 | **Memory** | Efficient (in-place) | Higher (copying) |
@@ -366,13 +366,13 @@ class FusionResult:
 | **Testability** | Requires mocking | Easy (pure functions) |
 | **Concurrency** | Not thread-safe | Thread-safe |
 
-**Verdict:** Claw's immutability is better for correctness and testing. TokMan's mutability is more performant.
+**Verdict:** Claw's immutability is better for correctness and testing. Tok's mutability is more performant.
 
 ---
 
 ## Language & Performance
 
-### TokMan (Go)
+### Tok (Go)
 ```go
 // Compiled binary, native performance
 // SIMD auto-vectorization (Go 1.26+)
@@ -411,7 +411,7 @@ def compress(self, text: str, ...) -> dict[str, Any]:
 
 **Comparison:**
 
-| Metric | TokMan (Go) | Claw Compactor (Python) |
+| Metric | Tok (Go) | Claw Compactor (Python) |
 |--------|-------------|-------------------------|
 | **Latency** | <20ms | 10-80ms |
 | **Binary Size** | ~5MB | N/A (interpreted) |
@@ -420,31 +420,31 @@ def compress(self, text: str, ...) -> dict[str, Any]:
 | **Concurrency** | Goroutines | GIL-limited |
 | **Startup Time** | Instant | ~100ms (Python import) |
 
-**Verdict:** TokMan is significantly faster for CLI use cases. Claw Compactor is acceptable for API/library use.
+**Verdict:** Tok is significantly faster for CLI use cases. Claw Compactor is acceptable for API/library use.
 
 ---
 
 ## Integration & Deployment
 
-### TokMan: CLI Proxy
+### Tok: CLI Proxy
 ```bash
 # Install as CLI tool
-brew install tokman
+brew install tok
 
 # Intercept commands
-tokman init -g  # Claude Code
-tokman init --cursor  # Cursor
+tok init -g  # Claude Code
+tok init --cursor  # Cursor
 
 # Commands automatically compressed
-git status  # Intercepted by TokMan
-docker ps   # Intercepted by TokMan
+git status  # Intercepted by Tok
+docker ps   # Intercepted by Tok
 ```
 
 **Deployment:**
 - Standalone binary (Linux, macOS, Windows)
 - Hook-based interception (shell integration)
 - Agent-specific installers (Claude, Cursor, Copilot, etc.)
-- Dashboard: `tokman dashboard` (web UI)
+- Dashboard: `tok dashboard` (web UI)
 
 ### Claw Compactor: Python Library
 ```python
@@ -467,7 +467,7 @@ print(result["compressed"])
 
 **Comparison:**
 
-| Aspect | TokMan | Claw Compactor |
+| Aspect | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Primary Use** | CLI interception | Library/API |
 | **Installation** | Binary (Homebrew) | pip install |
@@ -475,13 +475,13 @@ print(result["compressed"])
 | **Agent Support** | 7+ agents | OpenClaw agents |
 | **Dashboard** | Built-in web UI | None |
 
-**Verdict:** TokMan is better for CLI workflows. Claw Compactor is better for programmatic integration.
+**Verdict:** Tok is better for CLI workflows. Claw Compactor is better for programmatic integration.
 
 ---
 
 ## Testing & Quality
 
-### TokMan
+### Tok
 - **Tests:** 144 packages with tests
 - **Coverage:** Improving (not specified)
 - **Benchmarks:** `make benchmark` suite
@@ -497,20 +497,20 @@ print(result["compressed"])
 
 **Comparison:**
 
-| Metric | TokMan | Claw Compactor |
+| Metric | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Test Count** | 144 packages | 1,600+ tests |
 | **Quality Metrics** | 6-metric grading | ROUGE-L |
 | **Benchmarks** | CLI commands | SWE-bench tasks |
 | **Fuzz Testing** | Yes | Not mentioned |
 
-**Verdict:** Claw Compactor has more comprehensive testing. TokMan has better quality metrics.
+**Verdict:** Claw Compactor has more comprehensive testing. Tok has better quality metrics.
 
 ---
 
 ## Research Foundation
 
-### TokMan: 120+ Papers
+### Tok: 120+ Papers
 - **Entropy:** Selective Context (Mila 2023)
 - **Perplexity:** LLMLingua (Microsoft 2023)
 - **Goal-Driven:** SWE-Pruner (Shanghai Jiao Tong 2025)
@@ -537,19 +537,19 @@ print(result["compressed"])
 
 **Comparison:**
 
-| Aspect | TokMan | Claw Compactor |
+| Aspect | Tok | Claw Compactor |
 |--------|--------|----------------|
 | **Papers** | 120+ | 30+ |
 | **Depth** | More layers, more papers | Fewer stages, focused |
 | **Novelty** | Combines many techniques | Practical fusion |
 
-**Verdict:** TokMan has broader research coverage. Claw Compactor is more focused and practical.
+**Verdict:** Tok has broader research coverage. Claw Compactor is more focused and practical.
 
 ---
 
 ## Unique Features
 
-### TokMan Only
+### Tok Only
 1. **TOML Filters:** 97+ declarative filters for popular tools
 2. **Agent Integration:** 7+ AI agents (Claude, Cursor, Copilot, etc.)
 3. **Dashboard:** Built-in web analytics dashboard
@@ -573,7 +573,7 @@ print(result["compressed"])
 
 ## Recommendations
 
-### Use TokMan If:
+### Use Tok If:
 - ✅ You need CLI command interception
 - ✅ You're using Claude Code, Cursor, or GitHub Copilot
 - ✅ You want a standalone binary (no dependencies)
@@ -595,27 +595,27 @@ print(result["compressed"])
 
 ## Conclusion
 
-**TokMan** and **Claw Compactor** are both excellent tools with different strengths:
+**Tok** and **Claw Compactor** are both excellent tools with different strengths:
 
-- **TokMan** is a production-ready CLI proxy optimized for terminal workflows, with broader research coverage (120+ papers) and faster performance (Go).
+- **Tok** is a production-ready CLI proxy optimized for terminal workflows, with broader research coverage (120+ papers) and faster performance (Go).
 - **Claw Compactor** is a mature Python library optimized for agent integration, with cleaner architecture (immutable) and better structured data compression.
 
-**For CLI users:** TokMan is the clear winner.  
+**For CLI users:** Tok is the clear winner.  
 **For Python developers:** Claw Compactor is the better choice.  
-**For maximum compression:** Use both! TokMan for CLI, Claw for API.
+**For maximum compression:** Use both! Tok for CLI, Claw for API.
 
 ---
 
 ## Future Opportunities
 
-### TokMan Could Learn From Claw:
+### Tok Could Learn From Claw:
 1. **Immutable Architecture:** Adopt frozen dataclasses for better testability
 2. **Cross-Message Dedup:** Add conversation-level deduplication
 3. **Content-Specific Stages:** Add LogCrunch, SearchCrunch, DiffCrunch equivalents
 4. **Centralized Detection:** Add a Cortex-like content detection layer
 5. **RewindStore Maturity:** Improve Sketch Store with tool call integration
 
-### Claw Could Learn From TokMan:
+### Claw Could Learn From Tok:
 1. **CLI Interception:** Add shell hook system for command interception
 2. **TOML Filters:** Add declarative filter system
 3. **Dashboard:** Add web analytics UI
@@ -627,5 +627,5 @@ print(result["compressed"])
 
 **Document Version:** 1.0  
 **Last Updated:** April 10, 2026  
-**Authors:** TokMan Team  
+**Authors:** Tok Team  
 **License:** MIT

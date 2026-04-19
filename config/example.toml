@@ -1,9 +1,9 @@
-# TokMan Example Configuration
-# Place this file at ~/.config/tokman/config.toml
+# Tok Example Configuration
+# Place this file at ~/.config/tok/config.toml
 
 [tracking]
 enabled = true
-database_path = "~/.local/share/tokman/tokman.db"
+database_path = "~/.local/share/tok/tok.db"
 
 [filter]
 mode = "minimal"  # Options: minimal, aggressive
@@ -60,5 +60,5 @@ budget = 10000  # 10K token limit for this project
 path = "/home/user/personal/small-project"
 preset = "fast"  # Faster processing for small projects
 
-# Custom TOML filters can be added to ~/.config/tokman/filters/
-# See: https://tokman.dev/docs/toml-filters
+# Custom TOML filters can be added to ~/.config/tok/filters/
+# See: https://tok.dev/docs/toml-filters

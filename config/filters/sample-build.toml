@@ -1,6 +1,6 @@
 # Sample TOML Filter: Custom Build Tool
-# Copy this file to ~/.config/tokman/filters/ to use it
-# Test with: tokman filter-test my-build --command "my-build compile" --input "..."
+# Copy this file to ~/.config/tok/filters/ to use it
+# Test with: tok filter-test my-build --command "my-build compile" --input "..."
 schema_version = 1
 
 [my_build]

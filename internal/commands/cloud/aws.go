@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -71,7 +71,7 @@ func runAws(cmd *cobra.Command, args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: aws %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: aws %s\n", strings.Join(args, " "))
 	}
 
 	// Force JSON output
@@ -89,7 +89,7 @@ func runAws(cmd *cobra.Command, args []string) error {
 		filtered = filterAwsText(raw)
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

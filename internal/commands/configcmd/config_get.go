@@ -2,6 +2,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"reflect"
 	"strings"
@@ -25,9 +26,9 @@ func init() {
 func runConfigGet(cmd *cobra.Command, args []string) error {
 	key := args[0]
 
-	envKey := "TOKMAN_" + strings.ToUpper(strings.NewReplacer(".", "_", "-", "_").Replace(key))
+	envKey := "TOK_" + strings.ToUpper(strings.NewReplacer(".", "_", "-", "_").Replace(key))
 	if val := os.Getenv(envKey); val != "" {
-		fmt.Printf("%s = %s (from env)\n", key, val)
+		out.Global().Printf("%s = %s (from env)\n", key, val)
 		return nil
 	}
 
@@ -45,15 +46,15 @@ func runConfigGet(cmd *cobra.Command, args []string) error {
 
 	value, ok := lookupConfigValue(cfg, key)
 	if !ok {
-		fmt.Printf("%s = (not set)\n", key)
+		out.Global().Printf("%s = (not set)\n", key)
 		return nil
 	}
 
 	if source == "file" {
-		fmt.Printf("%s = %s\n", key, value)
+		out.Global().Printf("%s = %s\n", key, value)
 		return nil
 	}
-	fmt.Printf("%s = %s (default)\n", key, value)
+	out.Global().Printf("%s = %s (default)\n", key, value)
 	return nil
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -209,7 +210,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 				return fmt.Errorf("unknown command: %s\n\nTip: Run 'tok --help' for 100+ available commands", args[0])
 			}
 
-			fmt.Print(output)
+			out.Global().Print(output)
 			return err
 		},
 	}
@@ -233,7 +234,7 @@ func Execute() int {
 				fallback := shared.GetFallback()
 				output, handled, ferr := fallback.Handle(args)
 				if handled {
-					fmt.Print(output)
+					out.Global().Print(output)
 					if ferr != nil {
 						return exitCodeForError(ferr)
 					}
@@ -241,7 +242,7 @@ func Execute() int {
 				}
 			}
 		}
-		fmt.Fprintln(os.Stderr, err)
+		out.Global().Errorf("%v\n", err)
 		return exitCodeForError(err)
 	}
 
@@ -463,7 +464,7 @@ func init() {
 // Delegates to config.Load() for a single source of truth.
 func initConfig() {
 	if _, err := config.Load(cfgFile); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
+		out.Global().Errorf("Warning: failed to load config: %v\n", err)
 	}
 
 	// Initialize logger
@@ -472,7 +473,7 @@ func initConfig() {
 		logLevel = utils.LevelDebug
 	}
 	if err := utils.InitLogger(config.LogPath(), logLevel); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to initialize logger: %v\n", err)
+		out.Global().Errorf("Warning: failed to initialize logger: %v\n", err)
 	}
 }
 
@@ -539,42 +540,42 @@ func trackCommandInvocation(cmd *cobra.Command) {
 
 // showPowerfulWelcome displays a helpful welcome message for the CLI
 func showPowerfulWelcome(cmd *cobra.Command) error {
-	fmt.Println()
-	fmt.Println("╔════════════════════════════════════════════════════════════╗")
-	fmt.Println("║                    🚀 tok CLI v" + shared.Version + "                     ║")
-	fmt.Println("╠════════════════════════════════════════════════════════════╣")
-	fmt.Println("║  Token-aware CLI proxy - 60-90% token reduction           ║")
-	fmt.Println("╚════════════════════════════════════════════════════════════╝")
-	fmt.Println()
-	fmt.Println("📚 QUICK START:")
-	fmt.Println()
-	fmt.Println("  Run any command with automatic compression:")
-	fmt.Println("    tok git status")
-	fmt.Println("    tok docker ps")
-	fmt.Println("    tok kubectl logs pod-123")
-	fmt.Println()
-	fmt.Println("  Or pipe output through tok:")
-	fmt.Println("    git status | tok")
-	fmt.Println("    cat large.log | tok")
-	fmt.Println()
-	fmt.Println("📊 CHECK YOUR SAVINGS:")
-	fmt.Println("    tok gain          # Quick savings summary")
-	fmt.Println("    tok audit         # Detailed optimization report")
-	fmt.Println("    tok economics     # Cost analysis")
-	fmt.Println()
-	fmt.Println("🔧 COMMON COMMANDS:")
-	fmt.Println("    tok git <cmd>     # Git with compression")
-	fmt.Println("    tok docker <cmd>  # Docker with compression")
-	fmt.Println("    tok kubectl <cmd> # Kubernetes with compression")
-	fmt.Println("    tok go test       # Go tests with compression")
-	fmt.Println()
-	fmt.Println("⚡ POWER USER FEATURES:")
-	fmt.Println("    tok agent         # Interactive agent mode")
-	fmt.Println("    tok shell         # Interactive shell")
-	fmt.Println("    tok compress      # Direct text compression")
-	fmt.Println("    tok benchmark     # Performance benchmarks")
-	fmt.Println()
-	fmt.Println("💡 TIP: Run 'tok --help' to see all 100+ commands")
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println("╔════════════════════════════════════════════════════════════╗")
+	out.Global().Println("║                    🚀 tok CLI v" + shared.Version + "                     ║")
+	out.Global().Println("╠════════════════════════════════════════════════════════════╣")
+	out.Global().Println("║  Token-aware CLI proxy - 60-90% token reduction           ║")
+	out.Global().Println("╚════════════════════════════════════════════════════════════╝")
+	out.Global().Println()
+	out.Global().Println("📚 QUICK START:")
+	out.Global().Println()
+	out.Global().Println("  Run any command with automatic compression:")
+	out.Global().Println("    tok git status")
+	out.Global().Println("    tok docker ps")
+	out.Global().Println("    tok kubectl logs pod-123")
+	out.Global().Println()
+	out.Global().Println("  Or pipe output through tok:")
+	out.Global().Println("    git status | tok")
+	out.Global().Println("    cat large.log | tok")
+	out.Global().Println()
+	out.Global().Println("📊 CHECK YOUR SAVINGS:")
+	out.Global().Println("    tok gain          # Quick savings summary")
+	out.Global().Println("    tok audit         # Detailed optimization report")
+	out.Global().Println("    tok economics     # Cost analysis")
+	out.Global().Println()
+	out.Global().Println("🔧 COMMON COMMANDS:")
+	out.Global().Println("    tok git <cmd>     # Git with compression")
+	out.Global().Println("    tok docker <cmd>  # Docker with compression")
+	out.Global().Println("    tok kubectl <cmd> # Kubernetes with compression")
+	out.Global().Println("    tok go test       # Go tests with compression")
+	out.Global().Println()
+	out.Global().Println("⚡ POWER USER FEATURES:")
+	out.Global().Println("    tok agent         # Interactive agent mode")
+	out.Global().Println("    tok shell         # Interactive shell")
+	out.Global().Println("    tok compress      # Direct text compression")
+	out.Global().Println("    tok benchmark     # Performance benchmarks")
+	out.Global().Println()
+	out.Global().Println("💡 TIP: Run 'tok --help' to see all 100+ commands")
+	out.Global().Println()
 	return nil
 }

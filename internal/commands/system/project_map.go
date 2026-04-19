@@ -14,6 +14,7 @@ package system
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
@@ -230,26 +231,26 @@ func printProjectMapTree(root *DirNode, basePath string) {
 	color.New(color.Bold).Fprintf(os.Stderr, "%s\n", relativePath(root.Path, basePath))
 
 	if shared.IsVerbose() {
-		fmt.Fprintf(os.Stderr, "\n")
+		out.Global().Errorf("\n")
 	}
 
 	// Print tree
 	printDirTree(root, "", true, fileCountByDir)
 
 	// Summary
-	fmt.Fprintf(os.Stderr, "\n")
+	out.Global().Errorf("\n")
 	color.New(color.Bold).Printf("Summary\n")
-	fmt.Fprintf(os.Stderr, "  Files:     %d\n", totalFiles)
-	fmt.Fprintf(os.Stderr, "  Lines:     %s\n", formatNumber(totalLines))
+	out.Global().Errorf("  Files:     %d\n", totalFiles)
+	out.Global().Errorf("  Lines:     %s\n", formatNumber(totalLines))
 	if pmTokenEstimate {
-		fmt.Fprintf(os.Stderr, "  Tokens:    %s (~%d KB BPE estimate)\n", formatNumber(totalTokens), totalTokens/4)
-		fmt.Fprintf(os.Stderr, "  Cost:      $%.2f (at $3/MTok input)\n", float64(totalTokens)/1e6*3.0)
+		out.Global().Errorf("  Tokens:    %s (~%d KB BPE estimate)\n", formatNumber(totalTokens), totalTokens/4)
+		out.Global().Errorf("  Cost:      $%.2f (at $3/MTok input)\n", float64(totalTokens)/1e6*3.0)
 	}
-	fmt.Fprintf(os.Stderr, "  Size:      %s\n", formatBytes(totalSize))
-	fmt.Fprintf(os.Stderr, "  Dirs:      %d\n", countDirs(root))
+	out.Global().Errorf("  Size:      %s\n", formatBytes(totalSize))
+	out.Global().Errorf("  Dirs:      %d\n", countDirs(root))
 
 	if len(fileCountByExt) > 0 {
-		fmt.Fprintf(os.Stderr, "\n  By extension:\n")
+		out.Global().Errorf("\n  By extension:\n")
 		// Sort by count descending
 		type extCount struct {
 			ext   string
@@ -265,7 +266,7 @@ func printProjectMapTree(root *DirNode, basePath string) {
 			if ext == "" {
 				ext = "(no ext)"
 			}
-			fmt.Fprintf(os.Stderr, "    %-12s %d files\n", ext, ec.count)
+			out.Global().Errorf("    %-12s %d files\n", ext, ec.count)
 		}
 	}
 }
@@ -347,15 +348,15 @@ func printDirContents(node *DirNode, indent string, fileCountByDir map[string]in
 			}
 
 			if shared.IsUltraCompact() {
-				fmt.Fprintf(os.Stderr, "%s%d %s (%s, %s tokens, %s)...\n",
+				out.Global().Errorf("%s%d %s (%s, %s tokens, %s)...\n",
 					indent, len(files), extLabel,
 					formatNumber(totalLines), formatNumber(totalTokens), formatBytes(totalSize))
 			} else {
 				color.New(color.FgGreen).Fprintf(os.Stderr, "%s%d %s file", indent, len(files), extLabel)
 				if len(files) > 1 {
-					fmt.Fprintf(os.Stderr, "s")
+					out.Global().Errorf("s")
 				}
-				fmt.Fprintf(os.Stderr, " (%s lines, %s tokens, %s)...\n",
+				out.Global().Errorf(" (%s lines, %s tokens, %s)...\n",
 					formatNumber(totalLines), formatNumber(totalTokens), formatBytes(totalSize))
 			}
 
@@ -379,23 +380,23 @@ func printFile(f FileInfo, indent string, isLast bool) {
 	if isCodeFile(f.Ext) {
 		color.New(color.FgCyan).Printf("%s%s%s", indent, connector, f.Name)
 	} else if isTextFile(f.Ext) {
-		fmt.Fprintf(os.Stderr, "%s%s%s", indent, connector, f.Name)
+		out.Global().Errorf("%s%s%s", indent, connector, f.Name)
 	} else {
 		color.New(color.Faint).Printf("%s%s%s", indent, connector, f.Name)
 	}
 
 	if shared.IsVerbose() {
-		fmt.Fprintf(os.Stderr, " (%d lines", f.Lines)
+		out.Global().Errorf(" (%d lines", f.Lines)
 		if f.Tokens > 0 {
-			fmt.Fprintf(os.Stderr, ", %d tokens", f.Tokens)
+			out.Global().Errorf(", %d tokens", f.Tokens)
 		}
 		if f.Signatures > 0 {
-			fmt.Fprintf(os.Stderr, ", %d signatures", f.Signatures)
+			out.Global().Errorf(", %d signatures", f.Signatures)
 		}
-		fmt.Fprintf(os.Stderr, ")")
+		out.Global().Errorf(")")
 	}
 
-	fmt.Fprintf(os.Stderr, "\n")
+	out.Global().Errorf("\n")
 }
 
 // extensionOrRoot returns the proper indentation for root vs sub-directories.
@@ -436,7 +437,7 @@ func printCompactDir(node *DirNode, basePath string, prefix string) {
 			relPath = basePath
 		}
 
-		fmt.Printf("%-50s %6d files %8d lines %10d tokens\n",
+		out.Global().Printf("%-50s %6d files %8d lines %10d tokens\n",
 			relPath, totalFiles, totalLines, totalTokens)
 	}
 

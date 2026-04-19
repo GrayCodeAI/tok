@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -149,13 +150,13 @@ func showLearnedRules() error {
 	cyan := color.New(color.FgCyan).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	fmt.Println()
-	fmt.Println(cyan("Learned Correction Rules"))
-	fmt.Println(strings.Repeat("═", 60))
+	out.Global().Println()
+	out.Global().Println(cyan("Learned Correction Rules"))
+	out.Global().Println(strings.Repeat("═", 60))
 
 	if len(rules) == 0 {
-		fmt.Println("No learned rules yet.")
-		fmt.Println("tok will learn from your command patterns over time.")
+		out.Global().Println("No learned rules yet.")
+		out.Global().Println("tok will learn from your command patterns over time.")
 		return nil
 	}
 
@@ -168,14 +169,14 @@ func showLearnedRules() error {
 			confidenceColor = color.New(color.FgRed)
 		}
 
-		fmt.Printf("\n%d. %s → %s\n", i+1, yellow(rule.Pattern), rule.Correction)
-		fmt.Printf("   Confidence: %s  Uses: %d  Last: %s\n",
+		out.Global().Printf("\n%d. %s → %s\n", i+1, yellow(rule.Pattern), rule.Correction)
+		out.Global().Printf("   Confidence: %s  Uses: %d  Last: %s\n",
 			confidenceColor.Sprintf("%.0f%%", rule.Confidence*100),
 			rule.UsageCount,
 			rule.LastUsed.Format("2006-01-02"))
 	}
 
-	fmt.Printf("\nTotal: %d rule(s)\n", len(rules))
+	out.Global().Printf("\nTotal: %d rule(s)\n", len(rules))
 	return nil
 }
 
@@ -188,11 +189,11 @@ func showLearningStats() error {
 	cyan := color.New(color.FgCyan).SprintFunc()
 	green := color.New(color.FgGreen).SprintFunc()
 
-	fmt.Println()
-	fmt.Println(cyan("tok Learning Statistics"))
-	fmt.Println(strings.Repeat("═", 40))
+	out.Global().Println()
+	out.Global().Println(cyan("tok Learning Statistics"))
+	out.Global().Println(strings.Repeat("═", 40))
 
-	fmt.Printf("Learned rules:     %s\n", green(len(rules)))
+	out.Global().Printf("Learned rules:     %s\n", green(len(rules)))
 
 	var totalCorrections int
 	var avgConfidence float64
@@ -203,21 +204,21 @@ func showLearningStats() error {
 
 	if len(rules) > 0 {
 		avgConfidence /= float64(len(rules))
-		fmt.Printf("Total corrections: %s\n", green(totalCorrections))
-		fmt.Printf("Avg confidence:    %.0f%%\n", avgConfidence*100)
+		out.Global().Printf("Total corrections: %s\n", green(totalCorrections))
+		out.Global().Printf("Avg confidence:    %.0f%%\n", avgConfidence*100)
 	}
 
 	// Show data size
 	dataSize := getDataSize(learnDataPath())
 	if dataSize > 0 {
-		fmt.Printf("Data size:         %d KB\n", dataSize/1024)
+		out.Global().Printf("Data size:         %d KB\n", dataSize/1024)
 	}
 
-	fmt.Println()
-	fmt.Println("Learning features:")
-	fmt.Println("  • Common typo correction")
-	fmt.Println("  • Command optimization suggestions")
-	fmt.Println("  • Pattern recognition from history")
+	out.Global().Println()
+	out.Global().Println("Learning features:")
+	out.Global().Println("  • Common typo correction")
+	out.Global().Println("  • Command optimization suggestions")
+	out.Global().Println("  • Pattern recognition from history")
 
 	return nil
 }
@@ -226,12 +227,12 @@ func resetLearnedData() error {
 	path := learnDataPath()
 
 	// Confirm before reset
-	fmt.Print("Reset all learned data? This cannot be undone [y/N]: ")
+	out.Global().Print("Reset all learned data? This cannot be undone [y/N]: ")
 	var response string
 	fmt.Scanln(&response)
 
 	if strings.ToLower(response) != "y" && strings.ToLower(response) != "yes" {
-		fmt.Println("Reset canceled.")
+		out.Global().Println("Reset canceled.")
 		return nil
 	}
 
@@ -240,7 +241,7 @@ func resetLearnedData() error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s All learned data has been reset\n", green("✓"))
+	out.Global().Printf("%s All learned data has been reset\n", green("✓"))
 
 	return nil
 }
@@ -267,7 +268,7 @@ func exportLearnedRules(outputPath string) error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s Exported %d rule(s) to %s\n", green("✓"), len(rules), outputPath)
+	out.Global().Printf("%s Exported %d rule(s) to %s\n", green("✓"), len(rules), outputPath)
 
 	return nil
 }
@@ -301,7 +302,7 @@ func importLearnedRules(inputPath string) error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s Imported %d rule(s)\n", green("✓"), len(importData.Rules))
+	out.Global().Printf("%s Imported %d rule(s)\n", green("✓"), len(importData.Rules))
 
 	return nil
 }

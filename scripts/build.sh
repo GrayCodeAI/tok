@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# TokMan Build Script
+# Tok Build Script
 # Usage: ./scripts/build.sh [target]
 
-PROJECT_NAME="tokman"
+PROJECT_NAME="tok"
 VERSION=$(git describe --tags --always --dirty 2>/dev/null || echo "dev")
 BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS="-X main.version=${VERSION} -X main.buildTime=${BUILD_TIME}"
@@ -18,7 +18,7 @@ mkdir -p build/dist
 
 # Build main binary
 echo "Building main binary..."
-go build -ldflags "${LDFLAGS}" -o build/dist/tokman ./cmd/tokman
+go build -ldflags "${LDFLAGS}" -o build/dist/tok ./cmd/tok
 
 # Build microservices if requested
 if [ "$1" == "all" ] || [ "$1" == "services" ]; then

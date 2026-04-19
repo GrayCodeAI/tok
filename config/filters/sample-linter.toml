@@ -1,5 +1,5 @@
 # Sample TOML Filter: Custom Linter
-# Copy this file to ~/.config/tokman/filters/ to use it
+# Copy this file to ~/.config/tok/filters/ to use it
 schema_version = 1
 
 [my_linter]

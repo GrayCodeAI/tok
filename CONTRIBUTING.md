@@ -1,13 +1,13 @@
-# Contributing to TokMan
+# Contributing to Tok
 
-Thank you for your interest in contributing to TokMan! We welcome contributions of all kinds - from bug fixes and documentation improvements to new features and creative ideas.
+Thank you for your interest in contributing to Tok! We welcome contributions of all kinds - from bug fixes and documentation improvements to new features and creative ideas.
 
 ## Quick Start
 
 ```bash
 # 1. Fork and clone
-git clone https://github.com/YOUR_USERNAME/tokman.git
-cd tokman
+git clone https://github.com/YOUR_USERNAME/tok.git
+cd tok
 
 # 2. Install dependencies
 go mod download
@@ -69,8 +69,8 @@ git checkout -b my-great-feature
 
 ```bash
 # Clone
-git clone https://github.com/GrayCodeAI/tokman.git
-cd tokman
+git clone https://github.com/lakshmanpatel/tok.git
+cd tok
 
 # Build
 make build
@@ -294,7 +294,7 @@ package mycategory
 
 import (
     "github.com/spf13/cobra"
-    "github.com/GrayCodeAI/tokman/internal/commands/registry"
+    "github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 var myCmd = &cobra.Command{
@@ -315,7 +315,7 @@ func init() {
 Then add import to `root.go`:
 
 ```go
-_ "github.com/GrayCodeAI/tokman/internal/commands/mycategory"
+_ "github.com/lakshmanpatel/tok/internal/commands/mycategory"
 ```
 
 ## Testing Guidelines
@@ -369,12 +369,12 @@ go test ./internal/filter/ -fuzz=FuzzFilter
 
 Use our bug report template. Include:
 
-- TokMan version
+- Tok version
 - Operating system
 - AI tool (if using integration)
 - Steps to reproduce
 - Expected vs actual behavior
-- Relevant logs (`tokman -v`)
+- Relevant logs (`tok -v`)
 
 ### Features
 
@@ -409,7 +409,7 @@ func (f *EntropyFilter) Apply(input string, mode Mode) string {
 
 ```go
 // Use the logger package
-import "github.com/GrayCodeAI/tokman/internal/utils"
+import "github.com/lakshmanpatel/tok/internal/utils"
 
 utils.Logger.Debug("Processing %d tokens", count)
 utils.Logger.Info("Filter applied successfully", "layer", "entropy")
@@ -419,7 +419,7 @@ utils.Logger.Error("Failed to process", "error", err)
 ## Release Process
 
 1. Update `CHANGELOG.md`
-2. Bump version in `cmd/tokman/main.go`
+2. Bump version in `cmd/tok/main.go`
 3. Create release tag: `git tag v0.29.0`
 4. Push tag: `git push origin v0.29.0`
 5. Create GitHub release with notes
@@ -445,6 +445,6 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-**Thank you for contributing to TokMan!** 🚀
+**Thank you for contributing to Tok!** 🚀
 
 Every contribution matters, no matter how small. We're building something great together!

@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ func init() {
 func runFilterValidate(cmd *cobra.Command, args []string) error {
 	var filterDirs []string
 
-	builtinDir := filepath.Join(utils.GetTokmanSourceDir(), "internal", "toml", "builtin")
+	builtinDir := filepath.Join(utils.GetTokSourceDir(), "internal", "toml", "builtin")
 	if _, err := os.Stat(builtinDir); err == nil {
 		filterDirs = append(filterDirs, builtinDir)
 	}
@@ -64,7 +65,7 @@ func runFilterValidate(cmd *cobra.Command, args []string) error {
 
 			data, err := os.ReadFile(path)
 			if err != nil {
-				fmt.Printf("  ✗ %s: read error: %v\n", e.Name(), err)
+				out.Global().Printf("  ✗ %s: read error: %v\n", e.Name(), err)
 				hasErrors = true
 				continue
 			}
@@ -72,20 +73,20 @@ func runFilterValidate(cmd *cobra.Command, args []string) error {
 			content := string(data)
 
 			if !strings.Contains(content, "[[rules]]") && !strings.Contains(content, "[filters.") {
-				fmt.Printf("  ✗ %s: missing [[rules]] or [filters] section\n", e.Name())
+				out.Global().Printf("  ✗ %s: missing [[rules]] or [filters] section\n", e.Name())
 				hasErrors = true
 				continue
 			}
 
 			if !strings.Contains(content, "match =") && !strings.Contains(content, "match_command =") {
-				fmt.Printf("  ⚠ %s: no match pattern found\n", e.Name())
+				out.Global().Printf("  ⚠ %s: no match pattern found\n", e.Name())
 			}
 
-			fmt.Printf("  ✓ %s\n", e.Name())
+			out.Global().Printf("  ✓ %s\n", e.Name())
 		}
 	}
 
-	fmt.Printf("\nChecked %d filters\n", totalChecked)
+	out.Global().Printf("\nChecked %d filters\n", totalChecked)
 	if hasErrors {
 		return fmt.Errorf("some filters have errors")
 	}

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Test suite for tokman hook (cross-platform preToolUse handler).
-# Feeds mock preToolUse JSON through `tokman hook copilot` and verifies allow/deny decisions.
+# Test suite for tok hook (cross-platform preToolUse handler).
+# Feeds mock preToolUse JSON through `tok hook copilot` and verifies allow/deny decisions.
 #
-# Usage: bash hooks/test-copilot-tokman-rewrite.sh
+# Usage: bash hooks/test-copilot-tok-rewrite.sh
 #
 # Copilot CLI input format:
 #   {"toolName":"bash","toolArgs":"{\"command\":\"...\"}"}
@@ -14,7 +14,7 @@
 #
 # Output on pass-through: empty (exit 0)
 
-TOKMAN="${TOKMAN:-tokman}"
+TOK="${TOK:-tok}"
 PASS=0
 FAIL=0
 TOTAL=0
@@ -25,9 +25,9 @@ RED='\033[31m'
 DIM='\033[2m'
 RESET='\033[0m'
 
-# Skip if tokman binary not available
-if ! command -v tokman &>/dev/null; then
-  echo "tokman binary not found in PATH — skipping hook tests"
+# Skip if tok binary not available
+if ! command -v tok &>/dev/null; then
+  echo "tok binary not found in PATH — skipping hook tests"
   exit 0
 fi
 
@@ -51,26 +51,26 @@ tool_input() {
   jq -cn --arg t "$tool_name" '{"toolName":$t,"toolArgs":"{}"}'
 }
 
-# Assert Copilot CLI: hook denies and reason contains the expected tokman command
+# Assert Copilot CLI: hook denies and reason contains the expected tok command
 test_deny() {
   local description="$1"
   local input_cmd="$2"
-  local expected_tokman="$3"
+  local expected_tok="$3"
   TOTAL=$((TOTAL + 1))
 
   local output
-  output=$(copilot_bash_input "$input_cmd" | "$TOKMAN" hook copilot 2>/dev/null) || true
+  output=$(copilot_bash_input "$input_cmd" | "$TOK" hook copilot 2>/dev/null) || true
 
   local decision reason
   decision=$(echo "$output" | jq -r '.permissionDecision // empty' 2>/dev/null)
   reason=$(echo "$output" | jq -r '.permissionDecisionReason // empty' 2>/dev/null)
 
-  if [ "$decision" = "deny" ] && echo "$reason" | grep -qF "$expected_tokman"; then
-    printf "  ${GREEN}DENY${RESET} %s ${DIM}→ %s${RESET}\n" "$description" "$expected_tokman"
+  if [ "$decision" = "deny" ] && echo "$reason" | grep -qF "$expected_tok"; then
+    printf "  ${GREEN}DENY${RESET} %s ${DIM}→ %s${RESET}\n" "$description" "$expected_tok"
     PASS=$((PASS + 1))
   else
     printf "  ${RED}FAIL${RESET} %s\n" "$description"
-    printf "       expected decision: deny, reason containing: %s\n" "$expected_tokman"
+    printf "       expected decision: deny, reason containing: %s\n" "$expected_tok"
     printf "       actual decision:   %s\n" "$decision"
     printf "       actual reason:     %s\n" "$reason"
     FAIL=$((FAIL + 1))
@@ -81,22 +81,22 @@ test_deny() {
 test_vscode_rewrite() {
   local description="$1"
   local input_cmd="$2"
-  local expected_tokman="$3"
+  local expected_tok="$3"
   TOTAL=$((TOTAL + 1))
 
   local output
-  output=$(vscode_bash_input "$input_cmd" | "$TOKMAN" hook copilot 2>/dev/null) || true
+  output=$(vscode_bash_input "$input_cmd" | "$TOK" hook copilot 2>/dev/null) || true
 
   local decision updated_cmd
   decision=$(echo "$output" | jq -r '.hookSpecificOutput.permissionDecision // empty' 2>/dev/null)
   updated_cmd=$(echo "$output" | jq -r '.hookSpecificOutput.updatedInput.command // empty' 2>/dev/null)
 
-  if [ "$decision" = "allow" ] && echo "$updated_cmd" | grep -qF "$expected_tokman"; then
+  if [ "$decision" = "allow" ] && echo "$updated_cmd" | grep -qF "$expected_tok"; then
     printf "  ${GREEN}REWRITE${RESET} %s ${DIM}→ %s${RESET}\n" "$description" "$updated_cmd"
     PASS=$((PASS + 1))
   else
     printf "  ${RED}FAIL${RESET} %s\n" "$description"
-    printf "       expected decision: allow, updatedInput containing: %s\n" "$expected_tokman"
+    printf "       expected decision: allow, updatedInput containing: %s\n" "$expected_tok"
     printf "       actual decision:   %s\n" "$decision"
     printf "       actual updatedInput: %s\n" "$updated_cmd"
     FAIL=$((FAIL + 1))
@@ -110,7 +110,7 @@ test_allow() {
   TOTAL=$((TOTAL + 1))
 
   local output
-  output=$(echo "$input" | "$TOKMAN" hook copilot 2>/dev/null) || true
+  output=$(echo "$input" | "$TOK" hook copilot 2>/dev/null) || true
 
   if [ -z "$output" ]; then
     printf "  ${GREEN}PASS${RESET} %s ${DIM}→ (allow)${RESET}\n" "$description"
@@ -126,44 +126,44 @@ test_allow() {
 }
 
 echo "============================================"
-echo "  TokMan Hook Test Suite (tokman hook copilot)"
+echo "  Tok Hook Test Suite (tok hook copilot)"
 echo "============================================"
 echo ""
 
 # ---- SECTION 1: Copilot CLI — commands that should be denied ----
-echo "--- Copilot CLI: intercepted (deny with tokman suggestion) ---"
+echo "--- Copilot CLI: intercepted (deny with tok suggestion) ---"
 
 test_deny "git status" \
   "git status" \
-  "tokman git status"
+  "tok git status"
 
 test_deny "git log --oneline -10" \
   "git log --oneline -10" \
-  "tokman git log"
+  "tok git log"
 
 test_deny "git diff HEAD" \
   "git diff HEAD" \
-  "tokman git diff"
+  "tok git diff"
 
 test_deny "cargo test" \
   "cargo test" \
-  "tokman cargo test"
+  "tok cargo test"
 
 test_deny "cargo clippy --all-targets" \
   "cargo clippy --all-targets" \
-  "tokman cargo clippy"
+  "tok cargo clippy"
 
 test_deny "cargo build" \
   "cargo build" \
-  "tokman cargo build"
+  "tok cargo build"
 
 test_deny "grep -rn pattern src/" \
   "grep -rn pattern src/" \
-  "tokman grep"
+  "tok grep"
 
 test_deny "gh pr list" \
   "gh pr list" \
-  "tokman gh"
+  "tok gh"
 
 echo ""
 
@@ -172,26 +172,26 @@ echo "--- VS Code Copilot Chat: intercepted (updatedInput rewrite) ---"
 
 test_vscode_rewrite "git status" \
   "git status" \
-  "tokman git status"
+  "tok git status"
 
 test_vscode_rewrite "cargo test" \
   "cargo test" \
-  "tokman cargo test"
+  "tok cargo test"
 
 test_vscode_rewrite "gh pr list" \
   "gh pr list" \
-  "tokman gh"
+  "tok gh"
 
 echo ""
 
 # ---- SECTION 3: Pass-through cases ----
 echo "--- Pass-through (allow silently) ---"
 
-test_allow "Copilot CLI: already tokman: tokman git status" \
-  "$(copilot_bash_input "tokman git status")"
+test_allow "Copilot CLI: already tok: tok git status" \
+  "$(copilot_bash_input "tok git status")"
 
-test_allow "Copilot CLI: already tokman: tokman cargo test" \
-  "$(copilot_bash_input "tokman cargo test")"
+test_allow "Copilot CLI: already tok: tok cargo test" \
+  "$(copilot_bash_input "tok cargo test")"
 
 test_allow "Copilot CLI: heredoc" \
   "$(copilot_bash_input "cat <<'EOF'
@@ -210,8 +210,8 @@ test_allow "Copilot CLI: non-bash tool: view" \
 test_allow "Copilot CLI: non-bash tool: edit" \
   "$(tool_input "edit")"
 
-test_allow "VS Code: already tokman" \
-  "$(vscode_bash_input "tokman git status")"
+test_allow "VS Code: already tok" \
+  "$(vscode_bash_input "tok git status")"
 
 test_allow "VS Code: non-bash tool: editFiles" \
   "$(jq -cn '{"tool_name":"editFiles"}')"
@@ -223,7 +223,7 @@ echo "--- Output format ---"
 
 # Copilot CLI output format
 TOTAL=$((TOTAL + 1))
-raw_output=$(copilot_bash_input "git status" | "$TOKMAN" hook copilot 2>/dev/null)
+raw_output=$(copilot_bash_input "git status" | "$TOK" hook copilot 2>/dev/null)
 
 if echo "$raw_output" | jq . >/dev/null 2>&1; then
   printf "  ${GREEN}PASS${RESET} Copilot CLI: output is valid JSON\n"
@@ -245,8 +245,8 @@ fi
 
 TOTAL=$((TOTAL + 1))
 reason=$(echo "$raw_output" | jq -r '.permissionDecisionReason')
-if echo "$reason" | grep -qE '`tokman [^`]+`'; then
-  printf "  ${GREEN}PASS${RESET} Copilot CLI: reason contains backtick-quoted tokman command ${DIM}→ %s${RESET}\n" "$reason"
+if echo "$reason" | grep -qE '`tok [^`]+`'; then
+  printf "  ${GREEN}PASS${RESET} Copilot CLI: reason contains backtick-quoted tok command ${DIM}→ %s${RESET}\n" "$reason"
   PASS=$((PASS + 1))
 else
   printf "  ${RED}FAIL${RESET} Copilot CLI: reason missing backtick-quoted command: %s\n" "$reason"
@@ -255,7 +255,7 @@ fi
 
 # VS Code output format
 TOTAL=$((TOTAL + 1))
-vscode_output=$(vscode_bash_input "git status" | "$TOKMAN" hook copilot 2>/dev/null)
+vscode_output=$(vscode_bash_input "git status" | "$TOK" hook copilot 2>/dev/null)
 
 if echo "$vscode_output" | jq . >/dev/null 2>&1; then
   printf "  ${GREEN}PASS${RESET} VS Code: output is valid JSON\n"
@@ -277,11 +277,11 @@ fi
 
 TOTAL=$((TOTAL + 1))
 vscode_updated=$(echo "$vscode_output" | jq -r '.hookSpecificOutput.updatedInput.command')
-if echo "$vscode_updated" | grep -q "^tokman "; then
-  printf "  ${GREEN}PASS${RESET} VS Code: updatedInput.command starts with tokman ${DIM}→ %s${RESET}\n" "$vscode_updated"
+if echo "$vscode_updated" | grep -q "^tok "; then
+  printf "  ${GREEN}PASS${RESET} VS Code: updatedInput.command starts with tok ${DIM}→ %s${RESET}\n" "$vscode_updated"
   PASS=$((PASS + 1))
 else
-  printf "  ${RED}FAIL${RESET} VS Code: updatedInput.command should start with tokman: %s\n" "$vscode_updated"
+  printf "  ${RED}FAIL${RESET} VS Code: updatedInput.command should start with tok: %s\n" "$vscode_updated"
   FAIL=$((FAIL + 1))
 fi
 

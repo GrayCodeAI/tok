@@ -1,12 +1,12 @@
 # TOML Filter System
 
-TokMan supports declarative output filters defined in TOML format. This allows users to customize command output compression without writing Go code.
+Tok supports declarative output filters defined in TOML format. This allows users to customize command output compression without writing Go code.
 
 ## Overview
 
 TOML filters are loaded from:
-- `~/.config/tokman/filters/*.toml` - User-defined filters
-- Embedded built-in filters - Default filters shipped with TokMan
+- `~/.config/tok/filters/*.toml` - User-defined filters
+- Embedded built-in filters - Default filters shipped with Tok
 
 ## Filter Structure
 
@@ -156,7 +156,7 @@ expected = "INFO: processing\nWARNING: check this"
 
 Run tests with:
 ```bash
-tokman filter test ~/.config/tokman/filters/mycmd.toml
+tok filter test ~/.config/tok/filters/mycmd.toml
 ```
 
 ## Example Filters
@@ -214,7 +214,7 @@ tail_lines = 20
 
 ## Built-in Filters
 
-TokMan includes built-in filters for common commands:
+Tok includes built-in filters for common commands:
 
 | Filter | Command Pattern | Description |
 |--------|----------------|-------------|
@@ -229,17 +229,17 @@ TokMan includes built-in filters for common commands:
 
 View active filters:
 ```bash
-tokman filter list
+tok filter list
 ```
 
 Test a filter manually:
 ```bash
-tokman filter test --command "git status" --input "On branch main\nnothing to commit"
+tok filter test --command "git status" --input "On branch main\nnothing to commit"
 ```
 
 Validate filter syntax:
 ```bash
-tokman filter validate ~/.config/tokman/filters/myfilter.toml
+tok filter validate ~/.config/tok/filters/myfilter.toml
 ```
 
 ## Performance

@@ -6,9 +6,9 @@ before:
     - go mod verify
 
 builds:
-  - id: tokman
-    main: ./cmd/tokman
-    binary: tokman
+  - id: tok
+    main: ./cmd/tok
+    binary: tok
     env:
       - CGO_ENABLED=0
     goos:
@@ -40,7 +40,7 @@ builds:
 archives:
   - id: default
     builds:
-      - tokman
+      - tok
     formats: ['tar.gz']
     format_overrides:
       - goos: windows
@@ -90,13 +90,13 @@ changelog:
 
 release:
   github:
-    owner: GrayCodeAI
-    name: tokman
+    owner: lakshmanpatel
+    name: tok
   draft: false
   prerelease: auto
   name_template: "v{{ .Version }}"
   header: |
-    ## TokMan v{{ .Version }}
+    ## Tok v{{ .Version }}
     
     Token-aware CLI proxy with 31-layer compression pipeline.
     
@@ -104,44 +104,44 @@ release:
     
     ```bash
     # Homebrew
-    brew install GrayCodeAI/tap/tokman
+    brew install lakshmanpatel/tap/tok
     
     # Quick install
-    curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tokman/main/install.sh | bash
+    curl -fsSL https://raw.githubusercontent.com/lakshmanpatel/tok/main/install.sh | bash
     
     # Go install
-    go install github.com/GrayCodeAI/tokman/cmd/tokman@v{{ .Version }}
+    go install github.com/lakshmanpatel/tok/cmd/tok@v{{ .Version }}
     ```
   footer: |
     
-    **Full Changelog**: https://github.com/GrayCodeAI/tokman/compare/{{ .PreviousTag }}...{{ .Tag }}
+    **Full Changelog**: https://github.com/lakshmanpatel/tok/compare/{{ .PreviousTag }}...{{ .Tag }}
     
     ---
-    ⭐ Star us on GitHub if TokMan helps you save tokens!
+    ⭐ Star us on GitHub if Tok helps you save tokens!
 
 brews:
   - repository:
-      owner: GrayCodeAI
-      name: homebrew-tokman
+      owner: lakshmanpatel
+      name: homebrew-tok
       token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
-    homepage: "https://github.com/GrayCodeAI/tokman"
+    homepage: "https://github.com/lakshmanpatel/tok"
     description: "Token-aware CLI proxy with 31-layer compression pipeline for AI coding assistants"
     license: "MIT"
     install: |
-      bin.install "tokman"
+      bin.install "tok"
     test: |
-      system "#{bin}/tokman", "--version"
+      system "#{bin}/tok", "--version"
     caveats: |
       To get started:
-        tokman init -g        # Set up for Claude Code
-        tokman doctor         # Verify installation
+        tok init -g        # Set up for Claude Code
+        tok doctor         # Verify installation
 
 nfpms:
   - id: packages
-    package_name: tokman
+    package_name: tok
     vendor: GrayCode AI
-    homepage: https://github.com/GrayCodeAI/tokman
+    homepage: https://github.com/lakshmanpatel/tok
     maintainer: GrayCode AI <maintainers@graycode.ai>
     description: Token-aware CLI proxy with 31-layer compression pipeline for AI coding assistants
     license: MIT
@@ -151,6 +151,6 @@ nfpms:
     bindir: /usr/local/bin
     contents:
       - src: LICENSE
-        dst: /usr/share/doc/tokman/LICENSE
+        dst: /usr/share/doc/tok/LICENSE
       - src: README.md
-        dst: /usr/share/doc/tokman/README.md
+        dst: /usr/share/doc/tok/README.md

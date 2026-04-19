@@ -101,7 +101,7 @@ const (
 // IsEnabled returns true if telemetry is enabled
 func IsEnabled() bool {
 	// Check env override first (disable takes precedence)
-	if os.Getenv("TOKMAN_TELEMETRY_DISABLED") == "1" {
+	if os.Getenv("TOK_TELEMETRY_DISABLED") == "1" {
 		return false
 	}
 

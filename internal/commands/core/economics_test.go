@@ -35,7 +35,7 @@ func TestBuildCcusageArgs(t *testing.T) {
 	}
 }
 
-func TestGenerateEconomicsReportsWithoutCcusageFallsBackToTokmanData(t *testing.T) {
+func TestGenerateEconomicsReportsWithoutCcusageFallsBackToTokData(t *testing.T) {
 	reports := generateEconomicsReports(nil, map[string][]tokSavings{
 		"daily": {
 			{Date: "2026-04-18", Commands: 2, SavedTokens: 500, OriginalSize: 1000, FilteredSize: 500},

@@ -10,7 +10,7 @@ func (s *PipelineStats) String() string {
 	var sb strings.Builder
 
 	sb.WriteString("╔════════════════════════════════════════════════════╗\n")
-	sb.WriteString("║         Tokman 20-Layer Compression Stats          ║\n")
+	sb.WriteString("║         Tok 20-Layer Compression Stats          ║\n")
 	sb.WriteString("╠════════════════════════════════════════════════════╣\n")
 	sb.WriteString(fmt.Sprintf("║ Original:  %6d tokens                         ║\n", s.OriginalTokens))
 	sb.WriteString(fmt.Sprintf("║ Final:     %6d tokens                         ║\n", s.FinalTokens))

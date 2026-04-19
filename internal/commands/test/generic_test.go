@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -234,7 +235,7 @@ func runGenericTest(cmd *cobra.Command, args []string) error {
 
 func runCargoTestWithArgs(args []string, timer *tracking.TimedExecution) error {
 	// Delegate to existing cargo test implementation
-	fmt.Println(color.CyanString("Running Cargo tests..."))
+	out.Global().Println(color.CyanString("Running Cargo tests..."))
 
 	// This would call the existing cargo test filter
 	// For now, pass through to cargo test
@@ -242,47 +243,47 @@ func runCargoTestWithArgs(args []string, timer *tracking.TimedExecution) error {
 }
 
 func runGoTestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running Go tests..."))
+	out.Global().Println(color.CyanString("Running Go tests..."))
 	return runPassthroughTest("go", append([]string{"test"}, args...), timer)
 }
 
 func runNpmTestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running npm tests..."))
+	out.Global().Println(color.CyanString("Running npm tests..."))
 	return runPassthroughTest("npm", append([]string{"test"}, args...), timer)
 }
 
 func runPnpmTestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running pnpm tests..."))
+	out.Global().Println(color.CyanString("Running pnpm tests..."))
 	return runPassthroughTest("pnpm", append([]string{"test"}, args...), timer)
 }
 
 func runPytestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running pytest..."))
+	out.Global().Println(color.CyanString("Running pytest..."))
 	return runPassthroughTest("pytest", args, timer)
 }
 
 func runVitestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running Vitest..."))
+	out.Global().Println(color.CyanString("Running Vitest..."))
 	return runPassthroughTest("npx", append([]string{"vitest", "run"}, args...), timer)
 }
 
 func runJestWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running Jest..."))
+	out.Global().Println(color.CyanString("Running Jest..."))
 	return runPassthroughTest("npx", append([]string{"jest"}, args...), timer)
 }
 
 func runRspecWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running RSpec..."))
+	out.Global().Println(color.CyanString("Running RSpec..."))
 	return runPassthroughTest("rspec", args, timer)
 }
 
 func runRakeWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running Rake tests..."))
+	out.Global().Println(color.CyanString("Running Rake tests..."))
 	return runPassthroughTest("rake", append([]string{"test"}, args...), timer)
 }
 
 func runPlaywrightWithArgs(args []string, timer *tracking.TimedExecution) error {
-	fmt.Println(color.CyanString("Running Playwright..."))
+	out.Global().Println(color.CyanString("Running Playwright..."))
 	return runPassthroughTest("npx", append([]string{"playwright", "test"}, args...), timer)
 }
 
@@ -307,7 +308,7 @@ func runPassthroughTest(command string, args []string, timer *tracking.TimedExec
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	// Track usage
 	originalTokens := filter.EstimateTokens(output)

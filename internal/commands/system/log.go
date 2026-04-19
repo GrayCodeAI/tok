@@ -3,6 +3,7 @@ package system
 import (
 	"bufio"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"regexp"
 	"strings"
@@ -54,7 +55,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 	// Filter logs
 	filtered := filterLogs(input)
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(input)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -63,7 +64,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 	if shared.Verbose > 0 {
 		origLines := len(strings.Split(input, "\n"))
 		filtLines := len(strings.Split(filtered, "\n"))
-		fmt.Fprintf(os.Stderr, "Lines: %d -> %d\n", origLines, filtLines)
+		out.Global().Errorf("Lines: %d -> %d\n", origLines, filtLines)
 	}
 
 	return nil

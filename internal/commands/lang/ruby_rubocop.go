@@ -3,7 +3,7 @@ package lang
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -16,7 +16,7 @@ func runRubocopCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: rubocop %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: rubocop %s\n", strings.Join(args, " "))
 	}
 
 	// Use --format json for structured output
@@ -27,7 +27,7 @@ func runRubocopCmd(args []string) error {
 
 	filtered := filterRubocopOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

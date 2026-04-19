@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -119,7 +120,7 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			DetectDir:    filepath.Join(home, ".claude"),
 			ConfigDir:    filepath.Join(home, ".claude"),
 			HookDir:      filepath.Join(home, ".claude", "hooks"),
-			Instructions: "Patched ~/.claude/settings.json and ensured ~/.claude/CLAUDE.md references @TOKMAN.md",
+			Instructions: "Patched ~/.claude/settings.json and ensured ~/.claude/CLAUDE.md references @TOK.md",
 		},
 		{
 			Name:         "Cursor",
@@ -250,17 +251,17 @@ func runInit(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(toSetup) == 0 {
-		fmt.Println("No agents selected or detected.")
-		fmt.Println("\nTo setup a specific agent, use:")
-		fmt.Println("  tok init --claude     # For Claude Code")
-		fmt.Println("  tok init --cursor     # For Cursor")
-		fmt.Println("  tok init --windsurf   # For Windsurf")
-		fmt.Println("  tok init --opencode   # For OpenCode")
-		fmt.Println("  tok init --openclaw   # For OpenClaw")
-		fmt.Println("  tok init --kilocode   # For Kilo Code")
-		fmt.Println("  tok init --antigravity # For Google Antigravity")
-		fmt.Println("\nOr detect all installed agents:")
-		fmt.Println("  tok init --all")
+		out.Global().Println("No agents selected or detected.")
+		out.Global().Println("\nTo setup a specific agent, use:")
+		out.Global().Println("  tok init --claude     # For Claude Code")
+		out.Global().Println("  tok init --cursor     # For Cursor")
+		out.Global().Println("  tok init --windsurf   # For Windsurf")
+		out.Global().Println("  tok init --opencode   # For OpenCode")
+		out.Global().Println("  tok init --openclaw   # For OpenClaw")
+		out.Global().Println("  tok init --kilocode   # For Kilo Code")
+		out.Global().Println("  tok init --antigravity # For Google Antigravity")
+		out.Global().Println("\nOr detect all installed agents:")
+		out.Global().Println("  tok init --all")
 		return nil
 	}
 
@@ -272,35 +273,35 @@ func runInit(cmd *cobra.Command, args []string) error {
 	green := color.New(color.FgGreen).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	fmt.Println()
-	fmt.Println("Setting up tok for AI agents...")
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println("Setting up tok for AI agents...")
+	out.Global().Println()
 
 	for _, agent := range toSetup {
-		fmt.Printf("📦 %s\n", agent.Name)
+		out.Global().Printf("📦 %s\n", agent.Name)
 
 		if err := setupAgent(agent, installUsesGlobal(agent, initGlobal)); err != nil {
-			fmt.Printf("   %s %v\n", yellow("⚠"), err)
+			out.Global().Printf("   %s %v\n", yellow("⚠"), err)
 		} else {
-			fmt.Printf("   %s Hook installed\n", green("✓"))
-			fmt.Printf("   %s %s\n", yellow("ℹ"), agent.Instructions)
+			out.Global().Printf("   %s Hook installed\n", green("✓"))
+			out.Global().Printf("   %s %s\n", yellow("ℹ"), agent.Instructions)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	// Create default config if it doesn't exist
 	configPath := config.ConfigPath()
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		if err := createDefaulttokConfig(); err == nil {
-			fmt.Printf("%s Created default config at %s\n", green("✓"), configPath)
+			out.Global().Printf("%s Created default config at %s\n", green("✓"), configPath)
 		}
 	}
 
-	fmt.Println()
-	fmt.Println(green("🎉 Setup complete!"))
-	fmt.Println()
-	fmt.Println("tok is now integrated with your AI agents.")
-	fmt.Println("Token compression will be applied automatically.")
+	out.Global().Println()
+	out.Global().Println(green("🎉 Setup complete!"))
+	out.Global().Println()
+	out.Global().Println("tok is now integrated with your AI agents.")
+	out.Global().Println("Token compression will be applied automatically.")
 
 	return nil
 }
@@ -309,24 +310,24 @@ func runInitUninstall(toSetup []AgentInfo) error {
 	green := color.New(color.FgGreen).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	fmt.Println()
-	fmt.Println("Removing tok integration...")
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println("Removing tok integration...")
+	out.Global().Println()
 
 	for _, agent := range toSetup {
-		fmt.Printf("🧹 %s\n", agent.Name)
+		out.Global().Printf("🧹 %s\n", agent.Name)
 		removed, err := uninstallAgent(agent)
 		if err != nil {
-			fmt.Printf("   %s %v\n", yellow("⚠"), err)
+			out.Global().Printf("   %s %v\n", yellow("⚠"), err)
 		} else if len(removed) == 0 {
-			fmt.Printf("   %s nothing to remove\n", yellow("ℹ"))
+			out.Global().Printf("   %s nothing to remove\n", yellow("ℹ"))
 		} else {
-			fmt.Printf("   %s removed %d artifact(s)\n", green("✓"), len(removed))
+			out.Global().Printf("   %s removed %d artifact(s)\n", green("✓"), len(removed))
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
-	fmt.Println(green("Cleanup complete."))
+	out.Global().Println(green("Cleanup complete."))
 	return nil
 }
 
@@ -340,39 +341,39 @@ func runInteractiveInit(agents []AgentInfo) error {
 	}
 
 	if len(detected) == 0 {
-		fmt.Println("No AI agents detected in standard locations.")
-		fmt.Println("\nPlease specify which agent to setup:")
-		fmt.Println("  tok init --claude     # For Claude Code")
-		fmt.Println("  tok init --cursor     # For Cursor")
-		fmt.Println("  tok init --windsurf   # For Windsurf")
-		fmt.Println("  tok init --opencode   # For OpenCode")
-		fmt.Println("  tok init --openclaw   # For OpenClaw")
-		fmt.Println("  tok init --kilocode   # For Kilo Code")
-		fmt.Println("  tok init --antigravity # For Google Antigravity")
+		out.Global().Println("No AI agents detected in standard locations.")
+		out.Global().Println("\nPlease specify which agent to setup:")
+		out.Global().Println("  tok init --claude     # For Claude Code")
+		out.Global().Println("  tok init --cursor     # For Cursor")
+		out.Global().Println("  tok init --windsurf   # For Windsurf")
+		out.Global().Println("  tok init --opencode   # For OpenCode")
+		out.Global().Println("  tok init --openclaw   # For OpenClaw")
+		out.Global().Println("  tok init --kilocode   # For Kilo Code")
+		out.Global().Println("  tok init --antigravity # For Google Antigravity")
 		return nil
 	}
 
-	fmt.Println("Detected AI agents:")
+	out.Global().Println("Detected AI agents:")
 	for i, agent := range detected {
-		fmt.Printf("  %d. %s\n", i+1, agent.Name)
+		out.Global().Printf("  %d. %s\n", i+1, agent.Name)
 	}
-	fmt.Println()
+	out.Global().Println()
 
 	// For single agent, auto-setup
 	if len(detected) == 1 {
-		fmt.Printf("Auto-setting up for %s...\n", detected[0].Name)
+		out.Global().Printf("Auto-setting up for %s...\n", detected[0].Name)
 		return setupAgent(detected[0], installUsesGlobal(detected[0], initGlobal))
 	}
 
 	// For multiple agents, ask user
-	fmt.Print("Setup for all detected agents? [Y/n]: ")
+	out.Global().Print("Setup for all detected agents? [Y/n]: ")
 	var response string
 	fmt.Scanln(&response)
 
 	if response == "" || response == "y" || response == "Y" {
 		for _, agent := range detected {
 			if err := setupAgent(agent, installUsesGlobal(agent, initGlobal)); err != nil {
-				fmt.Printf("Warning: failed to setup %s: %v\n", agent.Name, err)
+				out.Global().Printf("Warning: failed to setup %s: %v\n", agent.Name, err)
 			}
 		}
 	}
@@ -415,7 +416,7 @@ func setupAgent(agent AgentInfo, global bool) error {
 	}
 
 	// Create instructions file
-	instructionsPath := filepath.Join(agent.ConfigDir, "TOKMAN.md")
+	instructionsPath := filepath.Join(agent.ConfigDir, "TOK.md")
 	instructions := generateInstructions(agent.Name)
 
 	if err := os.WriteFile(instructionsPath, []byte(instructions), 0644); err != nil {
@@ -472,7 +473,7 @@ func patchAgentIntegration(agent AgentInfo, hookPath string) error {
 		if err := patchClaudeSettingsFile(filepath.Join(agent.ConfigDir, "settings.json"), hookPath); err != nil {
 			return fmt.Errorf("cannot patch Claude settings: %w", err)
 		}
-		if err := ensureReferenceFileContains(filepath.Join(agent.ConfigDir, "CLAUDE.md"), "@TOKMAN.md"); err != nil {
+		if err := ensureReferenceFileContains(filepath.Join(agent.ConfigDir, "CLAUDE.md"), "@TOK.md"); err != nil {
 			return fmt.Errorf("cannot patch CLAUDE.md: %w", err)
 		}
 	case "Cursor":
@@ -531,7 +532,7 @@ func uninstallAgent(agent AgentInfo) ([]string, error) {
 		removed = append(removed, integrity.HashPath(legacyHookPath))
 	}
 
-	instructionsPath := filepath.Join(agent.ConfigDir, "TOKMAN.md")
+	instructionsPath := filepath.Join(agent.ConfigDir, "TOK.md")
 	if ok, err := removeFile(instructionsPath); err != nil {
 		return removed, err
 	} else if ok {
@@ -559,7 +560,7 @@ func removeAgentIntegration(agent AgentInfo, hookPath, legacyHookPath string) ([
 			removed = append(removed, settingsPath)
 		}
 		claudeMD := filepath.Join(agent.ConfigDir, "CLAUDE.md")
-		changed, err = removeReferenceFromFile(claudeMD, "@TOKMAN.md")
+		changed, err = removeReferenceFromFile(claudeMD, "@TOK.md")
 		if err != nil {
 			return removed, err
 		}
@@ -1034,12 +1035,12 @@ func setupCodexAgent(agent AgentInfo, global bool) error {
 		configDir = resolveCodexConfigDir(home)
 	}
 
-	tokPath := filepath.Join(configDir, "TOKMAN.md")
+	tokPath := filepath.Join(configDir, "TOK.md")
 	if err := writeOwnedFile(tokPath, generateInstructions(agent.Name), 0644); err != nil {
 		return err
 	}
 
-	reference := "@TOKMAN.md"
+	reference := "@TOK.md"
 	if global {
 		reference = "@" + tokPath
 	}
@@ -1077,7 +1078,7 @@ func uninstallCodexAgent(agent AgentInfo) ([]string, error) {
 		dir       string
 		reference string
 	}{
-		{dir: agent.ConfigDir, reference: "@TOKMAN.md"},
+		{dir: agent.ConfigDir, reference: "@TOK.md"},
 	}
 	if globalDir != agent.ConfigDir {
 		dirs = append(dirs, struct {
@@ -1085,12 +1086,12 @@ func uninstallCodexAgent(agent AgentInfo) ([]string, error) {
 			reference string
 		}{
 			dir:       globalDir,
-			reference: "@" + filepath.Join(globalDir, "TOKMAN.md"),
+			reference: "@" + filepath.Join(globalDir, "TOK.md"),
 		})
 	}
 
 	for _, item := range dirs {
-		tokPath := filepath.Join(item.dir, "TOKMAN.md")
+		tokPath := filepath.Join(item.dir, "TOK.md")
 		if ok, err := removeFile(tokPath); err != nil {
 			return removed, err
 		} else if ok {
@@ -1098,7 +1099,7 @@ func uninstallCodexAgent(agent AgentInfo) ([]string, error) {
 		}
 
 		agentsPath := filepath.Join(item.dir, "AGENTS.md")
-		changed, err := removeReferencesFromFile(agentsPath, item.reference, "@TOKMAN.md")
+		changed, err := removeReferencesFromFile(agentsPath, item.reference, "@TOK.md")
 		if err != nil {
 			return removed, err
 		}
@@ -1323,7 +1324,7 @@ func generateOpenCodePlugin() string {
 
 // tok OpenCode plugin — rewrites commands to use tok for token savings.
 
-export const TokmanOpenCodePlugin: Plugin = async ({ $ }) => {
+export const TokOpenCodePlugin: Plugin = async ({ $ }) => {
   try {
     await $` + "`which tok`" + `.quiet()
   } catch {
@@ -1394,21 +1395,21 @@ func showInitConfig() error {
 		return err
 	}
 
-	fmt.Println("tok Agent Configuration")
-	fmt.Println("==========================")
-	fmt.Println()
+	out.Global().Println("tok Agent Configuration")
+	out.Global().Println("==========================")
+	out.Global().Println()
 
 	for _, agent := range agents {
 		status, detail := describeAgentStatus(agent)
 		if detail != "" {
-			fmt.Printf("  %-20s %s (%s)\n", agent.Name+":", status, detail)
+			out.Global().Printf("  %-20s %s (%s)\n", agent.Name+":", status, detail)
 		} else {
-			fmt.Printf("  %-20s %s\n", agent.Name+":", status)
+			out.Global().Printf("  %-20s %s\n", agent.Name+":", status)
 		}
 	}
 
-	fmt.Println()
-	fmt.Println("Run 'tok init --all' to setup all detected agents")
+	out.Global().Println()
+	out.Global().Println("Run 'tok init --all' to setup all detected agents")
 
 	return nil
 }
@@ -1459,7 +1460,7 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 		case claudeHookConfigured(settingsPath, hookPath):
 			detail := "settings.json patched"
 			if fileExists(claudeMD) {
-				if content, err := os.ReadFile(claudeMD); err == nil && strings.Contains(string(content), "@TOKMAN.md") {
+				if content, err := os.ReadFile(claudeMD); err == nil && strings.Contains(string(content), "@TOK.md") {
 					detail += ", CLAUDE.md linked"
 				}
 			}
@@ -1584,8 +1585,8 @@ func describeCodexStatus(agent AgentInfo) (string, string) {
 	home, _ := os.UserHomeDir()
 	globalDir := resolveCodexConfigDir(home)
 	localDir := agent.ConfigDir
-	globalConfigured := codexScopeConfigured(globalDir, "@"+filepath.Join(globalDir, "TOKMAN.md"))
-	localConfigured := codexScopeConfigured(localDir, "@TOKMAN.md")
+	globalConfigured := codexScopeConfigured(globalDir, "@"+filepath.Join(globalDir, "TOK.md"))
+	localConfigured := codexScopeConfigured(localDir, "@TOK.md")
 
 	switch {
 	case globalConfigured && localConfigured:
@@ -1597,13 +1598,13 @@ func describeCodexStatus(agent AgentInfo) (string, string) {
 	}
 
 	switch {
-	case codexScopePartial(globalDir, "@"+filepath.Join(globalDir, "TOKMAN.md")) && codexScopePartial(localDir, "@TOKMAN.md"):
+	case codexScopePartial(globalDir, "@"+filepath.Join(globalDir, "TOK.md")) && codexScopePartial(localDir, "@TOK.md"):
 		return "partial", "global and local Codex files need repair"
-	case codexScopePartial(globalDir, "@"+filepath.Join(globalDir, "TOKMAN.md")):
+	case codexScopePartial(globalDir, "@"+filepath.Join(globalDir, "TOK.md")):
 		return "partial", "global Codex files need repair"
-	case codexScopePartial(localDir, "@TOKMAN.md"):
+	case codexScopePartial(localDir, "@TOK.md"):
 		return "partial", "local Codex files need repair"
-	case fileExists(globalDir) || fileExists(filepath.Join(localDir, "AGENTS.md")) || fileExists(filepath.Join(localDir, "TOKMAN.md")):
+	case fileExists(globalDir) || fileExists(filepath.Join(localDir, "AGENTS.md")) || fileExists(filepath.Join(localDir, "TOK.md")):
 		return "detected", "not configured"
 	default:
 		return "not detected", ""
@@ -1626,11 +1627,11 @@ func describeCopilotStatus(agent AgentInfo) (string, string) {
 }
 
 func codexScopeConfigured(baseDir, reference string) bool {
-	return fileContains(filepath.Join(baseDir, "AGENTS.md"), reference) && fileExists(filepath.Join(baseDir, "TOKMAN.md"))
+	return fileContains(filepath.Join(baseDir, "AGENTS.md"), reference) && fileExists(filepath.Join(baseDir, "TOK.md"))
 }
 
 func codexScopePartial(baseDir, reference string) bool {
-	return fileExists(filepath.Join(baseDir, "TOKMAN.md")) || fileContains(filepath.Join(baseDir, "AGENTS.md"), reference)
+	return fileExists(filepath.Join(baseDir, "TOK.md")) || fileContains(filepath.Join(baseDir, "AGENTS.md"), reference)
 }
 
 func managedBlockPresent(path, marker string) bool {

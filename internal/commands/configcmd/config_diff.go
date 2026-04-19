@@ -2,6 +2,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"reflect"
 
@@ -27,8 +28,8 @@ func runConfigDiff(cmd *cobra.Command, args []string) error {
 	configPath := effectiveConfigPath()
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		fmt.Println("No config file found. Using defaults.")
-		fmt.Printf("Config path: %s\n", configPath)
+		out.Global().Println("No config file found. Using defaults.")
+		out.Global().Printf("Config path: %s\n", configPath)
 		return nil
 	}
 
@@ -37,7 +38,7 @@ func runConfigDiff(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load config: %w", err)
 	}
 
-	fmt.Printf("Config diff: %s vs defaults\n\n", configPath)
+	out.Global().Printf("Config diff: %s vs defaults\n\n", configPath)
 
 	hasDiff := false
 
@@ -48,7 +49,7 @@ func runConfigDiff(cmd *cobra.Command, args []string) error {
 	hasDiff = diffStruct("tracking", &defaults.Tracking, &userCfg.Tracking) || hasDiff
 
 	if !hasDiff {
-		fmt.Println("No differences from defaults.")
+		out.Global().Println("No differences from defaults.")
 	}
 
 	return nil
@@ -68,7 +69,7 @@ func diffStruct(prefix string, defaults, current any) bool {
 		}
 
 		if !reflect.DeepEqual(df.Interface(), cf.Interface()) {
-			fmt.Printf("  %s.%s: %v → %v\n", prefix, fieldName, df.Interface(), cf.Interface())
+			out.Global().Printf("  %s.%s: %v → %v\n", prefix, fieldName, df.Interface(), cf.Interface())
 			hasDiff = true
 		}
 	}

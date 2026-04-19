@@ -3,7 +3,7 @@ package pkgmgr
 import (
 	"bytes"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -47,7 +47,7 @@ func runPipOutdated(cmd *cobra.Command, args []string) error {
 
 	if _, uvErr := exec.LookPath("uv"); uvErr == nil {
 		if shared.Verbose > 0 {
-			fmt.Fprintln(os.Stderr, "Using uv for faster package check")
+			out.Global().Errorf("Using uv for faster package check")
 		}
 		output, err = exec.Command("uv", "pip", "list", "--outdated").Output()
 	} else {
@@ -67,7 +67,7 @@ func runPipOutdated(cmd *cobra.Command, args []string) error {
 	packages := parsePipOutdated(raw)
 	filtered := formatPipOutdated(packages, pipOutdatedFormat)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	// Track metrics
 	originalTokens := filter.EstimateTokens(raw)

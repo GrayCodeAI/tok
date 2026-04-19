@@ -3,7 +3,7 @@ package system
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -68,7 +68,7 @@ func runCcusage(cmd *cobra.Command, args []string) error {
 	ccusageCmd.Args = append(ccusageCmd.Args, cmdArgs...)
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: %s %s\n", ccusageCmd.Path, strings.Join(cmdArgs, " "))
+		out.Global().Errorf("Running: %s %s\n", ccusageCmd.Path, strings.Join(cmdArgs, " "))
 	}
 
 	output, err := ccusageCmd.CombinedOutput()
@@ -84,19 +84,19 @@ func runCcusage(cmd *cobra.Command, args []string) error {
 
 	if ccusageFormat == "json" {
 		data, _ := json.MarshalIndent(periods, "", "  ")
-		fmt.Println(string(data))
+		out.Global().Println(string(data))
 		return nil
 	}
 
 	// Display text format
-	fmt.Printf("Claude Code Usage (%s)\n", strings.ToUpper(granularity[:1])+granularity[1:])
-	fmt.Println(strings.Repeat("-", 50))
+	out.Global().Printf("Claude Code Usage (%s)\n", strings.ToUpper(granularity[:1])+granularity[1:])
+	out.Global().Println(strings.Repeat("-", 50))
 
 	var totalInput, totalOutput, totalTokens uint64
 	var totalCost float64
 
 	for _, p := range periods {
-		fmt.Printf("%s: %d in / %d out / %d total = $%.2f\n",
+		out.Global().Printf("%s: %d in / %d out / %d total = $%.2f\n",
 			p.Key, p.InputTokens, p.OutputTokens, p.TotalTokens, p.TotalCost)
 		totalInput += p.InputTokens
 		totalOutput += p.OutputTokens
@@ -104,8 +104,8 @@ func runCcusage(cmd *cobra.Command, args []string) error {
 		totalCost += p.TotalCost
 	}
 
-	fmt.Println(strings.Repeat("-", 50))
-	fmt.Printf("TOTAL: %d in / %d out / %d tokens = $%.2f\n",
+	out.Global().Println(strings.Repeat("-", 50))
+	out.Global().Printf("TOTAL: %d in / %d out / %d tokens = $%.2f\n",
 		totalInput, totalOutput, totalTokens, totalCost)
 
 	return nil
@@ -133,8 +133,8 @@ func runCcusageAll() error {
 			return err
 		}
 
-		fmt.Printf("\n%s\n", strings.ToUpper(g[:1])+g[1:])
-		fmt.Println(strings.Repeat("-", 40))
+		out.Global().Printf("\n%s\n", strings.ToUpper(g[:1])+g[1:])
+		out.Global().Println(strings.Repeat("-", 40))
 
 		var totalTokens uint64
 		var totalCost float64
@@ -142,7 +142,7 @@ func runCcusageAll() error {
 			totalTokens += p.TotalTokens
 			totalCost += p.TotalCost
 		}
-		fmt.Printf("%d periods: %d tokens total = $%.2f\n",
+		out.Global().Printf("%d periods: %d tokens total = $%.2f\n",
 			len(periods), totalTokens, totalCost)
 	}
 

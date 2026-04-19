@@ -9,6 +9,7 @@ import (
 	"github.com/lakshmanpatel/tok/internal/commands/registry"
 	"github.com/lakshmanpatel/tok/internal/commands/shared"
 	"github.com/lakshmanpatel/tok/internal/filter"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
@@ -53,7 +54,7 @@ func runWc(cmd *cobra.Command, args []string) error {
 	// Compact output with smart formatting
 	filtered := compactWcOutput(output, mode)
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

@@ -24,8 +24,8 @@ go install honnef.co/go/tools/cmd/staticcheck@latest
 ## Project Structure
 
 ```
-tokman/
-├── cmd/tokman/              # Entry point
+tok/
+├── cmd/tok/              # Entry point
 ├── internal/                # Private packages
 │   ├── commands/            # CLI commands (Cobra)
 │   ├── filter/              # Practical 20-layer compression pipeline
@@ -44,14 +44,14 @@ tokman/
 
 ```bash
 # Fork on GitHub, then clone
-git clone https://github.com/YOUR_USERNAME/tokman.git
-cd tokman
+git clone https://github.com/YOUR_USERNAME/tok.git
+cd tok
 
 # Build
 make build
 
 # Run
-./tokman --version
+./tok --version
 ```
 
 ### 2. Run Tests
@@ -164,8 +164,8 @@ import (
     "github.com/spf13/viper"
     
     // Internal packages last
-    "github.com/GrayCodeAI/tokman/internal/config"
-    "github.com/GrayCodeAI/tokman/internal/filter"
+    "github.com/lakshmanpatel/tok/internal/config"
+    "github.com/lakshmanpatel/tok/internal/filter"
 )
 ```
 
@@ -366,7 +366,7 @@ func BenchmarkFilterApply_Parallel(b *testing.B) {
 Use the utils logger package:
 
 ```go
-import "github.com/GrayCodeAI/tokman/internal/utils"
+import "github.com/lakshmanpatel/tok/internal/utils"
 
 // Different log levels
 utils.Logger.Debug("Debug message with values", "key", value)
@@ -394,7 +394,7 @@ package mycategory
 
 import (
     "github.com/spf13/cobra"
-    "github.com/GrayCodeAI/tokman/internal/commands/registry"
+    "github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 var myCmd = &cobra.Command{
@@ -403,8 +403,8 @@ var myCmd = &cobra.Command{
     Long: `Longer description that can span multiple lines.
 
 Examples:
-  tokman mycmd --flag value
-  tokman mycmd arg1 arg2`,
+  tok mycmd --flag value
+  tok mycmd arg1 arg2`,
     Args: cobra.MinimumNArgs(1),
     RunE: myCmdRun,
 }
@@ -428,7 +428,7 @@ Then add the import to `root.go`:
 ```go
 import (
     // ... other imports
-    _ "github.com/GrayCodeAI/tokman/internal/commands/mycategory"
+    _ "github.com/lakshmanpatel/tok/internal/commands/mycategory"
 )
 ```
 
@@ -510,10 +510,10 @@ make build-small
 make build-all
 
 # Run the binary
-./tokman help
+./tok help
 
 # Cross-compile for Linux
-GOOS=linux GOARCH=amd64 go build -o tokman-linux ./cmd/tokman
+GOOS=linux GOARCH=amd64 go build -o tok-linux ./cmd/tok
 ```
 
 ## Performance Profiling
@@ -572,7 +572,7 @@ go install github.com/go-delve/delve/cmd/dlv@latest
 dlv test ./internal/filter/
 
 # Debug binary
-dlv exec ./tokman -- help
+dlv exec ./tok -- help
 
 # Breakpoints
 (dlv) break internal/filter/pipeline.go:42
@@ -583,11 +583,11 @@ dlv exec ./tokman -- help
 
 ```bash
 # Enable verbose output
-tokman -v [command]
+tok -v [command]
 
 # Enable debug logging
-export TOKMAN_LOG=debug
-tokman [command]
+export TOK_LOG=debug
+tok [command]
 ```
 
 ## Common Tasks
@@ -623,7 +623,7 @@ go mod tidy
 
 ```bash
 # 1. Update CHANGELOG.md
-# 2. Bump version in cmd/tokman/main.go
+# 2. Bump version in cmd/tok/main.go
 # 3. Run all checks
 make check
 

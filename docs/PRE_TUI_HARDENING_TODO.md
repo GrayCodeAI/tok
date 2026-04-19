@@ -1,6 +1,6 @@
 # Pre-TUI Hardening TODO
 
-This document tracks the backend cleanup required before the new TokMan TUI.
+This document tracks the backend cleanup required before the new Tok TUI.
 
 ## Completed
 
@@ -41,5 +41,5 @@ The new TUI should be built on:
 
 - `internal/tracking/dashboard.go`
 - `internal/session` summary/composition APIs
-- agent-aware diagnostics from `tokman doctor` / `tokman init --show`
+- agent-aware diagnostics from `tok doctor` / `tok init --show`
 - real integration state, not inferred placeholders

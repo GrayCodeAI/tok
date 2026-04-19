@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,7 @@ Trust-before-load security model:
 - Untrusted filters are SKIPPED (not loaded with warning)
 - This command stores the SHA-256 hash after user review
 - Content changes invalidate trust (requires re-review)
-- TOKMAN_TRUST_PROJECT_FILTERS=1 overrides for CI pipelines
+- TOK_TRUST_PROJECT_FILTERS=1 overrides for CI pipelines
 
 Examples:
   tok trust          # Review and trust .tok/filters.toml
@@ -86,26 +87,26 @@ func runTrust(cmd *cobra.Command, args []string) error {
 	green := color.New(color.FgGreen).SprintFunc()
 
 	// Display file content
-	fmt.Println()
-	fmt.Println(cyan("=== .tok/filters.toml ==="))
-	fmt.Println(string(content))
-	fmt.Println(cyan("==========================="))
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println(cyan("=== .tok/filters.toml ==="))
+	out.Global().Println(string(content))
+	out.Global().Println(cyan("==========================="))
+	out.Global().Println()
 
 	// Print risk summary
 	printRiskSummary(string(content))
-	fmt.Println()
+	out.Global().Println()
 
 	// Calculate hash
 	hash := computeHash(content)
 
 	// Ask for confirmation
-	fmt.Print("Trust this filter file? [y/N]: ")
+	out.Global().Print("Trust this filter file? [y/N]: ")
 	var response string
 	fmt.Scanln(&response)
 
 	if strings.ToLower(response) != "y" && strings.ToLower(response) != "yes" {
-		fmt.Println("Trust canceled.")
+		out.Global().Println("Trust canceled.")
 		return nil
 	}
 
@@ -114,10 +115,10 @@ func runTrust(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to store trust: %w", err)
 	}
 
-	fmt.Println()
-	fmt.Printf("%s Trusted .tok/filters.toml (sha256:%s)\n",
+	out.Global().Println()
+	out.Global().Printf("%s Trusted .tok/filters.toml (sha256:%s)\n",
 		green("✓"), hash[:16])
-	fmt.Println("Project-local filters will now be applied.")
+	out.Global().Println("Project-local filters will now be applied.")
 
 	return nil
 }
@@ -129,24 +130,24 @@ func listTrusted() error {
 	}
 
 	if len(store.Trusted) == 0 {
-		fmt.Println("No trusted project filters.")
+		out.Global().Println("No trusted project filters.")
 		return nil
 	}
 
 	cyan := color.New(color.FgCyan).SprintFunc()
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	fmt.Println()
-	fmt.Println(cyan("Trusted project filters:"))
-	fmt.Println(strings.Repeat("═", 60))
+	out.Global().Println()
+	out.Global().Println(cyan("Trusted project filters:"))
+	out.Global().Println(strings.Repeat("═", 60))
 
 	for path, entry := range store.Trusted {
 		date := entry.TrustedAt
 		if len(date) > 10 {
 			date = date[:10]
 		}
-		fmt.Printf("  %s (trusted %s)\n", yellow(path), date)
-		fmt.Printf("    sha256:%s\n", entry.SHA256)
+		out.Global().Printf("  %s (trusted %s)\n", yellow(path), date)
+		out.Global().Printf("    sha256:%s\n", entry.SHA256)
 	}
 
 	return nil
@@ -160,20 +161,20 @@ func printRiskSummary(content string) {
 
 	yellow := color.New(color.FgYellow).SprintFunc()
 
-	fmt.Println("Risk summary:")
-	fmt.Printf("  Filters: %d\n", filterCount)
+	out.Global().Println("Risk summary:")
+	out.Global().Printf("  Filters: %d\n", filterCount)
 
 	if hasReplace {
-		fmt.Printf("  %s Contains 'replace' rules (can rewrite output)\n", yellow("[!]"))
+		out.Global().Printf("  %s Contains 'replace' rules (can rewrite output)\n", yellow("[!]"))
 	}
 	if hasMatchOutput {
-		fmt.Printf("  %s Contains 'match_output' rules (can replace entire output)\n", yellow("[!]"))
+		out.Global().Printf("  %s Contains 'match_output' rules (can replace entire output)\n", yellow("[!]"))
 	}
 	if hasDotPattern {
-		fmt.Printf("  %s Contains catch-all pattern '.' (matches everything)\n", yellow("[!]"))
+		out.Global().Printf("  %s Contains catch-all pattern '.' (matches everything)\n", yellow("[!]"))
 	}
 	if !hasReplace && !hasMatchOutput && !hasDotPattern {
-		fmt.Println("  No high-risk patterns detected.")
+		out.Global().Println("  No high-risk patterns detected.")
 	}
 }
 
@@ -269,7 +270,7 @@ func trustFilter(filterPath string, hash string) error {
 // CheckTrust checks if a filter file is trusted
 func CheckTrust(filterPath string) TrustStatus {
 	// Fast path: env var override for CI pipelines
-	if os.Getenv("TOKMAN_TRUST_PROJECT_FILTERS") == "1" {
+	if os.Getenv("TOK_TRUST_PROJECT_FILTERS") == "1" {
 		// Require CI environment to prevent .envrc injection
 		if os.Getenv("CI") != "" || os.Getenv("GITHUB_ACTIONS") != "" ||
 			os.Getenv("GITLAB_CI") != "" || os.Getenv("JENKINS_URL") != "" {

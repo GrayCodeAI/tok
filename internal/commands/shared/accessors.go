@@ -29,7 +29,7 @@ func (s *AppState) GetQueryIntent() string {
 	if intent != "" {
 		return intent
 	}
-	return os.Getenv("TOKMAN_QUERY")
+	return os.Getenv("TOK_QUERY")
 }
 
 // IsLLMEnabled returns true if LLM compression is enabled.
@@ -37,7 +37,7 @@ func (s *AppState) IsLLMEnabled() bool {
 	s.mu.RLock()
 	enabled := s.LLMEnabled
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_LLM") == "true"
+	return enabled || os.Getenv("TOK_LLM") == "true"
 }
 
 // GetTokenBudget returns the token budget from flag or environment.
@@ -48,13 +48,13 @@ func (s *AppState) GetTokenBudget() int {
 	if budget > 0 {
 		return budget
 	}
-	envBudget := os.Getenv("TOKMAN_BUDGET")
+	envBudget := os.Getenv("TOK_BUDGET")
 	if envBudget != "" {
 		var b int
 		if _, err := fmt.Sscanf(envBudget, "%d", &b); err == nil {
 			return b
 		}
-		log.Printf("warning: invalid TOKMAN_BUDGET value %q, defaulting to unlimited", envBudget)
+		log.Printf("warning: invalid TOK_BUDGET value %q, defaulting to unlimited", envBudget)
 	}
 	return 0
 }
@@ -67,7 +67,7 @@ func (s *AppState) GetLayerPreset() string {
 	if preset != "" {
 		return preset
 	}
-	return os.Getenv("TOKMAN_PRESET")
+	return os.Getenv("TOK_PRESET")
 }
 
 // IsQuietMode returns true if quiet mode is enabled.
@@ -82,14 +82,14 @@ func (s *AppState) IsReversibleEnabled() bool {
 	s.mu.RLock()
 	enabled := s.ReversibleEnabled
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_REVERSIBLE") == "true"
+	return enabled || os.Getenv("TOK_REVERSIBLE") == "true"
 }
 
 // IsRemoteMode returns true if remote mode is enabled.
 func (s *AppState) IsRemoteMode() bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return s.RemoteMode || os.Getenv("TOKMAN_REMOTE") == "true"
+	return s.RemoteMode || os.Getenv("TOK_REMOTE") == "true"
 }
 
 // GetCompressionAddr returns the compression service address.
@@ -100,7 +100,7 @@ func (s *AppState) GetCompressionAddr() string {
 	if addr != "" {
 		return addr
 	}
-	return os.Getenv("TOKMAN_COMPRESSION_ADDR")
+	return os.Getenv("TOK_COMPRESSION_ADDR")
 }
 
 // GetAnalyticsAddr returns the analytics service address.
@@ -111,7 +111,7 @@ func (s *AppState) GetAnalyticsAddr() string {
 	if addr != "" {
 		return addr
 	}
-	return os.Getenv("TOKMAN_ANALYTICS_ADDR")
+	return os.Getenv("TOK_ANALYTICS_ADDR")
 }
 
 // GetRemoteTimeout returns the remote operation timeout in seconds.
@@ -151,7 +151,7 @@ func (s *AppState) IsPolicyRouterEnabled() bool {
 	s.mu.RLock()
 	enabled := s.PolicyRouter
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_POLICY_ROUTER") == "true"
+	return enabled || os.Getenv("TOK_POLICY_ROUTER") == "true"
 }
 
 // IsExtractiveEnabled returns true if extractive prefilter is enabled.
@@ -159,7 +159,7 @@ func (s *AppState) IsExtractiveEnabled() bool {
 	s.mu.RLock()
 	enabled := s.Extractive
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_EXTRACTIVE_PREFILTER") == "true"
+	return enabled || os.Getenv("TOK_EXTRACTIVE_PREFILTER") == "true"
 }
 
 func envInt(name string, def int) int {
@@ -182,7 +182,7 @@ func (s *AppState) GetExtractiveMax() int {
 	if v > 0 {
 		return v
 	}
-	return envInt("TOKMAN_EXTRACTIVE_MAX_LINES", 400)
+	return envInt("TOK_EXTRACTIVE_MAX_LINES", 400)
 }
 
 // GetExtractiveHead returns preserved head lines for extractive prefilter.
@@ -193,7 +193,7 @@ func (s *AppState) GetExtractiveHead() int {
 	if v > 0 {
 		return v
 	}
-	return envInt("TOKMAN_EXTRACTIVE_HEAD_LINES", 80)
+	return envInt("TOK_EXTRACTIVE_HEAD_LINES", 80)
 }
 
 // GetExtractiveTail returns preserved tail lines for extractive prefilter.
@@ -204,7 +204,7 @@ func (s *AppState) GetExtractiveTail() int {
 	if v > 0 {
 		return v
 	}
-	return envInt("TOKMAN_EXTRACTIVE_TAIL_LINES", 60)
+	return envInt("TOK_EXTRACTIVE_TAIL_LINES", 60)
 }
 
 // GetExtractiveSignal returns signal line budget for extractive prefilter.
@@ -215,7 +215,7 @@ func (s *AppState) GetExtractiveSignal() int {
 	if v > 0 {
 		return v
 	}
-	return envInt("TOKMAN_EXTRACTIVE_SIGNAL_LINES", 120)
+	return envInt("TOK_EXTRACTIVE_SIGNAL_LINES", 120)
 }
 
 // IsQualityGuardrailEnabled returns true if quality guardrail is enabled.
@@ -223,7 +223,7 @@ func (s *AppState) IsQualityGuardrailEnabled() bool {
 	s.mu.RLock()
 	enabled := s.QualityGuardrail
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_QUALITY_GUARDRAIL") == "true"
+	return enabled || os.Getenv("TOK_QUALITY_GUARDRAIL") == "true"
 }
 
 // IsDiffAdaptEnabled returns true if DiffAdapt layer is enabled.
@@ -231,7 +231,7 @@ func (s *AppState) IsDiffAdaptEnabled() bool {
 	s.mu.RLock()
 	enabled := s.DiffAdapt
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_DIFF_ADAPT") == "true"
+	return enabled || os.Getenv("TOK_DIFF_ADAPT") == "true"
 }
 
 // IsEPiCEnabled returns true if EPiC layer is enabled.
@@ -239,7 +239,7 @@ func (s *AppState) IsEPiCEnabled() bool {
 	s.mu.RLock()
 	enabled := s.EPiC
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_EPIC") == "true"
+	return enabled || os.Getenv("TOK_EPIC") == "true"
 }
 
 // IsSSDPEnabled returns true if SSDP layer is enabled.
@@ -247,7 +247,7 @@ func (s *AppState) IsSSDPEnabled() bool {
 	s.mu.RLock()
 	enabled := s.SSDP
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_SSDP") == "true"
+	return enabled || os.Getenv("TOK_SSDP") == "true"
 }
 
 // IsAgentOCREnabled returns true if AgentOCR layer is enabled.
@@ -255,7 +255,7 @@ func (s *AppState) IsAgentOCREnabled() bool {
 	s.mu.RLock()
 	enabled := s.AgentOCR
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_AGENT_OCR") == "true"
+	return enabled || os.Getenv("TOK_AGENT_OCR") == "true"
 }
 
 // IsS2MADEnabled returns true if S2-MAD layer is enabled.
@@ -263,7 +263,7 @@ func (s *AppState) IsS2MADEnabled() bool {
 	s.mu.RLock()
 	enabled := s.S2MAD
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_S2_MAD") == "true"
+	return enabled || os.Getenv("TOK_S2_MAD") == "true"
 }
 
 // IsACONEnabled returns true if ACON layer is enabled.
@@ -271,7 +271,7 @@ func (s *AppState) IsACONEnabled() bool {
 	s.mu.RLock()
 	enabled := s.ACON
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_ACON") == "true"
+	return enabled || os.Getenv("TOK_ACON") == "true"
 }
 
 // IsResearchPackEnabled returns true if research pack is enabled.
@@ -279,7 +279,7 @@ func (s *AppState) IsResearchPackEnabled() bool {
 	s.mu.RLock()
 	enabled := s.ResearchPack
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_RESEARCH_PACK") == "true"
+	return enabled || os.Getenv("TOK_RESEARCH_PACK") == "true"
 }
 
 // IsLatentCollabEnabled returns true if latent collaboration layer is enabled.
@@ -287,7 +287,7 @@ func (s *AppState) IsLatentCollabEnabled() bool {
 	s.mu.RLock()
 	enabled := s.LatentCollab
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_LATENT_COLLAB") == "true"
+	return enabled || os.Getenv("TOK_LATENT_COLLAB") == "true"
 }
 
 // IsGraphCoTEnabled returns true if graph-CoT layer is enabled.
@@ -295,7 +295,7 @@ func (s *AppState) IsGraphCoTEnabled() bool {
 	s.mu.RLock()
 	enabled := s.GraphCoT
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_GRAPH_COT") == "true"
+	return enabled || os.Getenv("TOK_GRAPH_COT") == "true"
 }
 
 // IsRoleBudgetEnabled returns true if role-budget layer is enabled.
@@ -303,7 +303,7 @@ func (s *AppState) IsRoleBudgetEnabled() bool {
 	s.mu.RLock()
 	enabled := s.RoleBudget
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_ROLE_BUDGET") == "true"
+	return enabled || os.Getenv("TOK_ROLE_BUDGET") == "true"
 }
 
 // IsSWEAdaptiveEnabled returns true if SWE adaptive loop is enabled.
@@ -311,7 +311,7 @@ func (s *AppState) IsSWEAdaptiveEnabled() bool {
 	s.mu.RLock()
 	enabled := s.SWEAdaptive
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_SWE_ADAPTIVE") == "true"
+	return enabled || os.Getenv("TOK_SWE_ADAPTIVE") == "true"
 }
 
 // IsAgentOCRHistoryEnabled returns true if agent OCR history layer is enabled.
@@ -319,7 +319,7 @@ func (s *AppState) IsAgentOCRHistoryEnabled() bool {
 	s.mu.RLock()
 	enabled := s.AgentOCRHistory
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_AGENT_OCR_HISTORY") == "true"
+	return enabled || os.Getenv("TOK_AGENT_OCR_HISTORY") == "true"
 }
 
 // IsPlanBudgetEnabled returns true if plan-budget layer is enabled.
@@ -327,7 +327,7 @@ func (s *AppState) IsPlanBudgetEnabled() bool {
 	s.mu.RLock()
 	enabled := s.PlanBudget
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_PLAN_BUDGET") == "true"
+	return enabled || os.Getenv("TOK_PLAN_BUDGET") == "true"
 }
 
 // IsLightMemEnabled returns true if lightmem layer is enabled.
@@ -335,7 +335,7 @@ func (s *AppState) IsLightMemEnabled() bool {
 	s.mu.RLock()
 	enabled := s.LightMem
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_LIGHTMEM") == "true"
+	return enabled || os.Getenv("TOK_LIGHTMEM") == "true"
 }
 
 // IsPathShortenEnabled returns true if path-shorten layer is enabled.
@@ -343,7 +343,7 @@ func (s *AppState) IsPathShortenEnabled() bool {
 	s.mu.RLock()
 	enabled := s.PathShorten
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_PATH_SHORTEN") == "true"
+	return enabled || os.Getenv("TOK_PATH_SHORTEN") == "true"
 }
 
 // IsJSONSamplerEnabled returns true if json-sampler layer is enabled.
@@ -351,7 +351,7 @@ func (s *AppState) IsJSONSamplerEnabled() bool {
 	s.mu.RLock()
 	enabled := s.JSONSampler
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_JSON_SAMPLER") == "true"
+	return enabled || os.Getenv("TOK_JSON_SAMPLER") == "true"
 }
 
 // IsContextCrunchEnabled returns true if context-crunch layer is enabled.
@@ -359,7 +359,7 @@ func (s *AppState) IsContextCrunchEnabled() bool {
 	s.mu.RLock()
 	enabled := s.ContextCrunch
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_CONTEXT_CRUNCH") == "true"
+	return enabled || os.Getenv("TOK_CONTEXT_CRUNCH") == "true"
 }
 
 // IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
@@ -367,7 +367,7 @@ func (s *AppState) IsSearchCrunchEnabled() bool {
 	s.mu.RLock()
 	enabled := s.SearchCrunch
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_SEARCH_CRUNCH") == "true"
+	return enabled || os.Getenv("TOK_SEARCH_CRUNCH") == "true"
 }
 
 // IsStructCollapseEnabled returns true if structural-collapse layer is enabled.
@@ -375,7 +375,7 @@ func (s *AppState) IsStructCollapseEnabled() bool {
 	s.mu.RLock()
 	enabled := s.StructCollapse
 	s.mu.RUnlock()
-	return enabled || os.Getenv("TOKMAN_STRUCTURAL_COLLAPSE") == "true"
+	return enabled || os.Getenv("TOK_STRUCTURAL_COLLAPSE") == "true"
 }
 
 // Global accessor functions for backward compatibility.

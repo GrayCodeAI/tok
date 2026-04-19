@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 
@@ -68,7 +69,7 @@ return = "%s: completed successfully"
 
 	filterDir := config.FiltersDir()
 	if err := os.MkdirAll(filterDir, 0700); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: failed to create directory: %v\n", err)
+		out.Global().Errorf("warning: failed to create directory: %v\n", err)
 	}
 
 	filterPath := filepath.Join(filterDir, name+".toml")
@@ -80,11 +81,11 @@ return = "%s: completed successfully"
 		return err
 	}
 
-	fmt.Printf("Created filter: %s\n", filterPath)
-	fmt.Println("\nEdit the filter to customize:")
-	fmt.Printf("  %s\n", filterPath)
-	fmt.Println("\nTest it with:")
-	fmt.Printf("  tok filter-test %s\n", name)
+	out.Global().Printf("Created filter: %s\n", filterPath)
+	out.Global().Println("\nEdit the filter to customize:")
+	out.Global().Printf("  %s\n", filterPath)
+	out.Global().Println("\nTest it with:")
+	out.Global().Printf("  tok filter-test %s\n", name)
 
 	return nil
 }

@@ -3,6 +3,7 @@ package lang
 import (
 	"encoding/xml"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 	"time"
@@ -185,31 +186,31 @@ func outputTrxText(testRun *TestRun) error {
 	counters := testRun.ResultSum.Counters
 
 	// Summary header
-	fmt.Println("╔════════════════════════════════════════╗")
-	fmt.Println("║        TRX Test Results Summary        ║")
-	fmt.Println("╚════════════════════════════════════════╝")
-	fmt.Println()
+	out.Global().Println("╔════════════════════════════════════════╗")
+	out.Global().Println("║        TRX Test Results Summary        ║")
+	out.Global().Println("╚════════════════════════════════════════╝")
+	out.Global().Println()
 
 	// Test counts
-	fmt.Printf("Total Tests: %d\n", counters.Total)
-	fmt.Printf("   PASS Passed:   %d\n", counters.Passed)
-	fmt.Printf("   FAIL Failed:   %d\n", counters.Failed)
-	fmt.Printf("   SKIP Skipped:  %d\n", counters.NotExecuted)
-	fmt.Printf("   Duration: %s\n", formatTrxDuration(testRun.Times.Start, testRun.Times.Finish))
-	fmt.Println()
+	out.Global().Printf("Total Tests: %d\n", counters.Total)
+	out.Global().Printf("   PASS Passed:   %d\n", counters.Passed)
+	out.Global().Printf("   FAIL Failed:   %d\n", counters.Failed)
+	out.Global().Printf("   SKIP Skipped:  %d\n", counters.NotExecuted)
+	out.Global().Printf("   Duration: %s\n", formatTrxDuration(testRun.Times.Start, testRun.Times.Finish))
+	out.Global().Println()
 
 	// Failed tests
 	if counters.Failed > 0 {
-		fmt.Println("═══════════════════════════════════════════")
-		fmt.Println("FAILED TESTS:")
-		fmt.Println("═══════════════════════════════════════════")
+		out.Global().Println("═══════════════════════════════════════════")
+		out.Global().Println("FAILED TESTS:")
+		out.Global().Println("═══════════════════════════════════════════")
 
 		failCount := 0
 		for _, result := range testRun.Results.UnitTestResults {
 			if result.Outcome == "Failed" {
 				failCount++
-				fmt.Printf("\n%d. ❌ %s\n", failCount, result.TestName)
-				fmt.Printf("   Duration: %s\n", result.Duration)
+				out.Global().Printf("\n%d. ❌ %s\n", failCount, result.TestName)
+				out.Global().Printf("   Duration: %s\n", result.Duration)
 
 				if result.Output != nil && result.Output.ErrorInfo != nil {
 					msg := strings.TrimSpace(result.Output.ErrorInfo.Message)
@@ -219,7 +220,7 @@ func outputTrxText(testRun *TestRun) error {
 						if len(lines) > 3 {
 							msg = strings.Join(lines[:3], "\n") + "\n   ..."
 						}
-						fmt.Printf("   Error: %s\n", msg)
+						out.Global().Printf("   Error: %s\n", msg)
 					}
 
 					stack := strings.TrimSpace(result.Output.ErrorInfo.StackTrace)
@@ -227,34 +228,34 @@ func outputTrxText(testRun *TestRun) error {
 						// Show first line of stack trace
 						lines := strings.Split(stack, "\n")
 						if len(lines) > 0 {
-							fmt.Printf("   Stack: %s\n", strings.TrimSpace(lines[0]))
+							out.Global().Printf("   Stack: %s\n", strings.TrimSpace(lines[0]))
 						}
 					}
 				}
 			}
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	// Run info / warnings
 	if len(testRun.ResultSum.RunInfo) > 0 {
-		fmt.Println("═══════════════════════════════════════════")
-		fmt.Println("RUN INFO:")
-		fmt.Println("═══════════════════════════════════════════")
+		out.Global().Println("═══════════════════════════════════════════")
+		out.Global().Println("RUN INFO:")
+		out.Global().Println("═══════════════════════════════════════════")
 		for _, info := range testRun.ResultSum.RunInfo {
-			fmt.Printf("  [%s] %s\n", info.Outcome, info.Text)
+			out.Global().Printf("  [%s] %s\n", info.Outcome, info.Text)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	// Final outcome
 	outcome := testRun.ResultSum.Outcome
 	if outcome == "Completed" && counters.Failed == 0 {
-		fmt.Println("✅ All tests passed!")
+		out.Global().Println("✅ All tests passed!")
 	} else if counters.Failed > 0 {
-		fmt.Printf("❌ %d test(s) failed\n", counters.Failed)
+		out.Global().Printf("❌ %d test(s) failed\n", counters.Failed)
 	} else {
-		fmt.Printf("⚠️  Outcome: %s\n", outcome)
+		out.Global().Printf("⚠️  Outcome: %s\n", outcome)
 	}
 
 	return nil
@@ -308,19 +309,19 @@ func outputTrxJSON(testRun *TestRun) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
-	fmt.Println(string(jsonBytes))
+	out.Global().Println(string(jsonBytes))
 	return nil
 }
 
 func outputTrxCSV(testRun *TestRun) error {
-	fmt.Println("TestName,Outcome,Duration,Error")
+	out.Global().Println("TestName,Outcome,Duration,Error")
 	for _, r := range testRun.Results.UnitTestResults {
 		errorMsg := ""
 		if r.Output != nil && r.Output.ErrorInfo != nil {
 			errorMsg = strings.ReplaceAll(r.Output.ErrorInfo.Message, "\n", " ")
 			errorMsg = strings.ReplaceAll(errorMsg, "\"", "\"\"")
 		}
-		fmt.Printf("\"%s\",%s,%s,\"%s\"\n", r.TestName, r.Outcome, r.Duration, errorMsg)
+		out.Global().Printf("\"%s\",%s,%s,\"%s\"\n", r.TestName, r.Outcome, r.Duration, errorMsg)
 	}
 	return nil
 }

@@ -1,10 +1,10 @@
-# TokMan Performance Guide
+# Tok Performance Guide
 
-This guide covers performance optimization features in TokMan, including caching, batching, and profiling.
+This guide covers performance optimization features in Tok, including caching, batching, and profiling.
 
 ## Overview
 
-TokMan includes several performance optimizations:
+Tok includes several performance optimizations:
 
 1. **Command Rewrite Caching**: 28x speedup for repeated commands
 2. **Telemetry Batching**: Reduces HTTP requests by 10x
@@ -18,7 +18,7 @@ The rewrite system caches command rewrites to avoid reprocessing.
 ### How It Works
 
 ```
-First call:  cargo test → tokman test-runner cargo test  (230 ns)
+First call:  cargo test → tok test-runner cargo test  (230 ns)
 Cached call: cargo test → [cache lookup] → cached result  (8 ns)
 ```
 
@@ -34,7 +34,7 @@ Cached call: cargo test → [cache lookup] → cached result  (8 ns)
 View cache performance:
 
 ```bash
-tokman doctor --cache-stats
+tok doctor --cache-stats
 ```
 
 Output:
@@ -49,10 +49,10 @@ Cache Statistics:
 
 ```bash
 # Clear cache
-tokman doctor --clear-cache
+tok doctor --clear-cache
 
 # View cache size
-tokman doctor --cache-info
+tok doctor --cache-info
 ```
 
 ### Disabling Cache
@@ -104,15 +104,15 @@ Force immediate flush:
 
 ```bash
 # Flush all pending telemetry
-tokman telemetry --flush
+tok telemetry --flush
 
 # Disable batching (debug only)
-export TOKMAN_TELEMETRY_BATCH_SIZE=1
+export TOK_TELEMETRY_BATCH_SIZE=1
 ```
 
 ## Profiling
 
-TokMan includes built-in profiling capabilities.
+Tok includes built-in profiling capabilities.
 
 ### CPU Profiling
 
@@ -120,7 +120,7 @@ Profile CPU usage:
 
 ```bash
 # Built-in profiler
-tokman profile --cpu --duration=30s --output=cpu.prof
+tok profile --cpu --duration=30s --output=cpu.prof
 
 # View results
 go tool pprof -http=:8080 cpu.prof
@@ -135,7 +135,7 @@ Profile memory allocations:
 
 ```bash
 # Built-in profiler
-tokman profile --mem --duration=30s --output=mem.prof
+tok profile --mem --duration=30s --output=mem.prof
 
 # View results
 go tool pprof -http=:8080 mem.prof
@@ -150,7 +150,7 @@ Trace execution flow:
 
 ```bash
 # Built-in tracer
-tokman profile --trace --duration=5s --output=trace.out
+tok profile --trace --duration=5s --output=trace.out
 
 # View results
 go tool trace trace.out
@@ -208,7 +208,7 @@ go test -bench=BenchmarkQuota -cpuprofile=cpu.prof -memprofile=mem.prof ./intern
 
 ## SIMD Optimizations
 
-TokMan uses SIMD instructions for performance-critical operations.
+Tok uses SIMD instructions for performance-critical operations.
 
 ### Supported Instructions
 
@@ -223,7 +223,7 @@ SIMD is automatically enabled when available:
 
 ```bash
 # Check SIMD support
-tokman doctor --simd-info
+tok doctor --simd-info
 ```
 
 Output:
@@ -240,15 +240,15 @@ Force SIMD build:
 
 ```bash
 # Build with AVX2
-go build -tags=simd_avx2 ./cmd/tokman
+go build -tags=simd_avx2 ./cmd/tok
 
 # Build with NEON
-go build -tags=simd_neon ./cmd/tokman
+go build -tags=simd_neon ./cmd/tok
 ```
 
 ## Streaming Mode
 
-For large inputs (>500K tokens), TokMan uses streaming mode.
+For large inputs (>500K tokens), Tok uses streaming mode.
 
 ### How It Works
 
@@ -320,23 +320,23 @@ budget = 10000  # Strict token budget
 
 ```bash
 # View performance metrics
-tokman gain --metrics
+tok gain --metrics
 
 # View cache hit rate
-tokman doctor --cache-stats
+tok doctor --cache-stats
 
 # View telemetry stats
-tokman telemetry --stats
+tok telemetry --stats
 ```
 
 ### External Monitoring
 
 ```bash
 # Export metrics in Prometheus format
-tokman metrics --format=prometheus
+tok metrics --format=prometheus
 
 # Export in JSON
-tokman metrics --format=json
+tok metrics --format=json
 ```
 
 ## Troubleshooting Performance
@@ -347,10 +347,10 @@ If rewriting is slow:
 
 ```bash
 # Check cache hit rate
-tokman doctor --cache-stats
+tok doctor --cache-stats
 
 # Clear and rebuild cache
-tokman doctor --clear-cache
+tok doctor --clear-cache
 
 # Profile rewrite system
 ./scripts/profile.sh rewrite
@@ -365,10 +365,10 @@ If memory usage is high:
 ./scripts/profile.sh mem
 
 # Enable streaming mode
-tokman config set pipeline.stream_threshold 100000
+tok config set pipeline.stream_threshold 100000
 
 # Reduce cache size
-tokman config set cache.max_entries 1000
+tok config set cache.max_entries 1000
 ```
 
 ### Slow Telemetry
@@ -377,13 +377,13 @@ If telemetry is slowing down commands:
 
 ```bash
 # Check telemetry queue
-tokman telemetry --queue-size
+tok telemetry --queue-size
 
 # Flush pending events
-tokman telemetry --flush
+tok telemetry --flush
 
 # Disable telemetry (last resort)
-tokman telemetry --disable
+tok telemetry --disable
 ```
 
 ## Performance Checklist
@@ -393,7 +393,7 @@ Before production deployment:
 - [ ] Run benchmarks: `go test -bench=. ./...`
 - [ ] Profile hot paths: `./scripts/profile.sh all`
 - [ ] Check cache hit rate: > 90% expected
-- [ ] Verify SIMD support: `tokman doctor --simd-info`
+- [ ] Verify SIMD support: `tok doctor --simd-info`
 - [ ] Test with large inputs: > 500K tokens
 - [ ] Monitor memory usage: < 512MB expected
 - [ ] Verify telemetry batching: < 10% overhead

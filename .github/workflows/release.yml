@@ -62,27 +62,32 @@ jobs:
         CGO_ENABLED: 0
       run: |
         version=${GITHUB_REF#refs/tags/}
-        ldflags="-s -w -X 'github.com/GrayCodeAI/tokman/internal/commands/shared.Version=${version}'"
+        ldflags="-s -w -X 'github.com/lakshmanpatel/tok/internal/commands/shared.Version=${version}'"
         
-        output="tokman-${{ matrix.os }}-${{ matrix.arch }}"
+        output="tok-${{ matrix.os }}-${{ matrix.arch }}"
         if [ "${{ matrix.os }}" = "windows" ]; then
           output="${output}.exe"
         fi
         
-        go build -ldflags="${ldflags}" -o "${output}" ./cmd/tokman
+        go build -ldflags="${ldflags}" -o "${output}" ./cmd/tok
         
         # Create archive
         if [ "${{ matrix.os }}" = "windows" ]; then
-          zip "tokman-${{ matrix.os }}-${{ matrix.arch }}.zip" "${output}"
+          zip "tok-${{ matrix.os }}-${{ matrix.arch }}.zip" "${output}"
         else
-          tar czf "tokman-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "${output}"
+          tar czf "tok-${{ matrix.os }}-${{ matrix.arch }}.tar.gz" "${output}"
         fi
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: tokman-${{ matrix.os }}-${{ matrix.arch }}
-        path: tokman-*.{tar.gz,zip}
+        name: tok-${{ matrix.os }}-${{ matrix.arch }}
+        path: tok-*.{tar.gz,zip}
+
+    - name: Generate SBOM
+      run: |
+        go install github.com/anchore/syft/cmd/syft@latest
+        syft dir:. --output cyclonedx-json > sbom.json
 
   release:
     name: Create Release

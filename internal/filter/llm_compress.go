@@ -58,7 +58,7 @@ func (lc *LLMCompressor) Compress(content string, maxTokens int) (string, int, i
 
 	cmd := exec.Command(lc.binPath)
 	cmd.Stdin = strings.NewReader(string(reqBytes))
-	cmd.Env = append(os.Environ(), "TOKMAN_LLM_TIMEOUT=30")
+	cmd.Env = append(os.Environ(), "TOK_LLM_TIMEOUT=30")
 
 	out, err := cmd.Output()
 	if err != nil {

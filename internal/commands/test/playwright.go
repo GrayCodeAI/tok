@@ -2,7 +2,7 @@ package test
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -41,7 +41,7 @@ func runPlaywright(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: playwright %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: playwright %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"playwright"}, args...)...)
@@ -56,7 +56,7 @@ func runPlaywright(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

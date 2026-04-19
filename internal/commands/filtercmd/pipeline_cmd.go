@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 
@@ -41,8 +42,8 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	originalTokens := core.EstimateTokens(rawOutput)
 
-	fmt.Printf("Pipeline Execution: %s\n", args[0])
-	fmt.Printf("Original: ~%d tokens\n\n", originalTokens)
+	out.Global().Printf("Pipeline Execution: %s\n", args[0])
+	out.Global().Printf("Original: ~%d tokens\n\n", originalTokens)
 
 	pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
 		Mode:                filter.ModeMinimal,
@@ -58,8 +59,8 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	_, stats := pipeline.Process(rawOutput)
 
-	fmt.Printf("%-30s %10s %8s\n", "Layer", "Saved", "Status")
-	fmt.Printf("%-30s %10s %8s\n", "──────────────────────────────", "──────────", "────────")
+	out.Global().Printf("%-30s %10s %8s\n", "Layer", "Saved", "Status")
+	out.Global().Printf("%-30s %10s %8s\n", "──────────────────────────────", "──────────", "────────")
 
 	runningTotal := originalTokens
 	layers := []string{
@@ -75,10 +76,10 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 		}
 		status := "applied"
 		runningTotal -= stat.TokensSaved
-		fmt.Printf("%-30s %10d %8s\n", layer, stat.TokensSaved, status)
+		out.Global().Printf("%-30s %10d %8s\n", layer, stat.TokensSaved, status)
 	}
 
-	fmt.Printf("\nFinal: ~%d tokens (%.1f%% reduction)\n", stats.FinalTokens, stats.ReductionPercent)
+	out.Global().Printf("\nFinal: ~%d tokens (%.1f%% reduction)\n", stats.FinalTokens, stats.ReductionPercent)
 
 	return err
 }

@@ -3,6 +3,7 @@ package container
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"regexp"
@@ -56,7 +57,7 @@ func runPsql(cmd *cobra.Command, args []string) error {
 	output := stdout.String()
 
 	if stderr.Len() > 0 {
-		fmt.Fprint(os.Stderr, stderr.String())
+		out.Global().Error(stderr.String())
 	}
 
 	if err != nil {
@@ -67,7 +68,7 @@ func runPsql(cmd *cobra.Command, args []string) error {
 	}
 
 	filtered := filterPsqlOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

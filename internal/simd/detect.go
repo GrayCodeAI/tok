@@ -41,12 +41,16 @@ func detectCPUFeatures() CPUFeatures {
 }
 
 func detectAVX2() bool {
-	// TODO: Use cpuid when Go 1.26+ available
+	// SIMD detection requires CGO and platform-specific assembly.
+	// Disabled by default for portability; falls through to scalar.
+	// Set CGO_ENABLED=1 and provide platform-specific cpuid bindings to enable.
 	return false
 }
 
 func detectAVX512() bool {
-	// TODO: Use cpuid when Go 1.26+ available
+	// SIMD detection requires CGO and platform-specific assembly.
+	// Disabled by default for portability; falls through to scalar.
+	// Set CGO_ENABLED=1 and provide platform-specific cpuid bindings to enable.
 	return false
 }
 
@@ -72,12 +76,14 @@ func (d *Dispatcher) EntropyFilter(data []float64) float64 {
 }
 
 func entropyAVX2(data []float64) float64 {
-	// TODO: AVX2 implementation
+	// AVX2 implementation requires CGO and platform-specific assembly.
+	// Disabled by default for portability; falls through to scalar.
 	return entropyScalar(data)
 }
 
 func entropyNEON(data []float64) float64 {
-	// TODO: NEON implementation
+	// NEON implementation requires CGO and platform-specific assembly.
+	// Disabled by default for portability; falls through to scalar.
 	return entropyScalar(data)
 }
 

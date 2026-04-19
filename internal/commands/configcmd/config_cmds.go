@@ -2,6 +2,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -41,18 +42,18 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		cfg = config.Defaults()
 	}
-	fmt.Println("Current Configuration:")
-	fmt.Println("=====================")
-	fmt.Printf("  Pipeline:\n")
-	fmt.Printf("    max_context_tokens: %d\n", cfg.Pipeline.MaxContextTokens)
-	fmt.Printf("    default_budget: %d\n", cfg.Pipeline.DefaultBudget)
-	fmt.Printf("    entropy_threshold: %.2f\n", cfg.Pipeline.EntropyThreshold)
-	fmt.Printf("  Filter:\n")
-	fmt.Printf("    mode: %s\n", cfg.Filter.Mode)
-	fmt.Printf("    max_width: %d\n", cfg.Filter.MaxWidth)
-	fmt.Printf("  Tracking:\n")
-	fmt.Printf("    enabled: %v\n", cfg.Tracking.Enabled)
-	fmt.Printf("    database_path: %s\n", cfg.Tracking.DatabasePath)
+	out.Global().Println("Current Configuration:")
+	out.Global().Println("=====================")
+	out.Global().Printf("  Pipeline:\n")
+	out.Global().Printf("    max_context_tokens: %d\n", cfg.Pipeline.MaxContextTokens)
+	out.Global().Printf("    default_budget: %d\n", cfg.Pipeline.DefaultBudget)
+	out.Global().Printf("    entropy_threshold: %.2f\n", cfg.Pipeline.EntropyThreshold)
+	out.Global().Printf("  Filter:\n")
+	out.Global().Printf("    mode: %s\n", cfg.Filter.Mode)
+	out.Global().Printf("    max_width: %d\n", cfg.Filter.MaxWidth)
+	out.Global().Printf("  Tracking:\n")
+	out.Global().Printf("    enabled: %v\n", cfg.Tracking.Enabled)
+	out.Global().Printf("    database_path: %s\n", cfg.Tracking.DatabasePath)
 	return nil
 }
 
@@ -64,7 +65,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 
 	configPath := effectiveConfigPath()
 	if _, err := os.Stat(configPath); err == nil {
-		fmt.Printf("Config already exists at %s\n", configPath)
+		out.Global().Printf("Config already exists at %s\n", configPath)
 		return nil
 	}
 
@@ -86,7 +87,7 @@ retention_days = 90
 		return err
 	}
 
-	fmt.Printf("Created config at %s\n", configPath)
+	out.Global().Printf("Created config at %s\n", configPath)
 	return nil
 }
 
@@ -170,7 +171,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("cannot write config: %w", err)
 	}
 
-	fmt.Printf("Set %s = %s\n", key, value)
-	fmt.Printf("Config: %s\n", configPath)
+	out.Global().Printf("Set %s = %s\n", key, value)
+	out.Global().Printf("Config: %s\n", configPath)
 	return nil
 }

@@ -1,14 +1,14 @@
 .PHONY: build build-small build-all test test-race test-cover lint typecheck check install clean help
 
 # Binary name
-BINARY=tokman
-BUILD_DIR=cmd/tokman
+BINARY=tok
+BUILD_DIR=cmd/tok
 
 # Version from git tag (e.g., v0.1.0 -> 0.1.0) or "dev"
 VERSION=$(shell git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' || echo "dev")
 
 # Build flags with version injection
-LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tokman/internal/commands/shared.Version=$(VERSION)'"
+LDFLAGS=-ldflags="-s -w -X 'github.com/lakshmanpatel/tok/internal/commands/shared.Version=$(VERSION)'"
 
 # Go flags
 GOFLAGS=CGO_ENABLED=0
@@ -21,26 +21,26 @@ build:
 
 ## docker-build: Build Docker image
 docker-build:
-	docker build -t tokman:latest .
+	docker build -t tok:latest .
 
 ## docker-build-dev: Build development Docker image
 docker-build-dev:
-	docker build -f Dockerfile.dev -t tokman:dev .
+	docker build -f Dockerfile.dev -t tok:dev .
 
-## docker-run: Run TokMan in Docker
+## docker-run: Run Tok in Docker
 docker-run:
-	docker run --rm -v $(PWD):/workspace tokman:latest
+	docker run --rm -v $(PWD):/workspace tok:latest
 
 ## docker-test: Run tests in Docker
 docker-test:
-	docker run --rm -v $(PWD):/app tokman:dev go test ./...
+	docker run --rm -v $(PWD):/app tok:dev go test ./...
 
 ## docker-push: Push Docker image to registry
 docker-push:
-	docker tag tokman:latest ghcr.io/graycodeai/tokman:latest
-	docker tag tokman:latest ghcr.io/graycodeai/tokman:$(VERSION)
-	docker push ghcr.io/graycodeai/tokman:latest
-	docker push ghcr.io/graycodeai/tokman:$(VERSION)
+	docker tag tok:latest ghcr.io/graycodeai/tok:latest
+	docker tag tok:latest ghcr.io/graycodeai/tok:$(VERSION)
+	docker push ghcr.io/graycodeai/tok:latest
+	docker push ghcr.io/graycodeai/tok:$(VERSION)
 
 ## build-small: Build optimized small binary (with UPX if available)
 build-small:
@@ -58,13 +58,13 @@ build-tiny:
 ## build-all: Build for all platforms (Linux, macOS, Windows)
 build-all:
 	@echo "Building for all platforms..."
-	GOOS=linux GOARCH=amd64 $(GOFLAGS) go build -o tokman-linux-amd64 $(LDFLAGS) ./$(BUILD_DIR)
-	GOOS=linux GOARCH=arm64 $(GOFLAGS) go build -o tokman-linux-arm64 $(LDFLAGS) ./$(BUILD_DIR)
-	GOOS=darwin GOARCH=amd64 $(GOFLAGS) go build -o tokman-darwin-amd64 $(LDFLAGS) ./$(BUILD_DIR)
-	GOOS=darwin GOARCH=arm64 $(GOFLAGS) go build -o tokman-darwin-arm64 $(LDFLAGS) ./$(BUILD_DIR)
-	GOOS=windows GOARCH=amd64 $(GOFLAGS) go build -o tokman-windows-amd64.exe $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=linux GOARCH=amd64 $(GOFLAGS) go build -o tok-linux-amd64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=linux GOARCH=arm64 $(GOFLAGS) go build -o tok-linux-arm64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=darwin GOARCH=amd64 $(GOFLAGS) go build -o tok-darwin-amd64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=darwin GOARCH=arm64 $(GOFLAGS) go build -o tok-darwin-arm64 $(LDFLAGS) ./$(BUILD_DIR)
+	GOOS=windows GOARCH=amd64 $(GOFLAGS) go build -o tok-windows-amd64.exe $(LDFLAGS) ./$(BUILD_DIR)
 	@echo "Done! Created binaries:"
-	@ls -lh tokman-*
+	@ls -lh tok-*
 
 ## build-simd: Build with SIMD optimizations (Go 1.26+)
 build-simd:
@@ -123,7 +123,7 @@ install-global: build
 
 ## clean: Clean build artifacts
 clean:
-	rm -f $(BINARY) tokman-* coverage.out coverage.html
+	rm -f $(BINARY) tok-* coverage.out coverage.html
 	go clean -testcache
 	@echo "Cleaned build artifacts"
 
@@ -187,7 +187,7 @@ version:
 
 ## help: Show this help
 help:
-	@echo "TokMan Makefile"
+	@echo "Tok Makefile"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""

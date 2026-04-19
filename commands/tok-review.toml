@@ -1,0 +1,2 @@
+description = "Generate terse code review comments"
+prompt = "Review staged diff and output concise findings in format: L<line>: <severity> <issue>. <fix>. Prioritize correctness and security issues."

@@ -1,5 +1,10 @@
 package filter
 
+import (
+	"fmt"
+	"strings"
+)
+
 // AdaptiveBufferSizer dynamically adjusts buffer sizes
 type AdaptiveBufferSizer struct {
 	minSize int
@@ -47,6 +52,37 @@ func NewPerplexityOptimizer(width int) *PerplexityOptimizer {
 	return &PerplexityOptimizer{beamWidth: width}
 }
 
+// Optimize ranks tokens by frequency; common words have lower perplexity
+// and can be dropped during compression. Returns tokens sorted by
+// ascending frequency (rarest first, highest perplexity first).
+func (po *PerplexityOptimizer) Optimize(tokens []string) []string {
+	freq := make(map[string]int)
+	for _, t := range tokens {
+		freq[strings.ToLower(t)]++
+	}
+	type tokenScore struct {
+		token string
+		score int
+	}
+	var scored []tokenScore
+	for _, t := range tokens {
+		scored = append(scored, tokenScore{token: t, score: freq[strings.ToLower(t)]})
+	}
+	// Sort by score ascending (rare tokens first = higher perplexity = keep)
+	for i := 0; i < len(scored); i++ {
+		for j := i + 1; j < len(scored); j++ {
+			if scored[j].score < scored[i].score {
+				scored[i], scored[j] = scored[j], scored[i]
+			}
+		}
+	}
+	result := make([]string, len(scored))
+	for i, s := range scored {
+		result[i] = s.token
+	}
+	return result
+}
+
 // HeatmapGenerator visualizes compression
 type HeatmapGenerator struct {
 	data map[int]float64
@@ -58,6 +94,16 @@ func NewHeatmapGenerator() *HeatmapGenerator {
 
 func (hg *HeatmapGenerator) Record(pos int, ratio float64) {
 	hg.data[pos] = ratio
+}
+
+// Output returns the heatmap as a formatted string.
+func (hg *HeatmapGenerator) Output() string {
+	var sb strings.Builder
+	sb.WriteString("Compression Heatmap:\n")
+	for pos, ratio := range hg.data {
+		sb.WriteString(fmt.Sprintf("  pos %d: %.2f\n", pos, ratio))
+	}
+	return sb.String()
 }
 
 // DifferentialCompressor compresses deltas
@@ -74,9 +120,22 @@ func (dc *DifferentialCompressor) Compress(current string) string {
 		dc.previous = current
 		return current
 	}
-	// TODO: compute diff
+	// Simple line-level diff: keep only changed lines
+	origLines := strings.Split(dc.previous, "\n")
+	currLines := strings.Split(current, "\n")
+	origSet := make(map[string]bool)
+	for _, line := range origLines {
+		origSet[strings.TrimSpace(line)] = true
+	}
+	var changed []string
+	for _, line := range currLines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" || !origSet[trimmed] {
+			changed = append(changed, line)
+		}
+	}
 	dc.previous = current
-	return current
+	return strings.Join(changed, "\n")
 }
 
 // RatioPredictor predicts compression ratio

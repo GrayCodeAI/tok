@@ -1,5 +1,5 @@
 #!/bin/bash
-# Performance profiling script for TokMan
+# Performance profiling script for Tok
 # Usage: ./scripts/profile.sh [cpu|mem|trace] [duration]
 
 set -e
@@ -8,7 +8,7 @@ PROFILE_TYPE=${1:-cpu}
 DURATION=${2:-30s}
 OUTPUT_DIR=${3:-./profiles}
 
-echo "🔍 TokMan Performance Profiling"
+echo "🔍 Tok Performance Profiling"
 echo "═══════════════════════════════════════════════════════"
 echo "Profile Type: $PROFILE_TYPE"
 echo "Duration: $DURATION"
@@ -24,12 +24,12 @@ OUTPUT_FILE="$OUTPUT_DIR/${PROFILE_TYPE}_${TIMESTAMP}.prof"
 
 # Build with profiling support
 echo "📦 Building with profiling support..."
-go build -o /tmp/tokman-profiled ./cmd/tokman
+go build -o /tmp/tok-profiled ./cmd/tok
 
 case $PROFILE_TYPE in
     cpu)
         echo "🚀 Running CPU profiler..."
-        /tmp/tokman-profiled profile --cpu --duration="$DURATION" --output="$OUTPUT_FILE"
+        /tmp/tok-profiled profile --cpu --duration="$DURATION" --output="$OUTPUT_FILE"
         echo ""
         echo "📊 Analyzing CPU profile..."
         go tool pprof -top -cum "$OUTPUT_FILE" | head -30
@@ -39,7 +39,7 @@ case $PROFILE_TYPE in
     
     mem)
         echo "🧠 Running memory profiler..."
-        /tmp/tokman-profiled profile --mem --duration="$DURATION" --output="$OUTPUT_FILE"
+        /tmp/tok-profiled profile --mem --duration="$DURATION" --output="$OUTPUT_FILE"
         echo ""
         echo "📊 Analyzing memory profile..."
         go tool pprof -top -cum "$OUTPUT_FILE" | head -30
@@ -50,7 +50,7 @@ case $PROFILE_TYPE in
     trace)
         echo "🎯 Running execution tracer..."
         TRACE_FILE="$OUTPUT_DIR/trace_${TIMESTAMP}.out"
-        /tmp/tokman-profiled profile --trace --duration="$DURATION" --output="$TRACE_FILE"
+        /tmp/tok-profiled profile --trace --duration="$DURATION" --output="$TRACE_FILE"
         echo ""
         echo "💡 View with: go tool trace $TRACE_FILE"
         ;;

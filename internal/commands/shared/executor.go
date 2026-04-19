@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"os/exec"
@@ -64,10 +65,10 @@ func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 		Timestamp:      time.Now(),
 		ParseSuccess:   success,
 		// AI Agent attribution from environment
-		AgentName:   os.Getenv("TOKMAN_AGENT"),
-		ModelName:   os.Getenv("TOKMAN_MODEL"),
-		Provider:    os.Getenv("TOKMAN_PROVIDER"),
-		ModelFamily: utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
+		AgentName:   os.Getenv("TOK_AGENT"),
+		ModelName:   os.Getenv("TOK_MODEL"),
+		Provider:    os.Getenv("TOK_PROVIDER"),
+		ModelFamily: utils.GetModelFamily(os.Getenv("TOK_MODEL")),
 	}
 
 	return tracker.Record(record)
@@ -114,26 +115,26 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 		return err
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	// Use remote analytics if in remote mode
 	if IsRemoteMode() {
 		origTokens := core.EstimateTokens(raw)
 		filteredTokens := core.EstimateTokens(filtered)
 		if rerr := RemoteRecordAnalytics(name, origTokens, filteredTokens, execTime, true); rerr != nil && Verbose > 0 {
-			fmt.Fprintf(os.Stderr, "Warning: failed to record remote analytics: %v\n", rerr)
+			out.Global().Errorf("Warning: failed to record remote analytics: %v\n", rerr)
 		}
 		return nil
 	}
 
 	if rerr := RecordCommand(name, raw, filtered, execTime, true); rerr != nil && Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Warning: failed to record: %v\n", rerr)
+		out.Global().Errorf("Warning: failed to record: %v\n", rerr)
 	}
 	return nil
 }

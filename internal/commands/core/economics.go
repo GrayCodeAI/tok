@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -82,9 +83,9 @@ type tokSavings struct {
 type EconomicsReport struct {
 	Period         string        `json:"period"`
 	CcUsage        CcUsagePeriod `json:"ccUsage"`
-	tokSavings  tokSavings `json:"tokManSavings"`
-	EffectiveCost  float64       `json:"effectiveCost"`
-	SavingsPercent float64       `json:"savingsPercent"`
+	tokSavings     tokSavings
+	EffectiveCost  float64 `json:"effectiveCost"`
+	SavingsPercent float64 `json:"savingsPercent"`
 }
 
 type ccusageInvocation struct {
@@ -108,7 +109,7 @@ func runCcEconomics(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		// Don't fail if ccusage is not available, just show tok data
 		if shared.Verbose > 0 {
-			fmt.Fprintf(os.Stderr, "Note: ccusage not available: %v\n", err)
+			out.Global().Errorf("Note: ccusage not available: %v\n", err)
 		}
 	}
 
@@ -400,7 +401,7 @@ func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, savingsDat
 			report := EconomicsReport{
 				Period:         cc.Date,
 				CcUsage:        cc,
-				tokSavings:  tok,
+				tokSavings:     tok,
 				EffectiveCost:  costSaved,
 				SavingsPercent: tokCompressionRatio * 100,
 			}
@@ -415,7 +416,7 @@ func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, savingsDat
 			for _, t := range periods {
 				report := EconomicsReport{
 					Period:         t.Date,
-					tokSavings:  t,
+					tokSavings:     t,
 					SavingsPercent: 0,
 				}
 				if t.OriginalSize > 0 {
@@ -431,8 +432,8 @@ func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, savingsDat
 
 func outputText(reports []EconomicsReport, granularities []string) error {
 	if len(reports) == 0 {
-		fmt.Println("No economics data available yet.")
-		fmt.Println("Run some commands through tok and use ccusage to track Claude Code spending.")
+		out.Global().Println("No economics data available yet.")
+		out.Global().Println("Run some commands through tok and use ccusage to track Claude Code spending.")
 		return nil
 	}
 
@@ -440,16 +441,16 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 
-	fmt.Println()
-	fmt.Println(cyan("╔══════════════════════════════════════════════════════════╗"))
-	fmt.Println(cyan("║           Claude Code Economics Report                   ║"))
-	fmt.Println(cyan("╚══════════════════════════════════════════════════════════╝"))
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println(cyan("╔══════════════════════════════════════════════════════════╗"))
+	out.Global().Println(cyan("║           Claude Code Economics Report                   ║"))
+	out.Global().Println(cyan("╚══════════════════════════════════════════════════════════╝"))
+	out.Global().Println()
 
 	// Group by granularity
 	for _, g := range granularities {
-		fmt.Printf("\n📊 %s Breakdown\n", strings.ToUpper(g[:1])+g[1:])
-		fmt.Println(strings.Repeat("─", 70))
+		out.Global().Printf("\n📊 %s Breakdown\n", strings.ToUpper(g[:1])+g[1:])
+		out.Global().Println(strings.Repeat("─", 70))
 
 		var totalCcCost float64
 		var totaltokTokens uint64
@@ -467,34 +468,34 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 				}
 				totaltokTokens += r.tokSavings.SavedTokens
 
-				fmt.Printf("\n%s:\n", yellow(r.Period))
+				out.Global().Printf("\n%s:\n", yellow(r.Period))
 				if r.CcUsage.TotalCost > 0 {
-					fmt.Printf("  Claude: %s tokens, $%.2f\n",
+					out.Global().Printf("  Claude: %s tokens, $%.2f\n",
 						formatTokens(r.CcUsage.TotalTokens), r.CcUsage.TotalCost)
 				}
 				if r.tokSavings.SavedTokens > 0 {
-					fmt.Printf("  tok: %s saved (%.1f%% compression)\n",
+					out.Global().Printf("  tok: %s saved (%.1f%% compression)\n",
 						formatTokens(r.tokSavings.SavedTokens), r.SavingsPercent)
 				}
 			}
 		}
 
-		fmt.Println(strings.Repeat("─", 70))
-		fmt.Printf("TOTALS:\n")
+		out.Global().Println(strings.Repeat("─", 70))
+		out.Global().Printf("TOTALS:\n")
 		if totalCcCost > 0 {
-			fmt.Printf("  CC Spend: $%.2f (%s tokens)\n", totalCcCost, formatTokens(totalCcTokens))
+			out.Global().Printf("  CC Spend: $%.2f (%s tokens)\n", totalCcCost, formatTokens(totalCcTokens))
 		}
-		fmt.Printf("  tok Savings: %s tokens\n", formatTokens(totaltokTokens))
+		out.Global().Printf("  tok Savings: %s tokens\n", formatTokens(totaltokTokens))
 		if totalCcCost > 0 && totaltokTokens > 0 && totalCcTokens > 0 {
 			efficiency := float64(totaltokTokens) / float64(totalCcTokens) * 100
-			fmt.Printf("  Efficiency: %s tokens saved per token spent\n",
+			out.Global().Printf("  Efficiency: %s tokens saved per token spent\n",
 				green(fmt.Sprintf("%.2fx", efficiency)))
 		}
 	}
 
-	fmt.Println()
-	fmt.Println(green("✓ tok reduces your Claude Code token consumption"))
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Println(green("✓ tok reduces your Claude Code token consumption"))
+	out.Global().Println()
 
 	return nil
 }
@@ -506,10 +507,10 @@ func outputJson(reports []EconomicsReport) error {
 }
 
 func outputCsv(reports []EconomicsReport) error {
-	fmt.Println("period,cc_input_tokens,cc_output_tokens,cc_cache_tokens,cc_total_tokens,cc_cost,tok_commands,tok_saved_tokens,tok_original_size,tok_filtered_size,effective_cost,savings_percent")
+	out.Global().Println("period,cc_input_tokens,cc_output_tokens,cc_cache_tokens,cc_total_tokens,cc_cost,tok_commands,tok_saved_tokens,tok_original_size,tok_filtered_size,effective_cost,savings_percent")
 
 	for _, r := range reports {
-		fmt.Printf("%s,%d,%d,%d,%d,%.2f,%d,%d,%d,%d,%.2f,%.2f\n",
+		out.Global().Printf("%s,%d,%d,%d,%d,%.2f,%d,%d,%d,%d,%.2f,%.2f\n",
 			r.Period,
 			r.CcUsage.InputTokens,
 			r.CcUsage.OutputTokens,

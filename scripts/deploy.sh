@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TokMan Deployment Script
+# Tok Deployment Script
 # Automates deployment to staging and production environments
 
 set -e  # Exit on error
@@ -15,8 +15,8 @@ NC='\033[0m'  # No Color
 # Configuration
 ENVIRONMENT=${1:-staging}
 REGION=${2:-us-central1}
-PROJECT_ID=${3:-tokman-project}
-NAMESPACE=tokman-${ENVIRONMENT}
+PROJECT_ID=${3:-tok-project}
+NAMESPACE=tok-${ENVIRONMENT}
 
 # Functions
 log_info() {
@@ -54,8 +54,8 @@ build_docker_image() {
 
     # Build image
     docker build \
-        -t gcr.io/${PROJECT_ID}/tokman:latest \
-        -t gcr.io/${PROJECT_ID}/tokman:$(git rev-parse --short HEAD) \
+        -t gcr.io/${PROJECT_ID}/tok:latest \
+        -t gcr.io/${PROJECT_ID}/tok:$(git rev-parse --short HEAD) \
         -f Dockerfile .
 
     log_success "Docker image built"
@@ -68,8 +68,8 @@ push_docker_image() {
     gcloud auth configure-docker
 
     # Push images
-    docker push gcr.io/${PROJECT_ID}/tokman:latest
-    docker push gcr.io/${PROJECT_ID}/tokman:$(git rev-parse --short HEAD)
+    docker push gcr.io/${PROJECT_ID}/tok:latest
+    docker push gcr.io/${PROJECT_ID}/tok:$(git rev-parse --short HEAD)
 
     log_success "Docker image pushed"
 }
@@ -91,24 +91,24 @@ create_secrets() {
     log_info "Creating Kubernetes secrets..."
 
     # Check if secrets already exist
-    if kubectl get secret tokman-secrets -n $NAMESPACE &> /dev/null; then
+    if kubectl get secret tok-secrets -n $NAMESPACE &> /dev/null; then
         log_warning "Secrets already exist, skipping creation"
         return
     fi
 
     # Get secrets from environment
-    API_KEY=${TOKMAN_API_KEY:-""}
-    DB_PASSWORD=${TOKMAN_DB_PASSWORD:-""}
-    JWT_SECRET=${TOKMAN_JWT_SECRET:-""}
+    API_KEY=${TOK_API_KEY:-""}
+    DB_PASSWORD=${TOK_DB_PASSWORD:-""}
+    JWT_SECRET=${TOK_JWT_SECRET:-""}
 
     if [ -z "$API_KEY" ] || [ -z "$DB_PASSWORD" ]; then
         log_error "Missing required environment variables"
-        log_error "Set: TOKMAN_API_KEY, TOKMAN_DB_PASSWORD, TOKMAN_JWT_SECRET"
+        log_error "Set: TOK_API_KEY, TOK_DB_PASSWORD, TOK_JWT_SECRET"
         exit 1
     fi
 
     # Create secrets
-    kubectl create secret generic tokman-secrets \
+    kubectl create secret generic tok-secrets \
         --from-literal=api-key="$API_KEY" \
         --from-literal=db-password="$DB_PASSWORD" \
         --from-literal=jwt-secret="$JWT_SECRET" \
@@ -121,13 +121,13 @@ create_configmap() {
     log_info "Creating Kubernetes ConfigMap..."
 
     # Check if ConfigMap already exists
-    if kubectl get configmap tokman-config -n $NAMESPACE &> /dev/null; then
+    if kubectl get configmap tok-config -n $NAMESPACE &> /dev/null; then
         log_warning "ConfigMap already exists, updating..."
-        kubectl delete configmap tokman-config -n $NAMESPACE
+        kubectl delete configmap tok-config -n $NAMESPACE
     fi
 
     # Create ConfigMap
-    kubectl create configmap tokman-config \
+    kubectl create configmap tok-config \
         --from-literal=log-level=info \
         --from-literal=compression-level=aggressive \
         --from-literal=cache-ttl=3600 \
@@ -141,8 +141,8 @@ deploy_kubernetes() {
     log_info "Deploying to Kubernetes..."
 
     # Update image in deployment manifest
-    sed -e "s|IMAGE|gcr.io/${PROJECT_ID}/tokman:$(git rev-parse --short HEAD)|g" \
-        deployments/kubernetes/tokman-deployment.yaml \
+    sed -e "s|IMAGE|gcr.io/${PROJECT_ID}/tok:$(git rev-parse --short HEAD)|g" \
+        deployments/kubernetes/tok-deployment.yaml \
         | kubectl apply -f - -n $NAMESPACE
 
     log_success "Kubernetes manifests applied"
@@ -152,7 +152,7 @@ wait_for_deployment() {
     log_info "Waiting for deployment to be ready..."
 
     # Wait for rollout
-    kubectl rollout status deployment/tokman-api -n $NAMESPACE --timeout=5m
+    kubectl rollout status deployment/tok-api -n $NAMESPACE --timeout=5m
 
     log_success "Deployment is ready"
 }
@@ -161,7 +161,7 @@ verify_deployment() {
     log_info "Verifying deployment..."
 
     # Get service IP
-    SERVICE_IP=$(kubectl get svc tokman-api -n $NAMESPACE \
+    SERVICE_IP=$(kubectl get svc tok-api -n $NAMESPACE \
         -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
 
     if [ "$SERVICE_IP" == "pending" ]; then
@@ -200,7 +200,7 @@ run_load_test() {
             log_info "Running load test..."
 
             # Get service IP
-            SERVICE_IP=$(kubectl get svc tokman-api -n $NAMESPACE \
+            SERVICE_IP=$(kubectl get svc tok-api -n $NAMESPACE \
                 -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 
             # Run k6 load test
@@ -250,8 +250,8 @@ print_summary() {
 
     log_info ""
     log_info "Next steps:"
-    log_info "1. Monitor deployment: kubectl logs -f -l app=tokman -n $NAMESPACE"
-    log_info "2. Access dashboard: kubectl port-forward svc/tokman-dashboard 3000:3000 -n $NAMESPACE"
+    log_info "1. Monitor deployment: kubectl logs -f -l app=tok -n $NAMESPACE"
+    log_info "2. Access dashboard: kubectl port-forward svc/tok-dashboard 3000:3000 -n $NAMESPACE"
     log_info "3. View metrics: kubectl port-forward svc/prometheus 9090:9090 -n $NAMESPACE"
     log_info "=========================================="
 }
@@ -259,15 +259,15 @@ print_summary() {
 rollback() {
     log_warning "Rolling back deployment..."
 
-    kubectl rollout undo deployment/tokman-api -n $NAMESPACE
-    kubectl rollout status deployment/tokman-api -n $NAMESPACE
+    kubectl rollout undo deployment/tok-api -n $NAMESPACE
+    kubectl rollout status deployment/tok-api -n $NAMESPACE
 
     log_success "Rollback completed"
 }
 
 # Main deployment flow
 main() {
-    log_info "Starting TokMan deployment to $ENVIRONMENT"
+    log_info "Starting Tok deployment to $ENVIRONMENT"
 
     # Pre-flight checks
     check_prerequisites

@@ -1,20 +1,20 @@
-# Claw Compactor Features: Deep Analysis for TokMan Integration
+# Claw Compactor Features: Deep Analysis for Tok Integration
 
 **Date:** April 10, 2026  
-**Analysis Scope:** All 14 Claw Compactor stages vs TokMan's 20 layers
+**Analysis Scope:** All 14 Claw Compactor stages vs Tok's 20 layers
 
 ---
 
 ## Executive Summary
 
-After deep analysis of Claw Compactor's codebase, here's what TokMan can learn:
+After deep analysis of Claw Compactor's codebase, here's what Tok can learn:
 
-### Already Implemented in TokMan ✅
-- **DiffCrunch** - TokMan has `diff_crunch.go` (simpler version)
-- **SearchCrunch** - TokMan has `search_crunch.go` (simpler version)
-- **LogCrunch** - TokMan has `log_crunch.go` (simpler version)
-- **SemanticDedup** - TokMan has `dedup.go` and `near_dedup_filter.go`
-- **AST Compression** - TokMan has `ast_preserve.go` (Layer 4)
+### Already Implemented in Tok ✅
+- **DiffCrunch** - Tok has `diff_crunch.go` (simpler version)
+- **SearchCrunch** - Tok has `search_crunch.go` (simpler version)
+- **LogCrunch** - Tok has `log_crunch.go` (simpler version)
+- **SemanticDedup** - Tok has `dedup.go` and `near_dedup_filter.go`
+- **AST Compression** - Tok has `ast_preserve.go` (Layer 4)
 
 ### High-Value Missing Features 🎯
 
@@ -27,11 +27,11 @@ After deep analysis of Claw Compactor's codebase, here's what TokMan can learn:
 | **5. Immutable Architecture** | 🟡 MEDIUM | High | Long-term refactor |
 
 ### Low-Value Features ⚠️
-- **RLE Stage** - TokMan already has better n-gram compression (Layer 6)
-- **TokenOpt** - TokMan handles this in TOML filters
-- **Abbrev** - TokMan has better semantic compression (Layer 11)
-- **Nexus** - TokMan has multiple ML-based layers (7, 8, 9)
-- **StructuralCollapse** - TokMan has `structural_collapse.go`
+- **RLE Stage** - Tok already has better n-gram compression (Layer 6)
+- **TokenOpt** - Tok handles this in TOML filters
+- **Abbrev** - Tok has better semantic compression (Layer 11)
+- **Nexus** - Tok has multiple ML-based layers (7, 8, 9)
+- **StructuralCollapse** - Tok has `structural_collapse.go`
 
 ---
 
@@ -44,19 +44,19 @@ After deep analysis of Claw Compactor's codebase, here's what TokMan can learn:
 - Uses 3-word shingle fingerprinting (Jaccard similarity > 0.8)
 - Replaces duplicate messages with compact references
 
-**Why TokMan needs it:**
+**Why Tok needs it:**
 - Long agent sessions repeat the same context across turns
 - Tool results get re-pasted in assistant summaries
 - System prompts contain repeated fragments
 - **Potential savings: 20-40% in multi-turn conversations**
 
-**Current TokMan status:**
+**Current Tok status:**
 - ❌ No cross-message deduplication
 - ✅ Has within-message dedup (`dedup.go`, `near_dedup_filter.go`)
 - ✅ Has simhash implementation
 
 **Implementation complexity:** MEDIUM
-- Need to add message-level API (currently TokMan processes single strings)
+- Need to add message-level API (currently Tok processes single strings)
 - Can reuse existing simhash/fingerprinting code
 - ~300 lines of Go code
 
@@ -79,12 +79,12 @@ def dedup_across_messages(messages: list[dict]) -> tuple[list[dict], dict]:
 - Appends "dynamic context" block at END of message
 - **Result: Stable prefix = cache hit on every request**
 
-**Why TokMan needs it:**
+**Why Tok needs it:**
 - Anthropic/OpenAI prompt caching keys on first N tokens
 - Any dynamic content near the top busts the cache
 - **Potential savings: 50-90% cache hit rate improvement**
 
-**Current TokMan status:**
+**Current Tok status:**
 - ❌ No KV-cache alignment
 - ✅ Has session tracking (`internal/session/`)
 - ✅ Has cache infrastructure (`internal/cache/`)
@@ -127,12 +127,12 @@ class QuantumLock(FusionStage):
 - Sets OpenAI `detail: "low"` to cap vision tokens
 - **Supports OpenAI, Anthropic, Google GenAI formats**
 
-**Why TokMan needs it:**
+**Why Tok needs it:**
 - Vision models are increasingly common
 - Images bloat context aggressively (1 image = 1000+ tokens)
 - **Potential savings: 40-70% on vision-heavy sessions**
 
-**Current TokMan status:**
+**Current Tok status:**
 - ❌ No image compression
 - ❌ No base64 detection
 - ✅ Has content detection infrastructure
@@ -174,12 +174,12 @@ class PhotonStage(FusionStage):
 - Detects 16 languages: Python, JS, TS, Java, C, C++, C#, Go, Rust, Ruby, PHP, Swift, Kotlin, Scala, Shell, SQL
 - All downstream stages read from `ctx.content_type` and `ctx.language`
 
-**Why TokMan might want it:**
+**Why Tok might want it:**
 - Cleaner architecture (single source of truth)
 - Easier to debug (one place to check detection logic)
 - Better maintainability
 
-**Current TokMan status:**
+**Current Tok status:**
 - ✅ Has distributed detection (each layer detects independently)
 - ✅ Has `content_detect.go` for some detection
 - ⚠️ Detection logic scattered across multiple files
@@ -227,13 +227,13 @@ class Cortex(FusionStage):
 - Each stage returns immutable `FusionResult`
 - No side effects, no mutation
 
-**Why TokMan might want it:**
+**Why Tok might want it:**
 - Easier to test (pure functions)
 - Easier to debug (no hidden state changes)
 - Thread-safe by default
 - Better for concurrent processing
 
-**Current TokMan status:**
+**Current Tok status:**
 - ❌ Mutable pipeline (strings mutated in-place)
 - ❌ Mutable stats struct
 - ✅ Go's value semantics help (but not enforced)
@@ -273,7 +273,7 @@ class FusionResult:
 
 ---
 
-## Comparison: TokMan vs Claw Implementations
+## Comparison: Tok vs Claw Implementations
 
 ### LogCrunch Comparison
 
@@ -287,7 +287,7 @@ class FusionResult:
 - Keeps first + last occurrence of repeated patterns
 ```
 
-**TokMan (Go):**
+**Tok (Go):**
 ```go
 // 60 lines, simple
 - Preserves errors/warnings
@@ -297,7 +297,7 @@ class FusionResult:
 - No timestamp normalization
 ```
 
-**Verdict:** Claw's LogCrunch is significantly more sophisticated. TokMan should upgrade.
+**Verdict:** Claw's LogCrunch is significantly more sophisticated. Tok should upgrade.
 
 ---
 
@@ -313,7 +313,7 @@ class FusionResult:
 - Emits fold markers with line counts
 ```
 
-**TokMan (Go):**
+**Tok (Go):**
 ```go
 // 70 lines
 - Simple context line counting
@@ -322,7 +322,7 @@ class FusionResult:
 - No hunk parsing
 ```
 
-**Verdict:** Claw's DiffCrunch is more sophisticated. TokMan's is adequate but could be improved.
+**Verdict:** Claw's DiffCrunch is more sophisticated. Tok's is adequate but could be improved.
 
 ---
 
@@ -337,7 +337,7 @@ class FusionResult:
 - Stores full results in RewindStore
 ```
 
-**TokMan (Go):**
+**Tok (Go):**
 ```go
 // 60 lines
 - Simple line-based deduplication
@@ -346,7 +346,7 @@ class FusionResult:
 - No structured parsing
 ```
 
-**Verdict:** Claw's SearchCrunch is more sophisticated. TokMan's is adequate for basic use.
+**Verdict:** Claw's SearchCrunch is more sophisticated. Tok's is adequate for basic use.
 
 ---
 
@@ -362,7 +362,7 @@ class FusionResult:
 - Cross-message deduplication
 ```
 
-**TokMan (Go):**
+**Tok (Go):**
 ```go
 // dedup.go + near_dedup_filter.go
 - SimHash fingerprinting
@@ -854,12 +854,12 @@ func TestPhoton_ImageResize(t *testing.T) {
 ### Measurement
 ```bash
 # Before
-tokman benchmark ./workspace --sessions 10
+tok benchmark ./workspace --sessions 10
 
 # After
-tokman benchmark ./workspace --sessions 10 --cross-message-dedup
-tokman benchmark ./workspace --vision --photon
-tokman stats --cache-hit-rate
+tok benchmark ./workspace --sessions 10 --cross-message-dedup
+tok benchmark ./workspace --vision --photon
+tok stats --cache-hit-rate
 ```
 
 ---

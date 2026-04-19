@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
@@ -76,10 +77,10 @@ type ClaudeContent struct {
 
 // DiscoveredCommand represents a discovered command pattern
 type DiscoveredCommand struct {
-	Command      string  `json:"command"`
-	Count        int     `json:"count"`
-	Category     string  `json:"category"`
-	tokEquiv  string  `json:"tok_equivalent,omitempty"`
+	Command      string `json:"command"`
+	Count        int    `json:"count"`
+	Category     string `json:"category"`
+	tokEquiv     string
 	EstSavings   float64 `json:"estimated_savings_pct"`
 	TokensSaved  int     `json:"tokens_saved,omitempty"`
 	SupportLevel string  `json:"support_level,omitempty"`
@@ -89,13 +90,13 @@ type DiscoveredCommand struct {
 type DiscoverResult struct {
 	SessionsScanned   int                 `json:"sessions_scanned"`
 	TotalCommands     int                 `json:"total_commands"`
-	Alreadytok     int                 `json:"already_tok"`
+	Alreadytok        int                 `json:"already_tok"`
 	SupportedMissed   []DiscoveredCommand `json:"supported_missed"`
 	PassthroughMissed []DiscoveredCommand `json:"passthrough_missed,omitempty"`
 	Unsupported       []DiscoveredCommand `json:"unsupported,omitempty"`
 	ParseErrors       int                 `json:"parse_errors"`
-	tokBypassCount int                 `json:"tok_bypass_count,omitempty"`
-	tokBypassCmds  []string            `json:"tok_bypass_commands,omitempty"`
+	tokBypassCount    int
+	tokBypassCmds     []string
 }
 
 // runDiscoverEnhanced scans Claude Code JSONL files for missed tok usage.
@@ -155,7 +156,7 @@ func runDiscoverEnhanced() error {
 			for _, part := range parts {
 				result.TotalCommands++
 
-				// Check for TOKMAN_DISABLED bypass
+				// Check for TOK_DISABLED bypass
 				if hasDisabledPrefix(part) {
 					actualCmd := stripDisabledPrefix(part)
 					if isSupportedCommand(actualCmd) {
@@ -186,7 +187,7 @@ func runDiscoverEnhanced() error {
 							Command:      part,
 							Count:        1,
 							Category:     cat,
-							tokEquiv:  rewritten,
+							tokEquiv:     rewritten,
 							EstSavings:   savings,
 							TokensSaved:  estimateTokens(part) * int(savings) / 100,
 							SupportLevel: string(discover.SupportOptimized),
@@ -202,7 +203,7 @@ func runDiscoverEnhanced() error {
 							Command:      part,
 							Count:        1,
 							Category:     cat,
-							tokEquiv:  rewritten,
+							tokEquiv:     rewritten,
 							SupportLevel: string(discover.SupportPassthrough),
 						}
 					}
@@ -350,14 +351,14 @@ func splitCommandChain(cmd string) []string {
 }
 
 func hasDisabledPrefix(cmd string) bool {
-	return strings.HasPrefix(strings.TrimSpace(cmd), "TOKMAN_DISABLED=1 ") ||
-		strings.HasPrefix(strings.TrimSpace(cmd), "TOKMAN_DISABLED=1")
+	return strings.HasPrefix(strings.TrimSpace(cmd), "TOK_DISABLED=1 ") ||
+		strings.HasPrefix(strings.TrimSpace(cmd), "TOK_DISABLED=1")
 }
 
 func stripDisabledPrefix(cmd string) string {
 	cmd = strings.TrimSpace(cmd)
-	cmd = strings.TrimPrefix(cmd, "TOKMAN_DISABLED=1 ")
-	cmd = strings.TrimPrefix(cmd, "TOKMAN_DISABLED=1")
+	cmd = strings.TrimPrefix(cmd, "TOK_DISABLED=1 ")
+	cmd = strings.TrimPrefix(cmd, "TOK_DISABLED=1")
 	return strings.TrimSpace(cmd)
 }
 
@@ -434,22 +435,22 @@ func printDiscoverText(result *DiscoverResult) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 
-	fmt.Println()
-	fmt.Printf("%s\n", yellow("🔍 tok Discovery Report"))
-	fmt.Println(strings.Repeat("═", 60))
-	fmt.Printf("Sessions scanned: %d\n", result.SessionsScanned)
-	fmt.Printf("Total commands:   %d\n", result.TotalCommands)
-	fmt.Printf("Already tok:   %d (%.0f%%)\n", result.Alreadytok,
+	out.Global().Println()
+	out.Global().Printf("%s\n", yellow("🔍 tok Discovery Report"))
+	out.Global().Println(strings.Repeat("═", 60))
+	out.Global().Printf("Sessions scanned: %d\n", result.SessionsScanned)
+	out.Global().Printf("Total commands:   %d\n", result.TotalCommands)
+	out.Global().Printf("Already tok:   %d (%.0f%%)\n", result.Alreadytok,
 		float64(result.Alreadytok)/float64(result.TotalCommands)*100)
-	fmt.Println()
+	out.Global().Println()
 
 	if len(result.SupportedMissed) > 0 {
-		fmt.Printf("%s\n", cyan("Missed Opportunities"))
-		fmt.Println(strings.Repeat("─", 60))
-		fmt.Printf("%-24s %4s %8s %10s %6s\n", "Command", "Cnt", "Category", "Est.Saved", "Save%")
-		fmt.Println(strings.Repeat("─", 60))
+		out.Global().Printf("%s\n", cyan("Missed Opportunities"))
+		out.Global().Println(strings.Repeat("─", 60))
+		out.Global().Printf("%-24s %4s %8s %10s %6s\n", "Command", "Cnt", "Category", "Est.Saved", "Save%")
+		out.Global().Println(strings.Repeat("─", 60))
 		for _, cmd := range result.SupportedMissed {
-			fmt.Printf("%-24s %4d %8s %10s %5.0f%%\n",
+			out.Global().Printf("%-24s %4d %8s %10s %5.0f%%\n",
 				shared.Truncate(cmd.Command, 24),
 				cmd.Count,
 				cmd.Category,
@@ -457,44 +458,44 @@ func printDiscoverText(result *DiscoverResult) error {
 				cmd.EstSavings,
 			)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if len(result.PassthroughMissed) > 0 {
-		fmt.Printf("%s\n", cyan("Passthrough Coverage"))
-		fmt.Println(strings.Repeat("─", 60))
-		fmt.Printf("%-24s %4s %12s %12s\n", "Command", "Cnt", "Category", "Equivalent")
-		fmt.Println(strings.Repeat("─", 60))
+		out.Global().Printf("%s\n", cyan("Passthrough Coverage"))
+		out.Global().Println(strings.Repeat("─", 60))
+		out.Global().Printf("%-24s %4s %12s %12s\n", "Command", "Cnt", "Category", "Equivalent")
+		out.Global().Println(strings.Repeat("─", 60))
 		for _, cmd := range result.PassthroughMissed {
-			fmt.Printf("%-24s %4d %12s %12s\n",
+			out.Global().Printf("%-24s %4d %12s %12s\n",
 				shared.Truncate(cmd.Command, 24),
 				cmd.Count,
 				cmd.Category,
 				shared.Truncate(cmd.tokEquiv, 12),
 			)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if result.tokBypassCount > 0 {
-		fmt.Printf("%s %d\n", yellow("⚠️  TOKMAN_DISABLED bypasses detected:"), result.tokBypassCount)
+		out.Global().Printf("%s %d\n", yellow("⚠️  TOK_DISABLED bypasses detected:"), result.tokBypassCount)
 		for _, cmd := range result.tokBypassCmds {
-			fmt.Printf("   %s\n", cmd)
+			out.Global().Printf("   %s\n", cmd)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if len(result.Unsupported) > 0 && shared.Verbose > 0 {
-		fmt.Printf("%s\n", cyan("Unsupported Commands"))
-		fmt.Println(strings.Repeat("─", 60))
+		out.Global().Printf("%s\n", cyan("Unsupported Commands"))
+		out.Global().Println(strings.Repeat("─", 60))
 		for _, cmd := range result.Unsupported[:min(len(result.Unsupported), 5)] {
-			fmt.Printf("  %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)
+			out.Global().Printf("  %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if len(result.SupportedMissed) == 0 && len(result.PassthroughMissed) == 0 && result.tokBypassCount == 0 {
-		fmt.Printf("%s\n", green("✓ All commands are optimized!"))
+		out.Global().Printf("%s\n", green("✓ All commands are optimized!"))
 	}
 
 	return nil
@@ -657,42 +658,42 @@ func runDiscover() error {
 	}
 
 	// Text output
-	fmt.Println()
-	fmt.Printf("%s\n", green("🔍 tok Discovery Report"))
-	fmt.Println("════════════════════════════════════════════════════")
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Printf("%s\n", green("🔍 tok Discovery Report"))
+	out.Global().Println("════════════════════════════════════════════════════")
+	out.Global().Println()
 
 	if projectFilter != "" {
-		fmt.Printf("  Project: %s\n", cyan(projectFilter))
+		out.Global().Printf("  Project: %s\n", cyan(projectFilter))
 	}
-	fmt.Printf("  Commands analyzed: %d\n", totalCommands)
-	fmt.Println()
+	out.Global().Printf("  Commands analyzed: %d\n", totalCommands)
+	out.Global().Println()
 
 	if len(result.Opportunities) > 0 {
-		fmt.Printf("  %s\n", yellow("Missed Opportunities (could use tok):"))
-		fmt.Println("  ─────────────────────────────────────────")
+		out.Global().Printf("  %s\n", yellow("Missed Opportunities (could use tok):"))
+		out.Global().Println("  ─────────────────────────────────────────")
 		for _, opp := range result.Opportunities {
 			pct := ""
 			if opp.EstSavings > 0 {
 				pct = fmt.Sprintf("  %4.1f%% saved", opp.EstSavings)
 			}
-			fmt.Printf("    %-30s  %3dx  [%s]%s\n", shared.Truncate(opp.Command, 30), opp.Count, opp.Category, pct)
+			out.Global().Printf("    %-30s  %3dx  [%s]%s\n", shared.Truncate(opp.Command, 30), opp.Count, opp.Category, pct)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if len(result.UnsupportedCmds) > 0 && shared.Verbose > 0 {
-		fmt.Printf("  %s\n", cyan("Unsupported Commands (frequent but no tok wrapper):"))
-		fmt.Println("  ─────────────────────────────────────────")
+		out.Global().Printf("  %s\n", cyan("Unsupported Commands (frequent but no tok wrapper):"))
+		out.Global().Println("  ─────────────────────────────────────────")
 		for _, cmd := range result.UnsupportedCmds {
-			fmt.Printf("    %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)
+			out.Global().Printf("    %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	if len(result.Opportunities) == 0 {
-		fmt.Printf("  %s\n", green("✓ All commands are already optimized!"))
-		fmt.Println()
+		out.Global().Printf("  %s\n", green("✓ All commands are already optimized!"))
+		out.Global().Println()
 	}
 
 	return nil

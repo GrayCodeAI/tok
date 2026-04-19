@@ -287,14 +287,14 @@ func TestDefaultTeeConfig(t *testing.T) {
 // --- Integration tests ---
 
 func TestTeeRaw_EnvDisable(t *testing.T) {
-	os.Setenv("TOKMAN_TEE", "0")
-	defer os.Unsetenv("TOKMAN_TEE")
+	os.Setenv("TOK_TEE", "0")
+	defer os.Unsetenv("TOK_TEE")
 
 	content := strings.Repeat("error output\n", 100)
 	path := TeeRaw(content, "test_cmd", 1)
 
 	if path != "" {
-		t.Error("TeeRaw should return empty when TOKMAN_TEE=0")
+		t.Error("TeeRaw should return empty when TOK_TEE=0")
 	}
 }
 
@@ -321,12 +321,12 @@ func TestTeeRaw_SuccessInFailuresMode(t *testing.T) {
 func TestTeeAndHint(t *testing.T) {
 	// Set up temp directory for tee files
 	tmpDir := t.TempDir()
-	os.Setenv("TOKMAN_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOKMAN_TEE_DIR")
+	os.Setenv("TOK_TEE_DIR", tmpDir)
+	defer os.Unsetenv("TOK_TEE_DIR")
 
 	// Set mode to always so we can test with exit code 0
-	os.Setenv("TOKMAN_TEE_MODE", "always")
-	defer os.Unsetenv("TOKMAN_TEE_MODE")
+	os.Setenv("TOK_TEE_MODE", "always")
+	defer os.Unsetenv("TOK_TEE_MODE")
 
 	content := strings.Repeat("test output\n", 100)
 	hint := TeeAndHint(content, "test_cmd", 0)
@@ -347,8 +347,8 @@ func TestTeeAndHint(t *testing.T) {
 func TestForceTeeHint(t *testing.T) {
 	// Set up temp directory for tee files
 	tmpDir := t.TempDir()
-	os.Setenv("TOKMAN_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOKMAN_TEE_DIR")
+	os.Setenv("TOK_TEE_DIR", tmpDir)
+	defer os.Unsetenv("TOK_TEE_DIR")
 
 	content := strings.Repeat("force tee output\n", 100)
 	hint := ForceTeeHint(content, "test_cmd")
@@ -373,14 +373,14 @@ func TestForceTeeHint_SmallOutput(t *testing.T) {
 }
 
 func TestForceTeeHint_EnvDisable(t *testing.T) {
-	os.Setenv("TOKMAN_TEE", "0")
-	defer os.Unsetenv("TOKMAN_TEE")
+	os.Setenv("TOK_TEE", "0")
+	defer os.Unsetenv("TOK_TEE")
 
 	content := strings.Repeat("force tee output\n", 100)
 	hint := ForceTeeHint(content, "test_cmd")
 
 	if hint != "" {
-		t.Error("ForceTeeHint should respect TOKMAN_TEE=0")
+		t.Error("ForceTeeHint should respect TOK_TEE=0")
 	}
 }
 
@@ -388,8 +388,8 @@ func TestForceTeeHint_EnvDisable(t *testing.T) {
 
 func TestListTeeFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("TOKMAN_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOKMAN_TEE_DIR")
+	os.Setenv("TOK_TEE_DIR", tmpDir)
+	defer os.Unsetenv("TOK_TEE_DIR")
 
 	// Create some test files
 	for i := 0; i < 3; i++ {
@@ -410,8 +410,8 @@ func TestListTeeFiles(t *testing.T) {
 
 func TestCleanupTeeFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("TOKMAN_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOKMAN_TEE_DIR")
+	os.Setenv("TOK_TEE_DIR", tmpDir)
+	defer os.Unsetenv("TOK_TEE_DIR")
 
 	// Create files with old and new timestamps
 	oldTime := time.Now().Add(-7 * 24 * time.Hour)

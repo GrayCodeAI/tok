@@ -1,4 +1,4 @@
-# TokMan Core Pipeline Performance Optimization
+# Tok Core Pipeline Performance Optimization
 
 ## Current Performance Metrics
 

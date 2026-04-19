@@ -1,5 +1,5 @@
-# TokMan Configuration
-# This file configures the TokMan dashboard and tracking behavior.
+# Tok Configuration
+# This file configures the Tok dashboard and tracking behavior.
 
 # Dashboard Settings
 dashboard:
@@ -27,7 +27,7 @@ alerts:
 
 # Tracking Settings
 tracking:
-  # Database path (empty = default ~/.tokman/tracking.db)
+  # Database path (empty = default ~/.tok/tracking.db)
   database_path: ""
   # Days to retain historical data
   history_retention_days: 90

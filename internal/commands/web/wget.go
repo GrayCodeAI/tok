@@ -2,6 +2,7 @@ package web
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -49,7 +50,7 @@ func runWget(cmd *cobra.Command, args []string) error {
 	// Filter wget output
 	filtered := filterWgetOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

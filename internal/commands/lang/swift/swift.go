@@ -2,6 +2,7 @@ package swift
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -46,11 +47,11 @@ func runSwift(args []string) error {
 		filtered = compactOutput(filtered)
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "swift", err); hint != "" {
-			fmt.Print("\n" + hint)
+			out.Global().Print("\n" + hint)
 		}
 	}
 

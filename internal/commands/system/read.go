@@ -3,6 +3,7 @@ package system
 import (
 	"bufio"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"log"
 	"os"
 	"strings"
@@ -69,7 +70,7 @@ func runRead(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		// Read from stdin
 		if shared.Verbose > 0 {
-			fmt.Fprintln(os.Stderr, "Reading from stdin")
+			out.Global().Errorf("Reading from stdin")
 		}
 		scanner := bufio.NewScanner(os.Stdin)
 		var lines []string
@@ -109,9 +110,9 @@ func runRead(cmd *cobra.Command, args []string) error {
 	}
 
 	// Output
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 	if !strings.HasSuffix(filtered, "\n") {
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	recordSmartRead("tok read", filePath, content, opts, originalTokens, filteredTokens, time.Since(start).Milliseconds())
@@ -123,7 +124,7 @@ func runRead(cmd *cobra.Command, args []string) error {
 		if originalLines > 0 {
 			reduction = float64(originalLines-filteredLines) / float64(originalLines) * 100
 		}
-		fmt.Fprintf(os.Stderr, "Lines: %d -> %d (%.1f%% reduction, %d tokens saved)\n",
+		out.Global().Errorf("Lines: %d -> %d (%.1f%% reduction, %d tokens saved)\n",
 			originalLines, filteredLines, reduction, originalTokens-filteredTokens)
 	}
 

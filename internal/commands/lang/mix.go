@@ -1,8 +1,7 @@
 package lang
 
 import (
-	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -59,7 +58,7 @@ func runMixCompile(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mix compile %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mix compile %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mix", append([]string{"compile"}, args...)...)
@@ -74,7 +73,7 @@ func runMixCompile(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -126,7 +125,7 @@ func runMixTest(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mix test %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mix test %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mix", append([]string{"test"}, args...)...)
@@ -141,7 +140,7 @@ func runMixTest(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -198,7 +197,7 @@ func runMixDeps(args []string) error {
 
 	fullArgs := append([]string{"deps"}, args...)
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mix %s\n", strings.Join(fullArgs, " "))
+		out.Global().Errorf("Running: mix %s\n", strings.Join(fullArgs, " "))
 	}
 
 	execCmd := exec.Command("mix", fullArgs...)
@@ -213,7 +212,7 @@ func runMixDeps(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -259,7 +258,7 @@ func runMixFormat(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mix format %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mix format %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mix", append([]string{"format"}, args...)...)
@@ -268,14 +267,14 @@ func runMixFormat(args []string) error {
 
 	// Format typically produces no output on success
 	if raw == "" {
-		fmt.Println("✅ Formatted successfully")
+		out.Global().Println("✅ Formatted successfully")
 	} else {
-		fmt.Println(raw)
+		out.Global().Println(raw)
 	}
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "mix_format", err); hint != "" {
-			fmt.Println(hint)
+			out.Global().Println(hint)
 		}
 	}
 
@@ -290,7 +289,7 @@ func runMixPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mix %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mix %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mix", args...)
@@ -305,7 +304,7 @@ func runMixPassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

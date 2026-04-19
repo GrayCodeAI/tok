@@ -2,7 +2,7 @@ package pkgmgr
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -63,7 +63,7 @@ func runTscCommand(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx tsc %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx tsc %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"tsc"}, args...)...)
@@ -71,7 +71,7 @@ func runTscCommand(args []string) error {
 	raw := string(output)
 
 	filtered := filterTscOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -84,7 +84,7 @@ func runLintCommand(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx eslint %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx eslint %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"eslint"}, args...)...)
@@ -92,7 +92,7 @@ func runLintCommand(args []string) error {
 	raw := string(output)
 
 	filtered := filterEslintJSON(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -105,7 +105,7 @@ func runPrettierCommand(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx prettier %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx prettier %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"prettier"}, args...)...)
@@ -113,7 +113,7 @@ func runPrettierCommand(args []string) error {
 	raw := string(output)
 
 	filtered := filterPrettierOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -126,7 +126,7 @@ func runPrismaCommand(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx prisma %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx prisma %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"prisma"}, args...)...)
@@ -134,7 +134,7 @@ func runPrismaCommand(args []string) error {
 	raw := string(output)
 
 	filtered := filterPrismaOutputCompact(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -147,7 +147,7 @@ func runNextCommand(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx next %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx next %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", append([]string{"next"}, args...)...)
@@ -155,7 +155,7 @@ func runNextCommand(args []string) error {
 	raw := string(output)
 
 	filtered := filterNextOutputCompact(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -168,7 +168,7 @@ func runNpxPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npx %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npx %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("npx", args...)
@@ -176,7 +176,7 @@ func runNpxPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterNpmOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

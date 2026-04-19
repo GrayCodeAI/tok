@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -76,7 +77,7 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(filterFiles) == 0 {
-		fmt.Println("No filter files found")
+		out.Global().Println("No filter files found")
 		return nil
 	}
 
@@ -88,7 +89,7 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 		filter, err := parseFilterFile(file)
 		if err != nil {
 			if testVerbose {
-				fmt.Fprintf(os.Stderr, "Warning: failed to parse %s: %v\n", file, err)
+				out.Global().Errorf("Warning: failed to parse %s: %v\n", file, err)
 			}
 			continue
 		}
@@ -102,7 +103,7 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 		tests, err := toml.ParseTests(filter.RawContent)
 		if err != nil {
 			if testVerbose {
-				fmt.Fprintf(os.Stderr, "Warning: failed to parse tests from %s: %v\n", file, err)
+				out.Global().Errorf("Warning: failed to parse tests from %s: %v\n", file, err)
 			}
 			continue // Skip this file
 		}
@@ -132,16 +133,16 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 
 	totalTests := allTests.TotalTests()
 	if totalTests == 0 {
-		fmt.Println("No tests found in filter files")
-		fmt.Println("\nTo add tests, edit your filter TOML file and add [[tests.filtername]] sections.")
+		out.Global().Println("No tests found in filter files")
+		out.Global().Println("\nTo add tests, edit your filter TOML file and add [[tests.filtername]] sections.")
 		return nil
 	}
 
 	// Print header
 	green := color.New(color.FgGreen).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
-	fmt.Printf("%s\n", cyan("Running filter tests..."))
-	fmt.Printf("Found %d test(s)\n\n", totalTests)
+	out.Global().Printf("%s\n", cyan("Running filter tests..."))
+	out.Global().Printf("Found %d test(s)\n\n", totalTests)
 
 	// Create filter functions for testing
 	filterFuncs := make(map[string]func(string) string)
@@ -164,13 +165,13 @@ func runFilterTests(cmd *cobra.Command, args []string) error {
 	}
 
 	// Print summary
-	fmt.Println()
+	out.Global().Println()
 	if summary.Failed == 0 && summary.Total > 0 {
-		fmt.Printf("%s\n", green(fmt.Sprintf("✓ All tests passed! (%d/%d)", summary.Passed, summary.Total)))
+		out.Global().Printf("%s\n", green(fmt.Sprintf("✓ All tests passed! (%d/%d)", summary.Passed, summary.Total)))
 	} else {
 		red := color.New(color.FgRed).SprintFunc()
-		fmt.Printf("%s\n", red(fmt.Sprintf("✗ %d test(s) failed", summary.Failed)))
-		fmt.Print(summary.FormatSummary())
+		out.Global().Printf("%s\n", red(fmt.Sprintf("✗ %d test(s) failed", summary.Failed)))
+		out.Global().Print(summary.FormatSummary())
 	}
 
 	if summary.Failed > 0 {
@@ -187,23 +188,23 @@ func printVerboseResults(results []toml.TestResult) {
 
 	for _, result := range results {
 		if result.Skipped {
-			fmt.Printf("%s %s / %s", yellow("⏭"), result.FilterName, result.TestName)
+			out.Global().Printf("%s %s / %s", yellow("⏭"), result.FilterName, result.TestName)
 			if result.Reason != "" {
-				fmt.Printf(" (%s)", result.Reason)
+				out.Global().Printf(" (%s)", result.Reason)
 			}
-			fmt.Println()
+			out.Global().Println()
 			continue
 		}
 
 		if result.Passed {
-			fmt.Printf("%s %s / %s\n", green("✓"), result.FilterName, result.TestName)
+			out.Global().Printf("%s %s / %s\n", green("✓"), result.FilterName, result.TestName)
 		} else {
-			fmt.Printf("%s %s / %s\n", red("✗"), result.FilterName, result.TestName)
+			out.Global().Printf("%s %s / %s\n", red("✗"), result.FilterName, result.TestName)
 			if result.Error != nil {
-				fmt.Printf("  Error: %s\n", result.Error)
+				out.Global().Printf("  Error: %s\n", result.Error)
 			} else {
-				fmt.Printf("  Expected: %q\n", result.Expected)
-				fmt.Printf("  Got:      %q\n", result.Got)
+				out.Global().Printf("  Expected: %q\n", result.Expected)
+				out.Global().Printf("  Got:      %q\n", result.Got)
 			}
 		}
 	}
@@ -212,14 +213,14 @@ func printVerboseResults(results []toml.TestResult) {
 func printCompactResults(results []toml.TestResult) {
 	for _, result := range results {
 		if result.Skipped {
-			fmt.Print("⏭")
+			out.Global().Print("⏭")
 		} else if result.Passed {
-			fmt.Print("✓")
+			out.Global().Print("✓")
 		} else {
-			fmt.Print("✗")
+			out.Global().Print("✗")
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 }
 
 func findFilterFiles() ([]string, error) {

@@ -8,10 +8,10 @@ import (
 
 func TestDetectedRunners(t *testing.T) {
 	tests := []struct {
-		name           string
-		files          []string
-		expectedFirst  string
-		shouldFindAny  bool
+		name          string
+		files         []string
+		expectedFirst string
+		shouldFindAny bool
 	}{
 		{
 			name:          "Cargo project",
@@ -170,8 +170,8 @@ Tests: 2 passed, 0 failed`,
 			excludes: []string{"Test Failures"},
 		},
 		{
-			name: "Empty output",
-			input: "",
+			name:     "Empty output",
+			input:    "",
 			contains: []string{},
 			excludes: []string{},
 		},

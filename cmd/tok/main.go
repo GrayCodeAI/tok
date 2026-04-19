@@ -13,16 +13,20 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/lakshmanpatel/tok/internal/app"
+	"github.com/lakshmanpatel/tok/internal/commands"
 )
 
 func main() {
-	app := app.New()
-	if err := app.Run(os.Args[1:]); err != nil {
-		fmt.Fprintf(os.Stderr, "tok error: %v\n", err)
-		os.Exit(1)
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	code := commands.ExecuteContext(ctx)
+	if code != 0 {
+		os.Exit(code)
 	}
 }

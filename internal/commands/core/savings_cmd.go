@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -53,9 +54,9 @@ func runGain(cmd *cobra.Command, args []string) error {
 	dbPath := config.DatabasePath()
 
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		fmt.Println("No tracking data found.")
-		fmt.Println("Run some commands through tok to start tracking token savings!")
-		fmt.Printf("\nExample: %s git status\n", os.Args[0])
+		out.Global().Println("No tracking data found.")
+		out.Global().Println("Run some commands through tok to start tracking token savings!")
+		out.Global().Printf("\nExample: %s git status\n", os.Args[0])
 		return nil
 	}
 
@@ -113,13 +114,13 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 		title = "tok Token Savings (Project Scope)"
 	}
 
-	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint(title))
-	fmt.Println(strings.Repeat("═", 60))
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint(title))
+	out.Global().Println(strings.Repeat("═", 60))
 	if opts.ProjectPath != "" {
-		fmt.Printf("Scope: %s\n", shortenPath(opts.ProjectPath))
+		out.Global().Printf("Scope: %s\n", shortenPath(opts.ProjectPath))
 	}
-	fmt.Println()
+	out.Global().Println()
 
 	// Print KPIs
 	printKPI("Total commands", fmt.Sprintf("%d", summary.TotalCommands))
@@ -137,12 +138,12 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 
 	printKPI("Total exec time", formatDuration(summary.TotalExecTimeMs))
 	printEfficiencyMeter(summary.AvgSavingsPct)
-	fmt.Println()
+	out.Global().Println()
 
 	// Print command breakdown
 	if len(summary.ByCommand) > 0 {
-		fmt.Println(color.New(color.Bold).Sprint("By Command"))
-		fmt.Println(strings.Repeat("─", 60))
+		out.Global().Println(color.New(color.Bold).Sprint("By Command"))
+		out.Global().Println(strings.Repeat("─", 60))
 
 		for _, cmd := range summary.ByCommand {
 			impact := ""
@@ -154,14 +155,14 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 				impact = color.RedString("low")
 			}
 
-			fmt.Printf("  %-24s %4d  %8s  %s\n",
+			out.Global().Printf("  %-24s %4d  %8s  %s\n",
 				truncate(cmd.Command, 24),
 				cmd.Count,
 				formatTokensInt(cmd.SavedTokens),
 				impact,
 			)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	// Print daily stats if requested
@@ -171,24 +172,24 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 
 	// Print history if requested
 	if gainHistory && len(summary.RecentCommands) > 0 {
-		fmt.Println(color.New(color.Bold).Sprint("Recent Commands"))
-		fmt.Println(strings.Repeat("─", 60))
+		out.Global().Println(color.New(color.Bold).Sprint("Recent Commands"))
+		out.Global().Println(strings.Repeat("─", 60))
 		for _, cmd := range summary.RecentCommands {
 			timeStr := cmd.Timestamp.Format("Jan 02 15:04")
-			fmt.Printf("  %s  %-20s  %s saved\n",
+			out.Global().Printf("  %s  %-20s  %s saved\n",
 				timeStr,
 				truncate(cmd.Command, 20),
 				formatTokensInt(cmd.SavedTokens),
 			)
 		}
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	return nil
 }
 
 func printKPI(label, value string) {
-	fmt.Printf("  %-20s %s\n", label+":", value)
+	out.Global().Printf("  %-20s %s\n", label+":", value)
 }
 
 func printEfficiencyMeter(pct float64) {
@@ -200,7 +201,7 @@ func printEfficiencyMeter(pct float64) {
 	empty := width - filled
 
 	bar := strings.Repeat("█", filled) + strings.Repeat("░", empty)
-	fmt.Printf("  Efficiency: [%s] %.0f%%\n", bar, pct)
+	out.Global().Printf("  Efficiency: [%s] %.0f%%\n", bar, pct)
 }
 
 func printASCIIGraph(stats []tracking.PeriodStats) {
@@ -208,8 +209,8 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 		return
 	}
 
-	fmt.Println(color.New(color.Bold).Sprint("Daily Savings (Last 30 Days)"))
-	fmt.Println(strings.Repeat("─", 60))
+	out.Global().Println(color.New(color.Bold).Sprint("Daily Savings (Last 30 Days)"))
+	out.Global().Println(strings.Repeat("─", 60))
 
 	// Find max for scaling
 	maxSaved := 0
@@ -238,9 +239,9 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 			dateLabel = dateLabel[5:] // Remove year
 		}
 
-		fmt.Printf("  %s  %-30s  %s\n", dateLabel, bar, formatTokensInt(s.SavedTokens))
+		out.Global().Printf("  %s  %-30s  %s\n", dateLabel, bar, formatTokensInt(s.SavedTokens))
 	}
-	fmt.Println()
+	out.Global().Println()
 }
 
 func exportGainJSON(summary *tracking.GainSummary) error {
@@ -285,21 +286,21 @@ func showFailures(tracker *tracking.Tracker) error {
 		return err
 	}
 
-	fmt.Println(color.New(color.Bold).Sprint("Recent Failures"))
-	fmt.Println(strings.Repeat("─", 60))
+	out.Global().Println(color.New(color.Bold).Sprint("Recent Failures"))
+	out.Global().Println(strings.Repeat("─", 60))
 
 	found := false
 	for _, cmd := range commands {
 		if !cmd.ParseSuccess {
 			found = true
-			fmt.Printf("  %s  %s\n",
+			out.Global().Printf("  %s  %s\n",
 				cmd.Timestamp.Format("Jan 02 15:04"),
 				cmd.Command)
 		}
 	}
 
 	if !found {
-		fmt.Println("  No recent failures found.")
+		out.Global().Println("  No recent failures found.")
 	}
 
 	return nil
@@ -345,9 +346,9 @@ func shortenPath(path string) string {
 
 // printQuotaEstimation shows subscription tier usage estimation.
 func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
-	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint("Quota Estimation"))
-	fmt.Println(strings.Repeat("═", 60))
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint("Quota Estimation"))
+	out.Global().Println(strings.Repeat("═", 60))
 
 	// Define tier limits (approximate token limits per tier)
 	tierLimits := map[string]int{
@@ -361,7 +362,7 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 	limit, ok := tierLimits[tier]
 	if !ok {
 		// Try to parse as number
-		fmt.Printf("Unknown tier '%s'. Using 'pro' as default.\n", tier)
+		out.Global().Printf("Unknown tier '%s'. Using 'pro' as default.\n", tier)
 		limit = tierLimits["pro"]
 		tier = "pro"
 	}
@@ -390,19 +391,19 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 
-	fmt.Printf("Subscription Tier:  %s\n", bold(tier))
-	fmt.Printf("Monthly Limit:      %s tokens\n", formatTokensInt(limit))
-	fmt.Println()
+	out.Global().Printf("Subscription Tier:  %s\n", bold(tier))
+	out.Global().Printf("Monthly Limit:      %s tokens\n", formatTokensInt(limit))
+	out.Global().Println()
 
-	fmt.Printf("Current Period (%d days):\n", days)
-	fmt.Printf("  Input tokens:     %s\n", cyan(formatTokensInt(inputTokens)))
-	fmt.Printf("  Output tokens:    %s\n", cyan(formatTokensInt(outputTokens)))
-	fmt.Printf("  Total processed:  %s\n", bold(formatTokensInt(totalTokens)))
-	fmt.Println()
+	out.Global().Printf("Current Period (%d days):\n", days)
+	out.Global().Printf("  Input tokens:     %s\n", cyan(formatTokensInt(inputTokens)))
+	out.Global().Printf("  Output tokens:    %s\n", cyan(formatTokensInt(outputTokens)))
+	out.Global().Printf("  Total processed:  %s\n", bold(formatTokensInt(totalTokens)))
+	out.Global().Println()
 
-	fmt.Printf("Projected Monthly Usage:\n")
-	fmt.Printf("  Daily average:    %s tokens/day\n", formatTokensInt(avgDaily))
-	fmt.Printf("  30-day estimate:  %s tokens\n", bold(formatTokensInt(monthlyProjection)))
+	out.Global().Printf("Projected Monthly Usage:\n")
+	out.Global().Printf("  Daily average:    %s tokens/day\n", formatTokensInt(avgDaily))
+	out.Global().Printf("  30-day estimate:  %s tokens\n", bold(formatTokensInt(monthlyProjection)))
 
 	// Usage bar
 	barWidth := 40
@@ -421,7 +422,7 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 		bar = red(strings.Repeat("█", filled)) + strings.Repeat("░", empty)
 	}
 
-	fmt.Printf("  Tier usage:       [%s] %.1f%%\n", bar, usagePct)
+	out.Global().Printf("  Tier usage:       [%s] %.1f%%\n", bar, usagePct)
 
 	// Savings from tok
 	savingsTokens := summary.TotalSaved
@@ -430,29 +431,29 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 		savingsPct = float64(savingsTokens) / float64(inputTokens) * 100
 	}
 
-	fmt.Println()
-	fmt.Println(bold("tok Savings Impact:"))
-	fmt.Printf("  Tokens saved:     %s (%.1f%%)\n", green(formatTokensInt(savingsTokens)), savingsPct)
+	out.Global().Println()
+	out.Global().Println(bold("tok Savings Impact:"))
+	out.Global().Printf("  Tokens saved:     %s (%.1f%%)\n", green(formatTokensInt(savingsTokens)), savingsPct)
 
 	// Calculate effective cost without tok
 	if savingsTokens > 0 {
 		effectiveWithouttok := monthlyProjection + (savingsTokens / days * 30)
-		fmt.Printf("  Without tok:   ~%s tokens/month\n", formatTokensInt(effectiveWithouttok))
-		fmt.Printf("  Effective tier:   %s\n", cyan(getTierForTokens(effectiveWithouttok, tierLimits)))
+		out.Global().Printf("  Without tok:   ~%s tokens/month\n", formatTokensInt(effectiveWithouttok))
+		out.Global().Printf("  Effective tier:   %s\n", cyan(getTierForTokens(effectiveWithouttok, tierLimits)))
 	}
 
 	// Recommendation
-	fmt.Println()
-	fmt.Println(bold("Recommendation:"))
+	out.Global().Println()
+	out.Global().Println(bold("Recommendation:"))
 	if usagePct < 50 {
-		fmt.Println(green("  ✓ Current tier is sufficient"))
+		out.Global().Println(green("  ✓ Current tier is sufficient"))
 	} else if usagePct < 80 {
-		fmt.Println(yellow("  ⚠ Approaching tier limit, monitor usage"))
+		out.Global().Println(yellow("  ⚠ Approaching tier limit, monitor usage"))
 	} else {
-		fmt.Println(red("  ✗ Consider upgrading tier or increasing compression"))
+		out.Global().Println(red("  ✗ Consider upgrading tier or increasing compression"))
 	}
 
-	fmt.Println()
+	out.Global().Println()
 
 	// Track telemetry
 	telemetry.TrackQuotaUsage(tier, usagePct)

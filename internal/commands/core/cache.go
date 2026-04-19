@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"time"
 
@@ -44,14 +45,14 @@ var cacheStatsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		qc, err := cache.NewQueryCache("")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening cache: %v\n", err)
+			out.Global().Errorf("Error opening cache: %v\n", err)
 			os.Exit(1)
 		}
 		defer qc.Close()
 
 		stats, err := qc.Stats()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			out.Global().Errorf("Error getting stats: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -62,13 +63,13 @@ var cacheStatsCmd = &cobra.Command{
 		blue := color.New(color.FgBlue).SprintFunc()
 		yellow := color.New(color.FgYellow).SprintFunc()
 
-		fmt.Println("Query Cache Statistics")
-		fmt.Println("=========================")
-		fmt.Printf("Total Entries: %s\n", green(fmt.Sprintf("%d", stats.TotalEntries)))
-		fmt.Printf("Cache Hits:    %s\n", green(fmt.Sprintf("%d", hits)))
-		fmt.Printf("Cache Misses:  %s\n", yellow(fmt.Sprintf("%d", misses)))
-		fmt.Printf("Hit Rate:      %s\n", blue(fmt.Sprintf("%.1f%%", stats.HitRate*100)))
-		fmt.Printf("Total Saved:   %s tokens\n", green(fmt.Sprintf("%d", stats.TotalSaved)))
+		out.Global().Println("Query Cache Statistics")
+		out.Global().Println("=========================")
+		out.Global().Printf("Total Entries: %s\n", green(fmt.Sprintf("%d", stats.TotalEntries)))
+		out.Global().Printf("Cache Hits:    %s\n", green(fmt.Sprintf("%d", hits)))
+		out.Global().Printf("Cache Misses:  %s\n", yellow(fmt.Sprintf("%d", misses)))
+		out.Global().Printf("Hit Rate:      %s\n", blue(fmt.Sprintf("%.1f%%", stats.HitRate*100)))
+		out.Global().Printf("Total Saved:   %s tokens\n", green(fmt.Sprintf("%d", stats.TotalSaved)))
 	},
 }
 
@@ -78,14 +79,14 @@ var cacheClearCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		qc, err := cache.NewQueryCache("")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening cache: %v\n", err)
+			out.Global().Errorf("Error opening cache: %v\n", err)
 			os.Exit(1)
 		}
 		defer qc.Close()
 
 		stats, err := qc.Stats()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			out.Global().Errorf("Error getting stats: %v\n", err)
 			return
 		}
 		count := stats.TotalEntries
@@ -96,7 +97,7 @@ var cacheClearCmd = &cobra.Command{
 		})
 
 		green := color.New(color.FgGreen).SprintFunc()
-		fmt.Printf("✓ Cleared %s cached entries\n", green(fmt.Sprintf("%d", count)))
+		out.Global().Printf("✓ Cleared %s cached entries\n", green(fmt.Sprintf("%d", count)))
 	},
 }
 
@@ -112,32 +113,32 @@ var cacheTopCmd = &cobra.Command{
 
 		qc, err := cache.NewQueryCache("")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening cache: %v\n", err)
+			out.Global().Errorf("Error opening cache: %v\n", err)
 			os.Exit(1)
 		}
 		defer qc.Close()
 
 		entries, err := qc.GetTopQueries(limit)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting top queries: %v\n", err)
+			out.Global().Errorf("Error getting top queries: %v\n", err)
 			os.Exit(1)
 		}
 
 		if len(entries) == 0 {
-			fmt.Println("No cached queries found.")
+			out.Global().Println("No cached queries found.")
 			return
 		}
 
-		fmt.Printf("Top %d Most Accessed Queries\n", len(entries))
-		fmt.Println("================================")
+		out.Global().Printf("Top %d Most Accessed Queries\n", len(entries))
+		out.Global().Println("================================")
 
 		for i, entry := range entries {
-			fmt.Printf("\n%d. %s %s\n", i+1, entry.Command, entry.Args)
-			fmt.Printf("   Hits: %d | Saved: %d tokens (%.1f%%)\n",
+			out.Global().Printf("\n%d. %s %s\n", i+1, entry.Command, entry.Args)
+			out.Global().Printf("   Hits: %d | Saved: %d tokens (%.1f%%)\n",
 				entry.HitCount,
 				entry.OriginalTokens-entry.FilteredTokens,
 				entry.CompressionRatio*100)
-			fmt.Printf("   Last: %s\n", entry.AccessedAt.Format("2006-01-02 15:04"))
+			out.Global().Printf("   Last: %s\n", entry.AccessedAt.Format("2006-01-02 15:04"))
 		}
 	},
 }
@@ -154,14 +155,14 @@ var cacheCleanupCmd = &cobra.Command{
 
 		qc, err := cache.NewQueryCache("")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error opening cache: %v\n", err)
+			out.Global().Errorf("Error opening cache: %v\n", err)
 			os.Exit(1)
 		}
 		defer qc.Close()
 
 		statsBefore, err := qc.Stats()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			out.Global().Errorf("Error getting stats: %v\n", err)
 			return
 		}
 
@@ -169,20 +170,20 @@ var cacheCleanupCmd = &cobra.Command{
 		maxAge := time.Duration(days) * 24 * time.Hour
 		err = qc.Cleanup(maxAge)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error cleaning up: %v\n", err)
+			out.Global().Errorf("Error cleaning up: %v\n", err)
 			os.Exit(1)
 		}
 
 		statsAfter, err := qc.Stats()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting stats: %v\n", err)
+			out.Global().Errorf("Error getting stats: %v\n", err)
 			return
 		}
 		removed := statsBefore.TotalEntries - statsAfter.TotalEntries
 
 		green := color.New(color.FgGreen).SprintFunc()
-		fmt.Printf("✓ Removed %s entries older than %d days\n",
+		out.Global().Printf("✓ Removed %s entries older than %d days\n",
 			green(fmt.Sprintf("%d", removed)), days)
-		fmt.Printf("  Remaining: %d entries\n", statsAfter.TotalEntries)
+		out.Global().Printf("  Remaining: %d entries\n", statsAfter.TotalEntries)
 	},
 }

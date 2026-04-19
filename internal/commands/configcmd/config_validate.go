@@ -2,6 +2,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,8 +24,8 @@ func init() {
 }
 
 func runConfigValidate(cmd *cobra.Command, args []string) error {
-	fmt.Println("Validating tok configuration...")
-	fmt.Println()
+	out.Global().Println("Validating tok configuration...")
+	out.Global().Println()
 
 	hasErrors := false
 
@@ -40,50 +41,50 @@ func runConfigValidate(cmd *cobra.Command, args []string) error {
 			continue
 		}
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			fmt.Printf("  ⚠ %s: not found (using defaults)\n", path)
+			out.Global().Printf("  ⚠ %s: not found (using defaults)\n", path)
 			continue
 		}
 
 		cfg, err := config.LoadFromFile(path)
 		if err != nil {
-			fmt.Printf("  ✗ %s: %v\n", path, err)
+			out.Global().Printf("  ✗ %s: %v\n", path, err)
 			hasErrors = true
 			continue
 		}
 
 		if cfg.Pipeline.MaxContextTokens < 0 {
-			fmt.Printf("  ✗ %s: max_context_tokens cannot be negative\n", path)
+			out.Global().Printf("  ✗ %s: max_context_tokens cannot be negative\n", path)
 			hasErrors = true
 		}
 		if cfg.Pipeline.EntropyThreshold < 0 || cfg.Pipeline.EntropyThreshold > 1 {
-			fmt.Printf("  ✗ %s: entropy_threshold must be 0.0-1.0\n", path)
+			out.Global().Printf("  ✗ %s: entropy_threshold must be 0.0-1.0\n", path)
 			hasErrors = true
 		}
 		if cfg.Pipeline.PerplexityThreshold < 0 || cfg.Pipeline.PerplexityThreshold > 1 {
-			fmt.Printf("  ✗ %s: perplexity_threshold must be 0.0-1.0\n", path)
+			out.Global().Printf("  ✗ %s: perplexity_threshold must be 0.0-1.0\n", path)
 			hasErrors = true
 		}
 		if cfg.Pipeline.H2OSinkSize < 0 {
-			fmt.Printf("  ✗ %s: h2o_sink_size cannot be negative\n", path)
+			out.Global().Printf("  ✗ %s: h2o_sink_size cannot be negative\n", path)
 			hasErrors = true
 		}
 		if cfg.Pipeline.CacheMaxSize < 0 {
-			fmt.Printf("  ✗ %s: cache_max_size cannot be negative\n", path)
+			out.Global().Printf("  ✗ %s: cache_max_size cannot be negative\n", path)
 			hasErrors = true
 		}
 
-		fmt.Printf("  ✓ %s: valid\n", path)
+		out.Global().Printf("  ✓ %s: valid\n", path)
 	}
 
 	defaults := config.Defaults()
 	if defaults.Pipeline.MaxContextTokens > 0 {
-		fmt.Printf("  ✓ defaults: max_context=%d tokens\n", defaults.Pipeline.MaxContextTokens)
+		out.Global().Printf("  ✓ defaults: max_context=%d tokens\n", defaults.Pipeline.MaxContextTokens)
 	}
 
-	fmt.Println()
+	out.Global().Println()
 	if hasErrors {
 		return fmt.Errorf("configuration has errors")
 	}
-	fmt.Println("All configuration checks passed!")
+	out.Global().Println("All configuration checks passed!")
 	return nil
 }
