@@ -170,19 +170,14 @@ func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptio
 		printASCIIGraph(summary.DailyStats)
 	}
 
+	// Print daily table if requested
+	if gainDaily && len(summary.DailyStats) > 0 {
+		printDailyTable(summary.DailyStats)
+	}
+
 	// Print history if requested
 	if gainHistory && len(summary.RecentCommands) > 0 {
-		out.Global().Println(color.New(color.Bold).Sprint("Recent Commands"))
-		out.Global().Println(strings.Repeat("─", 60))
-		for _, cmd := range summary.RecentCommands {
-			timeStr := cmd.Timestamp.Format("Jan 02 15:04")
-			out.Global().Printf("  %s  %-20s  %s saved\n",
-				timeStr,
-				truncate(cmd.Command, 20),
-				formatTokensInt(cmd.SavedTokens),
-			)
-		}
-		out.Global().Println()
+		printHistoryTable(summary.RecentCommands)
 	}
 
 	return nil
@@ -209,29 +204,37 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 		return
 	}
 
-	out.Global().Println(color.New(color.Bold).Sprint("Daily Savings (Last 30 Days)"))
-	out.Global().Println(strings.Repeat("─", 60))
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint("Token Savings (Last 30 Days)"))
+	out.Global().Println("┌" + strings.Repeat("─", 62) + "┐")
 
 	// Find max for scaling
 	maxSaved := 0
+	totalOriginal := 0
+	totalFiltered := 0
 	for _, s := range stats {
 		if s.SavedTokens > maxSaved {
 			maxSaved = s.SavedTokens
 		}
+		totalOriginal += s.InputTokens
+		totalFiltered += s.OutputTokens
 	}
 	if maxSaved == 0 {
 		maxSaved = 1
 	}
 
-	// Print graph (last 14 days only for display)
+	// Print graph (last 30 days)
 	startIdx := 0
-	if len(stats) > 14 {
-		startIdx = len(stats) - 14
+	if len(stats) > 30 {
+		startIdx = len(stats) - 30
 	}
 
 	for i := len(stats) - 1; i >= startIdx; i-- {
 		s := stats[i]
 		barLen := int((float64(s.SavedTokens) / float64(maxSaved)) * 30)
+		if barLen < 0 {
+			barLen = 0
+		}
 		bar := strings.Repeat("█", barLen)
 
 		dateLabel := s.Period
@@ -239,8 +242,26 @@ func printASCIIGraph(stats []tracking.PeriodStats) {
 			dateLabel = dateLabel[5:] // Remove year
 		}
 
-		out.Global().Printf("  %s  %-30s  %s\n", dateLabel, bar, formatTokensInt(s.SavedTokens))
+		pctStr := ""
+		if s.InputTokens > 0 {
+			pct := float64(s.SavedTokens) / float64(s.InputTokens) * 100
+			pctStr = fmt.Sprintf(" %.0f%%", pct)
+		}
+
+		out.Global().Printf("│ %-10s %-30s %6s%s │\n", dateLabel, bar, formatTokensInt(s.SavedTokens), pctStr)
 	}
+	out.Global().Println("└" + strings.Repeat("─", 62) + "┘")
+
+	totalSaved := totalOriginal - totalFiltered
+	if totalSaved < 0 {
+		totalSaved = 0
+	}
+	overallPct := 0.0
+	if totalOriginal > 0 {
+		overallPct = float64(totalSaved) / float64(totalOriginal) * 100
+	}
+	out.Global().Printf("Total: %s → %s tokens (%.1f%% saved)\n",
+		formatTokensInt(totalOriginal), formatTokensInt(totalFiltered), overallPct)
 	out.Global().Println()
 }
 
@@ -342,6 +363,58 @@ func shortenPath(path string) string {
 		return "~" + strings.TrimPrefix(path, home)
 	}
 	return path
+}
+
+func printHistoryTable(cmds []tracking.CommandRecord) {
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint("Recent Commands"))
+	out.Global().Println("┌" + strings.Repeat("─", 20) + "┬" + strings.Repeat("─", 10) + "┬" + strings.Repeat("─", 10) + "┬" + strings.Repeat("─", 8) + "┐")
+	out.Global().Printf("│ %-18s │ %8s │ %8s │ %6s │\n", "Command", "Original", "Filtered", "Saved")
+	out.Global().Println("├" + strings.Repeat("─", 20) + "┼" + strings.Repeat("─", 10) + "┼" + strings.Repeat("─", 10) + "┼" + strings.Repeat("─", 8) + "┤")
+
+	for _, cmd := range cmds {
+		pct := 0.0
+		if cmd.OriginalTokens > 0 {
+			pct = float64(cmd.SavedTokens) / float64(cmd.OriginalTokens) * 100
+		}
+		out.Global().Printf("│ %-18s │ %8s │ %8s │ %5.1f%% │\n",
+			truncate(cmd.Command, 18),
+			formatTokensInt(cmd.OriginalTokens),
+			formatTokensInt(cmd.FilteredTokens),
+			pct,
+		)
+	}
+	out.Global().Println("└" + strings.Repeat("─", 20) + "┴" + strings.Repeat("─", 10) + "┴" + strings.Repeat("─", 10) + "┴" + strings.Repeat("─", 8) + "┘")
+	out.Global().Println()
+}
+
+func printDailyTable(stats []tracking.PeriodStats) {
+	if len(stats) == 0 {
+		return
+	}
+
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint("Day-by-Day Breakdown"))
+	out.Global().Println("┌" + strings.Repeat("─", 12) + "┬" + strings.Repeat("─", 10) + "┬" + strings.Repeat("─", 10) + "┬" + strings.Repeat("─", 10) + "┬" + strings.Repeat("─", 8) + "┐")
+	out.Global().Printf("│ %-10s │ %8s │ %8s │ %8s │ %6s │\n", "Date", "Commands", "Original", "Filtered", "Saved")
+	out.Global().Println("├" + strings.Repeat("─", 12) + "┼" + strings.Repeat("─", 10) + "┼" + strings.Repeat("─", 10) + "┼" + strings.Repeat("─", 10) + "┼" + strings.Repeat("─", 8) + "┤")
+
+	for i := len(stats) - 1; i >= 0; i-- {
+		s := stats[i]
+		pct := 0.0
+		if s.InputTokens > 0 {
+			pct = float64(s.SavedTokens) / float64(s.InputTokens) * 100
+		}
+		out.Global().Printf("│ %-10s │ %8d │ %8s │ %8s │ %5.1f%% │\n",
+			s.Period,
+			s.Commands,
+			formatTokensInt(s.InputTokens),
+			formatTokensInt(s.OutputTokens),
+			pct,
+		)
+	}
+	out.Global().Println("└" + strings.Repeat("─", 12) + "┴" + strings.Repeat("─", 10) + "┴" + strings.Repeat("─", 10) + "┴" + strings.Repeat("─", 10) + "┴" + strings.Repeat("─", 8) + "┘")
+	out.Global().Println()
 }
 
 // printQuotaEstimation shows subscription tier usage estimation.

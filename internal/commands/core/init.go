@@ -32,6 +32,7 @@ var (
 	initAll         bool
 	initShow        bool
 	initUninstall   bool
+	initAgent       string
 )
 
 // initCmd represents the init command
@@ -83,6 +84,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initKilocode, "kilocode", false, "Setup for Kilo Code")
 	initCmd.Flags().BoolVar(&initAntigravity, "antigravity", false, "Setup for Google Antigravity")
 	initCmd.Flags().BoolVarP(&initAll, "all", "a", false, "Setup for all detected agents")
+	initCmd.Flags().StringVar(&initAgent, "agent", "", "Setup for specific agent by name (claude-code, copilot, cursor, windsurf, cline, roo-code, codex, gemini, kilocode, antigravity, opencode, openclaw)")
 	initCmd.Flags().BoolVar(&initShow, "show", false, "Show current configuration")
 	initCmd.Flags().BoolVar(&initUninstall, "uninstall", false, "Remove tok integration for selected agents")
 }
@@ -96,6 +98,30 @@ type AgentInfo struct {
 	HookDir      string
 	Detected     bool
 	Instructions string
+}
+
+// agentNameMap maps CLI agent names to AgentInfo names
+var agentNameMap = map[string]string{
+	"claude-code":  "Claude Code",
+	"claude":       "Claude Code",
+	"copilot":      "GitHub Copilot",
+	"cursor":       "Cursor",
+	"windsurf":     "Windsurf",
+	"cline":        "Cline",
+	"roo-code":     "Cline",
+	"codex":        "Codex",
+	"gemini":       "Gemini CLI",
+	"kilocode":     "Kilo Code",
+	"antigravity":  "Google Antigravity",
+	"opencode":     "OpenCode",
+	"openclaw":     "OpenClaw",
+}
+
+// SupportedAgents lists all supported agent names
+var SupportedAgents = []string{
+	"claude-code", "copilot", "cursor", "windsurf", "cline",
+	"roo-code", "codex", "gemini", "kilocode", "antigravity",
+	"opencode", "openclaw",
 }
 
 func currentAgentInfos(global bool) ([]AgentInfo, error) {
@@ -211,6 +237,108 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 	return agents, nil
 }
 
+// createAgentInfoByName creates an AgentInfo struct for a given agent name
+func createAgentInfoByName(name string) *AgentInfo {
+	home, _ := os.UserHomeDir()
+	if home == "" {
+		return nil
+	}
+	cwd, _ := os.Getwd()
+
+	switch name {
+	case "Claude Code":
+		return &AgentInfo{
+			Name:         "Claude Code",
+			DetectDir:    filepath.Join(home, ".claude"),
+			ConfigDir:    filepath.Join(home, ".claude"),
+			HookDir:      filepath.Join(home, ".claude", "hooks"),
+			Instructions: "Installed transparent rewrite hook via DEBUG trap",
+		}
+	case "Cursor":
+		return &AgentInfo{
+			Name:         "Cursor",
+			DetectDir:    filepath.Join(home, ".cursor"),
+			ConfigDir:    filepath.Join(home, ".cursor"),
+			HookDir:      filepath.Join(home, ".cursor", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Windsurf":
+		return &AgentInfo{
+			Name:         "Windsurf",
+			DetectDir:    filepath.Join(home, ".windsurf"),
+			ConfigDir:    cwd,
+			HookDir:      filepath.Join(home, ".windsurf", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Cline":
+		return &AgentInfo{
+			Name:         "Cline",
+			DetectDir:    filepath.Join(home, ".cline"),
+			ConfigDir:    cwd,
+			HookDir:      filepath.Join(home, ".cline", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Gemini CLI":
+		return &AgentInfo{
+			Name:         "Gemini CLI",
+			DetectDir:    filepath.Join(home, ".gemini"),
+			ConfigDir:    filepath.Join(home, ".gemini"),
+			HookDir:      filepath.Join(home, ".gemini", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Codex":
+		return &AgentInfo{
+			Name:         "Codex",
+			DetectDir:    resolveCodexConfigDir(home),
+			ConfigDir:    resolveCodexConfigDir(home),
+			HookDir:      filepath.Join(resolveCodexConfigDir(home), "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "GitHub Copilot":
+		return &AgentInfo{
+			Name:         "GitHub Copilot",
+			DetectDir:    filepath.Join(cwd, ".github"),
+			ConfigDir:    cwd,
+			HookDir:      filepath.Join(cwd, ".github", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "OpenCode":
+		return &AgentInfo{
+			Name:         "OpenCode",
+			DetectDir:    filepath.Join(home, ".config", "opencode"),
+			ConfigDir:    filepath.Join(home, ".config", "opencode"),
+			HookDir:      filepath.Join(home, ".config", "opencode", "plugins"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "OpenClaw":
+		return &AgentInfo{
+			Name:         "OpenClaw",
+			DetectDir:    filepath.Join(home, ".openclaw"),
+			ConfigDir:    filepath.Join(home, ".openclaw"),
+			HookDir:      filepath.Join(home, ".openclaw", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Kilo Code":
+		return &AgentInfo{
+			Name:         "Kilo Code",
+			DetectDir:    filepath.Join(home, ".kilocode"),
+			ConfigDir:    cwd,
+			HookDir:      filepath.Join(home, ".kilocode", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Google Antigravity":
+		return &AgentInfo{
+			Name:         "Google Antigravity",
+			DetectDir:    filepath.Join(home, ".antigravity"),
+			ConfigDir:    cwd,
+			HookDir:      filepath.Join(home, ".antigravity", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	default:
+		return nil
+	}
+}
+
 func runInit(cmd *cobra.Command, args []string) error {
 	if initShow {
 		return showInitConfig()
@@ -224,7 +352,37 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Determine which agents to setup
 	var toSetup []AgentInfo
 
-	if initAll {
+	if initAgent != "" {
+		// Setup specific agent by name
+		agentName, ok := agentNameMap[initAgent]
+		if !ok {
+			out.Global().Printf("Unknown agent: %s\n", initAgent)
+			out.Global().Println("\nSupported agents:")
+			for _, name := range SupportedAgents {
+				out.Global().Printf("  %s\n", name)
+			}
+			return fmt.Errorf("unknown agent: %s", initAgent)
+		}
+
+		found := false
+		for _, agent := range agents {
+			if agent.Name == agentName {
+				toSetup = append(toSetup, agent)
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			// Create agent info for agents not in currentAgentInfos
+			agent := createAgentInfoByName(agentName)
+			if agent != nil {
+				toSetup = append(toSetup, *agent)
+			} else {
+				return fmt.Errorf("could not create agent info for: %s", agentName)
+			}
+		}
+	} else if initAll {
 		// Setup all detected agents
 		for _, agent := range agents {
 			if agent.Detected {

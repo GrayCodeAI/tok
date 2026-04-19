@@ -1,0 +1,74 @@
+[
+  {
+    "id": "git-status",
+    "category": "vcs",
+    "prompt": "git status",
+    "description": "Standard git status output"
+  },
+  {
+    "id": "git-log",
+    "category": "vcs",
+    "prompt": "git log --oneline -20",
+    "description": "Recent git history"
+  },
+  {
+    "id": "docker-ps",
+    "category": "containers",
+    "prompt": "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'",
+    "description": "Running Docker containers"
+  },
+  {
+    "id": "kubectl-get-pods",
+    "category": "kubernetes",
+    "prompt": "kubectl get pods -A",
+    "description": "All Kubernetes pods across namespaces"
+  },
+  {
+    "id": "npm-test",
+    "category": "testing",
+    "prompt": "npm test -- --verbose",
+    "description": "Verbose npm test output"
+  },
+  {
+    "id": "go-test",
+    "category": "testing",
+    "prompt": "go test ./... -v -count=1",
+    "description": "Verbose Go test output"
+  },
+  {
+    "id": "eslint",
+    "category": "linting",
+    "prompt": "eslint src/ --format stylish",
+    "description": "ESLint full report"
+  },
+  {
+    "id": "docker-build",
+    "category": "containers",
+    "prompt": "docker build -t myapp:latest .",
+    "description": "Docker build output"
+  },
+  {
+    "id": "terraform-plan",
+    "category": "infra",
+    "prompt": "terraform plan -detailed",
+    "description": "Terraform plan with detailed changes"
+  },
+  {
+    "id": "system-info",
+    "category": "system",
+    "prompt": "uname -a && df -h && free -m && nproc",
+    "description": "System information summary"
+  },
+  {
+    "id": "long-log",
+    "category": "logs",
+    "prompt": "cat /var/log/syslog | tail -100",
+    "description": "Last 100 lines of system log"
+  },
+  {
+    "id": "find-large",
+    "category": "files",
+    "prompt": "find . -type f -size +10M -exec ls -lh {} \\;",
+    "description": "Find files larger than 10MB"
+  }
+]

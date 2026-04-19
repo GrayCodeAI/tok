@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -20,28 +21,32 @@ import (
 )
 
 var (
-	discoverProject string
-	discoverLimit   int
-	discoverAll     bool
-	discoverSince   int
-	discoverFormat  string
+	discoverProject   string
+	discoverLimit     int
+	discoverAll       bool
+	discoverSince     int
+	discoverFormat    string
+	discoverShellHist   bool
 )
 
 var discoverCmd = &cobra.Command{
 	Use:   "discover",
-	Short: "Discover missed token savings from Claude Code history",
-	Long: `Analyze Claude Code session history to find commands that could have
-used tok wrappers for token savings.
+	Short: "Discover missed token savings from shell or Claude Code history",
+	Long: `Analyze shell history or Claude Code session history to find commands
+that could have used tok wrappers for token savings.
 
-Scans Claude Code JSONL session files to identify commands that weren't
-rewritten and estimates potential savings.
+By default scans Claude Code JSONL session files. Use --shell-history
+to scan bash/zsh history files instead.
 
 Examples:
-  tok discover                 # Scan current project
-  tok discover --all           # Scan all projects
+  tok discover                 # Scan Claude Code sessions
+  tok discover --shell-history # Scan shell history
   tok discover --since 7       # Last 7 days only
   tok discover --format json   # JSON output`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if discoverShellHist {
+			return runShellDiscover()
+		}
 		return runDiscoverEnhanced()
 	},
 }
@@ -54,6 +59,7 @@ func init() {
 	discoverCmd.Flags().BoolVarP(&discoverAll, "all", "a", false, "Scan all projects (default: current project only)")
 	discoverCmd.Flags().IntVarP(&discoverSince, "since", "s", 30, "Limit to sessions from last N days")
 	discoverCmd.Flags().StringVarP(&discoverFormat, "format", "f", "text", "Output format: text, json")
+	discoverCmd.Flags().BoolVar(&discoverShellHist, "shell-history", false, "Scan shell history (bash/zsh) instead of Claude sessions")
 }
 
 // ClaudeJSONLMessage represents the structure of Claude Code JSONL files
@@ -694,6 +700,298 @@ func runDiscover() error {
 	if len(result.Opportunities) == 0 {
 		out.Global().Printf("  %s\n", green("✓ All commands are already optimized!"))
 		out.Global().Println()
+	}
+
+	return nil
+}
+
+type ShellMissedCommand struct {
+	Command       string  `json:"command"`
+	Count         int     `json:"count"`
+	EstOriginal   int     `json:"estimated_original_tokens"`
+	EstSaved      int     `json:"estimated_saved_tokens"`
+	SavingsPct    float64 `json:"estimated_savings_pct"`
+	TokEquivalent string  `json:"tok_equivalent"`
+	Category      string  `json:"category"`
+}
+
+type ShellDiscoverResult struct {
+	PeriodDays     int                  `json:"period_days"`
+	TotalCommands  int                  `json:"total_commands"`
+	MissedCommands int                  `json:"missed_commands"`
+	TotalEstSaved  int                  `json:"total_estimated_saved"`
+	Commands       []ShellMissedCommand `json:"commands"`
+}
+
+func runShellDiscover() error {
+	cutoff := time.Now().Add(-time.Duration(discoverSince) * 24 * time.Hour)
+
+	historyFiles := findShellHistoryFiles()
+	if len(historyFiles) == 0 {
+		out.Global().Println("No shell history files found.")
+		out.Global().Println("Supported: bash (~/.bash_history), zsh (~/.zsh_history)")
+		return nil
+	}
+
+	commandCounts := parseShellHistory(historyFiles, cutoff)
+	result := analyzeShellMissedSavings(commandCounts)
+
+	if len(result.Commands) == 0 {
+		out.Global().Println("No missed savings found in shell history.")
+		return nil
+	}
+
+	if !discoverAll && len(result.Commands) > 20 {
+		result.Commands = result.Commands[:20]
+	}
+
+	if discoverFormat == "json" {
+		encoder := json.NewEncoder(os.Stdout)
+		encoder.SetIndent("", "  ")
+		return encoder.Encode(result)
+	}
+
+	return printShellDiscoverText(result)
+}
+
+func findShellHistoryFiles() []string {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil
+	}
+
+	candidates := []string{
+		filepath.Join(home, ".bash_history"),
+		filepath.Join(home, ".zsh_history"),
+	}
+
+	var found []string
+	for _, path := range candidates {
+		if _, err := os.Stat(path); err == nil {
+			found = append(found, path)
+		}
+	}
+
+	return found
+}
+
+func parseShellHistory(files []string, cutoff time.Time) map[string]int {
+	commandCounts := make(map[string]int)
+
+	for _, file := range files {
+		f, err := os.Open(file)
+		if err != nil {
+			continue
+		}
+
+		scanner := bufio.NewScanner(f)
+		isZsh := strings.HasSuffix(file, ".zsh_history")
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			if line == "" {
+				continue
+			}
+
+			var commandStr string
+			var cmdTime time.Time
+
+			if isZsh {
+				commandStr, cmdTime = parseZshHistoryLine(line)
+			} else {
+				commandStr = strings.TrimSpace(line)
+				if strings.HasPrefix(commandStr, "#") {
+					continue
+				}
+				cmdTime = time.Time{}
+			}
+
+			if commandStr == "" {
+				continue
+			}
+
+			if !cutoff.IsZero() && !cmdTime.IsZero() && cmdTime.Before(cutoff) {
+				continue
+			}
+
+			baseCmd := extractBaseCommand(commandStr)
+			if baseCmd != "" {
+				commandCounts[baseCmd]++
+			}
+		}
+
+		f.Close()
+	}
+
+	return commandCounts
+}
+
+func parseZshHistoryLine(line string) (string, time.Time) {
+	if len(line) < 12 || line[0] != ':' {
+		return strings.TrimSpace(line), time.Time{}
+	}
+
+	parts := strings.SplitN(line, ":", 3)
+	if len(parts) < 3 {
+		return strings.TrimSpace(line), time.Time{}
+	}
+
+	tsStr := parts[1]
+	cmd := strings.TrimSpace(parts[2])
+
+	ts, err := strconv.ParseInt(tsStr, 10, 64)
+	if err != nil {
+		return cmd, time.Time{}
+	}
+
+	return cmd, time.Unix(ts, 0)
+}
+
+func extractBaseCommand(line string) string {
+	line = strings.TrimSpace(line)
+	if line == "" {
+		return ""
+	}
+
+	if strings.HasPrefix(line, "tok ") {
+		return ""
+	}
+
+	fields := strings.Fields(line)
+	if len(fields) == 0 {
+		return ""
+	}
+
+	if len(fields) >= 2 {
+		return fields[0] + " " + fields[1]
+	}
+
+	return fields[0]
+}
+
+func analyzeShellMissedSavings(commandCounts map[string]int) *ShellDiscoverResult {
+	result := &ShellDiscoverResult{
+		PeriodDays: discoverSince,
+	}
+
+	categorySavings := map[string]float64{
+		"git":       80,
+		"rust":      90,
+		"js":        85,
+		"go":        90,
+		"container": 80,
+		"cloud":     75,
+		"python":    90,
+		"system":    80,
+	}
+
+	for cmd, count := range commandCounts {
+		rewritten, supportLevel := discover.ClassifyCommand(cmd)
+		if supportLevel != discover.SupportOptimized {
+			continue
+		}
+
+		slug := getCommandSlug(cmd)
+		cat := categorizeCommand(slug)
+		savingsPct := categorySavings[cat]
+		if savingsPct == 0 {
+			savingsPct = 80
+		}
+
+		avgTokensPerCmd := estimateTokensForCommand(cmd)
+		estOriginal := avgTokensPerCmd * count
+		estSaved := int(float64(estOriginal) * savingsPct / 100)
+
+		result.Commands = append(result.Commands, ShellMissedCommand{
+			Command:       cmd,
+			Count:         count,
+			EstOriginal:   estOriginal,
+			EstSaved:      estSaved,
+			SavingsPct:    savingsPct,
+			TokEquivalent: rewritten,
+			Category:      cat,
+		})
+
+		result.TotalCommands += count
+		result.TotalEstSaved += estSaved
+	}
+
+	sort.Slice(result.Commands, func(i, j int) bool {
+		return result.Commands[i].EstSaved > result.Commands[j].EstSaved
+	})
+
+	result.MissedCommands = len(result.Commands)
+
+	return result
+}
+
+func estimateTokensForCommand(cmd string) int {
+	avgOutputSizes := map[string]int{
+		"git status":    2000,
+		"git log":       3000,
+		"git diff":      5000,
+		"npm test":      12000,
+		"npm run build": 8000,
+		"cargo build":   6000,
+		"cargo test":    8000,
+		"docker ps":     900,
+		"docker logs":   4000,
+		"kubectl get":   3000,
+		"ls":            500,
+		"find":          2000,
+		"grep":          1500,
+		"tree":          1000,
+		"go test":       5000,
+		"pytest":        4000,
+		"tsc":           3000,
+		"gh pr":         2000,
+		"gh issue":      1500,
+	}
+
+	for pattern, tokens := range avgOutputSizes {
+		if strings.HasPrefix(cmd, pattern) {
+			return tokens
+		}
+	}
+
+	return len(cmd) * 10
+}
+
+func printShellDiscoverText(result *ShellDiscoverResult) error {
+	green := color.New(color.FgGreen).SprintFunc()
+	yellow := color.New(color.FgYellow).SprintFunc()
+	cyan := color.New(color.FgCyan).SprintFunc()
+
+	out.Global().Println()
+	out.Global().Printf("%s\n", yellow("Missed Savings (Shell History)"))
+	out.Global().Println(strings.Repeat("═", 60))
+	out.Global().Printf("Period: last %d days\n", result.PeriodDays)
+	out.Global().Printf("Total commands in history: %d\n", result.TotalCommands)
+	out.Global().Println()
+
+	if len(result.Commands) > 0 {
+		out.Global().Printf("%s\n", cyan("Missed Opportunities"))
+		out.Global().Println("┌" + strings.Repeat("─", 20) + "┬" + strings.Repeat("─", 9) + "┬" + strings.Repeat("─", 14) + "┬" + strings.Repeat("─", 10) + "┐")
+		out.Global().Printf("│ %-18s │ %7s │ %12s │ %8s │\n", "Command", "Count", "Est. Original", "Est. Save")
+		out.Global().Println("├" + strings.Repeat("─", 20) + "┼" + strings.Repeat("─", 9) + "┼" + strings.Repeat("─", 14) + "┼" + strings.Repeat("─", 10) + "┤")
+
+		for _, mc := range result.Commands {
+			out.Global().Printf("│ %-18s │ %7d │ %12s │ %8s │\n",
+				shared.Truncate(mc.Command, 18),
+				mc.Count,
+				formatTokensInt(mc.EstOriginal),
+				formatTokensInt(mc.EstSaved),
+			)
+		}
+		out.Global().Println("└" + strings.Repeat("─", 20) + "┴" + strings.Repeat("─", 9) + "┴" + strings.Repeat("─", 14) + "┴" + strings.Repeat("─", 10) + "┘")
+		out.Global().Println()
+	}
+
+	out.Global().Printf("Total missed: ~%s tokens (80%% could have been saved)\n", formatTokensInt(result.TotalEstSaved))
+	out.Global().Println()
+
+	if len(result.Commands) == 0 {
+		out.Global().Printf("%s\n", green("✓ All shell commands are optimized!"))
 	}
 
 	return nil

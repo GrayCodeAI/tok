@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "sh -c 'if command -v tok >/dev/null 2>&1; then mkdir -p ~/.config/tok && echo full > ~/.config/tok/.tok-active; fi'"
+      }
+    ]
+  }
+}
