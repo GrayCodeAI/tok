@@ -1,450 +1,160 @@
-# Contributing to Tok
+# Contributing to tok
 
-Thank you for your interest in contributing to Tok! We welcome contributions of all kinds - from bug fixes and documentation improvements to new features and creative ideas.
+Thanks for contributing! This guide covers everything you need.
 
 ## Quick Start
 
 ```bash
-# 1. Fork and clone
-git clone https://github.com/YOUR_USERNAME/tok.git
-cd tok
-
-# 2. Install dependencies
+git clone https://github.com/GrayCodeAI/tok.git && cd tok
 go mod download
-
-# 3. Run tests
-make test
-
-# 4. Create a branch
-git checkout -b my-great-feature
+make test    # verify setup
+make build   # build binary
 ```
 
-## Ways to Contribute
+## Development Workflow
 
-### 🐛 Report Bugs
+### 1. Pick an Issue
 
-- Check existing issues first
-- Use our [bug report template](.github/ISSUE_TEMPLATE/bug_report.md)
-- Include version, OS, and reproduction steps
-- Attach logs if possible
+Browse [open issues](https://github.com/GrayCodeAI/tok/issues) and look for:
+- `good first issue` — great for newcomers
+- `help wanted` — we'd love your help
+- `bug` — fix something broken
+- `enhancement` — add new features
 
-### ✨ Suggest Features
+Comment on the issue to claim it before starting work.
 
-- Open a [feature request](.github/ISSUE_TEMPLATE/feature_request.md)
-- Describe the problem and your proposed solution
-- Include examples and use cases
-
-### 📝 Improve Documentation
-
-- Fix typos, grammar, or clarity issues
-- Add missing documentation
-- Translate docs to other languages
-- Create tutorials or examples
-
-### 💻 Write Code
-
-- Pick an issue labeled `good first issue`
-- Comment on the issue to claim it
-- Follow our coding standards (see below)
-- Write tests for your changes
-- Update documentation
-
-### 🧪 Test and Review
-
-- Test existing PRs on your system
-- Review code for correctness and style
-- Help with triaging issues
-- Verify bug reports
-
-## Development Setup
-
-### Prerequisites
-
-- **Go 1.21+** (1.24+ recommended)
-- **Git**
-- **Make** (for Makefile commands)
-- **SQLite** (included via modernc.org/sqlite)
-
-### Setup
+### 2. Create a Branch
 
 ```bash
-# Clone
-git clone https://github.com/lakshmanpatel/tok.git
-cd tok
-
-# Build
-make build
-
-# Run tests
-make test
-
-# Run linter
-make lint
+git checkout -b feat/my-feature    # new feature
+git checkout -b fix/my-bug-fix     # bug fix
+git checkout -b docs/my-docs       # documentation
 ```
 
-### Useful Commands
+### 3. Make Changes
+
+**Code style:**
+- Run `make lint` before committing
+- Follow `gofmt` formatting (enforced by CI)
+- Write tests for new functionality
+- Keep functions focused and under 50 lines when possible
+
+**Commit messages:**
+- Use [Conventional Commits](https://www.conventionalcommits.org/)
+- Format: `type(scope): description`
+- Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 
 ```bash
-make build          # Build the binary
-make test           # Run tests with race detector
-make test-cover     # Tests with coverage
-make lint           # Run golangci-lint
-make fmt            # Format code
-make vet            # Run go vet
-make typecheck      # Type checking
-make benchmark      # Run benchmarks
-make check          fmt + vet + typecheck + lint + test
-make clean          # Clean build artifacts
+feat(filter): add semantic chunk compression layer
+fix(commands): handle nil args in compress command
+docs(readme): update installation instructions
 ```
 
-## Coding Standards
-
-### Go Code Style
-
-We follow standard Go conventions:
+### 4. Run Tests
 
 ```bash
-# Format all code
-go fmt ./...
-
-# Check for issues
-go vet ./...
-
-# Run linter
-golangci-lint run
+make test          # all tests
+make test-race     # race detector
+make test-cover    # coverage report
+make lint          # golangci-lint
+make typecheck     # go vet
 ```
 
-### Naming Conventions
+### 5. Submit a PR
 
-- **Packages:** lowercase, short, concise names
-- **Exported names:** PascalCase (`FilterPipeline`, `EstimateTokens`)
-- **Unexported names:** camelCase (`filterPipeline`, `estimateTokens`)
-- **Interfaces:** -er suffix (`Filter`, `Estimator`, `Runner`)
-- **Constants:** PascalCase or ALL_CAPS for exported values
+Push your branch and open a pull request at [github.com/GrayCodeAI/tok/pulls](https://github.com/GrayCodeAI/tok/pulls).
 
-### Error Handling
+**PR checklist:**
+- [ ] Tests pass (`make test`)
+- [ ] Lint clean (`make lint`)
+- [ ] Commit messages follow Conventional Commits
+- [ ] Documentation updated (README, docs, etc.)
+- [ ] CHANGELOG.md updated (for user-facing changes)
+
+## Project Structure
+
+```
+tok/
+├── cmd/tok/              # CLI entry point
+├── internal/
+│   ├── commands/         # Command implementations (cobra)
+│   │   ├── core/         # Primary commands
+│   │   ├── system/       # System utilities
+│   │   ├── filtercmd/    # Filter pipeline
+│   │   └── ...           # 17 more categories
+│   ├── compressor/       # Input compression
+│   ├── filter/           # Output filtering (31 layers)
+│   └── output/           # Output abstraction layer
+├── agents/               # AI agent rules
+├── hooks/                # Shell scripts
+└── config/               # TOML configs + filters
+```
+
+### Adding a New Command
+
+1. Create a file in the appropriate `internal/commands/<category>/` directory
+2. Register it with the command registry:
 
 ```go
-// Good: Named errors for checking
-var ErrFilterNotFound = errors.New("filter not found")
-
-// Good: Wrap errors with context
-if err != nil {
-    return fmt.Errorf("failed to filter output: %w", err)
-}
-
-// Good: Check specific errors
-if errors.Is(err, ErrFilterNotFound) {
-    // Handle specific case
-}
-```
-
-### Function Design
-
-```go
-// Good: Single responsibility, clear name
-func FilterOutput(input string, mode Mode) (string, int) {
-    // ...
-    return filtered, tokensSaved
-}
-
-// Good: Context for cancellable operations
-func ProcessFile(ctx context.Context, path string) error {
-    // ...
-}
-```
-
-### Testing
-
-```go
-// Use table-driven tests
-func TestFilterPipeline(t *testing.T) {
-    tests := []struct {
-        name     string
-        input    string
-        mode     Mode
-        expected string
-    }{
-        {
-            name:     "empty input",
-            input:    "",
-            mode:     ModeMinimal,
-            expected: "",
-        },
-        // ...
-    }
-    
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            // Test logic
-        })
-    }
-}
-```
-
-### Commit Messages
-
-We follow [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-type(scope): description
-
-[optional body]
-
-[optional footer(s)]
-```
-
-**Types:**
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes
-- `style:` Code style changes (formatting, semicolons, etc)
-- `refactor:` Code refactoring
-- `test:` Adding or updating tests
-- `chore:` Build process, tooling, etc
-- `perf:` Performance improvements
-- `ci:` CI/CD changes
-
-**Examples:**
-
-```
-feat(filter): add entropy-based filtering layer
-fix(cli): handle empty config file gracefully
-docs(readme): add quick start guide
-test(pipeline): add table-driven tests for all layers
-perf(core): reduce allocations in token estimator
-```
-
-## Pull Request Process
-
-### Before Submitting
-
-1. **Create an issue** first (except for typos/minor fixes)
-2. **Discuss the approach** if your solution is non-trivial
-3. **Write tests** for your changes
-4. **Update docs** if applicable
-5. **Run the checks:**
-   ```bash
-   make check  # fmt + vet + typecheck + lint + test
-   ```
-
-### PR Guidelines
-
-1. **Keep it focused** - One feature/fix per PR
-2. **Reference the issue** - Use "Fixes #123" to auto-close
-3. **Explain your changes** - Fill out the PR template
-4. **Add tests** - New code needs tests
-5. **Update docs** - Update docs if behavior changes
-6. **Stay updated** - Rebase on main if needed
-
-### Review Process
-
-1. **Code review** by maintainers
-2. **Tests must pass** in CI
-3. **Address feedback** promptly
-4. **Merge** after approval
-
-## Filter Development
-
-Adding new filters? Follow this pattern:
-
-```go
-// internal/filter/my_filter.go
-
-package filter
-
-// MyFilter implements the [Layer] interface.
-type MyFilter struct {
-    // configuration
-}
-
-// NewMyFilter creates a new MyFilter.
-func NewMyFilter() *MyFilter {
-    return &MyFilter{}
-}
-
-// Apply processes the input and returns filtered text and tokens saved.
-func (f *MyFilter) Apply(input string, mode Mode) (string, int) {
-    // Implementation
-    return filtered, 0
-}
-
-// shouldSkipMyFilter checks if this layer would provide value.
-func shouldSkipMyFilter(input string) bool {
-    return len(input) < 50
-}
-```
-
-Don't forget to:
-
-1. Add to `PipelineConfig` in `pipeline.go`
-2. Add to `PipelineCoordinator` struct
-3. Initialize in `NewPipelineCoordinator()`
-4. Add `processLayer()` method with timing
-5. Add to `Process()` pipeline execution
-
-## Command Development
-
-Adding new commands? Use the registry pattern:
-
-```go
-// internal/commands/mycategory/mycmd.go
-
 package mycategory
 
 import (
     "github.com/spf13/cobra"
-    "github.com/lakshmanpatel/tok/internal/commands/registry"
+    "github.com/GrayCodeAI/tok/internal/commands/registry"
 )
 
-var myCmd = &cobra.Command{
-    Use:   "mycmd",
-    Short: "Brief description",
-    Long:  "Long description",
-    RunE: func(cmd *cobra.Command, args []string) error {
-        // Implementation
-        return nil
-    },
-}
-
 func init() {
-    registry.Add(func() { registry.Register(myCmd) })
+    registry.Register(&cobra.Command{
+        Use:   "my-command",
+        Short: "Brief description",
+        RunE:  runMyCommand,
+    })
+}
+
+func runMyCommand(cmd *cobra.Command, args []string) error {
+    // Your implementation
+    return nil
 }
 ```
 
-Then add import to `root.go`:
+3. Add tests in `mycommand_test.go`
+4. Update docs if needed
 
-```go
-_ "github.com/lakshmanpatel/tok/internal/commands/mycategory"
-```
+### Adding a Filter Layer
 
-## Testing Guidelines
+New compression layers go in `internal/filter/`. See [docs/LAYERS.md](docs/LAYERS.md) for the layer architecture and [internal/filter/AGENTS.md](internal/filter/AGENTS.md) for implementation guidelines.
 
-### Unit Tests
+## Testing
 
 ```bash
 # Run all tests
 make test
 
-# Run specific package tests
-go test ./internal/filter/...
+# Run specific package
+go test ./internal/filter/... -v
 
 # Run with coverage
-make test-cover
+go test ./... -coverprofile=coverage.out
+go tool cover -html=coverage.out
 
-# View coverage
-go tool cover -html=coverage.html
-```
-
-### Integration Tests
-
-```bash
-# Run integration tests
-go test ./tests/...
-
-# Run with verbose output
-go test ./tests/... -v
-```
-
-### Benchmarks
-
-```bash
-# Run benchmarks
-make benchmark
-
-# Profile
-go test -bench=. -cpuprofile=cpu.prof -memprofile=mem.prof
-```
-
-### Fuzz Testing
-
-```bash
 # Run fuzz tests
-go test ./internal/filter/ -fuzz=FuzzFilter
-```
-
-## Reporting Issues
-
-### Bugs
-
-Use our bug report template. Include:
-
-- Tok version
-- Operating system
-- AI tool (if using integration)
-- Steps to reproduce
-- Expected vs actual behavior
-- Relevant logs (`tok -v`)
-
-### Features
-
-Use the feature request template. Include:
-
-- Problem statement
-- Proposed solution
-- Real-world use cases
-- Prior art or comparable tools if relevant
-
-## Style Guide
-
-### Documentation
-
-- Use clear, concise language
-- Include code examples
-- Explain the "why" not just the "what"
-- Keep examples up-to-date
-- Use markdown formatting consistently
-
-### Comments
-
-```go
-// Good: Explain why, not what
-// Entropy filtering removes low-information tokens that don't
-// contribute to semantic understanding. Based on Selective Context
-// (Mila 2023), this targets tokens with low self-information.
-func (f *EntropyFilter) Apply(input string, mode Mode) string {
-```
-
-### Logging
-
-```go
-// Use the logger package
-import "github.com/lakshmanpatel/tok/internal/utils"
-
-utils.Logger.Debug("Processing %d tokens", count)
-utils.Logger.Info("Filter applied successfully", "layer", "entropy")
-utils.Logger.Error("Failed to process", "error", err)
+go test ./internal/filter/... -fuzz=FuzzPipelineProcess
+go test ./internal/toml/... -fuzz=FuzzTOMLFilterParse
 ```
 
 ## Release Process
 
-1. Update `CHANGELOG.md`
-2. Bump version in `cmd/tok/main.go`
-3. Create release tag: `git tag v0.29.0`
-4. Push tag: `git push origin v0.29.0`
-5. Create GitHub release with notes
+1. Create a tag: `git tag v0.XX.0`
+2. Push tag: `git push origin v0.XX.0`
+3. GitHub Actions builds binaries, generates SBOM, and creates release
+4. Homebrew tap updates automatically
 
-## Getting Help
+## Code of Conduct
 
-- **GitHub Issues:** For bugs, features, questions
-- **Discord:** (coming soon!) For community discussions
-- **Email:** maintainers@graycode.ai
+See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md). Be respectful and constructive.
 
-## Recognition
+## Questions?
 
-Contributors are recognized in:
-
-- `AUTHORS.md` file
-- Release notes
-- Our website (coming soon!)
-- Special thanks for significant contributions
-
-## License
-
-By contributing, you agree that your contributions will be licensed under the MIT License.
-
----
-
-**Thank you for contributing to Tok!** 🚀
-
-Every contribution matters, no matter how small. We're building something great together!
+- Open a [discussion](https://github.com/GrayCodeAI/tok/discussions)
+- File an [issue](https://github.com/GrayCodeAI/tok/issues)
+- Read the [docs](docs/)

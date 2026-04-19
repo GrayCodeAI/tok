@@ -1,67 +1,29 @@
-# Tok Contributors
+# Authors
 
-## Core Team
+tok is built by the community.
 
-### Lead Developers
+## Core Contributors
 
-- **Lakshman Patel** - Project Lead, Architecture, Core Development
-- **GrayCode AI** - Research, Filter Pipeline Design
+- Lakshman Patel — Creator & Maintainer
 
-### Contributors
+## Contributors
 
-<!-- Add contributors here as they contribute -->
+Thanks to everyone who has contributed to tok!
 
-## How to Be Listed
-
-You can be added to this file by:
-
-1. **Making significant code contributions** (PRs merged)
-2. **Reporting critical bugs** with detailed reproduction
-3. **Writing documentation** that helps the community
-4. **Improving performance** measurably
-5. **Contributing filters** or commands
-6. **Helping with community** support and moderation
-
-## Contributor Categories
-
-### 🌟 Core Contributors
-- Made 10+ significant contributions
-- Actively involved in development
-- Available for code review and guidance
-
-### 💎 Contributors
-- Made 3+ meaningful contributions
-- Helped improve Tok
-
-### 🌱 First-Time Contributors
-- Made their first contribution
-- Welcome to the Tok community!
-
-## Organizations
-
-- **GrayCode AI** - Primary maintainer
-- **Community Contributors** - Open source contributors
+[Full list of contributors](https://github.com/GrayCodeAI/tok/graphs/contributors)
 
 ## Acknowledgments
 
-Special thanks to all users who have:
+tok builds on research from:
+- **LLMLingua** (Microsoft/Tsinghua) — Perplexity-based iterative pruning
+- **LongLLMLingua** — Contrastive perplexity compression
+- **SWE-Pruner** (NUS) — Goal-driven code compression
+- **Gisting** (Stanford/Berkeley) — Virtual token compression
+- **H2O** — Heavy-Hitter Oracle token preservation
+- **StreamingLLM** — Attention sink preservation
+- **ChunkKV** — Semantic chunk compression
+- **EHPC** (Tsinghua/Huawei) — Evaluator-heads compression
 
-- Reported bugs and issues
-- Suggested features and improvements
-- Helped test on different platforms
-- Provided feedback and reviews
-- Spread the word about Tok
-
-## Adding Yourself
-
-After your first PR is merged, feel free to add your name to this file! Use the format:
-
-```markdown
-### Your Name - @github_username
-- **Contribution:** Brief description
-- **Date:** When you contributed
-```
-
----
-
-**Thank you to everyone who contributes to making Tok better!** 🚀
+And the open-source tools that inspired tok's design:
+- [jq](https://github.com/jqlang/jq), [ripgrep](https://github.com/BurntSushi/ripgrep), [bat](https://github.com/sharkdp/bat)
+- [fzf](https://github.com/junegunn/fzf), [delta](https://github.com/dandavison/delta)
