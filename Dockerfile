@@ -8,7 +8,7 @@ COPY . .
 ARG VERSION=dev
 RUN CGO_ENABLED=0 go build -ldflags="-s -w -X 'github.com/lakshmanpatel/tok/internal/commands/shared.Version=${VERSION}'" -o /tok ./cmd/tok/
 
-FROM alpine:3.21
+FROM alpine:3.23
 RUN apk add --no-cache ca-certificates git
 COPY --from=builder /tok /usr/local/bin/tok
 
