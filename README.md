@@ -4,36 +4,45 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![CI](https://github.com/GrayCodeAI/tok/actions/workflows/ci.yml/badge.svg)](https://github.com/GrayCodeAI/tok/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/GrayCodeAI/tok)](https://goreportcard.com/report/github.com/GrayCodeAI/tok)
-[![codecov](https://codecov.io/gh/GrayCodeAI/tok/branch/main/graph/badge.svg)](https://codecov.io/gh/GrayCodeAI/tok)
 
-> **Cut LLM token costs by up to 90%** — compress prompts before sending, filter noisy output after receiving. One binary, zero dependencies.
+> **Write less, get more.** Compress your prompts before sending. Filter noisy output for readability.
 
 ---
 
-## The Problem
+## What tok Does
 
-Every LLM interaction wastes tokens:
+### 1. Compress Your Prompts (Saves Input Tokens)
 
-```
-You type: "Hey, could you please help me figure out why
-           this React component keeps re-rendering every
-           time the props change? I'd really appreciate it."
-                    ↓
-        AI receives: 38 tokens (14 are filler)
-
-AI responds with 200 lines of test output, dependency trees,
-and stack traces. You only needed the 3 relevant lines.
-                    ↓
-        Context window: 87% consumed by noise
-```
-
-## The Solution
-
-tok sits between you and the AI, trimming fat on both sides:
+You write a verbose prompt → tok compresses it → the compressed version is sent to the AI → **fewer input tokens charged**.
 
 ```
-Your prompt ──compress──▶ AI (fewer tokens, same meaning)
-AI output   ◀──filter──── Your terminal (signal only)
+Before: "Hey, could you please help me figure out why this React
+         component keeps re-rendering every time the props change?"
+After:  "React component re-renders on prop change. Why?"
+
+38 tokens → 9 tokens (76% saved on input)
+```
+
+### 2. Filter Terminal Output (Readability + Context Savings)
+
+tok intercepts command output and removes noise. This doesn't save tokens on the AI's response (those are already generated), but it:
+- Makes terminal output **readable** — shows only what matters
+- Saves tokens when filtered output is **fed back** into another AI call
+
+```
+$ tok npm test
+# 200 lines of test output → 3 lines: pass/fail + failures
+
+$ tok git diff
+# 500-line diff → only the changed lines
+```
+
+### 3. Set AI Agent Tone
+
+Install rules that tell coding agents to respond tersely, saving tokens on their responses.
+
+```bash
+tok install-agents    # One command, 12 agents configured
 ```
 
 ---
@@ -47,9 +56,7 @@ go install github.com/GrayCodeAI/tok/cmd/tok@latest
 Or build from source:
 
 ```bash
-git clone https://github.com/GrayCodeAI/tok.git
-cd tok && make build
-./tok --help
+git clone https://github.com/GrayCodeAI/tok.git && cd tok && make build
 ```
 
 ---
@@ -68,92 +75,79 @@ $ echo "Could you explain why this React component keeps re-rendering?" | tok co
 React component re-renders. Why?
 ```
 
-**6 compression modes:**
+**6 modes:**
 
-| Mode | Example | Best For |
-|------|---------|----------|
-| `lite` | Drop filler, keep grammar | Professional emails |
-| `full` | Drop articles, fragments OK | Everyday prompts _(default)_ |
-| `ultra` | Telegraphic style | Code queries |
-| `wenyan-lite` | Classical Chinese light | CJK prompts |
-| `wenyan` | Classical Chinese standard | CJK prompts |
-| `wenyan-ultra` | Classical Chinese max | CJK prompts |
+| Mode | Style | Input Savings |
+|------|-------|--------------|
+| `lite` | Drop filler, keep grammar | ~20% |
+| `full` | Drop articles, fragments OK | ~40% _(default)_ |
+| `ultra` | Telegraphic, abbreviations | ~60% |
+| `wenyan-lite` | Classical Chinese light | ~30% |
+| `wenyan` | Classical Chinese standard | ~50% |
+| `wenyan-ultra` | Classical Chinese max | ~70% |
 
-### Filter Terminal Output
+### Filter Output
 
-Just prefix any command with `tok`:
+Prefix any command with `tok`:
 
 ```bash
-$ tok npm test
-# Verbose test output → clean pass/fail summary
-
-$ tok git diff
-# 500-line diff → only changed lines
-
-$ tok docker ps -a
-# Container table → essential info only
+tok npm test       # Clean test results
+tok git diff       # Only changed lines
+tok docker ps -a   # Essential container info
+tok cargo build    # Build output, no noise
 ```
 
-**100+ commands wrapped** — git, npm, cargo, go, docker, kubectl, pytest, jest, and more. tok auto-detects the command and applies the right filter.
+**100+ commands wrapped** — git, npm, cargo, go, docker, kubectl, pytest, jest, ruff, and more.
 
-### Set AI Agent Tone
-
-Tell coding agents to respond tersely:
+### Set Agent Tone
 
 ```bash
-$ tok on ultra     # Maximum brevity
-$ tok on lite      # Professional but tight
-$ tok status       # Current mode
-$ tok gain         # Token savings dashboard
+tok on ultra       # Tell agents: respond with maximum brevity
+tok on lite        # Professional but tight
+tok status         # Current mode
+tok gain           # Token savings from input compression
+```
+
+---
+
+## How It Works
+
+### Input Compression
+
+Your text goes through a compression engine that removes filler words, articles, and redundancy while preserving technical meaning. The compressed text is what gets sent to the AI.
+
+```
+Your prompt → tok compressor → compressed text → AI (charged for fewer tokens)
+```
+
+### Output Filtering
+
+Command output passes through a 31-layer pipeline that removes noise, deduplicates, and highlights important lines. The filtered output is what you see in your terminal.
+
+```
+Command output → tok filter pipeline (31 layers) → clean output → your terminal
+```
+
+If you pipe filtered output into another AI call, you save tokens on that next call.
+
+### Agent Rules
+
+tok installs instruction files into AI coding agent directories (Cursor, Claude Code, Copilot, etc.) that tell the agent to respond tersely. The agent generates fewer tokens in its responses.
+
+```
+tok install-agents → agent rule files → agent responds tersely → fewer output tokens
 ```
 
 ---
 
 ## Key Features
 
-### 31-Layer Compression Pipeline
-
-Research-backed algorithms from top labs:
-
-| Layer | Technique | Source |
-|-------|-----------|--------|
-| L1 | Entropy pruning | Shannon |
-| L2 | Perplexity filtering | LLMLingua (Microsoft) |
-| L4 | AST-aware compression | LongCodeZip (NUS) |
-| L8 | Gist tokens | Stanford/Berkeley |
-| L13 | Heavy-hitter preservation | H2O |
-| L14 | Attention sink | StreamingLLM |
-| L16 | Semantic chunking | ChunkKV |
-| +24 more | — | See `tok layers` |
-
-### Token Tracking
-
-```bash
-$ tok gain
-
-Session Savings
-┌──────────┬─────────┬─────────┬──────────┐
-│ Command  │ Original│ Filtered│ Saved    │
-├──────────┼─────────┼─────────┼──────────┤
-│ npm test │ 12,400  │ 1,860   │ 85.0%    │
-│ git diff │ 8,200   │ 980     │ 88.0%    │
-│ cargo b  │ 6,100   │ 1,220   │ 80.0%    │
-└──────────┴─────────┴─────────┴──────────┘
-Total: 26,700 → 4,060 tokens (84.8% saved)
-```
-
-### AI Agent Rules
-
-One command installs terse mode for 12 coding agents:
-
-```bash
-$ tok install-agents
-Installed: cursor/tok.mdc → ~/.cursor/rules/tok.mdc
-Installed: claude-code/tok.md → ~/.claude/tok.md
-... (12 agents total)
-```
-
-Supports: Cursor, Windsurf, Cline, Copilot, Claude Code, Aider, Continue, Roo Code, Cody, CodeWhisperer, Tabnine, Codeium.
+| Feature | What It Does | Saves Tokens? |
+|---------|-------------|---------------|
+| Input compression | Compresses your prompts before sending | ✅ Input tokens |
+| Output filtering | Cleans terminal output for readability | ❌ (but saves context on re-use) |
+| Agent rules | Tells agents to respond tersely | ✅ Output tokens (agent-side) |
+| Token tracking | Tracks your input compression savings | N/A (analytics) |
 
 ---
 
@@ -161,20 +155,17 @@ Supports: Cursor, Windsurf, Cline, Copilot, Claude Code, Aider, Continue, Roo Co
 
 ```
 tok
-├── cmd/tok/              Cobra CLI entry point
+├── cmd/tok/              CLI entry point
 ├── internal/
-│   ├── commands/         100+ command wrappers (20 categories)
-│   ├── compressor/       Input compression engine (6 modes)
+│   ├── commands/         100+ command wrappers
+│   ├── compressor/       Input compression (6 modes)
 │   ├── filter/           Output pipeline (31 layers)
-│   ├── output/           Centralized output abstraction
-│   ├── tracking/         SQLite token usage database
-│   └── telemetry/        Anonymous metrics (opt-out)
+│   └── tracking/         SQLite usage database
 ├── agents/               12 AI agent rule files
-├── hooks/                Shell integration scripts
-└── config/               TOML filters + examples
+└── hooks/                Shell integration scripts
 ```
 
-**Single binary, no runtime dependencies.** Built with Go, uses SQLite for local tracking, and embeds all agent rules and hook scripts.
+Single binary, no runtime dependencies.
 
 ---
 
@@ -185,43 +176,23 @@ tok
 [core]
 mode = "full"
 auto_activate = true
-
-[tracking]
-database_path = "~/.local/share/tok/tracking.db"
 ```
-
-All paths are configurable via environment variables:
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
 | `TOK_CONFIG_DIR` | `~/.config/tok` | Config location |
 | `TOK_AUTO_ACTIVATE` | _(empty)_ | Auto-start on shell init |
 | `TOK_DEFAULT_MODE` | `full` | Default compression |
-| `TOK_DATABASE_PATH` | `~/.local/share/tok/tracking.db` | Tracking DB |
 | `TOK_NO_COLOR` | _(empty)_ | Disable colors |
 
 ---
 
 ## Shell Integration
 
-Add a `[TOK]` badge to your prompt:
-
 ```bash
-tok hooks-install    # Adds to ~/.zshrc and ~/.bashrc
-```
-
-Generate completions:
-
-```bash
-tok completion bash   > /etc/bash_completion.d/tok
-tok completion zsh    > "${fpath[1]}/_tok"
-tok completion fish   > ~/.config/fish/completions/tok.fish
-tok completion powershell > $PROFILE
-```
-
-Generate man pages:
-
-```bash
+tok hooks-install              # Add [TOK] badge to prompt
+tok completion bash > /etc/bash_completion.d/tok
+tok completion zsh > "${fpath[1]}/_tok"
 tok man /usr/local/share/man/man1
 ```
 
@@ -231,16 +202,13 @@ tok man /usr/local/share/man/man1
 
 ```
 Core:       doctor  status  gain  on  off  mode  layers  suggest
-Input:      compress  terse  restore  template
+Input:      compress  terse  restore
 Output:     git  npm  cargo  go  docker  kubectl  pytest  jest  ... (100+)
-Filter:     filter-create  filter-validate  filter-bench  tests
 Agents:     install-agents  uninstall-agents  init
-Hooks:      hooks-install  hooks-uninstall  hooks-install-pwsh
+Hooks:      hooks-install  hooks-uninstall
 System:     completion  man  self-update  config  telemetry
-Tools:      diff  explain  summary  json  merge  rewrite  export
-Tracking:   recall  undo  audit  verify  trust  untrust
-Session:    session  engram  learn  cache  clean
-Build:      build  test  lint  format  benchmark  batch
+Tools:      diff  explain  summary  json  merge  export
+Tracking:   recall  undo  audit  trust  untrust
 ```
 
 ---
@@ -249,12 +217,10 @@ Build:      build  test  lint  format  benchmark  batch
 
 ```bash
 git clone https://github.com/GrayCodeAI/tok.git && cd tok
-make test    # Run tests
-make build   # Build binary
-make lint    # Run linters
+make test && make build && make lint
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
