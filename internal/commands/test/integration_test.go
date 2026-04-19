@@ -176,12 +176,12 @@ func TestIntegrationTestRunnerMultipleDetections(t *testing.T) {
 // TestIntegrationFilterGenericOutput tests the generic test output filter with real scenarios
 func TestIntegrationFilterGenericOutput(t *testing.T) {
 	tests := []struct {
-		name           string
-		input          string
-		shouldContain  []string
-		shouldExclude  []string
-		minLines       int
-		maxLines       int
+		name          string
+		input         string
+		shouldContain []string
+		shouldExclude []string
+		minLines      int
+		maxLines      int
 	}{
 		{
 			name: "Rust test output",

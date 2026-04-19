@@ -2,7 +2,7 @@ package lang
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -65,7 +65,7 @@ func runRubyPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: ruby %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: ruby %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("ruby", args...)
@@ -73,7 +73,7 @@ func runRubyPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterRubyOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

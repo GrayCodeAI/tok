@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"sort"
@@ -185,7 +186,7 @@ func runLint(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

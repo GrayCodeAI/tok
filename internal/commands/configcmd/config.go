@@ -2,6 +2,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ var configCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("error creating config: %w", err)
 			}
-			fmt.Printf("Created: %s\n", path)
+			out.Global().Printf("Created: %s\n", path)
 			return nil
 		}
 
@@ -59,11 +60,11 @@ func createDefaultConfig() (string, error) {
 
 func showConfig() error {
 	configPath := effectiveConfigPath()
-	fmt.Printf("Config: %s\n\n", configPath)
+	out.Global().Printf("Config: %s\n\n", configPath)
 
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		fmt.Println("(default config, file not created)")
-		fmt.Println()
+		out.Global().Println("(default config, file not created)")
+		out.Global().Println()
 		cfg := config.Defaults()
 		printConfig(cfg)
 		return nil
@@ -79,23 +80,23 @@ func showConfig() error {
 }
 
 func printConfig(cfg *config.Config) {
-	fmt.Println("[tracking]")
-	fmt.Printf("enabled = %v\n", cfg.Tracking.Enabled)
+	out.Global().Println("[tracking]")
+	out.Global().Printf("enabled = %v\n", cfg.Tracking.Enabled)
 	if cfg.Tracking.DatabasePath != "" {
-		fmt.Printf("database_path = %q\n", cfg.Tracking.DatabasePath)
+		out.Global().Printf("database_path = %q\n", cfg.Tracking.DatabasePath)
 	}
-	fmt.Printf("telemetry = %v\n", cfg.Tracking.Telemetry)
-	fmt.Println()
+	out.Global().Printf("telemetry = %v\n", cfg.Tracking.Telemetry)
+	out.Global().Println()
 
-	fmt.Println("[filter]")
-	fmt.Printf("mode = %q\n", cfg.Filter.Mode)
-	fmt.Printf("noise_dirs = %v\n", cfg.Filter.NoiseDirs)
-	fmt.Println()
+	out.Global().Println("[filter]")
+	out.Global().Printf("mode = %q\n", cfg.Filter.Mode)
+	out.Global().Printf("noise_dirs = %v\n", cfg.Filter.NoiseDirs)
+	out.Global().Println()
 
-	fmt.Println("[hooks]")
+	out.Global().Println("[hooks]")
 	if len(cfg.Hooks.ExcludedCommands) > 0 {
-		fmt.Printf("excluded_commands = %v\n", cfg.Hooks.ExcludedCommands)
+		out.Global().Printf("excluded_commands = %v\n", cfg.Hooks.ExcludedCommands)
 	} else {
-		fmt.Println("excluded_commands = []")
+		out.Global().Println("excluded_commands = []")
 	}
 }

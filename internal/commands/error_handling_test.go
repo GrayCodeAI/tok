@@ -140,7 +140,7 @@ func TestEnvironmentValidation(t *testing.T) {
 	}{
 		{
 			name:  "valid env var",
-			key:   "TOKMAN_MODE",
+			key:   "TOK_MODE",
 			value: "minimal",
 			valid: true,
 		},
@@ -166,7 +166,7 @@ func TestEnvironmentValidation(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			valid := len(tc.key) > 0 && tc.key == "TOKMAN_MODE"
+			valid := len(tc.key) > 0 && tc.key == "TOK_MODE"
 			if valid != tc.valid {
 				t.Errorf("Env %q=%q: valid=%v, want valid=%v", tc.key, tc.value, valid, tc.valid)
 			}

@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -161,7 +162,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 	var totalOrig, totalFinal, errCount int
 	for r := range results {
 		if r.err != nil {
-			fmt.Fprintf(os.Stderr, "[tok batch] error: %s: %v\n", r.path, r.err)
+			out.Global().Errorf("[tok batch] error: %s: %v\n", r.path, r.err)
 			errCount++
 			continue
 		}
@@ -172,18 +173,18 @@ func runBatch(cmd *cobra.Command, args []string) error {
 		switch {
 		case batchInPlace:
 			if err := os.WriteFile(r.path, []byte(r.compressed), 0600); err != nil {
-				fmt.Fprintf(os.Stderr, "[tok batch] write error: %s: %v\n", r.path, err)
+				out.Global().Errorf("[tok batch] write error: %s: %v\n", r.path, err)
 				errCount++
 			}
 		case batchOutDir != "":
 			outPath := filepath.Join(batchOutDir, filepath.Base(r.path))
 			if err := os.WriteFile(outPath, []byte(r.compressed), 0600); err != nil {
-				fmt.Fprintf(os.Stderr, "[tok batch] write error: %s: %v\n", outPath, err)
+				out.Global().Errorf("[tok batch] write error: %s: %v\n", outPath, err)
 				errCount++
 			}
 		default:
 			// Stdout with file markers
-			fmt.Printf("=== %s ===\n%s\n", r.path, r.compressed)
+			out.Global().Printf("=== %s ===\n%s\n", r.path, r.compressed)
 		}
 
 		if batchStats {
@@ -192,7 +193,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 			if r.origTokens > 0 {
 				pct = float64(saved) / float64(r.origTokens) * 100
 			}
-			fmt.Fprintf(os.Stderr, "[tok] %-40s %d→%d tokens (%.1f%% reduction)\n",
+			out.Global().Errorf("[tok] %-40s %d→%d tokens (%.1f%% reduction)\n",
 				r.path, r.origTokens, r.finalTokens, pct)
 		}
 	}
@@ -203,7 +204,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 		if totalOrig > 0 {
 			pct = float64(saved) / float64(totalOrig) * 100
 		}
-		fmt.Fprintf(os.Stderr, "[tok] TOTAL: %d files, %d→%d tokens (%.1f%% reduction)\n",
+		out.Global().Errorf("[tok] TOTAL: %d files, %d→%d tokens (%.1f%% reduction)\n",
 			len(paths)-errCount, totalOrig, totalFinal, pct)
 	}
 

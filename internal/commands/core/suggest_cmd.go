@@ -1,7 +1,7 @@
 package core
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"math/rand"
 	"time"
 
@@ -56,22 +56,22 @@ func runSuggest(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(tips) == 0 {
-		fmt.Println("No tips found for this category.")
+		out.Global().Println("No tips found for this category.")
 		return nil
 	}
 
 	rand.Seed(time.Now().UnixNano())
 	t := tips[rand.Intn(len(tips))]
 
-	fmt.Println(color.CyanString("💡 Tip:"))
-	fmt.Println()
+	out.Global().Println(color.CyanString("💡 Tip:"))
+	out.Global().Println()
 	bold := color.New(color.Bold)
 	bold.Println(t.title)
-	fmt.Println(t.description)
-	fmt.Println()
-	fmt.Printf("Category: %s\n", t.category)
+	out.Global().Println(t.description)
+	out.Global().Println()
+	out.Global().Printf("Category: %s\n", t.category)
 	if t.action != "" {
-		fmt.Printf("Action: %s\n", color.GreenString(t.action))
+		out.Global().Printf("Action: %s\n", color.GreenString(t.action))
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"sort"
 	"strings"
@@ -51,8 +52,8 @@ func init() {
 func runRecall(cmd *cobra.Command, args []string) error {
 	dbPath := config.DatabasePath()
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
-		fmt.Println("No command history found.")
-		fmt.Println("Run some commands through tok to start building history!")
+		out.Global().Println("No command history found.")
+		out.Global().Println("Run some commands through tok to start building history!")
 		return nil
 	}
 
@@ -111,19 +112,19 @@ func runRecall(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(results) == 0 {
-		fmt.Println("No matching commands found.")
+		out.Global().Println("No matching commands found.")
 		if query != "" {
-			fmt.Printf("Try a different search term or use --days to extend the time range.\n")
+			out.Global().Printf("Try a different search term or use --days to extend the time range.\n")
 		}
 		return nil
 	}
 
-	fmt.Println(strings.Repeat("─", 50))
+	out.Global().Println(strings.Repeat("─", 50))
 
 	bold := color.New(color.Bold)
 	bold.Print("Recent Commands")
-	fmt.Println()
-	fmt.Println(strings.Repeat("─", 50))
+	out.Global().Println()
+	out.Global().Println(strings.Repeat("─", 50))
 
 	for i, r := range results {
 		ts := r.Timestamp.Format("2006-01-02 15:04")
@@ -132,12 +133,12 @@ func runRecall(cmd *cobra.Command, args []string) error {
 			cmdTrunc = cmdTrunc[:60] + "..."
 		}
 
-		fmt.Printf("%d. %s\n", i+1, color.CyanString(cmdTrunc))
-		fmt.Printf("   %s | saved %d tokens | %d filtered\n", ts, r.SavedTokens, r.Filtered)
+		out.Global().Printf("%d. %s\n", i+1, color.CyanString(cmdTrunc))
+		out.Global().Printf("   %s | saved %d tokens | %d filtered\n", ts, r.SavedTokens, r.Filtered)
 	}
 
-	fmt.Println()
-	fmt.Printf("Showing %d of %d results\n", len(results), len(results))
+	out.Global().Println()
+	out.Global().Printf("Showing %d of %d results\n", len(results), len(results))
 
 	return nil
 }
@@ -199,6 +200,6 @@ func printRecallJSON(results []recallResult) error {
 	if err != nil {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
-	fmt.Println(string(data))
+	out.Global().Println(string(data))
 	return nil
 }

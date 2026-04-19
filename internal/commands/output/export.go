@@ -4,6 +4,7 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -52,7 +53,7 @@ func runExport(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(records) == 0 {
-		fmt.Println("No tracking records found.")
+		out.Global().Println("No tracking records found.")
 		return nil
 	}
 

@@ -1,4 +1,4 @@
-# TokMan Consolidated 20-Layer Pipeline
+# Tok Consolidated 20-Layer Pipeline
 
 ## Overview
 
@@ -72,8 +72,8 @@ Each layer now has:
 ## Migration Guide
 
 Old commands still work:
-- `tokman command --preset fast` → Uses L1, L3, L7, L17
-- `tokman command --preset balanced` → Uses 8 layers
-- `tokman command --preset full` → Uses all 20 layers
+- `tok command --preset fast` → Uses L1, L3, L7, L17
+- `tok command --preset balanced` → Uses 8 layers
+- `tok command --preset full` → Uses all 20 layers
 
 The `--research-pack` flag now maps to L14-L16.

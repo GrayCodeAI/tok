@@ -3,6 +3,7 @@ package output
 import (
 	"context"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"regexp"
@@ -47,7 +48,7 @@ func runSummary(cmd *cobra.Command, args []string) error {
 	command := strings.Join(args, " ")
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running and summarizing: %s\n", command)
+		out.Global().Errorf("Running and summarizing: %s\n", command)
 	}
 
 	if err := shared.SanitizeArgs(args); err != nil {
@@ -58,7 +59,7 @@ func runSummary(cmd *cobra.Command, args []string) error {
 		return err
 	} else if ok {
 		summary := summarizeOutput(raw, command, true)
-		fmt.Println(summary)
+		out.Global().Println(summary)
 
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(summary)
@@ -73,7 +74,7 @@ func runSummary(cmd *cobra.Command, args []string) error {
 	success := err == nil
 
 	summary := summarizeOutput(raw, command, success)
-	fmt.Println(summary)
+	out.Global().Println(summary)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(summary)

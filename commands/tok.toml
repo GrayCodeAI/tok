@@ -1,0 +1,2 @@
+description = "Switch tok intensity level (lite/full/ultra/wenyan)"
+prompt = "Switch to tok {{args}} mode. If no level specified, use full. Respond terse and direct, remove filler/pleasantries/hedging, keep technical accuracy exact, keep code unchanged."

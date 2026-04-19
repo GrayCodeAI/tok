@@ -9,6 +9,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -84,20 +85,20 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	var totalEvents int
 	var totalOrigTokens, totalFinalTokens int
 
-	fmt.Fprintf(os.Stderr, "[tok watch] Watching %s (interval: %s)\n", filePath, watchInterval)
+	out.Global().Errorf("[tok watch] Watching %s (interval: %s)\n", filePath, watchInterval)
 
 	for {
 		select {
 		case <-sigCh:
 			// Print summary and exit.
-			fmt.Fprintf(os.Stderr, "\n[tok watch] Stopped. Summary:\n")
-			fmt.Fprintf(os.Stderr, "  Events:       %d\n", totalEvents)
-			fmt.Fprintf(os.Stderr, "  Total input:  %d tokens\n", totalOrigTokens)
-			fmt.Fprintf(os.Stderr, "  Total output: %d tokens\n", totalFinalTokens)
+			out.Global().Errorf("\n[tok watch] Stopped. Summary:\n")
+			out.Global().Errorf("  Events:       %d\n", totalEvents)
+			out.Global().Errorf("  Total input:  %d tokens\n", totalOrigTokens)
+			out.Global().Errorf("  Total output: %d tokens\n", totalFinalTokens)
 			if totalOrigTokens > 0 {
 				saved := totalOrigTokens - totalFinalTokens
 				pct := float64(saved) / float64(totalOrigTokens) * 100
-				fmt.Fprintf(os.Stderr, "  Saved:        %s tokens (%.1f%%)\n",
+				out.Global().Errorf("  Saved:        %s tokens (%.1f%%)\n",
 					formatSaved(saved), pct)
 			}
 			return nil
@@ -105,7 +106,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		case <-ticker.C:
 			info, err := os.Stat(filePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[tok watch] stat error: %v\n", err)
+				out.Global().Errorf("[tok watch] stat error: %v\n", err)
 				continue
 			}
 
@@ -114,11 +115,11 @@ func runWatch(cmd *cobra.Command, args []string) error {
 			}
 			lastMod = info.ModTime()
 
-			fmt.Fprintf(os.Stderr, "Recompressing %s...\n", filePath)
+			out.Global().Errorf("Recompressing %s...\n", filePath)
 
 			raw, err := os.ReadFile(filePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[tok watch] read error: %v\n", err)
+				out.Global().Errorf("[tok watch] read error: %v\n", err)
 				continue
 			}
 
@@ -143,10 +144,10 @@ func runWatch(cmd *cobra.Command, args []string) error {
 				outPath := filepath.Join(watchOutDir, filepath.Base(filePath))
 				// #nosec G703 -- destination is constrained to watchOutDir + basename(filePath).
 				if err := os.WriteFile(outPath, []byte(result), 0600); err != nil {
-					fmt.Fprintf(os.Stderr, "[tok watch] write error: %v\n", err)
+					out.Global().Errorf("[tok watch] write error: %v\n", err)
 				}
 			} else {
-				fmt.Print(result)
+				out.Global().Print(result)
 			}
 		}
 	}

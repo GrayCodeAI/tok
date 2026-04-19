@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -76,7 +77,7 @@ func runMerge(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("no files found")
 	}
 
-	fmt.Fprintf(os.Stderr, "Merging %d files...\n", len(files))
+	out.Global().Errorf("Merging %d files...\n", len(files))
 
 	// Read all files
 	fileContents := make(map[string]string)
@@ -85,19 +86,19 @@ func runMerge(cmd *cobra.Command, args []string) error {
 	for _, file := range files {
 		content, err := os.ReadFile(file)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "WARNING Skipping %s: %v\n", file, err)
+			out.Global().Errorf("WARNING Skipping %s: %v\n", file, err)
 			continue
 		}
 		fileContents[file] = string(content)
 		totalSize += len(content)
 	}
 
-	fmt.Fprintf(os.Stderr, "Total size: %d bytes\n", totalSize)
+	out.Global().Errorf("Total size: %d bytes\n", totalSize)
 
 	// Apply intelligent ordering if requested
 	orderedFiles := files
 	if mergeIntelligent {
-		fmt.Fprintf(os.Stderr, "Analyzing dependencies...\n")
+		out.Global().Errorf("Analyzing dependencies...\n")
 		orderedFiles = intelligentOrder(fileContents)
 	}
 
@@ -106,20 +107,20 @@ func runMerge(cmd *cobra.Command, args []string) error {
 
 	// Compress if needed to meet budget
 	mergedTokens := core.EstimateTokens(merged)
-	fmt.Fprintf(os.Stderr, "Initial: %d tokens\n", mergedTokens)
+	out.Global().Errorf("Initial: %d tokens\n", mergedTokens)
 
 	if mergedTokens > mergeMaxTokens {
-		fmt.Fprintf(os.Stderr, "Compressing to meet %d token budget...\n", mergeMaxTokens)
+		out.Global().Errorf("Compressing to meet %d token budget...\n", mergeMaxTokens)
 		merged = compressToFit(merged, mergeMaxTokens)
 		mergedTokens = core.EstimateTokens(merged)
-		fmt.Fprintf(os.Stderr, "Final: %d tokens\n", mergedTokens)
+		out.Global().Errorf("Final: %d tokens\n", mergedTokens)
 	}
 
 	// Format output
 	formatted := formatMergedOutput(merged, mergeFormat, orderedFiles)
 
 	// Output
-	fmt.Println(formatted)
+	out.Global().Println(formatted)
 
 	return nil
 }

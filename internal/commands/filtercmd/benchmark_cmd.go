@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -81,18 +82,18 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 
 	if benchmarkJSON {
 		// JSON output
-		fmt.Println("{")
-		fmt.Printf("  \"timestamp\": \"%s\",\n", report.Timestamp.Format("2006-01-02T15:04:05Z"))
-		fmt.Printf("  \"total_tests\": %d,\n", report.TotalTests)
-		fmt.Printf("  \"passed\": %d,\n", report.Passed)
-		fmt.Printf("  \"failed\": %d,\n", report.Failed)
-		fmt.Printf("  \"avg_compression\": %.2f,\n", report.OverallStats.AvgCompression)
-		fmt.Printf("  \"avg_latency\": %.2f,\n", report.OverallStats.AvgLatency)
-		fmt.Printf("  \"avg_quality\": %.2f\n", report.OverallStats.AvgQuality)
-		fmt.Println("}")
+		out.Global().Println("{")
+		out.Global().Printf("  \"timestamp\": \"%s\",\n", report.Timestamp.Format("2006-01-02T15:04:05Z"))
+		out.Global().Printf("  \"total_tests\": %d,\n", report.TotalTests)
+		out.Global().Printf("  \"passed\": %d,\n", report.Passed)
+		out.Global().Printf("  \"failed\": %d,\n", report.Failed)
+		out.Global().Printf("  \"avg_compression\": %.2f,\n", report.OverallStats.AvgCompression)
+		out.Global().Printf("  \"avg_latency\": %.2f,\n", report.OverallStats.AvgLatency)
+		out.Global().Printf("  \"avg_quality\": %.2f\n", report.OverallStats.AvgQuality)
+		out.Global().Println("}")
 	} else {
 		// Formatted output
-		fmt.Print(bench.FormatReport(report))
+		out.Global().Print(bench.FormatReport(report))
 	}
 
 	return nil

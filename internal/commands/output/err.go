@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -57,7 +57,7 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 	timer := tracking.Start()
 
 	if verbose {
-		fmt.Fprintf(os.Stderr, "Running: %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: %s\n", strings.Join(args, " "))
 	}
 
 	if err := shared.SanitizeArgs(args); err != nil {
@@ -89,7 +89,7 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 			stdoutBuf.WriteString(scanner.Text() + "\n")
 		}
 		if err := scanner.Err(); err != nil {
-			fmt.Fprintf(os.Stderr, "stdout read error: %v\n", err)
+			out.Global().Errorf("stdout read error: %v\n", err)
 		}
 		close(doneOut)
 	}()
@@ -100,7 +100,7 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 			stderrBuf.WriteString(scanner.Text() + "\n")
 		}
 		if err := scanner.Err(); err != nil {
-			fmt.Fprintf(os.Stderr, "stderr read error: %v\n", err)
+			out.Global().Errorf("stderr read error: %v\n", err)
 		}
 		close(doneErr)
 	}()
@@ -144,7 +144,7 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 		result.WriteString(hint + "\n")
 	}
 
-	fmt.Print(result.String())
+	out.Global().Print(result.String())
 
 	timer.Track(strings.Join(args, " "), "tok err", tracking.EstimateTokens(raw), tracking.EstimateTokens(filtered))
 

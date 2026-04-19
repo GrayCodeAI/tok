@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
@@ -31,23 +32,23 @@ func runProfile(cmd *cobra.Command, args []string) error {
 	layers, err := tracker.GetTopLayers(20)
 	if err != nil {
 		// Table might not exist yet
-		fmt.Println("No layer statistics available yet.")
-		fmt.Println("Run some commands through tok to collect data.")
+		out.Global().Println("No layer statistics available yet.")
+		out.Global().Println("Run some commands through tok to collect data.")
 		return nil
 	}
 
 	if len(layers) == 0 {
-		fmt.Println("No layer statistics available yet.")
-		fmt.Println("Run some commands through tok to collect data.")
+		out.Global().Println("No layer statistics available yet.")
+		out.Global().Println("Run some commands through tok to collect data.")
 		return nil
 	}
 
-	fmt.Println("Pipeline Layer Performance")
-	fmt.Printf("%-25s %10s %10s %8s\n", "Layer", "Total Saved", "Avg Saved", "Calls")
-	fmt.Printf("%-25s %10s %10s %8s\n", "─────────────────────────", "──────────", "──────────", "────────")
+	out.Global().Println("Pipeline Layer Performance")
+	out.Global().Printf("%-25s %10s %10s %8s\n", "Layer", "Total Saved", "Avg Saved", "Calls")
+	out.Global().Printf("%-25s %10s %10s %8s\n", "─────────────────────────", "──────────", "──────────", "────────")
 
 	for _, l := range layers {
-		fmt.Printf("%-25s %10d %10.1f %8d\n",
+		out.Global().Printf("%-25s %10d %10.1f %8d\n",
 			l.LayerName, l.TotalSaved, l.AvgSaved, l.CallCount)
 	}
 

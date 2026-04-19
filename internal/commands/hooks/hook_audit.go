@@ -3,6 +3,7 @@ package hooks
 import (
 	"bufio"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
@@ -27,7 +28,7 @@ Shows statistics about hook invocations including:
 - Skip reasons breakdown
 - Top rewritten commands
 
-Requires TOKMAN_HOOK_AUDIT=1 environment variable to enable logging.`,
+Requires TOK_HOOK_AUDIT=1 environment variable to enable logging.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		since, _ := cmd.Flags().GetInt("since")
 		runHookAudit(since, shared.Verbose)
@@ -52,14 +53,14 @@ func runHookAudit(sinceDays int, verbose int) {
 	logPath := getAuditLogPath()
 
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
-		fmt.Printf("No audit log found at %s\n", logPath)
-		fmt.Println("Enable audit mode: export TOKMAN_HOOK_AUDIT=1 in your shell, then use tok.")
+		out.Global().Printf("No audit log found at %s\n", logPath)
+		out.Global().Println("Enable audit mode: export TOK_HOOK_AUDIT=1 in your shell, then use tok.")
 		return
 	}
 
 	file, err := os.Open(logPath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error reading audit log: %v\n", err)
+		out.Global().Errorf("Error reading audit log: %v\n", err)
 		return
 	}
 	defer file.Close()
@@ -75,7 +76,7 @@ func runHookAudit(sinceDays int, verbose int) {
 	}
 
 	if len(entries) == 0 {
-		fmt.Println("Audit log is empty.")
+		out.Global().Println("Audit log is empty.")
 		return
 	}
 
@@ -83,7 +84,7 @@ func runHookAudit(sinceDays int, verbose int) {
 	filtered := filterEntriesByDays(entries, sinceDays)
 
 	if len(filtered) == 0 {
-		fmt.Printf("No entries in the last %d days.\n", sinceDays)
+		out.Global().Printf("No entries in the last %d days.\n", sinceDays)
 		return
 	}
 
@@ -116,11 +117,11 @@ func runHookAudit(sinceDays int, verbose int) {
 	green := color.New(color.FgGreen).SprintFunc()
 	cyan := color.New(color.FgCyan).SprintFunc()
 
-	fmt.Printf("Hook Audit (%s)\n", period)
-	fmt.Println(strings.Repeat("─", 30))
-	fmt.Printf("Total invocations: %d\n", total)
-	fmt.Printf("Rewrites:          %s (%.1f%%)\n", green(rewrites), rewritePct)
-	fmt.Printf("Skips:             %d (%.1f%%)\n", skips, skipPct)
+	out.Global().Printf("Hook Audit (%s)\n", period)
+	out.Global().Println(strings.Repeat("─", 30))
+	out.Global().Printf("Total invocations: %d\n", total)
+	out.Global().Printf("Rewrites:          %s (%.1f%%)\n", green(rewrites), rewritePct)
+	out.Global().Printf("Skips:             %d (%.1f%%)\n", skips, skipPct)
 
 	// Skip breakdown
 	var skipActions []struct {
@@ -146,7 +147,7 @@ func runHookAudit(sinceDays int, verbose int) {
 			if len(reason) > 13 {
 				padding = " "
 			}
-			fmt.Printf("  %s:%s%d\n", reason, padding, sa.count)
+			out.Global().Printf("  %s:%s%d\n", reason, padding, sa.count)
 		}
 	}
 
@@ -170,16 +171,16 @@ func runHookAudit(sinceDays int, verbose int) {
 		for i := 0; i < 5 && i < len(sorted); i++ {
 			top = append(top, fmt.Sprintf("%s (%d)", sorted[i].cmd, sorted[i].count))
 		}
-		fmt.Printf("Top commands: %s\n", cyan(strings.Join(top, ", ")))
+		out.Global().Printf("Top commands: %s\n", cyan(strings.Join(top, ", ")))
 	}
 
 	if verbose > 0 {
-		fmt.Printf("\nLog: %s\n", logPath)
+		out.Global().Printf("\nLog: %s\n", logPath)
 	}
 }
 
 func getAuditLogPath() string {
-	if dir := os.Getenv("TOKMAN_AUDIT_DIR"); dir != "" {
+	if dir := os.Getenv("TOK_AUDIT_DIR"); dir != "" {
 		return filepath.Join(dir, "hook-audit.log")
 	}
 	return filepath.Join(shared.GetDataPath(), "hook-audit.log")

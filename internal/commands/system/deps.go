@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -59,7 +60,7 @@ func runDeps(cmd *cobra.Command, args []string) error {
 		result = "No recognized package manager found.\n"
 	}
 
-	fmt.Print(result)
+	out.Global().Print(result)
 
 	originalTokens := filter.EstimateTokens(result)
 	filteredTokens := filter.EstimateTokens(result)

@@ -215,7 +215,7 @@ func NewEngramLearner() *EngramLearner {
 
 // getEngramStoragePath returns the storage path for engram rules.
 func getEngramStoragePath() string {
-	if path := os.Getenv("TOKMAN_ENGRAM_PATH"); path != "" {
+	if path := os.Getenv("TOK_ENGRAM_PATH"); path != "" {
 		return path
 	}
 	if home, err := os.UserHomeDir(); err == nil {

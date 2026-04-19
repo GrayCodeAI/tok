@@ -1,12 +1,12 @@
 cff-version: 1.2.0
-title: "TokMan: Token-Aware CLI Proxy with 31-Layer Compression Pipeline"
-message: "If you use TokMan in your research, please cite it using these metadata."
+title: "Tok: Token-Aware CLI Proxy with 31-Layer Compression Pipeline"
+message: "If you use Tok in your research, please cite it using these metadata."
 type: software
 authors:
   - name: "GrayCode AI"
-    website: "https://github.com/GrayCodeAI"
-repository-code: "https://github.com/GrayCodeAI/tokman"
-url: "https://github.com/GrayCodeAI/tokman"
+    website: "https://github.com/lakshmanpatel"
+repository-code: "https://github.com/lakshmanpatel/tok"
+url: "https://github.com/lakshmanpatel/tok"
 license: MIT
 version: "0.28.2"
 date-released: "2026-04-03"
@@ -21,7 +21,7 @@ keywords:
   - cursor
   - copilot
 abstract: >-
-  TokMan is a token-aware CLI proxy that intercepts CLI commands and applies
+  Tok is a token-aware CLI proxy that intercepts CLI commands and applies
   a 31-layer compression pipeline to reduce token usage for AI coding assistants.
   Built on research from 120+ papers, it achieves 60-90% token reduction on
   common development operations. The pipeline includes entropy filtering,

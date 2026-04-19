@@ -151,7 +151,7 @@ func GetModelFamily(modelName string) string {
 	}
 }
 
-func GetTokmanSourceDir() string {
+func GetTokSourceDir() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, ".local", "share", "tok")
 }

@@ -3,6 +3,7 @@ package system
 import (
 	"bufio"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,13 +59,13 @@ func runSmart(cmd *cobra.Command, args []string) error {
 	summary := generateSummary(file, language, ext)
 
 	// Print with styling
-	fmt.Println()
-	fmt.Printf("%s %s\n", color.New(color.Bold).Sprint("📄"), color.New(color.Bold).Sprint(filePath))
-	fmt.Println(color.GreenString("┌─" + strings.Repeat("─", 58)))
-	fmt.Printf("│ %s\n", summary.Line1)
-	fmt.Printf("│ %s\n", summary.Line2)
-	fmt.Println(color.GreenString("└─" + strings.Repeat("─", 58)))
-	fmt.Println()
+	out.Global().Println()
+	out.Global().Printf("%s %s\n", color.New(color.Bold).Sprint("📄"), color.New(color.Bold).Sprint(filePath))
+	out.Global().Println(color.GreenString("┌─" + strings.Repeat("─", 58)))
+	out.Global().Printf("│ %s\n", summary.Line1)
+	out.Global().Printf("│ %s\n", summary.Line2)
+	out.Global().Println(color.GreenString("└─" + strings.Repeat("─", 58)))
+	out.Global().Println()
 
 	// Track usage
 	timer.Track("smart "+filePath, "tok smart", 100, 50)
@@ -80,7 +81,7 @@ type Summary struct {
 
 func generateSummary(file *os.File, language, ext string) Summary {
 	scanner := bufio.NewScanner(file)
-	
+
 	switch language {
 	case "go":
 		return summarizeGo(scanner)
@@ -108,11 +109,11 @@ func summarizeGo(scanner *bufio.Scanner) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "package ") {
 			packageName = strings.TrimSpace(strings.TrimPrefix(line, "package"))
 		}
-		
+
 		if strings.HasPrefix(line, "import ") || strings.HasPrefix(line, "\t\"") {
 			// Extract import path
 			if idx := strings.Index(line, "\""); idx != -1 {
@@ -126,11 +127,11 @@ func summarizeGo(scanner *bufio.Scanner) Summary {
 				}
 			}
 		}
-		
+
 		if strings.HasPrefix(line, "type ") && strings.Contains(line, " struct") {
 			structs++
 		}
-		
+
 		if strings.HasPrefix(line, "func ") {
 			funcs++
 		}
@@ -165,7 +166,7 @@ func summarizeRust(scanner *bufio.Scanner) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "mod ") || strings.HasPrefix(line, "pub mod ") {
 			if crateName == "" {
 				parts := strings.Fields(line)
@@ -174,15 +175,15 @@ func summarizeRust(scanner *bufio.Scanner) Summary {
 				}
 			}
 		}
-		
+
 		if strings.HasPrefix(line, "struct ") || strings.HasPrefix(line, "pub struct ") {
 			structs++
 		}
-		
+
 		if strings.HasPrefix(line, "impl ") {
 			impls++
 		}
-		
+
 		if strings.HasPrefix(line, "fn ") || strings.HasPrefix(line, "pub fn ") {
 			funcs++
 		}
@@ -209,19 +210,19 @@ func summarizeJS(scanner *bufio.Scanner) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "import ") || strings.HasPrefix(line, "require(") {
 			imports++
 		}
-		
+
 		if strings.HasPrefix(line, "export ") || strings.HasPrefix(line, "module.exports") {
 			exports++
 		}
-		
+
 		if strings.HasPrefix(line, "function ") || strings.HasPrefix(line, "const ") && strings.Contains(line, "= (") {
 			funcs++
 		}
-		
+
 		if strings.HasPrefix(line, "class ") {
 			classes++
 		}
@@ -255,19 +256,19 @@ func summarizePython(scanner *bufio.Scanner) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "import ") || strings.HasPrefix(line, "from ") {
 			imports++
 		}
-		
+
 		if strings.HasPrefix(line, "def ") && !strings.HasPrefix(line, "def _") {
 			funcs++
 		}
-		
+
 		if strings.HasPrefix(line, "class ") {
 			classes++
 		}
-		
+
 		if strings.Contains(line, `if __name__ == "__main__"`) {
 			hasMain = true
 		}
@@ -328,11 +329,11 @@ func summarizeConfig(scanner *bufio.Scanner, lang string) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
 			sections = append(sections, line[1:len(line)-1])
 		}
-		
+
 		if strings.Contains(line, "=") || strings.Contains(line, ": ") {
 			keyCount++
 		}
@@ -354,17 +355,17 @@ func summarizeMarkdown(scanner *bufio.Scanner) Summary {
 
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
-		
+
 		if strings.HasPrefix(line, "# ") {
 			headings = append(headings, strings.TrimSpace(line[2:]))
 		} else if strings.HasPrefix(line, "## ") {
 			headings = append(headings, strings.TrimSpace(line[3:]))
 		}
-		
+
 		if strings.HasPrefix(line, "```") {
 			codeBlocks++
 		}
-		
+
 		if strings.Contains(line, "](") {
 			links++
 		}

@@ -1,6 +1,6 @@
-# bash completion V2 for tokman                               -*- shell-script -*-
+# bash completion V2 for tok                               -*- shell-script -*-
 
-__tokman_debug()
+__tok_debug()
 {
     if [[ -n ${BASH_COMP_DEBUG_FILE-} ]]; then
         echo "$*" >> "${BASH_COMP_DEBUG_FILE}"
@@ -9,41 +9,41 @@ __tokman_debug()
 
 # Macs have bash3 for which the bash-completion package doesn't include
 # _init_completion. This is a minimal version of that function.
-__tokman_init_completion()
+__tok_init_completion()
 {
     COMPREPLY=()
     _get_comp_words_by_ref "$@" cur prev words cword
 }
 
-# This function calls the tokman program to obtain the completion
+# This function calls the tok program to obtain the completion
 # results and the directive.  It fills the 'out' and 'directive' vars.
-__tokman_get_completion_results() {
+__tok_get_completion_results() {
     local requestComp lastParam lastChar args
 
     # Prepare the command to request completions for the program.
-    # Calling ${words[0]} instead of directly tokman allows handling aliases
+    # Calling ${words[0]} instead of directly tok allows handling aliases
     args=("${words[@]:1}")
     requestComp="${words[0]} __complete ${args[*]}"
 
     lastParam=${words[$((${#words[@]}-1))]}
     lastChar=${lastParam:$((${#lastParam}-1)):1}
-    __tokman_debug "lastParam ${lastParam}, lastChar ${lastChar}"
+    __tok_debug "lastParam ${lastParam}, lastChar ${lastChar}"
 
     if [[ -z ${cur} && ${lastChar} != = ]]; then
         # If the last parameter is complete (there is a space following it)
         # We add an extra empty parameter so we can indicate this to the go method.
-        __tokman_debug "Adding extra empty parameter"
+        __tok_debug "Adding extra empty parameter"
         requestComp="${requestComp} ''"
     fi
 
-    # When completing a flag with an = (e.g., tokman -n=<TAB>)
+    # When completing a flag with an = (e.g., tok -n=<TAB>)
     # bash focuses on the part after the =, so we need to remove
     # the flag part from $cur
     if [[ ${cur} == -*=* ]]; then
         cur="${cur#*=}"
     fi
 
-    __tokman_debug "Calling ${requestComp}"
+    __tok_debug "Calling ${requestComp}"
     # Use eval to handle any environment variables and such
     out=$(eval "${requestComp}" 2>/dev/null)
 
@@ -55,11 +55,11 @@ __tokman_get_completion_results() {
         # There is not directive specified
         directive=0
     fi
-    __tokman_debug "The completion directive is: ${directive}"
-    __tokman_debug "The completions are: ${out}"
+    __tok_debug "The completion directive is: ${directive}"
+    __tok_debug "The completions are: ${out}"
 }
 
-__tokman_process_completion_results() {
+__tok_process_completion_results() {
     local shellCompDirectiveError=1
     local shellCompDirectiveNoSpace=2
     local shellCompDirectiveNoFileComp=4
@@ -69,36 +69,36 @@ __tokman_process_completion_results() {
 
     if (((directive & shellCompDirectiveError) != 0)); then
         # Error code.  No completion.
-        __tokman_debug "Received error from custom completion go code"
+        __tok_debug "Received error from custom completion go code"
         return
     else
         if (((directive & shellCompDirectiveNoSpace) != 0)); then
             if [[ $(type -t compopt) == builtin ]]; then
-                __tokman_debug "Activating no space"
+                __tok_debug "Activating no space"
                 compopt -o nospace
             else
-                __tokman_debug "No space directive not supported in this version of bash"
+                __tok_debug "No space directive not supported in this version of bash"
             fi
         fi
         if (((directive & shellCompDirectiveKeepOrder) != 0)); then
             if [[ $(type -t compopt) == builtin ]]; then
                 # no sort isn't supported for bash less than < 4.4
                 if [[ ${BASH_VERSINFO[0]} -lt 4 || ( ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -lt 4 ) ]]; then
-                    __tokman_debug "No sort directive not supported in this version of bash"
+                    __tok_debug "No sort directive not supported in this version of bash"
                 else
-                    __tokman_debug "Activating keep order"
+                    __tok_debug "Activating keep order"
                     compopt -o nosort
                 fi
             else
-                __tokman_debug "No sort directive not supported in this version of bash"
+                __tok_debug "No sort directive not supported in this version of bash"
             fi
         fi
         if (((directive & shellCompDirectiveNoFileComp) != 0)); then
             if [[ $(type -t compopt) == builtin ]]; then
-                __tokman_debug "Activating no file completion"
+                __tok_debug "Activating no file completion"
                 compopt +o default
             else
-                __tokman_debug "No file completion directive not supported in this version of bash"
+                __tok_debug "No file completion directive not supported in this version of bash"
             fi
         fi
     fi
@@ -106,7 +106,7 @@ __tokman_process_completion_results() {
     # Separate activeHelp from normal completions
     local completions=()
     local activeHelp=()
-    __tokman_extract_activeHelp
+    __tok_extract_activeHelp
 
     if (((directive & shellCompDirectiveFilterFileExt) != 0)); then
         # File extension filtering
@@ -119,7 +119,7 @@ __tokman_process_completion_results() {
         done
 
         filteringCmd="_filedir $fullFilter"
-        __tokman_debug "File filtering command: $filteringCmd"
+        __tok_debug "File filtering command: $filteringCmd"
         $filteringCmd
     elif (((directive & shellCompDirectiveFilterDirs) != 0)); then
         # File completion for directories only
@@ -127,24 +127,24 @@ __tokman_process_completion_results() {
         local subdir
         subdir=${completions[0]}
         if [[ -n $subdir ]]; then
-            __tokman_debug "Listing directories in $subdir"
+            __tok_debug "Listing directories in $subdir"
             pushd "$subdir" >/dev/null 2>&1 && _filedir -d && popd >/dev/null 2>&1 || return
         else
-            __tokman_debug "Listing directories in ."
+            __tok_debug "Listing directories in ."
             _filedir -d
         fi
     else
-        __tokman_handle_completion_types
+        __tok_handle_completion_types
     fi
 
-    __tokman_handle_special_char "$cur" :
-    __tokman_handle_special_char "$cur" =
+    __tok_handle_special_char "$cur" :
+    __tok_handle_special_char "$cur" =
 
     # Print the activeHelp statements before we finish
-    __tokman_handle_activeHelp
+    __tok_handle_activeHelp
 }
 
-__tokman_handle_activeHelp() {
+__tok_handle_activeHelp() {
     # Print the activeHelp statements
     if ((${#activeHelp[*]} != 0)); then
         if [ -z $COMP_TYPE ]; then
@@ -152,7 +152,7 @@ __tokman_handle_activeHelp() {
             printf "\n";
             printf "%s\n" "${activeHelp[@]}"
             printf "\n"
-            __tokman_reprint_commandLine
+            __tok_reprint_commandLine
             return
         fi
 
@@ -169,7 +169,7 @@ __tokman_handle_activeHelp() {
                 # To find out, we actually trigger the file completion ourselves;
                 # the call to _filedir will fill COMPREPLY if files match.
                 if (((directive & shellCompDirectiveNoFileComp) == 0)); then
-                    __tokman_debug "Listing files"
+                    __tok_debug "Listing files"
                     _filedir
                 fi
             fi
@@ -183,7 +183,7 @@ __tokman_handle_activeHelp() {
                 # When there are no completion choices at all, we need
                 # to re-print the command-line since the shell will
                 # not be doing it itself.
-                __tokman_reprint_commandLine
+                __tok_reprint_commandLine
             fi
         elif [ $COMP_TYPE -eq 37 ] || [ $COMP_TYPE -eq 42 ]; then
             # For completion type: menu-complete/menu-complete-backward and insert-completions
@@ -192,12 +192,12 @@ __tokman_handle_activeHelp() {
             printf "\n"
             printf "%s\n" "${activeHelp[@]}"
 
-            __tokman_reprint_commandLine
+            __tok_reprint_commandLine
         fi
     fi
 }
 
-__tokman_reprint_commandLine() {
+__tok_reprint_commandLine() {
     # The prompt format is only available from bash 4.4.
     # We test if it is available before using it.
     if (x=${PS1@P}) 2> /dev/null; then
@@ -211,7 +211,7 @@ __tokman_reprint_commandLine() {
 
 # Separate activeHelp lines from real completions.
 # Fills the $activeHelp and $completions arrays.
-__tokman_extract_activeHelp() {
+__tok_extract_activeHelp() {
     local activeHelpMarker="_activeHelp_ "
     local endIndex=${#activeHelpMarker}
 
@@ -220,7 +220,7 @@ __tokman_extract_activeHelp() {
 
         if [[ ${comp:0:endIndex} == $activeHelpMarker ]]; then
             comp=${comp:endIndex}
-            __tokman_debug "ActiveHelp found: $comp"
+            __tok_debug "ActiveHelp found: $comp"
             if [[ -n $comp ]]; then
                 activeHelp+=("$comp")
             fi
@@ -231,8 +231,8 @@ __tokman_extract_activeHelp() {
     done <<<"${out}"
 }
 
-__tokman_handle_completion_types() {
-    __tokman_debug "__tokman_handle_completion_types: COMP_TYPE is $COMP_TYPE"
+__tok_handle_completion_types() {
+    __tok_debug "__tok_handle_completion_types: COMP_TYPE is $COMP_TYPE"
 
     case $COMP_TYPE in
     37|42)
@@ -259,12 +259,12 @@ __tokman_handle_completion_types() {
 
     *)
         # Type: complete (normal completion)
-        __tokman_handle_standard_completion_case
+        __tok_handle_standard_completion_case
         ;;
     esac
 }
 
-__tokman_handle_standard_completion_case() {
+__tok_handle_standard_completion_case() {
     local tab=$'\t'
 
     # If there are no completions, we don't need to do anything
@@ -320,16 +320,16 @@ __tokman_handle_standard_completion_case() {
 
     # If there is a single completion left, remove the description text and escape any special characters
     if ((${#COMPREPLY[*]} == 1)); then
-        __tokman_debug "COMPREPLY[0]: ${COMPREPLY[0]}"
+        __tok_debug "COMPREPLY[0]: ${COMPREPLY[0]}"
         COMPREPLY[0]=$(printf "%q" "${COMPREPLY[0]%%$tab*}")
-        __tokman_debug "Removed description from single completion, which is now: ${COMPREPLY[0]}"
+        __tok_debug "Removed description from single completion, which is now: ${COMPREPLY[0]}"
     else
         # Format the descriptions
-        __tokman_format_comp_descriptions $longest
+        __tok_format_comp_descriptions $longest
     fi
 }
 
-__tokman_handle_special_char()
+__tok_handle_special_char()
 {
     local comp="$1"
     local char=$2
@@ -342,7 +342,7 @@ __tokman_handle_special_char()
     fi
 }
 
-__tokman_format_comp_descriptions()
+__tok_format_comp_descriptions()
 {
     local tab=$'\t'
     local comp desc maxdesclength
@@ -353,7 +353,7 @@ __tokman_format_comp_descriptions()
         comp=${COMPREPLY[ci]}
         # Properly format the description string which follows a tab character if there is one
         if [[ "$comp" == *$tab* ]]; then
-            __tokman_debug "Original comp: $comp"
+            __tok_debug "Original comp: $comp"
             desc=${comp#*$tab}
             comp=${comp%%$tab*}
 
@@ -383,12 +383,12 @@ __tokman_format_comp_descriptions()
                 comp+="  ($desc)"
             fi
             COMPREPLY[ci]=$comp
-            __tokman_debug "Final comp: $comp"
+            __tok_debug "Final comp: $comp"
         fi
     done
 }
 
-__start_tokman()
+__start_tok()
 {
     local cur prev words cword split
 
@@ -399,28 +399,28 @@ __start_tokman()
     if declare -F _init_completion >/dev/null 2>&1; then
         _init_completion -n =: || return
     else
-        __tokman_init_completion -n =: || return
+        __tok_init_completion -n =: || return
     fi
 
-    __tokman_debug
-    __tokman_debug "========= starting completion logic =========="
-    __tokman_debug "cur is ${cur}, words[*] is ${words[*]}, #words[@] is ${#words[@]}, cword is $cword"
+    __tok_debug
+    __tok_debug "========= starting completion logic =========="
+    __tok_debug "cur is ${cur}, words[*] is ${words[*]}, #words[@] is ${#words[@]}, cword is $cword"
 
     # The user could have moved the cursor backwards on the command-line.
     # We need to trigger completion from the $cword location, so we need
     # to truncate the command-line ($words) up to the $cword location.
     words=("${words[@]:0:$cword+1}")
-    __tokman_debug "Truncated words[*]: ${words[*]},"
+    __tok_debug "Truncated words[*]: ${words[*]},"
 
     local out directive
-    __tokman_get_completion_results
-    __tokman_process_completion_results
+    __tok_get_completion_results
+    __tok_process_completion_results
 }
 
 if [[ $(type -t compopt) = "builtin" ]]; then
-    complete -o default -F __start_tokman tokman
+    complete -o default -F __start_tok tok
 else
-    complete -o default -o nospace -F __start_tokman tokman
+    complete -o default -o nospace -F __start_tok tok
 fi
 
 # ex: ts=4 sw=4 et filetype=sh

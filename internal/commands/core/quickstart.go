@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,84 +47,84 @@ type agentInfo struct {
 
 func runQuickstart(cmd *cobra.Command, args []string) error {
 	if shared.IsVerbose() {
-		fmt.Println("tok Quickstart")
-		fmt.Println("=================")
-		fmt.Println()
+		out.Global().Println("tok Quickstart")
+		out.Global().Println("=================")
+		out.Global().Println()
 	}
 
 	// Step 1: Detect agents
-	fmt.Println("Detecting AI agents...")
+	out.Global().Println("Detecting AI agents...")
 	agents := detectAgents()
 
 	detectedCount := 0
 	for _, agent := range agents {
 		if agent.Detected {
 			detectedCount++
-			fmt.Printf("   ✓ %s detected\n", agent.Name)
+			out.Global().Printf("   ✓ %s detected\n", agent.Name)
 		}
 	}
 
 	if detectedCount == 0 {
-		fmt.Println("   ℹ No AI agents detected in standard locations")
-		fmt.Println()
-		fmt.Println("You can manually run:")
-		fmt.Println("  tok init --claude     # For Claude Code")
-		fmt.Println("  tok init --cursor     # For Cursor")
-		fmt.Println("  tok init --windsurf   # For Windsurf")
+		out.Global().Println("   ℹ No AI agents detected in standard locations")
+		out.Global().Println()
+		out.Global().Println("You can manually run:")
+		out.Global().Println("  tok init --claude     # For Claude Code")
+		out.Global().Println("  tok init --cursor     # For Cursor")
+		out.Global().Println("  tok init --windsurf   # For Windsurf")
 		return nil
 	}
-	fmt.Println()
+	out.Global().Println()
 
 	// Step 2: Install hooks
-	fmt.Println("Installing hooks...")
+	out.Global().Println("Installing hooks...")
 	installedCount := 0
 	for _, agent := range agents {
 		if agent.Detected {
 			if quickstartAll || detectedCount == 1 {
 				if err := installHookForAgent(agent); err != nil {
-					fmt.Printf("   ✗ %s: %v\n", agent.Name, err)
+					out.Global().Printf("   ✗ %s: %v\n", agent.Name, err)
 				} else {
 					installedCount++
-					fmt.Printf("   ✓ %s hook installed\n", agent.Name)
+					out.Global().Printf("   ✓ %s hook installed\n", agent.Name)
 				}
 			}
 		}
 	}
 
 	if installedCount == 0 && detectedCount > 0 && !quickstartAll {
-		fmt.Println("   ℹ Run 'tok quickstart --all' to install hooks for all detected agents")
+		out.Global().Println("   ℹ Run 'tok quickstart --all' to install hooks for all detected agents")
 	}
-	fmt.Println()
+	out.Global().Println()
 
 	// Step 3: Create default config
-	fmt.Println("Setting up configuration...")
+	out.Global().Println("Setting up configuration...")
 	if err := createDefaultConfig(); err != nil {
-		fmt.Printf("   ✗ Config setup failed: %v\n", err)
+		out.Global().Printf("   ✗ Config setup failed: %v\n", err)
 	} else {
-		fmt.Println("   ✓ Default configuration applied")
+		out.Global().Println("   ✓ Default configuration applied")
 	}
-	fmt.Println()
+	out.Global().Println()
 
 	// Step 4: Run doctor
-	fmt.Println("Running diagnostics...")
+	out.Global().Println("Running diagnostics...")
 	doctorCmd := exec.Command(tokExecutablePath(), "doctor")
 	doctorCmd.Stdout = os.Stdout
 	doctorCmd.Stderr = os.Stderr
 	if err := doctorCmd.Run(); err != nil {
-		fmt.Println()
-		fmt.Println("WARNING Some issues detected. See above for details.")
+		out.Global().Println()
+		out.Global().Println("WARNING Some issues detected. See above for details.")
 		return fmt.Errorf("doctor command failed: %w", err)
 	}
 
-	fmt.Println()
-	fmt.Println("Quickstart complete!")
-	fmt.Println()
-	fmt.Println("tok is now active and will compress CLI output automatically.")
-	fmt.Println()
-	fmt.Println("Quick commands:")
-	fmt.Println("  tok status          # View current stats")
-	fmt.Println("  tok gain            # See token savings")
-	fmt.Println("  tok discover        # Find optimization opportunities")
+	out.Global().Println()
+	out.Global().Println("Quickstart complete!")
+	out.Global().Println()
+	out.Global().Println("tok is now active and will compress CLI output automatically.")
+	out.Global().Println()
+	out.Global().Println("Quick commands:")
+	out.Global().Println("  tok status          # View current stats")
+	out.Global().Println("  tok gain            # See token savings")
+	out.Global().Println("  tok discover        # Find optimization opportunities")
 	return nil
 }
 

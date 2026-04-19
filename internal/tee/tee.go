@@ -80,7 +80,7 @@ func sanitizeSlug(slug string) string {
 // getTeeDir returns the tee directory, respecting config and env overrides.
 func getTeeDir(cfg *config.Config) (string, error) {
 	// Env var override takes precedence
-	if dir := os.Getenv("TOKMAN_TEE_DIR"); dir != "" {
+	if dir := os.Getenv("TOK_TEE_DIR"); dir != "" {
 		return dir, nil
 	}
 
@@ -207,7 +207,7 @@ func formatHint(path string) string {
 
 // getTeeModeFromEnv returns the tee mode from environment variable or empty string if not set.
 func getTeeModeFromEnv() TeeMode {
-	mode := os.Getenv("TOKMAN_TEE_MODE")
+	mode := os.Getenv("TOK_TEE_MODE")
 	switch TeeMode(mode) {
 	case TeeModeAlways, TeeModeNever, TeeModeFailures:
 		return TeeMode(mode)
@@ -220,14 +220,14 @@ func getTeeModeFromEnv() TeeMode {
 // Returns the file path on success, empty string if skipped/failed.
 //
 // This is the main entry point for tee functionality. It checks:
-// - TOKMAN_TEE=0 env override (disables tee)
-// - TOKMAN_TEE_MODE env override (failures/always/never)
+// - TOK_TEE=0 env override (disables tee)
+// - TOK_TEE_MODE env override (failures/always/never)
 // - Config enabled flag
 // - Tee mode (failures/always/never)
 // - Output size >= MinTeeSize
 func TeeRaw(raw string, commandSlug string, exitCode int) string {
-	// Check TOKMAN_TEE=0 env override (disable)
-	if os.Getenv("TOKMAN_TEE") == "0" {
+	// Check TOK_TEE=0 env override (disable)
+	if os.Getenv("TOK_TEE") == "0" {
 		return ""
 	}
 
@@ -286,8 +286,8 @@ func TeeAndHint(raw string, commandSlug string, exitCode int) string {
 // Used by filters when FilterResult.truncated = true, ensuring
 // the LLM has access to full untruncated output via the hint path.
 func ForceTeeHint(raw string, commandSlug string) string {
-	// Check TOKMAN_TEE=0 env override (disable)
-	if os.Getenv("TOKMAN_TEE") == "0" {
+	// Check TOK_TEE=0 env override (disable)
+	if os.Getenv("TOK_TEE") == "0" {
 		return ""
 	}
 

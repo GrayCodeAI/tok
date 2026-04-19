@@ -1,7 +1,7 @@
 package core
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,7 +29,7 @@ func init() {
 func runChangelog(cmd *cobra.Command, args []string) error {
 	paths := []string{
 		"CHANGELOG.md",
-		filepath.Join(utils.GetTokmanSourceDir(), "CHANGELOG.md"),
+		filepath.Join(utils.GetTokSourceDir(), "CHANGELOG.md"),
 	}
 
 	var content []byte
@@ -44,13 +44,13 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 	}
 
 	if !found {
-		fmt.Println("No CHANGELOG.md found.")
-		fmt.Println("Visit https://github.com/lakshmanpatel/tok/releases for release notes.")
+		out.Global().Println("No CHANGELOG.md found.")
+		out.Global().Println("Visit https://github.com/lakshmanpatel/tok/releases for release notes.")
 		return nil
 	}
 
 	if changelogAll {
-		fmt.Print(string(content))
+		out.Global().Print(string(content))
 		return nil
 	}
 
@@ -62,11 +62,11 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 			versionCount++
 			if versionCount > 1 {
 				// Print up to the next version header
-				fmt.Print(strings.Join(lines[:i], "\n"))
+				out.Global().Print(strings.Join(lines[:i], "\n"))
 				return nil
 			}
 		}
-		fmt.Println(line)
+		out.Global().Println(line)
 		if i > 50 {
 			// Limit output
 			break

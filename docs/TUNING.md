@@ -1,24 +1,24 @@
-# TokMan Configuration Tuning Guide
+# Tok Configuration Tuning Guide
 
-This guide explains how to tune TokMan's compression pipeline for optimal performance.
+This guide explains how to tune Tok's compression pipeline for optimal performance.
 
 ## Configuration File
 
-TokMan uses TOML configuration. Default location: `~/.config/tokman/config.toml`
+Tok uses TOML configuration. Default location: `~/.config/tok/config.toml`
 
 ```bash
 # Create default config
-tokman config --init
+tok config --init
 ```
 
 ## Complete Configuration Example
 
 ```toml
-# TokMan Configuration
+# Tok Configuration
 
 [tracking]
 enabled = true
-database_path = ""  # Default: ~/.local/share/tokman/tracking.db
+database_path = ""  # Default: ~/.local/share/tok/tracking.db
 telemetry = false
 
 [filter]
@@ -179,21 +179,21 @@ Override configuration with environment variables:
 
 ```bash
 # Budget
-export TOKMAN_PIPELINE_DEFAULT_BUDGET=1000
+export TOK_PIPELINE_DEFAULT_BUDGET=1000
 
 # Enable layers
-export TOKMAN_PIPELINE_ENABLE_ENTROPY=true
-export TOKMAN_PIPELINE_ENABLE_PERPLEXITY=false
+export TOK_PIPELINE_ENABLE_ENTROPY=true
+export TOK_PIPELINE_ENABLE_PERPLEXITY=false
 
 # Thresholds
-export TOKMAN_PIPELINE_ENTROPY_THRESHOLD=0.3
+export TOK_PIPELINE_ENTROPY_THRESHOLD=0.3
 
 # Resilience
-export TOKMAN_PIPELINE_FAILSAFE_MODE=true
-export TOKMAN_PIPELINE_VALIDATE_OUTPUT=true
+export TOK_PIPELINE_FAILSAFE_MODE=true
+export TOK_PIPELINE_VALIDATE_OUTPUT=true
 
 # Cache
-export TOKMAN_PIPELINE_CACHE_ENABLED=true
+export TOK_PIPELINE_CACHE_ENABLED=true
 ```
 
 ## CLI Flags
@@ -202,16 +202,16 @@ Override config at runtime:
 
 ```bash
 # Set budget
-tokman --budget 500 audit file.txt
+tok --budget 500 audit file.txt
 
 # Set mode
-tokman audit --mode aggressive file.txt
+tok audit --mode aggressive file.txt
 
 # Set query intent
-tokman audit --query "debug error" file.txt
+tok audit --query "debug error" file.txt
 
 # Use LLM compression
-tokman --llm audit file.txt
+tok --llm audit file.txt
 ```
 
 ## Layer-Specific Tuning
@@ -256,19 +256,19 @@ Lower threshold = more aggressive pruning:
 ### View Current Config
 
 ```bash
-tokman config
+tok config
 ```
 
 ### Audit Compression Performance
 
 ```bash
-tokman audit large_file.txt
+tok audit large_file.txt
 ```
 
 ### View Layer Statistics
 
 ```bash
-tokman layers --verbose
+tok layers --verbose
 ```
 
 ## Performance Tips

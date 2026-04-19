@@ -1,6 +1,6 @@
-# TokMan Layer Compression Pipeline (Core + Experimental)
+# Tok Layer Compression Pipeline (Core + Experimental)
 
-TokMan implements a world-class token reduction system based on 120+ research papers from top institutions worldwide (2023-2026).
+Tok implements a world-class token reduction system based on 120+ research papers from top institutions worldwide (2023-2026).
 
 This document focuses on foundational layers `1..20`. The production pipeline includes additional core and experimental stages.
 
@@ -332,7 +332,7 @@ agent_remove_noise = true        # Remove conversational filler
 
 ## Large Context Support
 
-TokMan supports inputs up to **2 million tokens** with streaming processing:
+Tok supports inputs up to **2 million tokens** with streaming processing:
 
 ```toml
 [pipeline]
@@ -358,7 +358,7 @@ Saves raw output to a file if compression fails:
 ```toml
 [pipeline]
 tee_on_failure = true
-tee_dir = "/tmp/tokman-tee"
+tee_dir = "/tmp/tok-tee"
 ```
 
 ### Short-Circuit Budget
@@ -385,21 +385,21 @@ cache_max_size = 1000
 ### CLI
 ```bash
 # Basic compression
-tokman audit large_file.txt
+tok audit large_file.txt
 
 # With budget
-tokman audit --budget 500 large_file.txt
+tok audit --budget 500 large_file.txt
 
 # Query-aware
-tokman audit --query "debug authentication" output.txt
+tok audit --query "debug authentication" output.txt
 
 # JSON output
-tokman audit --json large_file.txt
+tok audit --json large_file.txt
 ```
 
 ### Programmatic
 ```go
-import "github.com/GrayCodeAI/tokman/internal/filter"
+import "github.com/lakshmanpatel/tok/internal/filter"
 
 manager := filter.NewPipelineManager(filter.ManagerConfig{
     MaxContextTokens: 2000000,

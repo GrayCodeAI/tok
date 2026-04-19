@@ -3,6 +3,7 @@ package lang
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -138,7 +139,7 @@ func runDotnetSubcommand(subCmd string, args []string) error {
 		filtered = filterDotnetOutput(output)
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

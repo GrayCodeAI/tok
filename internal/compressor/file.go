@@ -192,14 +192,14 @@ func protectInlineCode(line string) (string, func(string) string) {
 
 	protected := line
 	for i, m := range matches {
-		token := fmt.Sprintf("__TORK_INLINE_%d__", i)
+		token := fmt.Sprintf("__TOK_INLINE_%d__", i)
 		protected = strings.Replace(protected, m, token, 1)
 	}
 
 	return protected, func(s string) string {
 		restored := s
 		for i, m := range matches {
-			token := fmt.Sprintf("__TORK_INLINE_%d__", i)
+			token := fmt.Sprintf("__TOK_INLINE_%d__", i)
 			restored = strings.ReplaceAll(restored, token, m)
 		}
 		return restored

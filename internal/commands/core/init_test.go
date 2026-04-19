@@ -70,10 +70,10 @@ func TestEnsureReferenceFileContains(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	if err := ensureReferenceFileContains(path, "@TOKMAN.md"); err != nil {
+	if err := ensureReferenceFileContains(path, "@TOK.md"); err != nil {
 		t.Fatalf("ensureReferenceFileContains() error = %v", err)
 	}
-	if err := ensureReferenceFileContains(path, "@TOKMAN.md"); err != nil {
+	if err := ensureReferenceFileContains(path, "@TOK.md"); err != nil {
 		t.Fatalf("ensureReferenceFileContains() second call error = %v", err)
 	}
 
@@ -81,7 +81,7 @@ func TestEnsureReferenceFileContains(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if count := strings.Count(string(content), "@TOKMAN.md"); count != 1 {
+	if count := strings.Count(string(content), "@TOK.md"); count != 1 {
 		t.Fatalf("reference count = %d, want 1", count)
 	}
 }
@@ -123,10 +123,10 @@ func TestUninstallAgentClaudeRemovesArtifacts(t *testing.T) {
 	if err := os.WriteFile(hookPath, []byte("#!/bin/sh\n"), 0755); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "TOKMAN.md"), []byte("tok"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "TOK.md"), []byte("tok"), 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "CLAUDE.md"), []byte("# Notes\n\n@TOKMAN.md\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "CLAUDE.md"), []byte("# Notes\n\n@TOK.md\n"), 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 	if err := patchClaudeSettingsFile(filepath.Join(agent.ConfigDir, "settings.json"), hookPath); err != nil {
@@ -147,8 +147,8 @@ func TestUninstallAgentClaudeRemovesArtifacts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if strings.Contains(string(content), "@TOKMAN.md") {
-		t.Fatal("CLAUDE.md should no longer reference @TOKMAN.md")
+	if strings.Contains(string(content), "@TOK.md") {
+		t.Fatal("CLAUDE.md should no longer reference @TOK.md")
 	}
 	root, err := loadJSONObject(filepath.Join(agent.ConfigDir, "settings.json"))
 	if err != nil {
@@ -200,15 +200,15 @@ func TestSetupAgentCodexLocal(t *testing.T) {
 		t.Fatalf("setupAgent() error = %v", err)
 	}
 
-	if _, err := os.Stat(filepath.Join(projectDir, "TOKMAN.md")); err != nil {
-		t.Fatalf("TOKMAN.md missing: %v", err)
+	if _, err := os.Stat(filepath.Join(projectDir, "TOK.md")); err != nil {
+		t.Fatalf("TOK.md missing: %v", err)
 	}
 	content, err := os.ReadFile(filepath.Join(projectDir, "AGENTS.md"))
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if !strings.Contains(string(content), "@TOKMAN.md") {
-		t.Fatal("AGENTS.md should reference @TOKMAN.md")
+	if !strings.Contains(string(content), "@TOK.md") {
+		t.Fatal("AGENTS.md should reference @TOK.md")
 	}
 }
 
@@ -235,11 +235,11 @@ func TestUninstallAgentCodexRemovesLocalArtifacts(t *testing.T) {
 	if len(removed) == 0 {
 		t.Fatal("uninstallAgent() should remove Codex artifacts")
 	}
-	if _, err := os.Stat(filepath.Join(projectDir, "TOKMAN.md")); !os.IsNotExist(err) {
-		t.Fatalf("TOKMAN.md still exists: %v", err)
+	if _, err := os.Stat(filepath.Join(projectDir, "TOK.md")); !os.IsNotExist(err) {
+		t.Fatalf("TOK.md still exists: %v", err)
 	}
-	if content, err := os.ReadFile(filepath.Join(projectDir, "AGENTS.md")); err == nil && strings.Contains(string(content), "@TOKMAN.md") {
-		t.Fatal("AGENTS.md should not reference @TOKMAN.md after uninstall")
+	if content, err := os.ReadFile(filepath.Join(projectDir, "AGENTS.md")); err == nil && strings.Contains(string(content), "@TOK.md") {
+		t.Fatal("AGENTS.md should not reference @TOK.md after uninstall")
 	}
 }
 

@@ -2,6 +2,7 @@ package compression
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 
@@ -131,13 +132,13 @@ func runBrotli(cmd *cobra.Command, args []string) error {
 
 	// Print stats
 	if !brotliDecompress && result != nil {
-		fmt.Fprintf(os.Stderr, "\n%s\n", color.New(color.Bold).Sprint("Compression Results"))
-		fmt.Fprintf(os.Stderr, "  Algorithm:    %s\n", result.Algorithm)
-		fmt.Fprintf(os.Stderr, "  Quality:      %d (%s)\n", brotliLevel, compression.GetQualityName(brotliLevel))
-		fmt.Fprintf(os.Stderr, "  Original:     %s\n", formatBytes(result.OriginalSize))
-		fmt.Fprintf(os.Stderr, "  Compressed:   %s\n", formatBytes(result.CompressedSize))
-		fmt.Fprintf(os.Stderr, "  Ratio:        %.2f%%\n", result.Percentage())
-		fmt.Fprintf(os.Stderr, "  Space Saved:  %s\n", formatBytes(result.SpaceSaved))
+		out.Global().Errorf("\n%s\n", color.New(color.Bold).Sprint("Compression Results"))
+		out.Global().Errorf("  Algorithm:    %s\n", result.Algorithm)
+		out.Global().Errorf("  Quality:      %d (%s)\n", brotliLevel, compression.GetQualityName(brotliLevel))
+		out.Global().Errorf("  Original:     %s\n", formatBytes(result.OriginalSize))
+		out.Global().Errorf("  Compressed:   %s\n", formatBytes(result.CompressedSize))
+		out.Global().Errorf("  Ratio:        %.2f%%\n", result.Percentage())
+		out.Global().Errorf("  Space Saved:  %s\n", formatBytes(result.SpaceSaved))
 	}
 
 	return nil

@@ -17,7 +17,7 @@ linters-settings:
   misspell:
     locale: US
   goimports:
-    local-prefixes: github.com/GrayCodeAI/tokman
+    local-prefixes: github.com/lakshmanpatel/tok
 
 issues:
   exclude-dirs:

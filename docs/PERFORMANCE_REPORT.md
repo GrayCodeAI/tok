@@ -1,4 +1,4 @@
-# TokMan Performance Report
+# Tok Performance Report
 
 **Date:** April 11, 2026  
 **Status:** After Thread-Safe Fixes Applied

@@ -3,6 +3,7 @@ package pkgmgr
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -72,7 +73,7 @@ func runBundle(cmd *cobra.Command, args []string) error {
 		filtered = strings.TrimSpace(output) + "\n"
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

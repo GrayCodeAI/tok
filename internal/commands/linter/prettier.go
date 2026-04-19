@@ -3,6 +3,7 @@ package linter
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -61,16 +62,16 @@ func runPrettier(cmd *cobra.Command, args []string) error {
 	if !hasOutput && err != nil {
 		msg := strings.TrimSpace(stderr.String())
 		if msg == "" {
-			fmt.Fprintln(os.Stderr, "Error: prettier not found or produced no output")
+			out.Global().Errorf("Error: prettier not found or produced no output")
 		} else {
-			fmt.Fprintln(os.Stderr, msg)
+			out.Global().Error(msg)
 		}
 		return err
 	}
 
 	filtered := filterPrettierOutput(output)
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

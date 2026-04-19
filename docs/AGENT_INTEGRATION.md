@@ -17,11 +17,11 @@
 
 ---
 
-## TokMan Integration Architecture
+## Tok Integration Architecture
 
 ### Hook-Based Integration (Claude Code / Cursor)
 
-TokMan uses a thin delegator script plus native `tokman hook <agent>` processors for Claude Code and Cursor:
+Tok uses a thin delegator script plus native `tok hook <agent>` processors for Claude Code and Cursor:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -35,19 +35,19 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
 │            │                                                 │
 │            ▼                                                 │
 │  ┌─────────────────────────────────────────────────────┐    │
-│  │ PreToolUse Hook (tokman-rewrite.sh)                 │    │
+│  │ PreToolUse Hook (tok-rewrite.sh)                 │    │
 │  │                                                      │    │
 │  │  INPUT: {"tool_input": {"command": "git status"}}   │    │
 │  │            │                                         │    │
 │  │            ▼                                         │    │
-│  │  exec tokman hook claude                            │    │
+│  │  exec tok hook claude                            │    │
 │  │            │                                         │    │
 │  │            ▼                                         │    │
-│  │  OUTPUT: {"updatedInput": {"command": "tokman git status"}}│ │
+│  │  OUTPUT: {"updatedInput": {"command": "tok git status"}}│ │
 │  └─────────────────────────────────────────────────────┘    │
 │            │                                                 │
 │            ▼                                                 │
-│  Shell executes: tokman git status                          │
+│  Shell executes: tok git status                          │
 │            │                                                 │
 │            ▼                                                 │
 │  Filtered output (~200 tokens instead of ~2000)              │
@@ -58,12 +58,12 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### TokMan Hook Installation (`tokman init -g`)
+### Tok Hook Installation (`tok init -g`)
 
-1. **Creates hook file**: `~/.claude/hooks/tokman-rewrite.sh`
+1. **Creates hook file**: `~/.claude/hooks/tok-rewrite.sh`
 2. **Patches settings.json**: Adds PreToolUse hook entry
-3. **Creates TOKMAN.md**: Instructions for Claude to understand tokman commands
-4. **Patches CLAUDE.md**: Adds `@TOKMAN.md` reference
+3. **Creates TOK.md**: Instructions for Claude to understand tok commands
+4. **Patches CLAUDE.md**: Adds `@TOK.md` reference
 
 ### settings.json Structure
 
@@ -76,7 +76,7 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/tokman-rewrite.sh"
+            "command": "~/.claude/hooks/tok-rewrite.sh"
           }
         ]
       }
@@ -87,9 +87,9 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
 
 ---
 
-## TokMan Architecture
+## Tok Architecture
 
-| Aspect | TokMan (Go) |
+| Aspect | Tok (Go) |
 |--------|-------------|
 | **Binary Size** | ~12MB (dynamic) |
 | **Startup Time** | ~15ms |
@@ -99,11 +99,11 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
 | **Compound Commands** | &&, ||, ;, \|, & |
 | **Env Prefixes** | sudo, VAR=val |
 | **Exclusion** | config.toml |
-| **Status** | TokmanStatus int |
+| **Status** | TokStatus int |
 
 ### Command Coverage
 
-| Category | TokMan Commands |
+| Category | Tok Commands |
 |----------|-----------------|
 | Git | git status/diff/log/add/commit/push/pull |
 | GitHub | gh pr/issue/run/repo/api/release |
@@ -124,10 +124,10 @@ TokMan uses a thin delegator script plus native `tokman hook <agent>` processors
 ### 1. Claude Code (Full Support)
 
 **Method**: PreToolUse hook
-**Integration**: Automatic with `tokman init -g`
+**Integration**: Automatic with `tok init -g`
 
 ```bash
-tokman init -g
+tok init -g
 # Restarts Claude Code
 # All bash commands auto-rewritten
 ```
@@ -135,7 +135,7 @@ tokman init -g
 ### 2. Cursor (Full Support)
 
 **Method**: Native Cursor `preToolUse` hook
-**Integration**: Automatic with `tokman init --cursor`, which patches `~/.cursor/hooks.json`
+**Integration**: Automatic with `tok init --cursor`, which patches `~/.cursor/hooks.json`
 
 ```json
 {
@@ -144,7 +144,7 @@ tokman init -g
     "preToolUse": [
       {
         "matcher": "Shell",
-        "command": "~/.cursor/hooks/tokman-rewrite.sh"
+        "command": "~/.cursor/hooks/tok-rewrite.sh"
       }
     ]
   }
@@ -154,14 +154,14 @@ tokman init -g
 ### 3. Aider (Shell Wrapper)
 
 **Method**: Shell aliases since Aider has no hook system
-**Integration**: Source tokman wrapper
+**Integration**: Source tok wrapper
 
 ```bash
 # In ~/.bashrc or ~/.zshrc
-alias git='tokman git'
-alias ls='tokman ls'
-alias cat='tokman read'
-alias rg='tokman grep'
+alias git='tok git'
+alias ls='tok ls'
+alias cat='tok read'
+alias rg='tok grep'
 ```
 
 ### 4. Cline (VSCode Terminal)
@@ -170,22 +170,22 @@ alias rg='tokman grep'
 **Integration**: `./.clinerules`
 
 ```md
-<!-- tokman:cline:start -->
-# TokMan Rules for Cline
+<!-- tok:cline:start -->
+# Tok Rules for Cline
 
-Prefer `tokman`-prefixed shell commands so large terminal output is reduced before it reaches the model.
-<!-- tokman:cline:end -->
+Prefer `tok`-prefixed shell commands so large terminal output is reduced before it reaches the model.
+<!-- tok:cline:end -->
 ```
 
 ### 5. OpenCode (Custom Tool)
 
 **Method**: Global OpenCode plugin
-**Integration**: `~/.config/opencode/plugins/tokman.ts`
+**Integration**: `~/.config/opencode/plugins/tok.ts`
 
 ```ts
-export const TokmanOpenCodePlugin = async ({ $ }) => ({
+export const TokOpenCodePlugin = async ({ $ }) => ({
   "tool.execute.before": async (input, output) => {
-    // rewrite shell commands through tokman
+    // rewrite shell commands through tok
   },
 })
 ```
@@ -199,7 +199,7 @@ export const TokmanOpenCodePlugin = async ({ $ }) => ({
 hooks:
   preToolUse:
     - matcher: "Bash"
-      command: "tokman rewrite"
+      command: "tok rewrite"
 ```
 
 ### 7. Continue (Limited)
@@ -208,7 +208,7 @@ hooks:
 **Integration**: Set environment variable
 
 ```bash
-export TOKMAN_AUTO_REWRITE=1
+export TOK_AUTO_REWRITE=1
 ```
 
 ---
@@ -228,7 +228,7 @@ export TOKMAN_AUTO_REWRITE=1
 
 ---
 
-## TokMan Integration TODO
+## Tok Integration TODO
 
 1. Add explicit parity for secondary agents that still use generic hook installs instead of native config patching.
 2. Track install-state and hook adoption per agent in the future dashboard.
@@ -239,12 +239,12 @@ export TOKMAN_AUTO_REWRITE=1
 
 ## MCP Context Examples
 
-TokMan can also act as a context service instead of only a shell rewriter.
+Tok can also act as a context service instead of only a shell rewriter.
 
 ### Start the MCP server
 
 ```bash
-tokman mcp --port 8080
+tok mcp --port 8080
 ```
 
 ### Read one file under a token budget
@@ -291,7 +291,7 @@ Claude Code / Cursor style bundle request:
 
 ```json
 {
-  "tool": "tokman.read_bundle",
+  "tool": "tok.read_bundle",
   "server": "http://localhost:8080",
   "method": "POST",
   "path": "/bundle",
@@ -309,7 +309,7 @@ Codex / OpenCode style single-file refresh:
 
 ```json
 {
-  "tool": "tokman.read_file",
+  "tool": "tok.read_file",
   "server": "http://localhost:8080",
   "method": "POST",
   "path": "/read",

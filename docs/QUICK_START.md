@@ -1,11 +1,11 @@
-# TokMan Quick Start Guide
+# Tok Quick Start Guide
 
 **Get started in under 30 seconds**
 
 ## One-Command Setup
 
 ```bash
-tokman quickstart
+tok quickstart
 ```
 
 This automatically:
@@ -16,7 +16,7 @@ This automatically:
 
 ## What Happens Automatically
 
-TokMan uses a **4-tier adaptive system** that selects the right compression level based on content:
+Tok uses a **4-tier adaptive system** that selects the right compression level based on content:
 
 | Tier | Layers | When | Speed |
 |------|--------|------|-------|
@@ -25,7 +25,7 @@ TokMan uses a **4-tier adaptive system** that selects the right compression leve
 | 2 (Medium) | 8 | Git diffs, tests, builds | <2ms |
 | 3 (Full) | 20 | Large output, code, logs | <15ms |
 
-**You don't need to configure anything** - TokMan auto-detects content size and type.
+**You don't need to configure anything** - Tok auto-detects content size and type.
 
 ## Presets (Optional)
 
@@ -33,44 +33,44 @@ If you want explicit control:
 
 ```bash
 # Fast: minimal layer set, maximum speed
-tokman --preset=fast git status
+tok --preset=fast git status
 
 # Balanced: default quality/latency tradeoff
-tokman --preset=balanced git diff
+tok --preset=balanced git diff
 
 # Full: deepest available compression path
-tokman --preset=full cat large-file.log
+tok --preset=full cat large-file.log
 
-# Auto: Let TokMan decide (recommended)
-tokman --preset=auto make build
+# Auto: Let Tok decide (recommended)
+tok --preset=auto make build
 ```
 
 ## Common Commands
 
 ```bash
 # Check everything is working
-tokman doctor
+tok doctor
 
 # See your token savings
-tokman gain
+tok gain
 
 # Find missed optimization opportunities
-tokman discover
+tok discover
 
 # View current status
-tokman status
+tok status
 
 # Inspect or delete local telemetry data
-tokman telemetry --status
-tokman telemetry --forget
+tok telemetry --status
+tok telemetry --forget
 ```
 
 ## How It Works
 
-When you run commands through TokMan:
+When you run commands through Tok:
 
 ```
-git diff → tokman → compressed output (60-90% fewer tokens)
+git diff → tok → compressed output (60-90% fewer tokens)
 ```
 
 The 20 compression layers are based on research from 120+ papers:
@@ -84,36 +84,36 @@ The 20 compression layers are based on research from 120+ papers:
 
 ```bash
 # Claude Code
-tokman init --claude
+tok init --claude
 
 # Cursor
-tokman init --cursor
+tok init --cursor
 
 # Remove an integration cleanly
-tokman init --claude --uninstall
+tok init --claude --uninstall
 
 # Windsurf
-tokman init --windsurf
+tok init --windsurf
 
 # All detected agents
-tokman init --all
+tok init --all
 ```
 
 ## Verification
 
 ```bash
-tokman doctor
+tok doctor
 ```
 
 Expected output:
 ```
-tokman doctor — diagnosing setup
+tok doctor — diagnosing setup
 ================================
-  ✓ Binary: /usr/local/bin/tokman
-  ✓ Config Dir: /home/user/.config/tokman
-  ✓ Database: /home/user/.local/share/tokman/tracking.db
-  ✓ Shell Hook: /home/user/.claude/hooks/tokman-rewrite.sh
-  ✓ PATH: /usr/local/bin/tokman
+  ✓ Binary: /usr/local/bin/tok
+  ✓ Config Dir: /home/user/.config/tok
+  ✓ Database: /home/user/.local/share/tok/tracking.db
+  ✓ Shell Hook: /home/user/.claude/hooks/tok-rewrite.sh
+  ✓ PATH: /usr/local/bin/tok
   ✓ Platform: linux/amd64 Go go1.26.0
   ✓ Tokenizer: tiktoken-go (embedded)
   ✓ TOML Filters: 15 built-in filters
@@ -126,7 +126,7 @@ All checks passed!
 
 ## Need Help?
 
-- `tokman --help` - Command reference
-- `tokman <command> --help` - Command-specific help
+- `tok --help` - Command reference
+- `tok <command> --help` - Command-specific help
 - [Documentation](./docs/) - Full docs
-- [GitHub Issues](https://github.com/GrayCodeAI/tokman/issues) - Bug reports
+- [GitHub Issues](https://github.com/lakshmanpatel/tok/issues) - Bug reports

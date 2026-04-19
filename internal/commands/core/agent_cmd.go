@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/fatih/color"
@@ -42,19 +43,19 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		if cfg.Pipeline.Preset != "" {
 			current = cfg.Pipeline.Preset
 		}
-		if env := os.Getenv("TOKMAN_PRESET"); env != "" {
-			current = env + " (via TOKMAN_PRESET)"
+		if env := os.Getenv("TOK_PRESET"); env != "" {
+			current = env + " (via TOK_PRESET)"
 		}
 
-		fmt.Println("Current Agent Mode:", color.New(color.Bold).Sprint(current))
-		fmt.Println()
-		fmt.Println("Available modes:")
-		fmt.Println("  fast    - Quick compression (50-60% savings)")
-		fmt.Println("  balanced- Smart selection (70-80% savings, default)")
-		fmt.Println("  deep    - Maximum compression (85-95% savings)")
-		fmt.Println("  ultra   - Experimental research layers (90%+ savings)")
-		fmt.Println()
-		fmt.Println("Use: tok agent set <mode>")
+		out.Global().Println("Current Agent Mode:", color.New(color.Bold).Sprint(current))
+		out.Global().Println()
+		out.Global().Println("Available modes:")
+		out.Global().Println("  fast    - Quick compression (50-60% savings)")
+		out.Global().Println("  balanced- Smart selection (70-80% savings, default)")
+		out.Global().Println("  deep    - Maximum compression (85-95% savings)")
+		out.Global().Println("  ultra   - Experimental research layers (90%+ savings)")
+		out.Global().Println()
+		out.Global().Println("Use: tok agent set <mode>")
 		return nil
 	}
 
@@ -78,7 +79,7 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		if err := cfg.Save(cfgPath); err != nil {
 			return fmt.Errorf("failed to save config: %w", err)
 		}
-		fmt.Printf("Agent mode set to '%s'. Config saved to %s\n", mode, cfgPath)
+		out.Global().Printf("Agent mode set to '%s'. Config saved to %s\n", mode, cfgPath)
 		return nil
 
 	case "reset":
@@ -88,7 +89,7 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		if err := cfg.Save(cfgPath); err != nil {
 			return fmt.Errorf("failed to save config: %w", err)
 		}
-		fmt.Println("Agent mode reset to default (balanced).")
+		out.Global().Println("Agent mode reset to default (balanced).")
 		return nil
 
 	default:

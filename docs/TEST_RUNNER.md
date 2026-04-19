@@ -1,6 +1,6 @@
-# TokMan Test Runner
+# Tok Test Runner
 
-The `tokman test-runner` command provides automatic test runner detection and execution with intelligent output filtering.
+The `tok test-runner` command provides automatic test runner detection and execution with intelligent output filtering.
 
 ## Overview
 
@@ -35,17 +35,17 @@ Test-runner automatically detects the appropriate test framework for your projec
 
 ```bash
 # Automatically detect and run tests
-tokman test-runner
+tok test-runner
 
 # In a Rust project
 cd my-rust-project
-tokman test-runner
+tok test-runner
 # Output: Running Cargo tests...
 #         ✓ 15 tests passed
 
 # In a Node.js project
 cd my-node-project
-tokman test-runner
+tok test-runner
 # Output: Running npm tests...
 #         ✓ 42 tests passed
 ```
@@ -54,22 +54,22 @@ tokman test-runner
 
 ```bash
 # Specify the test command explicitly
-tokman test-runner cargo test
-tokman test-runner npm test
-tokman test-runner pytest -v
-tokman test-runner go test ./...
+tok test-runner cargo test
+tok test-runner npm test
+tok test-runner pytest -v
+tok test-runner go test ./...
 ```
 
 ### With auto-rewrite
 
-When using TokMan's auto-rewrite hook, test commands are automatically converted:
+When using Tok's auto-rewrite hook, test commands are automatically converted:
 
 ```bash
 # These are automatically rewritten:
-cargo test           → tokman test-runner cargo test
-npm test             → tokman test-runner npm test
-pytest               → tokman test-runner pytest
-go test ./...        → tokman test-runner go test ./...
+cargo test           → tok test-runner cargo test
+npm test             → tok test-runner npm test
+pytest               → tok test-runner pytest
+go test ./...        → tok test-runner go test ./...
 ```
 
 ## Output Filtering
@@ -123,18 +123,18 @@ test test_099: assertion failed
 
 ### Disable auto-rewrite for specific commands
 
-Add to your `~/.config/tokman/config.toml`:
+Add to your `~/.config/tok/config.toml`:
 
 ```toml
 [hooks]
 excluded_commands = ["cargo test", "npm test"]
 ```
 
-### Prefer explicit tokman commands
+### Prefer explicit tok commands
 
 ```toml
 [rewrite]
-prefer_explicit = true  # Use "tokman cargo test" instead of "tokman test-runner cargo test"
+prefer_explicit = true  # Use "tok cargo test" instead of "tok test-runner cargo test"
 ```
 
 ## Integration with CI/CD
@@ -144,10 +144,10 @@ Test-runner works great in CI/CD pipelines:
 ```yaml
 # GitHub Actions example
 - name: Run tests
-  run: tokman test-runner
+  run: tok test-runner
 
 - name: Run tests with coverage
-  run: tokman test-runner cargo test --coverage
+  run: tok test-runner cargo test --coverage
 ```
 
 ## Performance
@@ -163,23 +163,23 @@ Test-runner works great in CI/CD pipelines:
 If no test runner is detected:
 
 1. Check that the project has the appropriate configuration file
-2. Run with verbose mode: `tokman -v test-runner`
-3. Explicitly specify the test command: `tokman test-runner cargo test`
+2. Run with verbose mode: `tok -v test-runner`
+3. Explicitly specify the test command: `tok test-runner cargo test`
 
 ### Wrong test runner selected
 
 If the wrong test runner is auto-detected:
 
 1. Check the priority table above
-2. Use explicit mode: `tokman test-runner <correct-command>`
+2. Use explicit mode: `tok test-runner <correct-command>`
 3. Adjust priority by removing conflicting configuration files
 
 ### Missing test failures
 
 If failures aren't showing in output:
 
-1. Run with verbose mode: `tokman -vv test-runner`
-2. Check the raw output: `tokman -vvv test-runner`
+1. Run with verbose mode: `tok -vv test-runner`
+2. Check the raw output: `tok -vvv test-runner`
 3. Report an issue with the test framework and output format
 
 ## Examples
@@ -188,7 +188,7 @@ If failures aren't showing in output:
 
 ```bash
 $ cd my-rust-project
-$ tokman test-runner
+$ tok test-runner
 Running Cargo tests...
 ✓ 47 tests passed (12ms)
 ```
@@ -197,7 +197,7 @@ Running Cargo tests...
 
 ```bash
 $ cd my-vite-project
-$ tokman test-runner
+$ tok test-runner
 Running Vitest...
 ✓ 156 tests passed
 ```
@@ -206,7 +206,7 @@ Running Vitest...
 
 ```bash
 $ cd my-python-project
-$ tokman test-runner
+$ tok test-runner
 Running pytest...
 FAILED: 2/50 tests
 

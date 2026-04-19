@@ -1,10 +1,10 @@
-# TokMan Developer Quick Reference
+# Tok Developer Quick Reference
 
 ## 🚀 New Components Usage
 
 ### Rate Limiting
 ```go
-import "github.com/GrayCodeAI/tokman/internal/ratelimit"
+import "github.com/lakshmanpatel/tok/internal/ratelimit"
 
 // Check if request allowed
 if !ratelimit.CheckGlobal() {
@@ -21,7 +21,7 @@ if err := ratelimit.WaitGlobal(ctx); err != nil {
 
 ### Input Validation
 ```go
-import "github.com/GrayCodeAI/tokman/internal/validation"
+import "github.com/lakshmanpatel/tok/internal/validation"
 
 // Validate input size (max 10MB)
 if err := validation.ValidateInputSize(input); err != nil {
@@ -42,7 +42,7 @@ if err != nil {
 
 ### Pipeline Coordinator Pooling
 ```go
-import "github.com/GrayCodeAI/tokman/internal/filter"
+import "github.com/lakshmanpatel/tok/internal/filter"
 
 // Use default pool
 pool := filter.GetDefaultPool()
@@ -57,7 +57,7 @@ customPool := filter.NewCoordinatorPool(myConfig)
 
 ### Global State Management
 ```go
-import "github.com/GrayCodeAI/tokman/internal/state"
+import "github.com/lakshmanpatel/tok/internal/state"
 
 // Get global state manager
 mgr := state.Global()
@@ -78,7 +78,7 @@ if mgr.IsVerbose() {
 
 ### Database Retry Logic
 ```go
-import "github.com/GrayCodeAI/tokman/internal/retry"
+import "github.com/lakshmanpatel/tok/internal/retry"
 
 // Simple retry
 err := retry.Do(ctx, retry.DefaultConfig(), func() error {
@@ -101,7 +101,7 @@ cfg := retry.Config{
 
 ### Circuit Breaker
 ```go
-import "github.com/GrayCodeAI/tokman/internal/breaker"
+import "github.com/lakshmanpatel/tok/internal/breaker"
 
 // Create breaker (5 failures, 30s timeout)
 breaker := breaker.New(5, 30*time.Second)
@@ -129,7 +129,7 @@ case breaker.StateHalfOpen:
 
 ### TTL Cache
 ```go
-import "github.com/GrayCodeAI/tokman/internal/ttlcache"
+import "github.com/lakshmanpatel/tok/internal/ttlcache"
 
 // Create cache (5min TTL, 100MB max)
 cache := ttlcache.New(5*time.Minute, 100*1024*1024)
@@ -235,10 +235,10 @@ go test -bench=. ./internal/filter/
 go test -bench=. ./internal/ratelimit/
 
 # Test rate limiting
-for i in {1..300}; do tokman status & done
+for i in {1..300}; do tok status & done
 
 # Test input validation
-dd if=/dev/zero bs=1M count=20 | tokman compress
+dd if=/dev/zero bs=1M count=20 | tok compress
 
 # Test coordinator pooling
 go test -bench=BenchmarkPool -benchmem ./internal/filter/

@@ -2,6 +2,7 @@ package infra
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -83,7 +84,7 @@ func runTerraformPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformOutput(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -107,7 +108,7 @@ func runTerraformPlan(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformPlan(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -116,7 +117,7 @@ func runTerraformPlan(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_plan", err); hint != "" {
 			filtered = filtered + "\n" + hint
-			fmt.Print(filtered)
+			out.Global().Print(filtered)
 		}
 	}
 	return err
@@ -131,7 +132,7 @@ func runTerraformApply(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformApply(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -140,7 +141,7 @@ func runTerraformApply(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_apply", err); hint != "" {
 			filtered = filtered + "\n" + hint
-			fmt.Print(filtered)
+			out.Global().Print(filtered)
 		}
 	}
 	return err
@@ -155,7 +156,7 @@ func runTerraformShow(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformShow(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -173,7 +174,7 @@ func runTerraformOutput(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformOutputJSON(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -193,7 +194,7 @@ func runTerraformState(args []string) error {
 		raw := string(output)
 
 		filtered := filterTerraformStateList(raw)
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
@@ -214,7 +215,7 @@ func runTerraformImport(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformImport(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -232,7 +233,7 @@ func runTerraformInit(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformInit(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -250,7 +251,7 @@ func runTerraformValidate(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformValidate(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -268,7 +269,7 @@ func runTerraformGraph(args []string) error {
 	raw := string(output)
 
 	filtered := filterTerraformGraph(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

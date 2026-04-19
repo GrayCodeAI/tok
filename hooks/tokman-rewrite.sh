@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# tokman-hook-version: 2
-# TokMan Claude Code hook — rewrites commands to use tokman for token savings.
-# Requires: tokman >= 0.2.0, jq
+# tok-hook-version: 2
+# Tok Claude Code hook — rewrites commands to use tok for token savings.
+# Requires: tok >= 0.2.0, jq
 #
-# This is a thin delegating hook: all rewrite logic lives in `tokman rewrite`,
+# This is a thin delegating hook: all rewrite logic lives in `tok rewrite`,
 # which is the single source of truth (internal/discover/registry.go).
 # To add or change rewrite rules, edit the Go registry — not this file.
 
@@ -11,19 +11,19 @@ if ! command -v jq &>/dev/null; then
   exit 0
 fi
 
-if ! command -v tokman &>/dev/null; then
+if ! command -v tok &>/dev/null; then
   exit 0
 fi
 
-# Version guard: tokman rewrite was added in 0.2.0.
+# Version guard: tok rewrite was added in 0.2.0.
 # Older binaries: warn once and exit cleanly (no silent failure).
-TOKMAN_VERSION=$(tokman --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-if [ -n "$TOKMAN_VERSION" ]; then
-  MAJOR=$(echo "$TOKMAN_VERSION" | cut -d. -f1)
-  MINOR=$(echo "$TOKMAN_VERSION" | cut -d. -f2)
+TOK_VERSION=$(tok --version 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+if [ -n "$TOK_VERSION" ]; then
+  MAJOR=$(echo "$TOK_VERSION" | cut -d. -f1)
+  MINOR=$(echo "$TOK_VERSION" | cut -d. -f2)
   # Require >= 0.2.0
   if [ "$MAJOR" -eq 0 ] && [ "$MINOR" -lt 2 ]; then
-    echo "[tokman] WARNING: tokman $TOKMAN_VERSION is too old (need >= 0.2.0). Upgrade: go install github.com/GrayCodeAI/tokman@latest" >&2
+    echo "[tok] WARNING: tok $TOK_VERSION is too old (need >= 0.2.0). Upgrade: go install github.com/lakshmanpatel/tok@latest" >&2
     exit 0
   fi
 fi
@@ -36,8 +36,8 @@ if [ -z "$CMD" ]; then
 fi
 
 # Delegate all rewrite logic to the Go binary.
-# tokman rewrite exits 1 when there's no rewrite — hook passes through silently.
-REWRITTEN=$(tokman rewrite "$CMD" 2>/dev/null) || exit 0
+# tok rewrite exits 1 when there's no rewrite — hook passes through silently.
+REWRITTEN=$(tok rewrite "$CMD" 2>/dev/null) || exit 0
 
 # No change — nothing to do.
 if [ "$CMD" = "$REWRITTEN" ]; then
@@ -53,7 +53,7 @@ jq -n \
     "hookSpecificOutput": {
       "hookEventName": "PreToolUse",
       "permissionDecision": "allow",
-      "permissionDecisionReason": "TokMan auto-rewrite",
+      "permissionDecisionReason": "Tok auto-rewrite",
       "updatedInput": $updated
     }
   }'

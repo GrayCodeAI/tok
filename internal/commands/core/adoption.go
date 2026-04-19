@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
@@ -45,7 +46,7 @@ type SessionSummary struct {
 	ID           string
 	Date         string
 	TotalCmds    int
-	tokCmds   int
+	tokCmds      int
 	OutputTokens int
 }
 
@@ -82,8 +83,8 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(sessions) == 0 {
-		fmt.Println("No Claude Code sessions found in the last 30 days.")
-		fmt.Println("Make sure Claude Code has been used at least once.")
+		out.Global().Println("No Claude Code sessions found in the last 30 days.")
+		out.Global().Println("Make sure Claude Code has been used at least once.")
 		return nil
 	}
 
@@ -134,23 +135,23 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 			ID:           id,
 			Date:         dateStr,
 			TotalCmds:    total,
-			tokCmds:   tok,
+			tokCmds:      tok,
 			OutputTokens: estimateTokens(cmds),
 		})
 	}
 
 	if len(summaries) == 0 {
-		fmt.Println("No sessions with Bash commands found.")
+		out.Global().Println("No sessions with Bash commands found.")
 		return nil
 	}
 
 	// Display table
-	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint("tok Adoption Overview"))
-	fmt.Println(strings.Repeat("─", 70))
-	fmt.Printf("%-12s %-12s %5s %5s %9s %-7s %8s\n",
+	out.Global().Println()
+	out.Global().Println(color.New(color.Bold).Sprint("tok Adoption Overview"))
+	out.Global().Println(strings.Repeat("─", 70))
+	out.Global().Printf("%-12s %-12s %5s %5s %9s %-7s %8s\n",
 		"Session", "Date", "Cmds", "TokM", "Adoption", "", "Output")
-	fmt.Println(strings.Repeat("─", 70))
+	out.Global().Println(strings.Repeat("─", 70))
 
 	var totalCmds, totaltok int
 
@@ -160,7 +161,7 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 		totalCmds += s.TotalCmds
 		totaltok += s.tokCmds
 
-		fmt.Printf("%-12s %-12s %5d %5d %8.0f%% %-7s %8s\n",
+		out.Global().Printf("%-12s %-12s %5d %5d %8.0f%% %-7s %8s\n",
 			s.ID,
 			s.Date,
 			s.TotalCmds,
@@ -171,15 +172,15 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 		)
 	}
 
-	fmt.Println(strings.Repeat("─", 70))
+	out.Global().Println(strings.Repeat("─", 70))
 
 	avgAdoption := 0.0
 	if totalCmds > 0 {
 		avgAdoption = float64(totaltok) / float64(totalCmds) * 100
 	}
-	fmt.Printf("Average adoption: %.0f%%\n", avgAdoption)
-	fmt.Println()
-	fmt.Println("Tip: Run 'tok discover' to find missed optimization opportunities")
+	out.Global().Printf("Average adoption: %.0f%%\n", avgAdoption)
+	out.Global().Println()
+	out.Global().Println("Tip: Run 'tok discover' to find missed optimization opportunities")
 
 	return nil
 }

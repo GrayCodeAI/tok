@@ -1,4 +1,4 @@
-# TokMan Troubleshooting Guide
+# Tok Troubleshooting Guide
 
 **Solutions to common issues and error messages**
 
@@ -21,21 +21,21 @@
 
 ## Installation Issues
 
-### `command not found: tokman`
+### `command not found: tok`
 
-**Cause**: TokMan is not in your PATH.
+**Cause**: Tok is not in your PATH.
 
 **Solutions**:
 
 1. Verify installation:
    ```bash
-   which tokman
-   # Should output: /path/to/tokman
+   which tok
+   # Should output: /path/to/tok
    ```
 
 2. If missing, reinstall:
    ```bash
-   go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+   go install github.com/lakshmanpatel/tok/cmd/tok@latest
    ```
 
 3. Ensure Go bin is in PATH:
@@ -54,13 +54,13 @@
 
 1. For system-wide install:
    ```bash
-   sudo mv tokman /usr/local/bin/
+   sudo mv tok /usr/local/bin/
    ```
 
 2. For user install:
    ```bash
    mkdir -p ~/bin
-   mv tokman ~/bin/
+   mv tok ~/bin/
    echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc
    source ~/.bashrc
    ```
@@ -80,7 +80,7 @@
 
 2. Update dependencies:
    ```bash
-   cd tokman
+   cd tok
    go mod tidy
    go mod download
    ```
@@ -88,7 +88,7 @@
 3. Clean build:
    ```bash
    go clean -cache
-   go build -o tokman ./cmd/tokman
+   go build -o tok ./cmd/tok
    ```
 
 ---
@@ -103,17 +103,17 @@
 
 1. Verify hook exists:
    ```bash
-   ls -la ~/.claude/hooks/tokman-rewrite.sh
+   ls -la ~/.claude/hooks/tok-rewrite.sh
    ```
 
 2. Check shell config:
    ```bash
-   grep -q "tokman" ~/.bashrc || echo "Hook not in config"
+   grep -q "tok" ~/.bashrc || echo "Hook not in config"
    ```
 
 3. Reinstall hook:
    ```bash
-   tokman init
+   tok init
    source ~/.bashrc  # or ~/.zshrc
    ```
 
@@ -125,7 +125,7 @@
 
 ---
 
-### `tokman init` fails
+### `tok init` fails
 
 **Cause**: Permission issues or missing directories.
 
@@ -134,8 +134,8 @@
 1. Create required directories:
    ```bash
    mkdir -p ~/.claude/hooks
-   mkdir -p ~/.config/tokman
-   mkdir -p ~/.local/share/tokman
+   mkdir -p ~/.config/tok
+   mkdir -p ~/.local/share/tok
    ```
 
 2. Check permissions:
@@ -146,7 +146,7 @@
 
 3. Run with verbose output:
    ```bash
-   tokman -v init
+   tok -v init
    ```
 
 ---
@@ -162,35 +162,35 @@
    type git | head -5
    ```
 
-2. Ensure TokMan loads last:
+2. Ensure Tok loads last:
    ```bash
-   # Move TokMan init to end of ~/.bashrc
+   # Move Tok init to end of ~/.bashrc
    # Other tool inits should come before
    ```
 
-3. Use explicit tokman prefix:
+3. Use explicit tok prefix:
    ```bash
-   tokman git status  # Always works
+   tok git status  # Always works
    ```
 
 ---
 
 ## Command Not Found Errors
 
-### `tokman: unknown command "xyz"`
+### `tok: unknown command "xyz"`
 
-**Cause**: Command not yet supported by TokMan.
+**Cause**: Command not yet supported by Tok.
 
 **Solutions**:
 
 1. Use proxy mode (still tracked, no filtering):
    ```bash
-   tokman proxy xyz args...
+   tok proxy xyz args...
    ```
 
 2. Check supported commands:
    ```bash
-   tokman rewrite list
+   tok rewrite list
    ```
 
 3. Request support on GitHub Issues.
@@ -230,18 +230,18 @@
 
 1. Use ultra-compact mode:
    ```bash
-   tokman -u git status
+   tok -u git status
    ```
 
 2. Create custom plugin:
    ```bash
-   tokman plugin create my-filter
-   # Edit ~/.config/tokman/plugins/my-filter.json
+   tok plugin create my-filter
+   # Edit ~/.config/tok/plugins/my-filter.json
    ```
 
 3. Use aggressive config:
    ```toml
-   # ~/.config/tokman/config.toml
+   # ~/.config/tok/config.toml
    [filter]
    mode = "aggressive"
    ```
@@ -256,23 +256,23 @@
 
 1. Use verbose mode:
    ```bash
-   tokman -v git status
+   tok -v git status
    ```
 
 2. Check tee output for failed commands:
    ```bash
-   ls ~/.local/share/tokman/tee/
-   cat ~/.local/share/tokman/tee/<latest_file>
+   ls ~/.local/share/tok/tee/
+   cat ~/.local/share/tok/tee/<latest_file>
    ```
 
 3. Use proxy mode to see full output:
    ```bash
-   tokman proxy git status
+   tok proxy git status
    ```
 
 4. Adjust filter settings:
    ```toml
-   # ~/.config/tokman/config.toml
+   # ~/.config/tok/config.toml
    [filter]
    mode = "minimal"
    ```
@@ -287,14 +287,14 @@
 
 1. Enable ANSI stripping:
    ```toml
-   # ~/.config/tokman/config.toml
+   # ~/.config/tok/config.toml
    [filter]
    strip_ansi = true
    ```
 
 2. Force color off in original command:
    ```bash
-   tokman git -c color.ui=never status
+   tok git -c color.ui=never status
    ```
 
 ---
@@ -309,19 +309,19 @@
 
 1. Use ultra-compact mode for faster processing:
    ```bash
-   tokman -u command
+   tok -u command
    ```
 
 2. Limit output size:
    ```toml
-   # ~/.config/tokman/config.toml
+   # ~/.config/tok/config.toml
    [filter]
    max_output_lines = 500
    ```
 
 3. Use streaming mode (if available):
    ```bash
-   tokman command --stream
+   tok command --stream
    ```
 
 ---
@@ -334,17 +334,17 @@
 
 1. Process in chunks:
    ```bash
-   command | head -1000 | tokman proxy cat
+   command | head -1000 | tok proxy cat
    ```
 
 2. Use native command with less:
    ```bash
-   TOKMAN_DISABLED=1 command | less
+   TOK_DISABLED=1 command | less
    ```
 
 3. Profile memory:
    ```bash
-   tokman -v command 2>&1 | grep -i memory
+   tok -v command 2>&1 | grep -i memory
    ```
 
 ---
@@ -353,23 +353,23 @@
 
 ### `database is locked` error
 
-**Cause**: Multiple TokMan processes accessing the same DB.
+**Cause**: Multiple Tok processes accessing the same DB.
 
 **Solutions**:
 
 1. Check for running processes:
    ```bash
-   ps aux | grep tokman
+   ps aux | grep tok
    ```
 
 2. Kill zombie processes:
    ```bash
-   pkill -9 tokman
+   pkill -9 tok
    ```
 
 3. Move database:
    ```bash
-   mv ~/.local/share/tokman/tokman.db ~/.local/share/tokman/tokman.db.bak
+   mv ~/.local/share/tok/tok.db ~/.local/share/tok/tok.db.bak
    # Database will be recreated on next run
    ```
 
@@ -383,21 +383,21 @@
 
 1. Backup and recreate:
    ```bash
-   cp ~/.local/share/tokman/tokman.db ~/.local/share/tokman/tokman.db.backup
-   rm ~/.local/share/tokman/tokman.db
+   cp ~/.local/share/tok/tok.db ~/.local/share/tok/tok.db.backup
+   rm ~/.local/share/tok/tok.db
    # Database will be recreated
    ```
 
 2. Check integrity:
    ```bash
-   sqlite3 ~/.local/share/tokman/tokman.db "PRAGMA integrity_check;"
+   sqlite3 ~/.local/share/tok/tok.db "PRAGMA integrity_check;"
    ```
 
 3. Repair if possible:
    ```bash
-   sqlite3 ~/.local/share/tokman/tokman.db ".recover" > recover.sql
-   sqlite3 ~/.local/share/tokman/tokman_new.db < recover.sql
-   mv ~/.local/share/tokman/tokman_new.db ~/.local/share/tokman/tokman.db
+   sqlite3 ~/.local/share/tok/tok.db ".recover" > recover.sql
+   sqlite3 ~/.local/share/tok/tok_new.db < recover.sql
+   mv ~/.local/share/tok/tok_new.db ~/.local/share/tok/tok.db
    ```
 
 ---
@@ -408,15 +408,15 @@
 
 **Solutions**:
 
-1. Delete and let TokMan recreate:
+1. Delete and let Tok recreate:
    ```bash
-   rm ~/.local/share/tokman/tokman.db
-   tokman status  # Triggers recreation
+   rm ~/.local/share/tok/tok.db
+   tok status  # Triggers recreation
    ```
 
 2. Manual schema creation:
    ```bash
-   sqlite3 ~/.local/share/tokman/tokman.db < schemas/commands.sql
+   sqlite3 ~/.local/share/tok/tok.db < schemas/commands.sql
    ```
 
 ---
@@ -431,18 +431,18 @@
 
 1. Reinstall hook:
    ```bash
-   tokman init --force
+   tok init --force
    ```
 
 2. Verify hash:
    ```bash
-   tokman verify
-   cat ~/.claude/hooks/tokman-rewrite.sh.sha256
+   tok verify
+   cat ~/.claude/hooks/tok-rewrite.sh.sha256
    ```
 
 3. Check for tampering:
    ```bash
-   sha256sum ~/.claude/hooks/tokman-rewrite.sh
+   sha256sum ~/.claude/hooks/tok-rewrite.sh
    # Compare with stored hash
    ```
 
@@ -456,18 +456,18 @@
 
 1. Make hook read-only:
    ```bash
-   chmod 444 ~/.claude/hooks/tokman-rewrite.sh
+   chmod 444 ~/.claude/hooks/tok-rewrite.sh
    ```
 
 2. Use system-level hook (if available):
    ```bash
-   sudo tokman init --system
+   sudo tok init --system
    ```
 
 3. Add to version control:
    ```bash
    # Backup hook to a repo
-   cp ~/.claude/hooks/tokman-rewrite.sh ~/dotfiles/
+   cp ~/.claude/hooks/tok-rewrite.sh ~/dotfiles/
    ```
 
 ---
@@ -482,17 +482,17 @@
 
 1. Validate JSON:
    ```bash
-   python3 -m json.tool ~/.config/tokman/plugins/myplugin.json
+   python3 -m json.tool ~/.config/tok/plugins/myplugin.json
    ```
 
 2. Check plugin directory:
    ```bash
-   ls -la ~/.config/tokman/plugins/
+   ls -la ~/.config/tok/plugins/
    ```
 
 3. Use verbose mode:
    ```bash
-   tokman -v plugin list
+   tok -v plugin list
    ```
 
 ---
@@ -514,8 +514,8 @@
 
 2. Verify plugin is enabled:
    ```bash
-   tokman plugin list
-   tokman plugin enable my-plugin
+   tok plugin list
+   tok plugin enable my-plugin
    ```
 
 ---
@@ -547,7 +547,7 @@
 
 ## Environment Variables
 
-### `TOKMAN_DISABLED` not working
+### `TOK_DISABLED` not working
 
 **Cause**: Variable not exported or wrong scope.
 
@@ -555,13 +555,13 @@
 
 1. Export the variable:
    ```bash
-   export TOKMAN_DISABLED=1
+   export TOK_DISABLED=1
    git status  # Now runs natively
    ```
 
 2. Use inline:
    ```bash
-   TOKMAN_DISABLED=1 git status
+   TOK_DISABLED=1 git status
    ```
 
 ---
@@ -572,17 +572,17 @@
 
 **Solutions**:
 
-1. Set before running TokMan:
+1. Set before running Tok:
    ```bash
-   export TOKMAN_DATABASE_PATH=/custom/path/tokman.db
-   tokman status
+   export TOK_DATABASE_PATH=/custom/path/tok.db
+   tok status
    ```
 
 2. Use config file:
    ```toml
-   # ~/.config/tokman/config.toml
+   # ~/.config/tok/config.toml
    [tracking]
-   database_path = "/custom/path/tokman.db"
+   database_path = "/custom/path/tok.db"
    ```
 
 ---
@@ -593,36 +593,36 @@
 
 ```bash
 # Single command
-tokman -v git status
+tok -v git status
 
 # More verbose
-tokman -vv git status
+tok -vv git status
 
 # Maximum verbosity
-tokman -vvv git status
+tok -vvv git status
 ```
 
 ### Check logs
 
 ```bash
 # View log file
-cat ~/.local/share/tokman/tokman.log
+cat ~/.local/share/tok/tok.log
 
 # Tail logs
-tail -f ~/.local/share/tokman/tokman.log
+tail -f ~/.local/share/tok/tok.log
 
 # Search for errors
-grep -i error ~/.local/share/tokman/tokman.log
+grep -i error ~/.local/share/tok/tok.log
 ```
 
 ### Debug shell integration
 
 ```bash
 # Show what the hook does
-cat ~/.claude/hooks/tokman-rewrite.sh
+cat ~/.claude/hooks/tok-rewrite.sh
 
 # Test hook manually
-source ~/.claude/hooks/tokman-rewrite.sh
+source ~/.claude/hooks/tok-rewrite.sh
 type git
 ```
 
@@ -630,13 +630,13 @@ type git
 
 ```bash
 # Show all tables
-sqlite3 ~/.local/share/tokman/tokman.db ".tables"
+sqlite3 ~/.local/share/tok/tok.db ".tables"
 
 # Show recent commands
-sqlite3 ~/.local/share/tokman/tokman.db "SELECT * FROM commands ORDER BY timestamp DESC LIMIT 10"
+sqlite3 ~/.local/share/tok/tok.db "SELECT * FROM commands ORDER BY timestamp DESC LIMIT 10"
 
 # Show savings summary
-sqlite3 ~/.local/share/tokman/tokman.db "SELECT command, SUM(saved_tokens) as total FROM commands GROUP BY command ORDER BY total DESC LIMIT 10"
+sqlite3 ~/.local/share/tok/tok.db "SELECT command, SUM(saved_tokens) as total FROM commands GROUP BY command ORDER BY total DESC LIMIT 10"
 ```
 
 ---
@@ -645,34 +645,34 @@ sqlite3 ~/.local/share/tokman/tokman.db "SELECT command, SUM(saved_tokens) as to
 
 1. **Check the logs**:
    ```bash
-   tokman -vvv command 2>&1 | tee debug.log
+   tok -vvv command 2>&1 | tee debug.log
    ```
 
 2. **Verify environment**:
    ```bash
-   tokman config
-   tokman verify
-   which tokman
+   tok config
+   tok verify
+   which tok
    echo $PATH
    ```
 
 3. **Clean reinstall**:
    ```bash
    # Backup data
-   cp -r ~/.config/tokman ~/tokman-backup/
-   cp -r ~/.local/share/tokman ~/tokman-backup/
+   cp -r ~/.config/tok ~/tok-backup/
+   cp -r ~/.local/share/tok ~/tok-backup/
 
    # Remove everything
-   rm -rf ~/.config/tokman ~/.local/share/tokman ~/.claude/hooks/tokman-rewrite.sh*
+   rm -rf ~/.config/tok ~/.local/share/tok ~/.claude/hooks/tok-rewrite.sh*
 
    # Reinstall
-   go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
-   tokman init
+   go install github.com/lakshmanpatel/tok/cmd/tok@latest
+   tok init
    ```
 
 4. **Report the issue**:
-   - GitHub Issues: [github.com/GrayCodeAI/tokman/issues](https://github.com/GrayCodeAI/tokman/issues)
-   - Include: debug log, `tokman --version`, OS, shell
+   - GitHub Issues: [github.com/lakshmanpatel/tok/issues](https://github.com/lakshmanpatel/tok/issues)
+   - Include: debug log, `tok --version`, OS, shell
 
 ---
 
@@ -680,11 +680,11 @@ sqlite3 ~/.local/share/tokman/tokman.db "SELECT command, SUM(saved_tokens) as to
 
 | Issue | Quick Fix |
 |-------|-----------|
-| Command not found | `go install github.com/GrayCodeAI/tokman/cmd/tokman@latest` |
-| Hook not working | `tokman init && source ~/.bashrc` |
-| Too verbose output | `tokman -u command` |
-| Missing output | `tokman proxy command` |
-| Database locked | `pkill -9 tokman` |
-| Integrity failed | `tokman init --force` |
-| Plugin not loading | `tokman plugin list && tokman plugin enable name` |
-| Disable temporarily | `TOKMAN_DISABLED=1 command` |
+| Command not found | `go install github.com/lakshmanpatel/tok/cmd/tok@latest` |
+| Hook not working | `tok init && source ~/.bashrc` |
+| Too verbose output | `tok -u command` |
+| Missing output | `tok proxy command` |
+| Database locked | `pkill -9 tok` |
+| Integrity failed | `tok init --force` |
+| Plugin not loading | `tok plugin list && tok plugin enable name` |
+| Disable temporarily | `TOK_DISABLED=1 command` |

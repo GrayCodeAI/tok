@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"time"
@@ -55,13 +56,13 @@ func runEdit(cmd *cobra.Command, args []string) error {
 
 	editCfg := cfg.Edit
 	if !editCfg.BatchEnabled && !editDryRun {
-		fmt.Println("Edit batching is disabled. Enable with: tok config set edit.batch_enabled true")
-		fmt.Println("Or run with explicit flags: tok edit --batch")
+		out.Global().Println("Edit batching is disabled. Enable with: tok config set edit.batch_enabled true")
+		out.Global().Println("Or run with explicit flags: tok edit --batch")
 	}
 
 	if editDryRun {
-		fmt.Println(color.YellowString("DRY RUN MODE - No files will be modified"))
-		fmt.Println()
+		out.Global().Println(color.YellowString("DRY RUN MODE - No files will be modified"))
+		out.Global().Println()
 	}
 
 	if len(args) == 0 && !editBatch {
@@ -75,7 +76,7 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		files = args
 	}
 
-	fmt.Printf("Processing %d file(s)...\n", len(files))
+	out.Global().Printf("Processing %d file(s)...\n", len(files))
 
 	results := make(chan editResult, len(files))
 	sem := make(chan struct{}, editConcurrency)
@@ -95,21 +96,21 @@ func runEdit(cmd *cobra.Command, args []string) error {
 		if result.success {
 			success++
 			if editDryRun {
-				fmt.Printf("  %s %s (would modify)\n", color.GreenString("✓"), result.path)
+				out.Global().Printf("  %s %s (would modify)\n", color.GreenString("✓"), result.path)
 			} else {
-				fmt.Printf("  %s %s\n", color.GreenString("✓"), result.path)
+				out.Global().Printf("  %s %s\n", color.GreenString("✓"), result.path)
 			}
 		} else {
 			failed++
-			fmt.Printf("  %s %s: %v\n", color.RedString("✗"), result.path, result.err)
+			out.Global().Printf("  %s %s: %v\n", color.RedString("✗"), result.path, result.err)
 		}
 	}
 
-	fmt.Println()
-	fmt.Printf("Summary: %d successful, %d failed\n", success, failed)
+	out.Global().Println()
+	out.Global().Printf("Summary: %d successful, %d failed\n", success, failed)
 
 	if editDryRun {
-		fmt.Println(color.YellowString("\nNo files were modified (dry run)"))
+		out.Global().Println(color.YellowString("\nNo files were modified (dry run)"))
 	}
 
 	return nil

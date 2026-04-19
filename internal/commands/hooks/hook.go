@@ -3,6 +3,7 @@ package hooks
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"path/filepath"
@@ -105,14 +106,14 @@ func runClaudeHook() {
 func runCursorHook() {
 	input, ok := readHookJSON()
 	if !ok {
-		fmt.Println("{}")
+		out.Global().Println("{}")
 		return
 	}
 
 	output, action, rewritten := processCursorPayload(input)
 	recordHookAudit(action, hookCommandFromPayload(input), rewritten)
 	if output == nil {
-		fmt.Println("{}")
+		out.Global().Println("{}")
 		return
 	}
 	writeHookJSON(output)
@@ -153,7 +154,7 @@ func runCopilotHook() {
 		output, action, rewritten := processCopilotCLICommand(command)
 		recordHookAudit(action, command, rewritten)
 		if output == nil {
-			fmt.Println("{}")
+			out.Global().Println("{}")
 			return
 		}
 		writeHookJSON(output)
@@ -172,7 +173,7 @@ func readHookJSON() (map[string]any, bool) {
 
 	var payload map[string]any
 	if err := json.Unmarshal([]byte(inputStr), &payload); err != nil {
-		fmt.Fprintln(os.Stderr, "[tok hook] Failed to parse JSON input:", err)
+		out.Global().Errorf("[tok hook] Failed to parse JSON input: %v", err)
 		return nil, false
 	}
 	return payload, true
@@ -393,21 +394,21 @@ func buildCopilotVSCodeResponse(originalCmd, rewritten string) map[string]any {
 }
 
 func printGeminiAllow() {
-	fmt.Println(`{"decision":"allow"}`)
+	out.Global().Println(`{"decision":"allow"}`)
 }
 
 func writeHookJSON(output map[string]any) {
 	data, err := json.Marshal(output)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[tok hook] Failed to marshal output: %v\n", err)
+		out.Global().Errorf("[tok hook] Failed to marshal output: %v\n", err)
 		return
 	}
-	fmt.Println(string(data))
+	out.Global().Println(string(data))
 }
 
 func recordHookAudit(action, originalCmd, rewrittenCmd string) {
-	auditEnabled := strings.EqualFold(os.Getenv("TOKMAN_HOOK_AUDIT"), "1") ||
-		strings.EqualFold(os.Getenv("TOKMAN_HOOK_AUDIT"), "true")
+	auditEnabled := strings.EqualFold(os.Getenv("TOK_HOOK_AUDIT"), "1") ||
+		strings.EqualFold(os.Getenv("TOK_HOOK_AUDIT"), "true")
 	if !auditEnabled || action == "" || originalCmd == "" {
 		return
 	}

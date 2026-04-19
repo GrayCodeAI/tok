@@ -3,6 +3,7 @@ package pkgmgr
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strconv"
@@ -105,7 +106,7 @@ func runCargo(cmd *cobra.Command, args []string) error {
 	}
 
 	if cargoJSON {
-		fmt.Println(formatAsJSONcargo(output))
+		out.Global().Println(formatAsJSONcargo(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tok cargo", originalTokens, filteredTokens)
@@ -118,7 +119,7 @@ func runCargo(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

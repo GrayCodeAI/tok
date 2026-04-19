@@ -1,4 +1,4 @@
-# TokMan API Documentation
+# Tok API Documentation
 
 ## Task 101-115: Complete Documentation
 

@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Added `tokman` binary to `.gitignore`
+- Added `tok` binary to `.gitignore`
 
 ### Documentation
 
@@ -70,17 +70,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Initial release of TokMan token-aware CLI proxy
+- Initial release of Tok token-aware CLI proxy
 - Basic filter pipeline implementation
 - Core command runner and token estimation
 - Configuration system with Viper + TOML
 - Basic hook system for Claude Code integration
 - CLI commands:
-  - `tokman init` - Initialize with AI tools
-  - `tokman doctor` - System health check
-  - `tokman status` - Show current status
-  - `tokman help` - Display help information
-  - `tokman version` - Show version information
+  - `tok init` - Initialize with AI tools
+  - `tok doctor` - System health check
+  - `tok status` - Show current status
+  - `tok help` - Display help information
+  - `tok version` - Show version information
 
 ## [0.28.0] - 2026-03-01
 
@@ -124,7 +124,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -->
 
 <!-- Links -->
-[Unreleased]: https://github.com/GrayCodeAI/tokman/compare/v0.28.2...HEAD
-[0.28.2]: https://github.com/GrayCodeAI/tokman/compare/v0.28.1...v0.28.2
-[0.28.1]: https://github.com/GrayCodeAI/tokman/compare/v0.28.0...v0.28.1
-[0.28.0]: https://github.com/GrayCodeAI/tokman/releases/tag/v0.28.0
+[Unreleased]: https://github.com/lakshmanpatel/tok/compare/v0.28.2...HEAD
+[0.28.2]: https://github.com/lakshmanpatel/tok/compare/v0.28.1...v0.28.2
+[0.28.1]: https://github.com/lakshmanpatel/tok/compare/v0.28.0...v0.28.1
+[0.28.0]: https://github.com/lakshmanpatel/tok/releases/tag/v0.28.0

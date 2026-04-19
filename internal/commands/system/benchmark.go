@@ -1,7 +1,7 @@
 package system
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"sort"
 	"strconv"
 	"strings"
@@ -66,12 +66,12 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	_, stats := p.Process(input)
 	totalDur := time.Since(start)
 
-	fmt.Printf("tok Pipeline Benchmark\n")
-	fmt.Printf("Profile=%s Mode=%s Lines=%d\n\n", profile, mode, benchLines)
+	out.Global().Printf("tok Pipeline Benchmark\n")
+	out.Global().Printf("Profile=%s Mode=%s Lines=%d\n\n", profile, mode, benchLines)
 	fusion := filter.ClawFusionStageCoverage()
-	fmt.Printf("Fusion Coverage: %d/14 stages mapped\n\n", len(fusion))
-	fmt.Printf("%-26s %-10s %-12s\n", "Stage", "Saved", "Time")
-	fmt.Printf("%-26s %-10s %-12s\n", strings.Repeat("-", 26), strings.Repeat("-", 10), strings.Repeat("-", 12))
+	out.Global().Printf("Fusion Coverage: %d/14 stages mapped\n\n", len(fusion))
+	out.Global().Printf("%-26s %-10s %-12s\n", "Stage", "Saved", "Time")
+	out.Global().Printf("%-26s %-10s %-12s\n", strings.Repeat("-", 26), strings.Repeat("-", 10), strings.Repeat("-", 12))
 
 	keys := sortedLayerKeys(stats.LayerStats)
 	for _, k := range keys {
@@ -79,13 +79,13 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 		if st.TokensSaved == 0 {
 			continue
 		}
-		fmt.Printf("%-26s %-10d %-12s\n", k, st.TokensSaved, formatDuration(st.Duration))
+		out.Global().Printf("%-26s %-10d %-12s\n", k, st.TokensSaved, formatDuration(st.Duration))
 	}
 
-	fmt.Printf("\nOriginal: %d tokens\n", stats.OriginalTokens)
-	fmt.Printf("Final:    %d tokens\n", stats.FinalTokens)
-	fmt.Printf("Saved:    %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
-	fmt.Printf("Total:    %s\n", totalDur.Round(time.Millisecond))
+	out.Global().Printf("\nOriginal: %d tokens\n", stats.OriginalTokens)
+	out.Global().Printf("Final:    %d tokens\n", stats.FinalTokens)
+	out.Global().Printf("Saved:    %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
+	out.Global().Printf("Total:    %s\n", totalDur.Round(time.Millisecond))
 	return nil
 }
 

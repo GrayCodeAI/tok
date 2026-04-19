@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-We actively support the following versions of TokMan with security updates:
+We actively support the following versions of Tok with security updates:
 
 | Version | Supported          |
 | ------- | ------------------ |
@@ -14,7 +14,7 @@ We actively support the following versions of TokMan with security updates:
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-We take the security of TokMan seriously. If you discover a security vulnerability, please follow these steps:
+We take the security of Tok seriously. If you discover a security vulnerability, please follow these steps:
 
 ### 1. Private Disclosure
 
@@ -48,14 +48,14 @@ Send an email to **security@graycode.ai** (or the maintainer's email) with:
 
 ## Security Features
 
-TokMan implements several security best practices:
+Tok implements several security best practices:
 
 ### Hook Integrity Verification
 
 - Hooks are verified using SHA-256 checksums
-- `tokman doctor` detects tampered hooks
-- `tokman hook-audit` provides detailed integrity reports
-- Hooks can be re-verified with `tokman verify`
+- `tok doctor` detects tampered hooks
+- `tok hook-audit` provides detailed integrity reports
+- Hooks can be re-verified with `tok verify`
 
 ### Input Validation
 
@@ -97,14 +97,14 @@ TokMan implements several security best practices:
 - **Protect config files:** Set appropriate permissions (0600)
 - **No secrets in configs:** Use environment variables or secret managers
 - **Review hooks:** Understand what hooks do before installing
-- **Regular updates:** Keep TokMan updated to get security fixes
+- **Regular updates:** Keep Tok updated to get security fixes
 
 ### Hook Usage
 
-- **Verify hooks:** Run `tokman hook-audit` after installation
+- **Verify hooks:** Run `tok hook-audit` after installation
 - **Trusted sources only:** Only install hooks from trusted sources
-- **Review before install:** Check hook scripts before running `tokman init`
-- **Monitor changes:** `tokman doctor` detects unauthorized modifications
+- **Review before install:** Check hook scripts before running `tok init`
+- **Monitor changes:** `tok doctor` detects unauthorized modifications
 
 ### Telemetry
 
@@ -129,12 +129,12 @@ TokMan implements several security best practices:
 **Mitigation:**
 - Hooks are only installed with explicit user consent
 - Hooks are auditable (plain text shell scripts)
-- Hooks can be uninstalled anytime (`tokman init --uninstall`)
+- Hooks can be uninstalled anytime (`tok init --uninstall`)
 - Hook integrity is verified
 
 ### Command Interception
 
-**Risk:** TokMan intercepts shell commands
+**Risk:** Tok intercepts shell commands
 
 **Mitigation:**
 - Only intercepts commands explicitly configured
@@ -149,7 +149,7 @@ TokMan implements several security best practices:
 **Mitigation:**
 - Database is local-only (never transmitted)
 - Permissions set to user-only (0600)
-- Can be cleared with `tokman sessions clear`
+- Can be cleared with `tok sessions clear`
 - Does not store secrets or credentials
 
 ### MCP Server (Optional)
@@ -209,7 +209,7 @@ We believe in responsible disclosure and will work with you in good faith. We wi
 - Give us reasonable time to fix the issue before public disclosure
 - Do not access, modify, or delete others' data
 
-Thank you for helping keep TokMan and our users safe!
+Thank you for helping keep Tok and our users safe!
 
 ---
 

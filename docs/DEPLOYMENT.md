@@ -2,7 +2,7 @@
 
 ## Overview
 
-TokMan can be deployed in several ways depending on your use case:
+Tok can be deployed in several ways depending on your use case:
 
 1. **Single User** - Local installation on developer machine
 2. **Team** - Shared configuration with individual installations
@@ -17,48 +17,48 @@ TokMan can be deployed in several ways depending on your use case:
 
 ```bash
 # Option 1: Go install
-go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+go install github.com/lakshmanpatel/tok/cmd/tok@latest
 
 # Option 2: From source
-git clone https://github.com/GrayCodeAI/tokman.git
-cd tokman && make build
-sudo mv tokman /usr/local/bin/
+git clone https://github.com/lakshmanpatel/tok.git
+cd tok && make build
+sudo mv tok /usr/local/bin/
 
 # Option 3: Pre-built binary
-curl -fsSL https://github.com/GrayCodeAI/tokman/releases/latest/download/tokman_$(uname -s)_$(uname -m).tar.gz | tar xz
-sudo mv tokman /usr/local/bin/
+curl -fsSL https://github.com/lakshmanpatel/tok/releases/latest/download/tok_$(uname -s)_$(uname -m).tar.gz | tar xz
+sudo mv tok /usr/local/bin/
 ```
 
 ### Post-Install Setup
 
 ```bash
 # 1. Verify installation
-tokman --version
-tokman doctor
+tok --version
+tok doctor
 
 # 2. Initialize for your AI tool
-tokman init -g                    # Claude Code
-tokman init -g --cursor           # Cursor
-tokman init -g --copilot          # GitHub Copilot
-tokman init --all                 # All detected tools
+tok init -g                    # Claude Code
+tok init -g --cursor           # Cursor
+tok init -g --copilot          # GitHub Copilot
+tok init --all                 # All detected tools
 
 # 3. Configure (optional)
-mkdir -p ~/.config/tokman
-tokman config init
+mkdir -p ~/.config/tok
+tok config init
 
 # 4. Test
-tokman git status
-tokman ls .
+tok git status
+tok ls .
 ```
 
 ### Configuration
 
-Default config location: `~/.config/tokman/config.toml`
+Default config location: `~/.config/tok/config.toml`
 
 ```toml
 [tracking]
 enabled = true
-database_path = "~/.local/share/tokman/tokman.db"
+database_path = "~/.local/share/tok/tok.db"
 
 [filter]
 mode = "minimal"
@@ -82,9 +82,9 @@ enabled = false
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-export TOKMAN_MODE=minimal
-export TOKMAN_BUDGET=2000
-export TOKMAN_PRESET=balanced
+export TOK_MODE=minimal
+export TOK_BUDGET=2000
+export TOK_PRESET=balanced
 ```
 
 ---
@@ -97,7 +97,7 @@ Create a team config file and distribute:
 
 ```bash
 # 1. Create team config
-cat > tokman-team.toml << 'EOF'
+cat > tok-team.toml << 'EOF'
 [filter]
 mode = "minimal"
 
@@ -111,7 +111,7 @@ enabled = true
 EOF
 
 # 2. Distribute to team
-# Each developer copies to ~/.config/tokman/config.toml
+# Each developer copies to ~/.config/tok/config.toml
 ```
 
 ### Team Setup Script
@@ -122,22 +122,22 @@ EOF
 
 set -e
 
-echo "Setting up TokMan for team..."
+echo "Setting up Tok for team..."
 
 # Install
-go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+go install github.com/lakshmanpatel/tok/cmd/tok@latest
 
 # Copy team config
-mkdir -p ~/.config/tokman
-cp tokman-team.toml ~/.config/tokman/config.toml
+mkdir -p ~/.config/tok
+cp tok-team.toml ~/.config/tok/config.toml
 
 # Initialize for detected AI tools
-tokman init --all
+tok init --all
 
 # Verify
-tokman doctor
+tok doctor
 
-echo "TokMan setup complete!"
+echo "Tok setup complete!"
 ```
 
 ---
@@ -147,8 +147,8 @@ echo "TokMan setup complete!"
 ### GitHub Actions
 
 ```yaml
-# .github/workflows/tokman.yml
-name: TokMan CI Integration
+# .github/workflows/tok.yml
+name: Tok CI Integration
 
 on: [push, pull_request]
 
@@ -163,36 +163,36 @@ jobs:
         with:
           go-version: '1.24'
       
-      - name: Install TokMan
-        run: go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+      - name: Install Tok
+        run: go install github.com/lakshmanpatel/tok/cmd/tok@latest
       
-      - name: Run tests with TokMan
-        run: tokman go test ./... 2>&1 | head -50
+      - name: Run tests with Tok
+        run: tok go test ./... 2>&1 | head -50
       
       - name: Check token usage
-        run: tokman stats --json > tokman-report.json
+        run: tok stats --json > tok-report.json
       
       - name: Upload report
         uses: actions/upload-artifact@v4
         with:
-          name: tokman-report
-          path: tokman-report.json
+          name: tok-report
+          path: tok-report.json
 ```
 
 ### GitLab CI
 
 ```yaml
 # .gitlab-ci.yml
-tokman:
+tok:
   image: golang:1.24
   stage: test
   script:
-    - go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
-    - tokman go test ./...
-    - tokman stats
+    - go install github.com/lakshmanpatel/tok/cmd/tok@latest
+    - tok go test ./...
+    - tok stats
   artifacts:
     reports:
-      metrics: tokman-metrics.txt
+      metrics: tok-metrics.txt
 ```
 
 ### Pre-Commit Hook
@@ -201,12 +201,12 @@ tokman:
 #!/bin/bash
 # .git/hooks/pre-commit
 
-# Run TokMan doctor before each commit
-if command -v tokman &> /dev/null; then
-    tokman doctor --quiet
+# Run Tok doctor before each commit
+if command -v tok &> /dev/null; then
+    tok doctor --quiet
     if [ $? -ne 0 ]; then
-        echo "TokMan: Hook integrity check failed!"
-        echo "Run 'tokman doctor' for details."
+        echo "Tok: Hook integrity check failed!"
+        echo "Run 'tok doctor' for details."
         exit 1
     fi
 fi
@@ -228,8 +228,8 @@ before:
     - go generate ./...
 
 builds:
-  - main: ./cmd/tokman
-    binary: tokman
+  - main: ./cmd/tok
+    binary: tok
     env:
       - CGO_ENABLED=0
     goos:
@@ -274,18 +274,18 @@ changelog:
 
 brews:
   - repository:
-      owner: GrayCodeAI
-      name: homebrew-tokman
-    homepage: "https://github.com/GrayCodeAI/tokman"
+      owner: lakshmanpatel
+      name: homebrew-tok
+    homepage: "https://github.com/lakshmanpatel/tok"
     description: "Token-aware CLI proxy with practical 20-layer compression pipeline"
     license: "MIT"
     test: |
-      system "#{bin}/tokman", "--version"
+      system "#{bin}/tok", "--version"
 
 nfpms:
-  - package_name: tokman
+  - package_name: tok
     vendor: GrayCode AI
-    homepage: https://github.com/GrayCodeAI/tokman
+    homepage: https://github.com/lakshmanpatel/tok
     maintainer: GrayCode AI <maintainers@graycode.ai>
     description: Token-aware CLI proxy for AI coding assistants
     license: MIT
@@ -306,9 +306,9 @@ goreleaser release --clean
 
 # 3. Verify artifacts
 ls dist/
-# tokman_0.29.0_linux_amd64.tar.gz
-# tokman_0.29.0_darwin_arm64.tar.gz
-# tokman_0.29.0_windows_amd64.zip
+# tok_0.29.0_linux_amd64.tar.gz
+# tok_0.29.0_darwin_arm64.tar.gz
+# tok_0.29.0_windows_amd64.zip
 # checksums.txt
 ```
 
@@ -320,27 +320,27 @@ ls dist/
 
 ```bash
 # Check current version
-tokman --version
+tok --version
 
 # Upgrade via Go
-go install github.com/GrayCodeAI/tokman/cmd/tokman@latest
+go install github.com/lakshmanpatel/tok/cmd/tok@latest
 
 # Upgrade via Homebrew (when available)
-brew upgrade tokman
+brew upgrade tok
 
 # Verify
-tokman --version
-tokman doctor
+tok --version
+tok doctor
 ```
 
 ### Automated Upgrade Check
 
 ```bash
 # Check for updates
-tokman version --check-update
+tok version --check-update
 
 # Auto-upgrade (when available)
-tokman upgrade
+tok upgrade
 ```
 
 ---
@@ -351,19 +351,19 @@ tokman upgrade
 
 ```bash
 # Install specific version
-go install github.com/GrayCodeAI/tokman/cmd/tokman@v0.28.0
+go install github.com/lakshmanpatel/tok/cmd/tok@v0.28.0
 
 # Or download specific release binary
-curl -fsSL https://github.com/GrayCodeAI/tokman/releases/download/v0.28.0/tokman_0.28.0_$(uname -s)_$(uname -m).tar.gz | tar xz
-sudo mv tokman /usr/local/bin/
+curl -fsSL https://github.com/lakshmanpatel/tok/releases/download/v0.28.0/tok_0.28.0_$(uname -s)_$(uname -m).tar.gz | tar xz
+sudo mv tok /usr/local/bin/
 ```
 
 ### Hook Rollback
 
 ```bash
 # Restore hooks to previous state
-tokman init --uninstall
-tokman init -g  # Re-install fresh hooks
+tok init --uninstall
+tok init -g  # Re-install fresh hooks
 ```
 
 ---
@@ -372,20 +372,20 @@ tokman init -g  # Re-install fresh hooks
 
 ```bash
 # 1. Remove hooks
-tokman init --uninstall
+tok init --uninstall
 
 # 2. Remove binary
-sudo rm /usr/local/bin/tokman
-# Or: brew uninstall tokman
+sudo rm /usr/local/bin/tok
+# Or: brew uninstall tok
 
 # 3. Remove config (optional)
-rm -rf ~/.config/tokman
+rm -rf ~/.config/tok
 
 # 4. Remove data (optional)
-rm -rf ~/.local/share/tokman
+rm -rf ~/.local/share/tok
 
 # 5. Remove Go cache
-go clean -i github.com/GrayCodeAI/tokman/...
+go clean -i github.com/lakshmanpatel/tok/...
 ```
 
 ---
@@ -396,33 +396,33 @@ go clean -i github.com/GrayCodeAI/tokman/...
 
 ```bash
 # Basic health check
-tokman doctor
+tok doctor
 
 # Detailed audit
-tokman hook-audit
+tok hook-audit
 
 # Check hook integrity
-tokman verify
+tok verify
 ```
 
 ### Metrics
 
 ```bash
 # View stats
-tokman stats
+tok stats
 
 # Export as JSON
-tokman stats --json > metrics.json
+tok stats --json > metrics.json
 
 # Token savings report
-tokman gain
+tok gain
 ```
 
 ### Dashboard
 
 ```bash
 # Start dashboard
-tokman dashboard --port 8080
+tok dashboard --port 8080
 
 # Open in browser
 open http://localhost:8080
@@ -437,7 +437,7 @@ open http://localhost:8080
 **Binary not found:**
 ```bash
 # Check PATH
-which tokman
+which tok
 echo $PATH
 
 # Add to PATH
@@ -447,26 +447,26 @@ export PATH="$HOME/go/bin:$PATH"
 **Hooks not working:**
 ```bash
 # Reinstall hooks
-tokman init --uninstall
-tokman init -g
+tok init --uninstall
+tok init -g
 
 # Check hook integrity
-tokman doctor
+tok doctor
 ```
 
 **Database issues:**
 ```bash
 # Reset database
-rm ~/.local/share/tokman/tokman.db
-tokman status  # Will recreate
+rm ~/.local/share/tok/tok.db
+tok status  # Will recreate
 ```
 
 **Permission issues:**
 ```bash
 # Fix permissions
-chmod 755 $(which tokman)
-chmod 700 ~/.config/tokman
-chmod 600 ~/.config/tokman/config.toml
+chmod 755 $(which tok)
+chmod 700 ~/.config/tok
+chmod 600 ~/.config/tok/config.toml
 ```
 
 ---
@@ -477,6 +477,6 @@ chmod 600 ~/.config/tokman/config.toml
 2. **Hook Scripts:** Review hooks before installing
 3. **Database:** Local SQLite DB should not contain sensitive data
 4. **Telemetry:** Opt-in only; no secrets transmitted
-5. **Updates:** Keep TokMan updated for security fixes
+5. **Updates:** Keep Tok updated for security fixes
 
 See [SECURITY.md](../SECURITY.md) for full security policy.

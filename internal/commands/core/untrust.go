@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -43,10 +44,10 @@ func runUntrust(cmd *cobra.Command, args []string) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 
 	if removed {
-		fmt.Printf("%s Trust revoked for .tok/filters.toml\n", green("✓"))
-		fmt.Println("Project-local filters will no longer be applied.")
+		out.Global().Printf("%s Trust revoked for .tok/filters.toml\n", green("✓"))
+		out.Global().Println("Project-local filters will no longer be applied.")
 	} else {
-		fmt.Printf("%s No trust entry found for current directory.\n", yellow("!"))
+		out.Global().Printf("%s No trust entry found for current directory.\n", yellow("!"))
 	}
 
 	return nil

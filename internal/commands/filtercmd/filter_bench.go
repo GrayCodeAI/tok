@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -55,8 +56,8 @@ func runFilterBench(cmd *cobra.Command, args []string) error {
 		input = generateBenchmarkInput()
 	}
 
-	fmt.Printf("Benchmarking filters with %d iterations\n", benchmarkIterations)
-	fmt.Printf("Input size: %d chars (~%d tokens)\n\n", len(input), len(input)/4)
+	out.Global().Printf("Benchmarking filters with %d iterations\n", benchmarkIterations)
+	out.Global().Printf("Input size: %d chars (~%d tokens)\n\n", len(input), len(input)/4)
 
 	if len(args) > 0 {
 		command := args[0]
@@ -75,8 +76,8 @@ func runFilterBench(cmd *cobra.Command, args []string) error {
 		"pip install",
 	}
 
-	fmt.Println("| Command              | Match (ns) | Apply (ns) | Savings % | Throughput (MB/s) |")
-	fmt.Println("|----------------------|------------|------------|-----------|-------------------|")
+	out.Global().Println("| Command              | Match (ns) | Apply (ns) | Savings % | Throughput (MB/s) |")
+	out.Global().Println("|----------------------|------------|------------|-----------|-------------------|")
 
 	for _, c := range commands {
 		benchmarkCommandRow(reg, c, input, benchmarkIterations)
@@ -86,14 +87,14 @@ func runFilterBench(cmd *cobra.Command, args []string) error {
 }
 
 func benchmarkCommand(reg *toml.FilterRegistry, command, input string, iterations int) error {
-	fmt.Printf("Benchmarking filter for: %s\n\n", command)
+	out.Global().Printf("Benchmarking filter for: %s\n\n", command)
 
 	_, filterName, config := reg.FindMatchingFilter(command)
 	if config == nil {
 		return fmt.Errorf("no filter matches command %q", command)
 	}
 
-	fmt.Printf("Filter: %s\n", filterName)
+	out.Global().Printf("Filter: %s\n", filterName)
 
 	var totalMatch, totalApply time.Duration
 	var totalSaved int
@@ -116,11 +117,11 @@ func benchmarkCommand(reg *toml.FilterRegistry, command, input string, iteration
 	savingsPct := float64(avgSaved) / float64(len(input)) * 100
 	throughput := float64(len(input)*iterations) / totalApply.Seconds() / 1024 / 1024
 
-	fmt.Printf("\nResults (%d iterations):\n", iterations)
-	fmt.Printf("  Match time:    %v\n", avgMatch)
-	fmt.Printf("  Apply time:    %v\n", avgApply)
-	fmt.Printf("  Token savings: %.1f%%\n", savingsPct)
-	fmt.Printf("  Throughput:    %.2f MB/s\n", throughput)
+	out.Global().Printf("\nResults (%d iterations):\n", iterations)
+	out.Global().Printf("  Match time:    %v\n", avgMatch)
+	out.Global().Printf("  Apply time:    %v\n", avgApply)
+	out.Global().Printf("  Token savings: %.1f%%\n", savingsPct)
+	out.Global().Printf("  Throughput:    %.2f MB/s\n", throughput)
 
 	return nil
 }
@@ -128,7 +129,7 @@ func benchmarkCommand(reg *toml.FilterRegistry, command, input string, iteration
 func benchmarkCommandRow(reg *toml.FilterRegistry, command, input string, iterations int) {
 	_, _, config := reg.FindMatchingFilter(command)
 	if config == nil {
-		fmt.Printf("| %-20s | %10s | %10s | %9s | %17s |\n",
+		out.Global().Printf("| %-20s | %10s | %10s | %9s | %17s |\n",
 			shared.Truncate(command, 20), "-", "-", "no match", "-")
 		return
 	}
@@ -154,7 +155,7 @@ func benchmarkCommandRow(reg *toml.FilterRegistry, command, input string, iterat
 	savingsPct := float64(avgSaved) / float64(len(input)) * 100
 	throughput := float64(len(input)*iterations) / totalApply.Seconds() / 1024 / 1024
 
-	fmt.Printf("| %-20s | %10d | %10d | %8.1f%% | %17.2f |\n",
+	out.Global().Printf("| %-20s | %10d | %10d | %8.1f%% | %17.2f |\n",
 		shared.Truncate(command, 20), avgMatch.Nanoseconds(), avgApply.Nanoseconds(), savingsPct, throughput)
 }
 

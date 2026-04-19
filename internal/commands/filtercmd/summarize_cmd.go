@@ -3,6 +3,7 @@ package filtercmd
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -57,7 +58,7 @@ func runSummarize(cmd *cobra.Command, args []string) error {
 			"l2":   tiers.L2,
 		}
 		data, _ := json.MarshalIndent(output, "", "  ")
-		fmt.Println(string(data))
+		out.Global().Println(string(data))
 		return nil
 	}
 
@@ -74,9 +75,9 @@ func runSummarize(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("╔════════════════════════════════════════════════════╗\n")
-	fmt.Printf("║  Tiered Summary: %-34s ║\n", args[0])
-	fmt.Printf("╚════════════════════════════════════════════════════╝\n\n")
+	out.Global().Printf("╔════════════════════════════════════════════════════╗\n")
+	out.Global().Printf("║  Tiered Summary: %-34s ║\n", args[0])
+	out.Global().Printf("╚════════════════════════════════════════════════════╝\n\n")
 
 	switch tier {
 	case "l0", "L0":
@@ -87,11 +88,11 @@ func runSummarize(cmd *cobra.Command, args []string) error {
 		printL2Summary(tiers.L2)
 	default:
 		// Show all tiers
-		fmt.Println("=== L0: Surface Summary ===")
+		out.Global().Println("=== L0: Surface Summary ===")
 		printL0Summary(tiers.L0)
-		fmt.Println("\n=== L1: Structural Summary ===")
+		out.Global().Println("\n=== L1: Structural Summary ===")
 		printL1Summary(tiers.L1)
-		fmt.Println("\n=== L2: Deep Summary ===")
+		out.Global().Println("\n=== L2: Deep Summary ===")
 		printL2Summary(tiers.L2)
 	}
 
@@ -100,76 +101,76 @@ func runSummarize(cmd *cobra.Command, args []string) error {
 
 func printL0Summary(l0 *filter.L0Summary) {
 	if l0 == nil {
-		fmt.Println("No L0 summary available.")
+		out.Global().Println("No L0 summary available.")
 		return
 	}
 
 	if len(l0.Topics) > 0 {
-		fmt.Printf("Topics:   %v\n", l0.Topics)
+		out.Global().Printf("Topics:   %v\n", l0.Topics)
 	}
 	if len(l0.Keywords) > 0 {
-		fmt.Printf("Keywords: %v\n", l0.Keywords)
+		out.Global().Printf("Keywords: %v\n", l0.Keywords)
 	}
 	if len(l0.Entities) > 0 {
-		fmt.Printf("Entities: %v\n", l0.Entities)
+		out.Global().Printf("Entities: %v\n", l0.Entities)
 	}
-	fmt.Printf("Tokens:   %d\n", l0.TokenCount)
+	out.Global().Printf("Tokens:   %d\n", l0.TokenCount)
 }
 
 func printL1Summary(l1 *filter.L1Summary) {
 	if l1 == nil {
-		fmt.Println("No L1 summary available.")
+		out.Global().Println("No L1 summary available.")
 		return
 	}
 
 	if l1.Title != "" {
-		fmt.Printf("Title: %s\n", l1.Title)
+		out.Global().Printf("Title: %s\n", l1.Title)
 	}
 
 	if l1.Outline != "" {
-		fmt.Println("\nOutline:")
-		fmt.Println(l1.Outline)
+		out.Global().Println("\nOutline:")
+		out.Global().Println(l1.Outline)
 	}
 
 	if len(l1.Sections) > 0 {
-		fmt.Println("\nSections:")
+		out.Global().Println("\nSections:")
 		for _, sec := range l1.Sections {
 			indent := ""
 			for i := 0; i < sec.Level-1; i++ {
 				indent += "  "
 			}
-			fmt.Printf("%s- %s\n", indent, sec.Heading)
+			out.Global().Printf("%s- %s\n", indent, sec.Heading)
 			if sec.Summary != "" {
-				fmt.Printf("%s  %s\n", indent, truncateString(sec.Summary, 60))
+				out.Global().Printf("%s  %s\n", indent, truncateString(sec.Summary, 60))
 			}
 		}
 	}
-	fmt.Printf("\nTokens: %d\n", l1.TokenCount)
+	out.Global().Printf("\nTokens: %d\n", l1.TokenCount)
 }
 
 func printL2Summary(l2 *filter.L2Summary) {
 	if l2 == nil {
-		fmt.Println("No L2 summary available.")
+		out.Global().Println("No L2 summary available.")
 		return
 	}
 
 	if l2.Summary != "" {
-		fmt.Println("Summary:")
-		fmt.Println(l2.Summary)
+		out.Global().Println("Summary:")
+		out.Global().Println(l2.Summary)
 	}
 
 	if len(l2.KeyPoints) > 0 {
-		fmt.Println("\nKey Points:")
+		out.Global().Println("\nKey Points:")
 		for i, point := range l2.KeyPoints {
-			fmt.Printf("%d. %s\n", i+1, point)
+			out.Global().Printf("%d. %s\n", i+1, point)
 		}
 	}
 
 	if len(l2.Implications) > 0 {
-		fmt.Println("\nImplications:")
+		out.Global().Println("\nImplications:")
 		for _, imp := range l2.Implications {
-			fmt.Printf("• %s\n", imp)
+			out.Global().Printf("• %s\n", imp)
 		}
 	}
-	fmt.Printf("\nTokens: %d\n", l2.TokenCount)
+	out.Global().Printf("\nTokens: %d\n", l2.TokenCount)
 }

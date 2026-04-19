@@ -2,31 +2,31 @@
 FROM golang:1.26-alpine AS builder
 WORKDIR /app
 COPY . .
-RUN go build -o tokman ./cmd/tokman
+RUN go build -o tok ./cmd/tok
 
 FROM alpine:latest
-COPY --from=builder /app/tokman /usr/local/bin/
-ENTRYPOINT ["tokman"]
+COPY --from=builder /app/tok /usr/local/bin/
+ENTRYPOINT ["tok"]
 
 ---
 # Task 132-133: Kubernetes & Helm
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tokman
+  name: tok
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: tokman
+      app: tok
   template:
     metadata:
       labels:
-        app: tokman
+        app: tok
     spec:
       containers:
-      - name: tokman
-        image: tokman:latest
+      - name: tok
+        image: tok:latest
         ports:
         - containerPort: 8080
         livenessProbe:
@@ -41,12 +41,12 @@ spec:
 ---
 # Task 134: systemd service
 [Unit]
-Description=TokMan Compression Service
+Description=Tok Compression Service
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/tokman server
+ExecStart=/usr/local/bin/tok server
 Restart=always
 
 [Install]
@@ -54,32 +54,32 @@ WantedBy=multi-user.target
 
 ---
 # Task 135: Ansible playbook
-- name: Deploy TokMan
+- name: Deploy Tok
   hosts: all
   tasks:
-    - name: Install TokMan
+    - name: Install Tok
       get_url:
-        url: https://github.com/GrayCodeAI/tokman/releases/latest/download/tokman
-        dest: /usr/local/bin/tokman
+        url: https://github.com/lakshmanpatel/tok/releases/latest/download/tok
+        dest: /usr/local/bin/tok
         mode: '0755'
 
 ---
 # Task 136: Terraform module
-resource "aws_instance" "tokman" {
+resource "aws_instance" "tok" {
   ami           = "ami-12345678"
   instance_type = "t3.micro"
   
   user_data = <<-EOF
     #!/bin/bash
-    curl -fsSL https://tokman.dev/install.sh | sh
+    curl -fsSL https://tok.dev/install.sh | sh
   EOF
 }
 
 ---
 # Task 137: Serverless (AWS Lambda)
-resource "aws_lambda_function" "tokman" {
-  filename      = "tokman.zip"
-  function_name = "tokman-compress"
+resource "aws_lambda_function" "tok" {
+  filename      = "tok.zip"
+  function_name = "tok-compress"
   role          = aws_iam_role.lambda.arn
   handler       = "bootstrap"
   runtime       = "provided.al2"
@@ -89,7 +89,7 @@ resource "aws_lambda_function" "tokman" {
 # Task 138: CloudFormation
 AWSTemplateFormatVersion: '2010-09-09'
 Resources:
-  TokManInstance:
+  TokInstance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-12345678
@@ -98,7 +98,7 @@ Resources:
 ---
 # Task 139: GCP Deployment Manager
 resources:
-- name: tokman-vm
+- name: tok-vm
   type: compute.v1.instance
   properties:
     zone: us-central1-a
@@ -110,7 +110,7 @@ resources:
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "resources": [{
     "type": "Microsoft.Compute/virtualMachines",
-    "name": "tokman-vm"
+    "name": "tok-vm"
   }]
 }
 

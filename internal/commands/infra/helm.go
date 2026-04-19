@@ -3,6 +3,7 @@ package infra
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -72,7 +73,7 @@ func runHelmPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmOutput(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -101,7 +102,7 @@ func runHelmList(args []string) error {
 		output, _ = c.CombinedOutput()
 		raw = string(output)
 		filtered := filterHelmListText(raw)
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("helm list", "tok helm list", originalTokens, filteredTokens)
@@ -109,7 +110,7 @@ func runHelmList(args []string) error {
 	}
 
 	filtered := filterHelmListJSON(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -127,7 +128,7 @@ func runHelmStatus(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmStatus(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -145,7 +146,7 @@ func runHelmHistory(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmHistory(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -163,7 +164,7 @@ func runHelmSearch(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmSearch(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -192,7 +193,7 @@ func runHelmValues(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -210,7 +211,7 @@ func runHelmInstall(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmInstall(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -228,7 +229,7 @@ func runHelmUpgrade(args []string) error {
 	raw := string(output)
 
 	filtered := filterHelmInstall(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

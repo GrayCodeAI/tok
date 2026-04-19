@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -48,8 +49,8 @@ func runExplain(cmd *cobra.Command, args []string) error {
 	rawOutput := string(output)
 
 	originalTokens := core.EstimateTokens(rawOutput)
-	fmt.Printf("Command: %s\n", strings.Join(args, " "))
-	fmt.Printf("Original: ~%d tokens\n\n", originalTokens)
+	out.Global().Printf("Command: %s\n", strings.Join(args, " "))
+	out.Global().Printf("Original: ~%d tokens\n\n", originalTokens)
 
 	pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
 		Mode:                filter.ModeMinimal,
@@ -66,8 +67,8 @@ func runExplain(cmd *cobra.Command, args []string) error {
 
 	_, stats := pipeline.Process(rawOutput)
 
-	fmt.Printf("%-25s %s\n", "Layer", "Tokens Saved")
-	fmt.Printf("%-25s %s\n", "─────────────────────────", "────────────")
+	out.Global().Printf("%-25s %s\n", "Layer", "Tokens Saved")
+	out.Global().Printf("%-25s %s\n", "─────────────────────────", "────────────")
 
 	layerOrder := []string{
 		"1_entropy", "2_perplexity", "3_goal_driven", "4_ast_preserve",
@@ -101,12 +102,12 @@ func runExplain(cmd *cobra.Command, args []string) error {
 			if desc == "" {
 				desc = layer
 			}
-			fmt.Printf("%-25s %d tokens\n", desc, stat.TokensSaved)
+			out.Global().Printf("%-25s %d tokens\n", desc, stat.TokensSaved)
 			totalLayerSaved += stat.TokensSaved
 		}
 	}
 
-	fmt.Printf("\nTotal saved: %d tokens (%.1f%% reduction)\n",
+	out.Global().Printf("\nTotal saved: %d tokens (%.1f%% reduction)\n",
 		stats.TotalSaved, stats.ReductionPercent)
 
 	return err

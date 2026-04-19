@@ -1,4 +1,4 @@
-# TokMan Contributors
+# Tok Contributors
 
 ## Core Team
 
@@ -31,11 +31,11 @@ You can be added to this file by:
 
 ### 💎 Contributors
 - Made 3+ meaningful contributions
-- Helped improve TokMan
+- Helped improve Tok
 
 ### 🌱 First-Time Contributors
 - Made their first contribution
-- Welcome to the TokMan community!
+- Welcome to the Tok community!
 
 ## Organizations
 
@@ -50,7 +50,7 @@ Special thanks to all users who have:
 - Suggested features and improvements
 - Helped test on different platforms
 - Provided feedback and reviews
-- Spread the word about TokMan
+- Spread the word about Tok
 
 ## Adding Yourself
 
@@ -64,4 +64,4 @@ After your first PR is merged, feel free to add your name to this file! Use the 
 
 ---
 
-**Thank you to everyone who contributes to making TokMan better!** 🚀
+**Thank you to everyone who contributes to making Tok better!** 🚀

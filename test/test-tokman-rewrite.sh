@@ -1,10 +1,10 @@
 #!/bin/bash
-# Test suite for tokman-rewrite.sh
+# Test suite for tok-rewrite.sh
 # Feeds mock JSON through the hook and verifies the rewritten commands.
 #
-# Usage: bash hooks/test-tokman-rewrite.sh
+# Usage: bash hooks/test-tok-rewrite.sh
 
-HOOK="${HOOK:-$HOME/.claude/hooks/tokman-rewrite.sh}"
+HOOK="${HOOK:-$HOME/.claude/hooks/tok-rewrite.sh}"
 PASS=0
 FAIL=0
 TOTAL=0
@@ -15,15 +15,15 @@ RED='\033[31m'
 DIM='\033[2m'
 RESET='\033[0m'
 
-# Skip if tokman binary not available
-if ! command -v tokman &>/dev/null; then
-  echo "tokman binary not found in PATH — skipping hook tests"
+# Skip if tok binary not available
+if ! command -v tok &>/dev/null; then
+  echo "tok binary not found in PATH — skipping hook tests"
   exit 0
 fi
 
-# Enable tokman for tests
-mkdir -p "$HOME/.local/share/tokman"
-touch "$HOME/.local/share/tokman/.enabled"
+# Enable tok for tests
+mkdir -p "$HOME/.local/share/tok"
+touch "$HOME/.local/share/tok/.enabled"
 
 test_rewrite() {
   local description="$1"
@@ -64,7 +64,7 @@ test_rewrite() {
 }
 
 echo "============================================"
-echo "  TokMan Rewrite Hook Test Suite"
+echo "  Tok Rewrite Hook Test Suite"
 echo "============================================"
 echo ""
 
@@ -72,59 +72,59 @@ echo ""
 echo "--- Existing patterns (regression) ---"
 test_rewrite "git status" \
   "git status" \
-  "tokman git status"
+  "tok git status"
 
 test_rewrite "git log --oneline -10" \
   "git log --oneline -10" \
-  "tokman git log --oneline -10"
+  "tok git log --oneline -10"
 
 test_rewrite "git diff HEAD" \
   "git diff HEAD" \
-  "tokman git diff HEAD"
+  "tok git diff HEAD"
 
 test_rewrite "git show abc123" \
   "git show abc123" \
-  "tokman git show abc123"
+  "tok git show abc123"
 
 test_rewrite "git add ." \
   "git add ." \
-  "tokman git add ."
+  "tok git add ."
 
 test_rewrite "gh pr list" \
   "gh pr list" \
-  "tokman gh pr list"
+  "tok gh pr list"
 
 test_rewrite "npx playwright test" \
   "npx playwright test" \
-  "tokman playwright test"
+  "tok playwright test"
 
 test_rewrite "ls -la" \
   "ls -la" \
-  "tokman ls -la"
+  "tok ls -la"
 
 test_rewrite "curl -s https://example.com" \
   "curl -s https://example.com" \
-  "tokman curl -s https://example.com"
+  "tok curl -s https://example.com"
 
 test_rewrite "cat package.json" \
   "cat package.json" \
-  "tokman read package.json"
+  "tok read package.json"
 
 test_rewrite "grep -rn pattern src/" \
   "grep -rn pattern src/" \
-  "tokman grep -rn pattern src/"
+  "tok grep -rn pattern src/"
 
 test_rewrite "rg pattern src/" \
   "rg pattern src/" \
-  "tokman grep pattern src/"
+  "tok grep pattern src/"
 
 test_rewrite "cargo test" \
   "cargo test" \
-  "tokman cargo test"
+  "tok cargo test"
 
 test_rewrite "npx prisma migrate" \
   "npx prisma migrate" \
-  "tokman prisma migrate"
+  "tok prisma migrate"
 
 echo ""
 
@@ -132,27 +132,27 @@ echo ""
 echo "--- Env var prefix handling ---"
 test_rewrite "env + playwright" \
   "TEST_SESSION_ID=2 npx playwright test --config=foo" \
-  "TEST_SESSION_ID=2 tokman playwright test --config=foo"
+  "TEST_SESSION_ID=2 tok playwright test --config=foo"
 
 test_rewrite "env + git status" \
   "GIT_PAGER=cat git status" \
-  "GIT_PAGER=cat tokman git status"
+  "GIT_PAGER=cat tok git status"
 
 test_rewrite "env + git log" \
   "GIT_PAGER=cat git log --oneline -10" \
-  "GIT_PAGER=cat tokman git log --oneline -10"
+  "GIT_PAGER=cat tok git log --oneline -10"
 
 test_rewrite "multi env + vitest" \
   "NODE_ENV=test CI=1 npx vitest run" \
-  "NODE_ENV=test CI=1 tokman vitest run"
+  "NODE_ENV=test CI=1 tok vitest run"
 
 test_rewrite "env + ls" \
   "LANG=C ls -la" \
-  "LANG=C tokman ls -la"
+  "LANG=C tok ls -la"
 
 test_rewrite "env + npm run" \
   "NODE_ENV=test npm run test:e2e" \
-  "NODE_ENV=test tokman npm test:e2e"
+  "NODE_ENV=test tok npm test:e2e"
 
 test_rewrite "env + docker compose (unsupported subcommand, NOT rewritten)" \
   "COMPOSE_PROJECT_NAME=test docker compose up -d" \
@@ -160,7 +160,7 @@ test_rewrite "env + docker compose (unsupported subcommand, NOT rewritten)" \
 
 test_rewrite "env + docker compose logs (supported, rewritten)" \
   "COMPOSE_PROJECT_NAME=test docker compose logs web" \
-  "COMPOSE_PROJECT_NAME=test tokman docker compose logs web"
+  "COMPOSE_PROJECT_NAME=test tok docker compose logs web"
 
 echo ""
 
@@ -168,85 +168,85 @@ echo ""
 echo "--- New patterns ---"
 test_rewrite "npm run test:e2e" \
   "npm run test:e2e" \
-  "tokman npm test:e2e"
+  "tok npm test:e2e"
 
 test_rewrite "npm run build" \
   "npm run build" \
-  "tokman npm build"
+  "tok npm build"
 
 test_rewrite "npm test" \
   "npm test" \
-  "tokman npm test"
+  "tok npm test"
 
 test_rewrite "docker compose logs postgrest" \
   "docker compose logs postgrest" \
-  "tokman docker compose logs postgrest"
+  "tok docker compose logs postgrest"
 
 test_rewrite "docker compose ps" \
   "docker compose ps" \
-  "tokman docker compose ps"
+  "tok docker compose ps"
 
 test_rewrite "docker compose build" \
   "docker compose build" \
-  "tokman docker compose build"
+  "tok docker compose build"
 
 test_rewrite "docker run --rm postgres" \
   "docker run --rm postgres" \
-  "tokman docker run --rm postgres"
+  "tok docker run --rm postgres"
 
 test_rewrite "docker exec -it db psql" \
   "docker exec -it db psql" \
-  "tokman docker exec -it db psql"
+  "tok docker exec -it db psql"
 
 test_rewrite "gh api repos/owner/repo" \
   "gh api repos/owner/repo" \
-  "tokman gh api repos/owner/repo"
+  "tok gh api repos/owner/repo"
 
 test_rewrite "gh release list" \
   "gh release list" \
-  "tokman gh release list"
+  "tok gh release list"
 
 test_rewrite "kubectl describe pod foo" \
   "kubectl describe pod foo" \
-  "tokman kubectl describe pod foo"
+  "tok kubectl describe pod foo"
 
 test_rewrite "kubectl apply -f deploy.yaml" \
   "kubectl apply -f deploy.yaml" \
-  "tokman kubectl apply -f deploy.yaml"
+  "tok kubectl apply -f deploy.yaml"
 
 echo ""
 
-# ---- SECTION 3b: TOKMAN_DISABLED ----
-echo "--- TOKMAN_DISABLED ---"
-test_rewrite "TOKMAN_DISABLED=1 git status (no rewrite)" \
-  "TOKMAN_DISABLED=1 git status" \
+# ---- SECTION 3b: TOK_DISABLED ----
+echo "--- TOK_DISABLED ---"
+test_rewrite "TOK_DISABLED=1 git status (no rewrite)" \
+  "TOK_DISABLED=1 git status" \
   ""
 
-test_rewrite "TOKMAN_DISABLED=1 cargo test (no rewrite)" \
-  "TOKMAN_DISABLED=1 cargo test" \
+test_rewrite "TOK_DISABLED=1 cargo test (no rewrite)" \
+  "TOK_DISABLED=1 cargo test" \
   ""
 
-test_rewrite "FOO=1 TOKMAN_DISABLED=1 git status (no rewrite)" \
-  "FOO=1 TOKMAN_DISABLED=1 git status" \
+test_rewrite "FOO=1 TOK_DISABLED=1 git status (no rewrite)" \
+  "FOO=1 TOK_DISABLED=1 git status" \
   ""
 
 echo ""
 echo "--- Redirect operators ---"
 test_rewrite "cargo test 2>&1 | head" \
   "cargo test 2>&1 | head" \
-  "tokman cargo test 2>&1 | head"
+  "tok cargo test 2>&1 | head"
 
 test_rewrite "cargo test 2>&1" \
   "cargo test 2>&1" \
-  "tokman cargo test 2>&1"
+  "tok cargo test 2>&1"
 
 test_rewrite "cargo test &>/dev/null" \
   "cargo test &>/dev/null" \
-  "tokman cargo test &>/dev/null"
+  "tok cargo test &>/dev/null"
 
 test_rewrite "cargo test & git status (hook rewrites first segment only)" \
   "cargo test & git status" \
-  "tokman cargo test & git status"
+  "tok cargo test & git status"
 
 echo ""
 
@@ -254,15 +254,15 @@ echo ""
 echo "--- Tail rewriting ---"
 test_rewrite "tail -10 file.txt" \
   "tail -10 file.txt" \
-  "tokman read file.txt --tail-lines 10"
+  "tok read file.txt --tail-lines 10"
 
 test_rewrite "tail -n 5 log.txt" \
   "tail -n 5 log.txt" \
-  "tokman read log.txt --tail-lines 5"
+  "tok read log.txt --tail-lines 5"
 
 test_rewrite "tail --lines=20 output.log" \
   "tail --lines=20 output.log" \
-  "tokman read output.log --tail-lines 20"
+  "tok read output.log --tail-lines 20"
 
 echo ""
 
@@ -270,18 +270,18 @@ echo ""
 echo "--- Head rewriting ---"
 test_rewrite "head -10 file.txt" \
   "head -10 file.txt" \
-  "tokman read file.txt --max-lines 10"
+  "tok read file.txt --max-lines 10"
 
 test_rewrite "head --lines=5 log.txt" \
   "head --lines=5 log.txt" \
-  "tokman read log.txt --max-lines 5"
+  "tok read log.txt --max-lines 5"
 
 echo ""
 
 # ---- SECTION 6: Should NOT rewrite ----
 echo "--- Should NOT rewrite ---"
-test_rewrite "already tokman" \
-  "tokman git status" \
+test_rewrite "already tok" \
+  "tok git status" \
   ""
 
 test_rewrite "heredoc" \
@@ -328,19 +328,19 @@ echo ""
 echo "--- Vitest run dedup ---"
 test_rewrite "vitest (no args)" \
   "vitest" \
-  "tokman vitest run"
+  "tok vitest run"
 
 test_rewrite "vitest run (no double run)" \
   "vitest run" \
-  "tokman vitest run"
+  "tok vitest run"
 
 test_rewrite "npx vitest run" \
   "npx vitest run" \
-  "tokman vitest run"
+  "tok vitest run"
 
 test_rewrite "pnpm vitest run --coverage" \
   "pnpm vitest run --coverage" \
-  "tokman vitest run --coverage"
+  "tok vitest run --coverage"
 
 echo ""
 

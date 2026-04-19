@@ -1,8 +1,7 @@
 package system
 
 import (
-	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -54,7 +53,7 @@ func runJustRecipe(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: just %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: just %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("just", args...)
@@ -69,7 +68,7 @@ func runJustRecipe(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -119,7 +118,7 @@ func runJustList() error {
 
 	filtered := filterJustListOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

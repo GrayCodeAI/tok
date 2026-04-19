@@ -1,8 +1,8 @@
-# TokMan World-Class TUI Rebuild Plan
+# Tok World-Class TUI Rebuild Plan
 
 ## Goal
 
-Rebuild TokMan's terminal UI from scratch as a premium token intelligence product using the Charm stack:
+Rebuild Tok's terminal UI from scratch as a premium token intelligence product using the Charm stack:
 
 - `Bubble Tea v2`
 - `Bubbles v2`
@@ -15,11 +15,11 @@ The new TUI should feel like a polished product, not a generic metrics screen an
 
 Implementation source of truth:
 
-- [docs/TUI_PRODUCT_SPEC.md](/Users/lakshmanpatel/Desktop/ProjectAlpha/tokman/docs/TUI_PRODUCT_SPEC.md:1)
+- [docs/TUI_PRODUCT_SPEC.md](/Users/lakshmanpatel/Desktop/ProjectAlpha/tok/docs/TUI_PRODUCT_SPEC.md:1)
 
 ## Codebase-First Findings
 
-This plan is based on inspection of the current TokMan codebase, especially:
+This plan is based on inspection of the current Tok codebase, especially:
 
 - `internal/tracking`
 - `internal/session`
@@ -30,7 +30,7 @@ This plan is based on inspection of the current TokMan codebase, especially:
 - `internal/config`
 - `docs/AGENT_INTEGRATION.md`
 
-### What TokMan Already Has
+### What Tok Already Has
 
 The codebase already supports more TUI-relevant analytics than a fresh design would normally assume:
 
@@ -64,16 +64,16 @@ The codebase already supports more TUI-relevant analytics than a fresh design wo
 - checkpoint events table
 - session system with its own `sessions.db`
 - `SessionManager` with session metadata and context blocks
-- `tokman gain` command for savings analytics
-- `tokman proxy` for pass-through execution with tracking
-- `tokman mcp` for MCP-based usage
-- `tokman init` with multi-agent integration setup
-- native hook processors under `tokman hook`
-- Claude Code usage correlation via `tokman ccusage` and `tokman cc-economics`
+- `tok gain` command for savings analytics
+- `tok proxy` for pass-through execution with tracking
+- `tok mcp` for MCP-based usage
+- `tok init` with multi-agent integration setup
+- native hook processors under `tok hook`
+- Claude Code usage correlation via `tok ccusage` and `tok cc-economics`
 
 ### Existing Integration Model in Code
 
-TokMan already models itself as a layer between:
+Tok already models itself as a layer between:
 
 - coding agents
 - hooks / shell execution
@@ -111,7 +111,7 @@ It must begin with:
 
 ## Product Positioning
 
-TokMan TUI should become:
+Tok TUI should become:
 
 - the observability layer between coding agents/IDEs and LLM providers
 - a token savings dashboard
@@ -120,11 +120,11 @@ TokMan TUI should become:
 - a developer productivity and gamification layer
 - a detailed session and command drilldown interface
 
-TokMan's real role is:
+Tok's real role is:
 
 - coding agent or IDE issues work
-- TokMan sits in the middle
-- TokMan observes, compresses, routes, and measures
+- Tok sits in the middle
+- Tok observes, compresses, routes, and measures
 - the upstream system is a coding agent CLI, agent TUI, plugin, or IDE
 - the downstream system is an LLM provider/model
 
@@ -142,7 +142,7 @@ That means the product must understand and attribute activity across:
 It should answer two classes of questions:
 
 1. Executive summary:
-   - How much token volume did TokMan save?
+   - How much token volume did Tok save?
    - How much money did it save?
    - Which provider, model, command, project, and session drove the savings?
    - Am I trending better or worse than yesterday/week/month?
@@ -157,7 +157,7 @@ It should answer two classes of questions:
 
 ## Integration Model
 
-TokMan should support attribution from any of these sources:
+Tok should support attribution from any of these sources:
 
 - coding agent CLI
 - coding agent TUI
@@ -218,8 +218,8 @@ The new TUI must be able to answer:
 - Which coding agent saved the most tokens?
 - Which IDE integration generated the highest token volume?
 - Which provider cost the most?
-- Which model was most expensive before TokMan filtering?
-- Which model/provider pair benefited most from TokMan?
+- Which model was most expensive before Tok filtering?
+- Which model/provider pair benefited most from Tok?
 - Which agent/provider combinations are inefficient?
 - Which projects are producing the highest AI spend?
 - Which sessions from a given coding agent were best or worst?
@@ -467,7 +467,7 @@ Examples:
 ## 7. Integrations
 
 Purpose:
-Track where TokMan is being used from.
+Track where Tok is being used from.
 
 Must show:
 

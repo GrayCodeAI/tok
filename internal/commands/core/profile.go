@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"runtime"
 	"runtime/pprof"
@@ -14,11 +15,11 @@ import (
 )
 
 var (
-	profileCPU     bool
-	profileMem     bool
-	profileTrace   bool
+	profileCPU      bool
+	profileMem      bool
+	profileTrace    bool
 	profileDuration time.Duration
-	profileOutput  string
+	profileOutput   string
 )
 
 var profileCmd = &cobra.Command{
@@ -79,8 +80,8 @@ func runProfile(cmd *cobra.Command, args []string) error {
 }
 
 func runCPUProfile() error {
-	fmt.Printf("🔥 Starting CPU profiling for %v...\n", profileDuration)
-	fmt.Printf("Output: %s\n\n", profileOutput)
+	out.Global().Printf("🔥 Starting CPU profiling for %v...\n", profileDuration)
+	out.Global().Printf("Output: %s\n\n", profileOutput)
 
 	f, err := os.Create(profileOutput)
 	if err != nil {
@@ -96,14 +97,14 @@ func runCPUProfile() error {
 	// Run workload
 	runWorkload(profileDuration)
 
-	fmt.Println("✅ CPU profiling complete!")
-	fmt.Printf("View with: go tool pprof -http=:8080 %s\n", profileOutput)
+	out.Global().Println("✅ CPU profiling complete!")
+	out.Global().Printf("View with: go tool pprof -http=:8080 %s\n", profileOutput)
 	return nil
 }
 
 func runMemProfile() error {
-	fmt.Printf("🧠 Starting memory profiling for %v...\n", profileDuration)
-	fmt.Printf("Output: %s\n\n", profileOutput)
+	out.Global().Printf("🧠 Starting memory profiling for %v...\n", profileDuration)
+	out.Global().Printf("Output: %s\n\n", profileOutput)
 
 	// Run workload first
 	runWorkload(profileDuration)
@@ -121,14 +122,14 @@ func runMemProfile() error {
 		return fmt.Errorf("could not write memory profile: %w", err)
 	}
 
-	fmt.Println("✅ Memory profiling complete!")
-	fmt.Printf("View with: go tool pprof -http=:8080 %s\n", profileOutput)
+	out.Global().Println("✅ Memory profiling complete!")
+	out.Global().Printf("View with: go tool pprof -http=:8080 %s\n", profileOutput)
 	return nil
 }
 
 func runTraceProfile() error {
-	fmt.Printf("🎯 Starting execution trace for %v...\n", profileDuration)
-	fmt.Printf("Output: %s\n\n", profileOutput)
+	out.Global().Printf("🎯 Starting execution trace for %v...\n", profileDuration)
+	out.Global().Printf("Output: %s\n\n", profileOutput)
 
 	f, err := os.Create(profileOutput)
 	if err != nil {
@@ -144,8 +145,8 @@ func runTraceProfile() error {
 	// Run workload
 	runWorkload(profileDuration)
 
-	fmt.Println("✅ Execution trace complete!")
-	fmt.Printf("View with: go tool trace %s\n", profileOutput)
+	out.Global().Println("✅ Execution trace complete!")
+	out.Global().Printf("View with: go tool trace %s\n", profileOutput)
 	return nil
 }
 
@@ -160,14 +161,14 @@ func runWorkload(duration time.Duration) {
 	for {
 		select {
 		case <-done:
-			fmt.Printf("Completed %d iterations\n", iterations)
+			out.Global().Printf("Completed %d iterations\n", iterations)
 			return
 		case <-ticker.C:
 			// Simulate command processing
 			simulateCommandProcessing()
 			iterations++
 			if iterations%100 == 0 {
-				fmt.Printf("Progress: %d iterations...\r", iterations)
+				out.Global().Printf("Progress: %d iterations...\r", iterations)
 			}
 		}
 	}

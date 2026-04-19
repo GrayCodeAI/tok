@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -57,7 +57,7 @@ func runMiseInstall(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mise install %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mise install %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mise", append([]string{"install"}, args...)...)
@@ -72,7 +72,7 @@ func runMiseInstall(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -128,7 +128,7 @@ func runMiseLs(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mise ls %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mise ls %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mise", append([]string{"ls"}, args...)...)
@@ -137,7 +137,7 @@ func runMiseLs(args []string) error {
 
 	filtered := filterMiseLsOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -183,7 +183,7 @@ func runMiseOutdated(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mise outdated %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mise outdated %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mise", append([]string{"outdated"}, args...)...)
@@ -193,9 +193,9 @@ func runMiseOutdated(args []string) error {
 	filtered := filterMiseOutdatedOutput(raw)
 
 	if filtered == "" && err == nil {
-		fmt.Println("OK All tools are up to date")
+		out.Global().Println("OK All tools are up to date")
 	} else {
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 	}
 
 	originalTokens := filter.EstimateTokens(raw)
@@ -238,7 +238,7 @@ func runMisePassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: mise %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: mise %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("mise", args...)
@@ -253,7 +253,7 @@ func runMisePassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

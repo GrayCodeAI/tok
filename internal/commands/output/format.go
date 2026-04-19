@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -61,7 +62,7 @@ func runFormat(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Detected formatter: %s\n", formatter)
+		out.Global().Errorf("Detected formatter: %s\n", formatter)
 	}
 
 	var execCmd *exec.Cmd
@@ -106,14 +107,14 @@ func runFormat(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: %s %s\n", formatter, strings.Join(formatterArgs, " "))
+		out.Global().Errorf("Running: %s %s\n", formatter, strings.Join(formatterArgs, " "))
 	}
 
 	output, err := execCmd.CombinedOutput()
 	raw := string(output)
 
 	filtered := filterFormatOutput(raw, formatter)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

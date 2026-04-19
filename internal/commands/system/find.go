@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ func runFind(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

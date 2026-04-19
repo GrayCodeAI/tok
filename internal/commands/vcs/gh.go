@@ -3,7 +3,7 @@ package vcs
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -62,7 +62,7 @@ func runGhPr(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh pr %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh pr %s\n", strings.Join(args, " "))
 	}
 
 	// Add --json for structured output if listing
@@ -85,7 +85,7 @@ func runGhPr(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -98,7 +98,7 @@ func runGhIssue(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh issue %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh issue %s\n", strings.Join(args, " "))
 	}
 
 	if len(args) > 0 && args[0] == "list" {
@@ -117,7 +117,7 @@ func runGhIssue(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -130,7 +130,7 @@ func runGhRun(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh run %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh run %s\n", strings.Join(args, " "))
 	}
 
 	// Add JSON output for list command
@@ -150,7 +150,7 @@ func runGhRun(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -163,7 +163,7 @@ func runGhRepo(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh repo %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh repo %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gh", append([]string{"repo"}, args...)...)
@@ -178,7 +178,7 @@ func runGhRepo(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -191,7 +191,7 @@ func runGhPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gh", args...)
@@ -206,7 +206,7 @@ func runGhPassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -523,7 +523,7 @@ func runGhRelease(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh release %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh release %s\n", strings.Join(args, " "))
 	}
 
 	// Add JSON output for list command
@@ -543,7 +543,7 @@ func runGhRelease(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -607,7 +607,7 @@ func runGhApi(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gh api %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gh api %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gh", append([]string{"api"}, args...)...)
@@ -623,7 +623,7 @@ func runGhApi(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

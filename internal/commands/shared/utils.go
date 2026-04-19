@@ -3,7 +3,7 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"path/filepath"
 	"strings"
 )
@@ -96,7 +96,7 @@ func generateSchemaFromJSON(v any, depth, maxDepth int) string {
 // PrintTokenSavings prints token savings info to stderr when in verbose mode.
 func PrintTokenSavings(originalTokens, filteredTokens int) {
 	if !IsQuietMode() && IsVerbose() {
-		fmt.Fprintf(os.Stderr, "Tokens saved: %d\n", originalTokens-filteredTokens)
+		out.Global().Errorf("Tokens saved: %d\n", originalTokens-filteredTokens)
 	}
 }
 

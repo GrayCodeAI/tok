@@ -46,7 +46,40 @@ func NewDAGOptimizer() *DAGOptimizer {
 }
 
 func (dag *DAGOptimizer) Optimize(layers []int) []int {
-	return layers // TODO: topological sort
+	// Kahn's algorithm for topological sort
+	inDegree := make(map[int]int)
+	for node := range layers {
+		if _, ok := inDegree[node]; !ok {
+			inDegree[node] = 0
+		}
+	}
+	for _, deps := range dag.graph {
+		for _, dep := range deps {
+			inDegree[dep]++
+		}
+	}
+	var queue []int
+	for node, deg := range inDegree {
+		if deg == 0 {
+			queue = append(queue, node)
+		}
+	}
+	var result []int
+	for len(queue) > 0 {
+		node := queue[0]
+		queue = queue[1:]
+		result = append(result, node)
+		for _, neighbor := range dag.graph[node] {
+			inDegree[neighbor]--
+			if inDegree[neighbor] == 0 {
+				queue = append(queue, neighbor)
+			}
+		}
+	}
+	if len(result) != len(layers) {
+		return layers // cycle detected, return original
+	}
+	return result
 }
 
 // BloomFilter for H2O optimization

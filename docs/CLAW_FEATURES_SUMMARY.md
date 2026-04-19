@@ -10,19 +10,19 @@
 - **What:** Deduplicate content across entire conversation history
 - **Impact:** 20-40% savings in multi-turn conversations
 - **Effort:** 2 days (~300 lines)
-- **Status:** ❌ Not in TokMan
+- **Status:** ❌ Not in Tok
 
 ### 2. QuantumLock (KV-Cache Alignment)
 - **What:** Stabilize system prompts for cache hits
 - **Impact:** 50-90% cache hit rate improvement
 - **Effort:** 1 day (~200 lines)
-- **Status:** ❌ Not in TokMan
+- **Status:** ❌ Not in Tok
 
 ### 3. Photon (Image Compression)
 - **What:** Resize/compress base64 images
 - **Impact:** 40-70% savings on vision sessions
 - **Effort:** 3 days (~400 lines)
-- **Status:** ❌ Not in TokMan
+- **Status:** ❌ Not in Tok
 
 **Total:** 6 days, ~900 lines of code
 
@@ -68,13 +68,13 @@
 
 ---
 
-## ❌ DON'T IMPLEMENT (Already Better in TokMan)
+## ❌ DON'T IMPLEMENT (Already Better in Tok)
 
-- **RLE Stage** - TokMan's n-gram compression is better
-- **TokenOpt** - TokMan handles in TOML filters
-- **Abbrev** - TokMan has better semantic compression
-- **Nexus** - TokMan has multiple ML layers
-- **StructuralCollapse** - TokMan already has this
+- **RLE Stage** - Tok's n-gram compression is better
+- **TokenOpt** - Tok handles in TOML filters
+- **Abbrev** - Tok has better semantic compression
+- **Nexus** - Tok has multiple ML layers
+- **StructuralCollapse** - Tok already has this
 
 ---
 

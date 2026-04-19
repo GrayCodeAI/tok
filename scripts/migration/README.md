@@ -1,4 +1,4 @@
-# TokMan Code Migration Scripts
+# Tok Code Migration Scripts
 
 This directory contains automated migration scripts to fix critical issues.
 

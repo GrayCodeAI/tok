@@ -2,7 +2,7 @@ package vcs
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -61,7 +61,7 @@ func runGtLog(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt log %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt log %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"log"}, args...)...)
@@ -76,7 +76,7 @@ func runGtLog(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -89,7 +89,7 @@ func runGtSubmit(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt submit %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt submit %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"submit"}, args...)...)
@@ -104,7 +104,7 @@ func runGtSubmit(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -117,7 +117,7 @@ func runGtSync(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt sync %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt sync %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"sync"}, args...)...)
@@ -132,7 +132,7 @@ func runGtSync(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -145,7 +145,7 @@ func runGtRestack(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt restack %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt restack %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"restack"}, args...)...)
@@ -160,7 +160,7 @@ func runGtRestack(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -173,7 +173,7 @@ func runGtCreate(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt create %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt create %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"create"}, args...)...)
@@ -188,7 +188,7 @@ func runGtCreate(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -201,7 +201,7 @@ func runGtBranch(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt branch %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt branch %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", append([]string{"branch"}, args...)...)
@@ -216,7 +216,7 @@ func runGtBranch(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -229,7 +229,7 @@ func runGtPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gt %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gt %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gt", args...)
@@ -244,7 +244,7 @@ func runGtPassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

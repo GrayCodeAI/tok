@@ -9,6 +9,7 @@ package configcmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -67,17 +68,17 @@ func runConfigMigrate(cmd *cobra.Command, args []string) error {
 	migrated, changes := applyMigrationRules(original)
 
 	if len(changes) == 0 {
-		fmt.Fprintf(os.Stderr, "migrate: no changes needed in %s\n", cfgPath)
+		out.Global().Errorf("migrate: no changes needed in %s\n", cfgPath)
 		return nil
 	}
 
-	fmt.Fprintf(os.Stderr, "migrate: %d change(s) to apply in %s:\n", len(changes), cfgPath)
+	out.Global().Errorf("migrate: %d change(s) to apply in %s:\n", len(changes), cfgPath)
 	for _, c := range changes {
-		fmt.Fprintf(os.Stderr, "  - %s\n", c)
+		out.Global().Errorf("  - %s\n", c)
 	}
 
 	if migrateDryRun {
-		fmt.Print(migrated)
+		out.Global().Print(migrated)
 		return nil
 	}
 
@@ -89,7 +90,7 @@ func runConfigMigrate(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("migrate: write %s: %w", cfgPath, err)
 	}
 
-	fmt.Fprintf(os.Stderr, "migrate: wrote migrated config to %s\n", cfgPath)
+	out.Global().Errorf("migrate: wrote migrated config to %s\n", cfgPath)
 	return nil
 }
 

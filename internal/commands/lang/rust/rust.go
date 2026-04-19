@@ -2,6 +2,7 @@ package rust
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -66,11 +67,11 @@ func runRust(args []string) error {
 		filtered = compactRustOutput(filtered, subcommand)
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "rust_"+subcommand, err); hint != "" {
-			fmt.Print("\n" + hint)
+			out.Global().Print("\n" + hint)
 		}
 		return err
 	}

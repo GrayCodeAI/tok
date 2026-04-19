@@ -1,13 +1,13 @@
 #!/bin/bash
-# Test suite for tokman-rewrite.sh hook
+# Test suite for tok-rewrite.sh hook
 # Feeds mock JSON through the hook and verifies the rewritten commands.
 #
 # Usage: bash scripts/test-hook-rewrite.sh
-# Requires: tokman, jq
+# Requires: tok, jq
 
 set -euo pipefail
 
-HOOK="${HOOK:-$HOME/.claude/hooks/tokman-rewrite.sh}"
+HOOK="${HOOK:-$HOME/.claude/hooks/tok-rewrite.sh}"
 PASS=0
 FAIL=0
 TOTAL=0
@@ -24,19 +24,19 @@ if ! command -v jq &>/dev/null; then
   exit 1
 fi
 
-if ! command -v tokman &>/dev/null; then
-  echo "ERROR: tokman is not in PATH. Build with: make build" >&2
+if ! command -v tok &>/dev/null; then
+  echo "ERROR: tok is not in PATH. Build with: make build" >&2
   exit 1
 fi
 
 if [ ! -f "$HOOK" ]; then
   echo "ERROR: Hook not found at $HOOK" >&2
-  echo "Install with: tokman init -g" >&2
+  echo "Install with: tok init -g" >&2
   exit 1
 fi
 
-# Ensure tokman is enabled for hook to work
-ENABLED_DIR="$HOME/.local/share/tokman"
+# Ensure tok is enabled for hook to work
+ENABLED_DIR="$HOME/.local/share/tok"
 mkdir -p "$ENABLED_DIR"
 touch "$ENABLED_DIR/.enabled"
 
@@ -80,89 +80,89 @@ test_rewrite() {
 }
 
 echo "============================================"
-echo "  TokMan Rewrite Hook Test Suite"
+echo "  Tok Rewrite Hook Test Suite"
 echo "============================================"
 echo ""
 
 # ---- Git commands ----
 echo "--- Git commands ---"
-test_rewrite "git status" "git status" "tokman git status"
-test_rewrite "git log --oneline -10" "git log --oneline -10" "tokman git log --oneline -10"
-test_rewrite "git diff HEAD" "git diff HEAD" "tokman git diff HEAD"
-test_rewrite "git show abc123" "git show abc123" "tokman git show abc123"
+test_rewrite "git status" "git status" "tok git status"
+test_rewrite "git log --oneline -10" "git log --oneline -10" "tok git log --oneline -10"
+test_rewrite "git diff HEAD" "git diff HEAD" "tok git diff HEAD"
+test_rewrite "git show abc123" "git show abc123" "tok git show abc123"
 test_rewrite "git add ." "git add ." ""
 
 # ---- GitHub CLI ----
 echo ""
 echo "--- GitHub CLI ---"
-test_rewrite "gh pr list" "gh pr list" "tokman gh pr list"
-test_rewrite "gh issue view 123" "gh issue view 123" "tokman gh issue view 123"
-test_rewrite "gh pr diff 456" "gh pr diff 456" "tokman gh pr diff 456"
+test_rewrite "gh pr list" "gh pr list" "tok gh pr list"
+test_rewrite "gh issue view 123" "gh issue view 123" "tok gh issue view 123"
+test_rewrite "gh pr diff 456" "gh pr diff 456" "tok gh pr diff 456"
 
 # ---- Docker ----
 echo ""
 echo "--- Docker ---"
-test_rewrite "docker ps" "docker ps" "tokman docker ps"
-test_rewrite "docker images" "docker images" "tokman docker images"
-test_rewrite "docker logs container" "docker logs container" "tokman docker logs container"
+test_rewrite "docker ps" "docker ps" "tok docker ps"
+test_rewrite "docker images" "docker images" "tok docker images"
+test_rewrite "docker logs container" "docker logs container" "tok docker logs container"
 test_rewrite "docker run ubuntu" "docker run ubuntu" ""
 
 # ---- Kubernetes ----
 echo ""
 echo "--- Kubernetes ---"
-test_rewrite "kubectl get pods" "kubectl get pods" "tokman kubectl get pods"
-test_rewrite "kubectl describe svc" "kubectl describe svc" "tokman kubectl describe svc"
+test_rewrite "kubectl get pods" "kubectl get pods" "tok kubectl get pods"
+test_rewrite "kubectl describe svc" "kubectl describe svc" "tok kubectl describe svc"
 
 # ---- System commands ----
 echo ""
 echo "--- System commands ---"
-test_rewrite "ls -la" "ls -la" "tokman ls -la"
-test_rewrite "find . -name '*.go'" "find . -name '*.go'" "tokman find . -name '*.go'"
-test_rewrite "grep -r TODO src/" "grep -r TODO src/" "tokman grep -r TODO src/"
-test_rewrite "tree src/" "tree src/" "tokman tree src/"
+test_rewrite "ls -la" "ls -la" "tok ls -la"
+test_rewrite "find . -name '*.go'" "find . -name '*.go'" "tok find . -name '*.go'"
+test_rewrite "grep -r TODO src/" "grep -r TODO src/" "tok grep -r TODO src/"
+test_rewrite "tree src/" "tree src/" "tok tree src/"
 
 # ---- Package managers ----
 echo ""
 echo "--- Package managers ---"
-test_rewrite "npm install" "npm install" "tokman npm install"
-test_rewrite "npm test" "npm test" "tokman npm test"
-test_rewrite "cargo test" "cargo test" "tokman cargo test"
-test_rewrite "pip install flask" "pip install flask" "tokman pip install flask"
+test_rewrite "npm install" "npm install" "tok npm install"
+test_rewrite "npm test" "npm test" "tok npm test"
+test_rewrite "cargo test" "cargo test" "tok cargo test"
+test_rewrite "pip install flask" "pip install flask" "tok pip install flask"
 
 # ---- Test runners ----
 echo ""
 echo "--- Test runners ---"
-test_rewrite "jest" "jest" "tokman jest"
-test_rewrite "pytest" "pytest" "tokman pytest"
-test_rewrite "vitest" "vitest" "tokman vitest"
-test_rewrite "rspec" "rspec" "tokman rspec"
-test_rewrite "rake test" "rake test" "tokman rake test"
+test_rewrite "jest" "jest" "tok jest"
+test_rewrite "pytest" "pytest" "tok pytest"
+test_rewrite "vitest" "vitest" "tok vitest"
+test_rewrite "rspec" "rspec" "tok rspec"
+test_rewrite "rake test" "rake test" "tok rake test"
 
 # ---- Build tools ----
 echo ""
 echo "--- Build tools ---"
-test_rewrite "tsc --noEmit" "tsc --noEmit" "tokman tsc --noEmit"
-test_rewrite "next build" "next build" "tokman next build"
-test_rewrite "golangci-lint run" "golangci-lint run" "tokman golangci-lint run"
+test_rewrite "tsc --noEmit" "tsc --noEmit" "tok tsc --noEmit"
+test_rewrite "next build" "next build" "tok next build"
+test_rewrite "golangci-lint run" "golangci-lint run" "tok golangci-lint run"
 
 # ---- AWS ----
 echo ""
 echo "--- AWS ---"
-test_rewrite "aws s3 ls" "aws s3 ls" "tokman aws s3 ls"
-test_rewrite "aws sts get-caller-identity" "aws sts get-caller-identity" "tokman aws sts get-caller-identity"
+test_rewrite "aws s3 ls" "aws s3 ls" "tok aws s3 ls"
+test_rewrite "aws sts get-caller-identity" "aws sts get-caller-identity" "tok aws sts get-caller-identity"
 
 # ---- Linters ----
 echo ""
 echo "--- Linters ---"
-test_rewrite "rubocop" "rubocop" "tokman rubocop"
-test_rewrite "ruff check ." "ruff check ." "tokman ruff check ."
-test_rewrite "prettier --check ." "prettier --check ." "tokman prettier --check ."
-test_rewrite "mypy src/" "mypy src/" "tokman mypy src/"
+test_rewrite "rubocop" "rubocop" "tok rubocop"
+test_rewrite "ruff check ." "ruff check ." "tok ruff check ."
+test_rewrite "prettier --check ." "prettier --check ." "tok prettier --check ."
+test_rewrite "mypy src/" "mypy src/" "tok mypy src/"
 
 # ---- Edge cases ----
 echo ""
 echo "--- Edge cases ---"
-test_rewrite "already prefixed" "tokman git status" "tokman git status"
+test_rewrite "already prefixed" "tok git status" "tok git status"
 test_rewrite "unknown command" "vim file.txt" ""
 test_rewrite "piped command" "cat file.txt | grep foo" ""
 

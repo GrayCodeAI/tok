@@ -3,6 +3,7 @@ package container
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strconv"
@@ -115,13 +116,13 @@ func runDockerPassthrough(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	if dockerJSON {
-		fmt.Println(formatAsJSON(output))
+		out.Global().Println(formatAsJSON(output))
 		originalTokens := filter.EstimateTokens(output)
 		timer.Track(fmt.Sprintf("docker %s", strings.Join(args, " ")), "tok docker", originalTokens, originalTokens)
 		return err
 	}
 
-	fmt.Print(output)
+	out.Global().Print(output)
 
 	originalTokens := filter.EstimateTokens(output)
 	timer.Track(fmt.Sprintf("docker %s", strings.Join(args, " ")), "tok docker", originalTokens, originalTokens)
@@ -149,7 +150,7 @@ func runDockerPs(args []string) error {
 	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
-		fmt.Println("0 containers")
+		out.Global().Println("0 containers")
 		timer.Track("docker ps", "tok docker ps", 0, 0)
 		return nil
 	}
@@ -171,7 +172,7 @@ func runDockerPs(args []string) error {
 		if count > 5 {
 			filtered += fmt.Sprintf(" +%d", count-5)
 		}
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("docker ps", "tok docker ps", originalTokens, filteredTokens)
@@ -209,7 +210,7 @@ func runDockerPs(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -232,7 +233,7 @@ func runDockerImages(args []string) error {
 	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
-		fmt.Println("0 images")
+		out.Global().Println("0 images")
 		timer.Track("docker images", "tok docker images", 0, 0)
 		return nil
 	}
@@ -254,7 +255,7 @@ func runDockerImages(args []string) error {
 		if count > 5 {
 			filtered += fmt.Sprintf(" +%d", count-5)
 		}
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("docker images", "tok docker images", originalTokens, filteredTokens)
@@ -287,7 +288,7 @@ func runDockerImages(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -300,7 +301,7 @@ func runDockerLogs(args []string) error {
 	timer := tracking.Start()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: tok docker logs <container>")
+		out.Global().Println("Usage: tok docker logs <container>")
 		return nil
 	}
 
@@ -319,7 +320,7 @@ func runDockerLogs(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
-	fmt.Printf("Logs for %s:\n%s", container, filtered)
+	out.Global().Printf("Logs for %s:\n%s", container, filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -345,7 +346,7 @@ func runDockerBuild(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterDockerBuild(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -358,7 +359,7 @@ func runDockerInspect(args []string) error {
 	timer := tracking.Start()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: tok docker inspect <container|image>")
+		out.Global().Println("Usage: tok docker inspect <container|image>")
 		return nil
 	}
 
@@ -370,7 +371,7 @@ func runDockerInspect(args []string) error {
 
 	if shared.UltraCompact {
 		filtered := compactDockerInspect(raw)
-		fmt.Println(filtered)
+		out.Global().Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("docker inspect", "tok docker inspect", originalTokens, filteredTokens)
@@ -382,14 +383,14 @@ func runDockerInspect(args []string) error {
 		buf := &strings.Builder{}
 		compactJSON(data, "", buf, 2)
 		filtered := buf.String()
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("docker inspect", "tok docker inspect", originalTokens, filteredTokens)
 		return err
 	}
 
-	fmt.Print(raw)
+	out.Global().Print(raw)
 	originalTokens := filter.EstimateTokens(raw)
 	timer.Track("docker inspect", "tok docker inspect", originalTokens, originalTokens)
 	return err
@@ -410,7 +411,7 @@ func runDockerStats(args []string) error {
 	if shared.UltraCompact {
 		lines := strings.Split(strings.TrimSpace(raw), "\n")
 		if len(lines) <= 1 {
-			fmt.Print(raw)
+			out.Global().Print(raw)
 		} else {
 			var result strings.Builder
 			for i, line := range lines {
@@ -422,7 +423,7 @@ func runDockerStats(args []string) error {
 					result.WriteString(fmt.Sprintf("%s: cpu=%s mem=%s\n", fields[1], fields[2], fields[3]))
 				}
 			}
-			fmt.Print(result.String())
+			out.Global().Print(result.String())
 		}
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(strings.Split(strings.TrimSpace(raw), "\n")[0])
@@ -431,7 +432,7 @@ func runDockerStats(args []string) error {
 	}
 
 	filtered := filterDockerStats(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -444,7 +445,7 @@ func runDockerTop(args []string) error {
 	timer := tracking.Start()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: tok docker top <container>")
+		out.Global().Println("Usage: tok docker top <container>")
 		return nil
 	}
 
@@ -455,7 +456,7 @@ func runDockerTop(args []string) error {
 	raw := string(output)
 
 	filtered := filterDockerTop(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -468,7 +469,7 @@ func runDockerPort(args []string) error {
 	timer := tracking.Start()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: tok docker port <container>")
+		out.Global().Println("Usage: tok docker port <container>")
 		return nil
 	}
 
@@ -478,7 +479,7 @@ func runDockerPort(args []string) error {
 	output, err := c.CombinedOutput()
 	raw := string(output)
 
-	fmt.Print(raw)
+	out.Global().Print(raw)
 
 	originalTokens := filter.EstimateTokens(raw)
 	timer.Track("docker port", "tok docker port", originalTokens, originalTokens)
@@ -526,7 +527,7 @@ func runDockerNetwork(args []string) error {
 		}
 
 		filtered := result.String()
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
@@ -584,7 +585,7 @@ func runDockerVolume(args []string) error {
 		}
 
 		filtered := result.String()
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
@@ -611,7 +612,7 @@ func runDockerSystem(args []string) error {
 		raw := string(output)
 
 		filtered := filterDockerSystemDf(raw)
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
@@ -637,7 +638,7 @@ func runDockerInfo(args []string) error {
 	raw := string(output)
 
 	filtered := filterDockerInfo(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -656,7 +657,7 @@ func runDockerVersion(args []string) error {
 	raw := string(output)
 
 	filtered := filterDockerVersion(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -682,7 +683,7 @@ func runDockerLifecycle(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterDockerLifecycle(output, args)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -714,7 +715,7 @@ func runDockerExec(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterDockerExecOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -747,7 +748,7 @@ func runDockerRun(args []string) error {
 
 	if shared.UltraCompact {
 		filtered := filterDockerRunUltraCompact(output)
-		fmt.Print(filtered)
+		out.Global().Print(filtered)
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track("docker run", "tok docker run", originalTokens, filteredTokens)
@@ -755,7 +756,7 @@ func runDockerRun(args []string) error {
 	}
 
 	filtered := filterDockerRunOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -810,7 +811,7 @@ func runComposeUp(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterComposeUp(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -836,7 +837,7 @@ func runComposeDown(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterComposeDown(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -878,7 +879,7 @@ func runComposeConfig(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -901,7 +902,7 @@ func runComposePs(args []string) error {
 	output := stdoutBuf.String()
 
 	if strings.TrimSpace(output) == "" {
-		fmt.Println("0 compose services")
+		out.Global().Println("0 compose services")
 		timer.Track("docker compose ps", "tok docker compose ps", 0, 0)
 		return nil
 	}
@@ -938,7 +939,7 @@ func runComposePs(args []string) error {
 	}
 
 	filtered := result.String()
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -964,7 +965,7 @@ func runComposeLogs(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterLogOutput(output)
-	fmt.Printf("Compose logs:\n%s", filtered)
+	out.Global().Printf("Compose logs:\n%s", filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -990,7 +991,7 @@ func runComposeBuild(args []string) error {
 	output := stdoutBuf.String() + stderrBuf.String()
 
 	filtered := filterComposeBuild(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

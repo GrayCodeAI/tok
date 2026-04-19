@@ -17,7 +17,7 @@ max_lines = 20
 
 [[tests.brew-install]]
 name = "already installed short-circuits"
-input = "Warning: tokman 0.9.0 is already installed and up-to-date.\nTo reinstall 0.9.0, run:\n  brew reinstall tokman"
+input = "Warning: tok 0.9.0 is already installed and up-to-date.\nTo reinstall 0.9.0, run:\n  brew reinstall tok"
 expected = "ok (already installed)"
 
 [[tests.brew-install]]

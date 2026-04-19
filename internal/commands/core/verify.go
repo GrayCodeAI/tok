@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 
@@ -50,86 +51,86 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Printf("Hook:  %s\n", result.HookPath)
-		fmt.Printf("Hash:  %s\n", result.HashPath)
-		fmt.Println()
+		out.Global().Printf("Hook:  %s\n", result.HookPath)
+		out.Global().Printf("Hash:  %s\n", result.HashPath)
+		out.Global().Println()
 	}
 
 	switch result.Status {
 	case integrity.StatusVerified:
 		hash, _ := integrity.ComputeHash(result.HookPath)
-		fmt.Printf("%s  hook integrity verified\n", green("PASS"))
-		fmt.Printf("      sha256:%s\n", hash)
-		fmt.Printf("      %s\n", cyan(result.HookPath))
+		out.Global().Printf("%s  hook integrity verified\n", green("PASS"))
+		out.Global().Printf("      sha256:%s\n", hash)
+		out.Global().Printf("      %s\n", cyan(result.HookPath))
 
 	case integrity.StatusTampered:
-		fmt.Fprintf(os.Stderr, "%s  hook integrity check FAILED\n", red("FAIL"))
+		out.Global().Errorf("%s  hook integrity check FAILED\n", red("FAIL"))
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintf(os.Stderr, "  Expected: %s\n", result.Expected)
-		fmt.Fprintf(os.Stderr, "  Actual:   %s\n", result.Actual)
+		out.Global().Errorf("  Expected: %s\n", result.Expected)
+		out.Global().Errorf("  Actual:   %s\n", result.Actual)
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "  The hook file has been modified outside of `tok init`.")
-		fmt.Fprintln(os.Stderr, "  This could indicate tampering or a manual edit.")
+		out.Global().Errorf("  The hook file has been modified outside of `tok init`.")
+		out.Global().Errorf("  This could indicate tampering or a manual edit.")
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "  To restore: tok init")
-		fmt.Fprintf(os.Stderr, "  To inspect: cat %s\n", result.HookPath)
+		out.Global().Errorf("  To restore: tok init")
+		out.Global().Errorf("  To inspect: cat %s\n", result.HookPath)
 		allPassed = false
 		if !verifyRequireAll {
 			return fmt.Errorf("hook integrity check failed")
 		}
 
 	case integrity.StatusNoBaseline:
-		fmt.Printf("%s  no baseline hash found\n", yellow("WARN"))
-		fmt.Println("      Hook exists but was installed before integrity checks.")
-		fmt.Println("      Run `tok init` to establish baseline.")
+		out.Global().Printf("%s  no baseline hash found\n", yellow("WARN"))
+		out.Global().Println("      Hook exists but was installed before integrity checks.")
+		out.Global().Println("      Run `tok init` to establish baseline.")
 		allPassed = false
 
 	case integrity.StatusNotInstalled:
-		fmt.Printf("%s  tok hook not installed\n", yellow("SKIP"))
-		fmt.Println("      Run `tok init` to install.")
+		out.Global().Printf("%s  tok hook not installed\n", yellow("SKIP"))
+		out.Global().Println("      Run `tok init` to install.")
 		allPassed = false
 
 	case integrity.StatusOrphanedHash:
-		fmt.Fprintf(os.Stderr, "%s  hash file exists but hook is missing\n", yellow("WARN"))
-		fmt.Fprintln(os.Stderr, "      Run `tok init` to reinstall.")
+		out.Global().Errorf("%s  hash file exists but hook is missing\n", yellow("WARN"))
+		out.Global().Errorf("      Run `tok init` to reinstall.")
 		allPassed = false
 
 	case integrity.StatusOutdated:
-		fmt.Printf("%s  hook is outdated\n", yellow("WARN"))
-		fmt.Printf("      Installed version: %d\n", result.HookVersion)
-		fmt.Printf("      Required version:  %d\n", result.RequiredVersion)
-		fmt.Println("      Run `tok init --claude` to refresh the generated hook.")
+		out.Global().Printf("%s  hook is outdated\n", yellow("WARN"))
+		out.Global().Printf("      Installed version: %d\n", result.HookVersion)
+		out.Global().Printf("      Required version:  %d\n", result.RequiredVersion)
+		out.Global().Println("      Run `tok init --claude` to refresh the generated hook.")
 		allPassed = false
 	}
 
 	// If --require-all, also check config and filters
 	if verifyRequireAll {
-		fmt.Println()
-		fmt.Println(cyan("Additional verification checks:"))
+		out.Global().Println()
+		out.Global().Println(cyan("Additional verification checks:"))
 
 		// Check config
 		configOK := verifyConfig()
 		if configOK {
-			fmt.Printf("%s  config valid\n", green("PASS"))
+			out.Global().Printf("%s  config valid\n", green("PASS"))
 		} else {
-			fmt.Printf("%s  config issues found\n", yellow("WARN"))
+			out.Global().Printf("%s  config issues found\n", yellow("WARN"))
 			allPassed = false
 		}
 
 		// Check filters
 		filtersOK := verifyFilters()
 		if filtersOK {
-			fmt.Printf("%s  filters valid\n", green("PASS"))
+			out.Global().Printf("%s  filters valid\n", green("PASS"))
 		} else {
-			fmt.Printf("%s  filter issues found\n", yellow("WARN"))
+			out.Global().Printf("%s  filter issues found\n", yellow("WARN"))
 			allPassed = false
 		}
 	}
 
 	// Print security reference
-	fmt.Println()
-	fmt.Println(strings.Repeat("─", 50))
-	fmt.Println("Security: This check prevents command injection via hook tampering.")
+	out.Global().Println()
+	out.Global().Println(strings.Repeat("─", 50))
+	out.Global().Println("Security: This check prevents command injection via hook tampering.")
 
 	if verifyRequireAll && !allPassed {
 		return fmt.Errorf("not all verification checks passed")

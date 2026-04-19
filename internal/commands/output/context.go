@@ -2,6 +2,7 @@ package output
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"log"
 	"os"
 	"path/filepath"
@@ -83,33 +84,33 @@ func runContext(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to get context data: %w", err)
 	}
 
-	fmt.Println("Context Window Analysis")
-	fmt.Println("======================")
-	fmt.Println()
+	out.Global().Println("Context Window Analysis")
+	out.Global().Println("======================")
+	out.Global().Println()
 
 	if savings.TotalCommands == 0 {
-		fmt.Println("No data yet. Run some commands through tok first.")
+		out.Global().Println("No data yet. Run some commands through tok first.")
 		return nil
 	}
 
-	fmt.Printf("Commands analyzed: %d\n", savings.TotalCommands)
-	fmt.Printf("Original context:  %d tokens\n", savings.TotalOriginal)
-	fmt.Printf("Filtered context:  %d tokens\n", savings.TotalFiltered)
-	fmt.Printf("Tokens saved:      %d tokens\n", savings.TotalSaved)
-	fmt.Printf("Reduction:         %.1f%%\n\n", savings.ReductionPct)
+	out.Global().Printf("Commands analyzed: %d\n", savings.TotalCommands)
+	out.Global().Printf("Original context:  %d tokens\n", savings.TotalOriginal)
+	out.Global().Printf("Filtered context:  %d tokens\n", savings.TotalFiltered)
+	out.Global().Printf("Tokens saved:      %d tokens\n", savings.TotalSaved)
+	out.Global().Printf("Reduction:         %.1f%%\n\n", savings.ReductionPct)
 
 	readSavings, err := tracker.GetSavingsForContextReads(projectPath, "", "")
 	if err != nil {
 		return fmt.Errorf("failed to get smart read data: %w", err)
 	}
 	if readSavings.TotalCommands > 0 {
-		fmt.Println("Smart context reads")
-		fmt.Println("-------------------")
-		fmt.Printf("Reads analyzed:    %d\n", readSavings.TotalCommands)
-		fmt.Printf("Original context:  %d tokens\n", readSavings.TotalOriginal)
-		fmt.Printf("Delivered context: %d tokens\n", readSavings.TotalFiltered)
-		fmt.Printf("Tokens saved:      %d tokens\n", readSavings.TotalSaved)
-		fmt.Printf("Reduction:         %.1f%%\n\n", readSavings.ReductionPct)
+		out.Global().Println("Smart context reads")
+		out.Global().Println("-------------------")
+		out.Global().Printf("Reads analyzed:    %d\n", readSavings.TotalCommands)
+		out.Global().Printf("Original context:  %d tokens\n", readSavings.TotalOriginal)
+		out.Global().Printf("Delivered context: %d tokens\n", readSavings.TotalFiltered)
+		out.Global().Printf("Tokens saved:      %d tokens\n", readSavings.TotalSaved)
+		out.Global().Printf("Reduction:         %.1f%%\n\n", readSavings.ReductionPct)
 	}
 
 	contextSizes := []struct {
@@ -123,9 +124,9 @@ func runContext(cmd *cobra.Command, args []string) error {
 		{"Gemini 1.5 (1M)", 1000000},
 	}
 
-	fmt.Println("Context window capacity with tok:")
-	fmt.Printf("%-25s %12s %12s %10s\n", "Model", "Without", "With", "Extra")
-	fmt.Printf("%-25s %12s %12s %10s\n", "─────────────────────────", "────────────", "────────────", "──────────")
+	out.Global().Println("Context window capacity with tok:")
+	out.Global().Printf("%-25s %12s %12s %10s\n", "Model", "Without", "With", "Extra")
+	out.Global().Printf("%-25s %12s %12s %10s\n", "─────────────────────────", "────────────", "────────────", "──────────")
 
 	for _, cs := range contextSizes {
 		without := cs.limit / savings.TotalOriginal
@@ -137,7 +138,7 @@ func runContext(cmd *cobra.Command, args []string) error {
 			with = 1
 		}
 		extra := with - without
-		fmt.Printf("%-25s %10dx %10dx +%dx\n", cs.name, without, with, extra)
+		out.Global().Printf("%-25s %10dx %10dx +%dx\n", cs.name, without, with, extra)
 	}
 
 	return nil
@@ -194,9 +195,9 @@ func emitContextFile(path string, opts contextread.Options) error {
 		return err
 	}
 
-	fmt.Print(content)
+	out.Global().Print(content)
 	if content != "" && !strings.HasSuffix(content, "\n") {
-		fmt.Println()
+		out.Global().Println()
 	}
 
 	commandName := "tok ctx read"

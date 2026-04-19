@@ -1,4 +1,4 @@
-# TokMan Benchmarks
+# Tok Benchmarks
 
 ## Performance Comparison
 
@@ -6,7 +6,7 @@
 
 | System | Reduction | Method | Research Basis |
 |--------|-----------|--------|----------------|
-| **TokMan** | **95-99.9%** | Practical 20-layer pipeline | 120+ papers |
+| **Tok** | **95-99.9%** | Practical 20-layer pipeline | 120+ papers |
 | LLMLingua | 20x | Perplexity pruning | Microsoft 2023 |
 | Selective Context | 2-3x | Entropy filtering | Mila 2023 |
 | AutoCompressor | 98%+ | Hierarchical summary | Princeton/MIT 2023 |
@@ -17,7 +17,7 @@
 
 ### Large Context Performance
 
-| Input Size | TokMan Time | Memory | Reduction |
+| Input Size | Tok Time | Memory | Reduction |
 |------------|-------------|--------|-----------|
 | 100K tokens | 8.2s | 4.2GB | 99.2% |
 | 500K tokens | 42s | 18GB | 99.7% |
@@ -47,7 +47,7 @@
 
 ### vs. LLMLingua (Microsoft)
 
-**TokMan Advantages:**
+**Tok Advantages:**
 - 14 layers vs 1-2 techniques
 - Streaming support for infinite context
 - Query-aware compression
@@ -59,7 +59,7 @@
 
 ### vs. MemGPT (UC Berkeley)
 
-**TokMan Advantages:**
+**Tok Advantages:**
 - No external dependencies
 - CLI-first design
 - Real-time filtering
@@ -71,7 +71,7 @@
 
 ### vs. LangChain Compression
 
-**TokMan Advantages:**
+**Tok Advantages:**
 - 95-99% vs 50-70% reduction
 - Research-based methods
 - Layer transparency
@@ -83,7 +83,7 @@
 
 ### vs. Native LLM Context Truncation
 
-**TokMan Advantages:**
+**Tok Advantages:**
 - Intelligent vs naive truncation
 - Preserves critical information
 - Query-aware selection

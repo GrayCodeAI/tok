@@ -65,9 +65,9 @@ func Start() *TimedExecution {
 
 // Track records the execution with token savings.
 // Automatically captures AI agent attribution from environment variables:
-//   - TOKMAN_AGENT: AI agent name (e.g., "Claude Code", "OpenCode", "Cursor")
-//   - TOKMAN_MODEL: Model name (e.g., "claude-3-opus", "gpt-4")
-//   - TOKMAN_PROVIDER: Provider name (e.g., "Anthropic", "OpenAI")
+//   - TOK_AGENT: AI agent name (e.g., "Claude Code", "OpenCode", "Cursor")
+//   - TOK_MODEL: Model name (e.g., "claude-3-opus", "gpt-4")
+//   - TOK_PROVIDER: Provider name (e.g., "Anthropic", "OpenAI")
 func (t *TimedExecution) Track(command, tokCmd string, originalTokens, filteredTokens int) {
 	t.once.Do(func() {
 		execTime := time.Since(t.startTime)
@@ -93,10 +93,10 @@ func (t *TimedExecution) Track(command, tokCmd string, originalTokens, filteredT
 			Timestamp:      time.Now(),
 			ParseSuccess:   true,
 			// AI Agent attribution from environment
-			AgentName:   os.Getenv("TOKMAN_AGENT"),
-			ModelName:   os.Getenv("TOKMAN_MODEL"),
-			Provider:    os.Getenv("TOKMAN_PROVIDER"),
-			ModelFamily: utils.GetModelFamily(os.Getenv("TOKMAN_MODEL")),
+			AgentName:   os.Getenv("TOK_AGENT"),
+			ModelName:   os.Getenv("TOK_MODEL"),
+			Provider:    os.Getenv("TOK_PROVIDER"),
+			ModelFamily: utils.GetModelFamily(os.Getenv("TOK_MODEL")),
 		})
 	})
 }

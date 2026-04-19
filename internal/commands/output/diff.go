@@ -3,6 +3,7 @@ package output
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -57,7 +58,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 
 	filtered := compactDiff(output)
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := core.EstimateTokens(output)
 	filteredTokens := core.EstimateTokens(filtered)

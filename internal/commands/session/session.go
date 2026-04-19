@@ -3,6 +3,7 @@ package session
 import (
 	"context"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/fatih/color"
@@ -102,24 +103,24 @@ func runSessionStart(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create session: %w", err)
 	}
 
-	fmt.Printf("\n%s Started new session\n\n", color.GreenString("✓"))
-	fmt.Printf("  ID:       %s\n", s.ID)
-	fmt.Printf("  Agent:    %s\n", s.Agent)
-	fmt.Printf("  Project:  %s\n", s.ProjectPath)
-	fmt.Printf("  Started:  %s\n\n", s.StartedAt.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("\n%s Started new session\n\n", color.GreenString("✓"))
+	out.Global().Printf("  ID:       %s\n", s.ID)
+	out.Global().Printf("  Agent:    %s\n", s.Agent)
+	out.Global().Printf("  Project:  %s\n", s.ProjectPath)
+	out.Global().Printf("  Started:  %s\n\n", s.StartedAt.Format("2006-01-02 15:04:05"))
 
 	return nil
 }
 
 func runSessionList(cmd *cobra.Command, args []string) error {
-	fmt.Println("\nActive Sessions:")
+	out.Global().Println("\nActive Sessions:")
 
 	// Simple table output without external dependency
-	fmt.Printf("%-16s %-12s %-30s %-8s %-10s %-15s\n", "ID", "Agent", "Project", "Turns", "Tokens", "Last Activity")
-	fmt.Println(string(make([]byte, 95)))
+	out.Global().Printf("%-16s %-12s %-30s %-8s %-10s %-15s\n", "ID", "Agent", "Project", "Turns", "Tokens", "Last Activity")
+	out.Global().Println(string(make([]byte, 95)))
 
 	// Note: In real implementation, would query from manager
-	fmt.Printf("%-16s %-12s %-30s %-8s %-10s %-15s\n",
+	out.Global().Printf("%-16s %-12s %-30s %-8s %-10s %-15s\n",
 		"abc123...",
 		"claude",
 		"/home/user/project",
@@ -139,27 +140,27 @@ func runSessionActive(cmd *cobra.Command, args []string) error {
 
 	s := mgr.GetActiveSession()
 	if s == nil {
-		fmt.Println("No active session")
+		out.Global().Println("No active session")
 		return nil
 	}
 
-	fmt.Printf("\n%s Active Session\n\n", color.New(color.Bold).Sprint("→"))
-	fmt.Printf("  ID:          %s\n", s.ID)
-	fmt.Printf("  Agent:       %s\n", s.Agent)
-	fmt.Printf("  Project:     %s\n", s.ProjectPath)
-	fmt.Printf("  Started:     %s\n", s.StartedAt.Format("2006-01-02 15:04:05"))
-	fmt.Printf("  Last Active: %s\n", s.LastActivity.Format("2006-01-02 15:04:05"))
-	fmt.Printf("  Turns:       %d\n", s.Metadata.TotalTurns)
-	fmt.Printf("  Tokens:      %d\n", s.Metadata.TotalTokens)
+	out.Global().Printf("\n%s Active Session\n\n", color.New(color.Bold).Sprint("→"))
+	out.Global().Printf("  ID:          %s\n", s.ID)
+	out.Global().Printf("  Agent:       %s\n", s.Agent)
+	out.Global().Printf("  Project:     %s\n", s.ProjectPath)
+	out.Global().Printf("  Started:     %s\n", s.StartedAt.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("  Last Active: %s\n", s.LastActivity.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("  Turns:       %d\n", s.Metadata.TotalTurns)
+	out.Global().Printf("  Tokens:      %d\n", s.Metadata.TotalTokens)
 
 	if s.State.Focus != "" {
-		fmt.Printf("  Focus:       %s\n", s.State.Focus)
+		out.Global().Printf("  Focus:       %s\n", s.State.Focus)
 	}
 	if s.State.NextAction != "" {
-		fmt.Printf("  Next Action: %s\n", s.State.NextAction)
+		out.Global().Printf("  Next Action: %s\n", s.State.NextAction)
 	}
 
-	fmt.Println()
+	out.Global().Println()
 	return nil
 }
 
@@ -176,8 +177,8 @@ func runSessionCompact(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("precompact failed: %w", err)
 	}
 
-	fmt.Printf("\n%s PreCompact Summary\n\n", color.New(color.Bold).Sprint("→"))
-	fmt.Println(summary)
+	out.Global().Printf("\n%s PreCompact Summary\n\n", color.New(color.Bold).Sprint("→"))
+	out.Global().Println(summary)
 
 	return nil
 }
@@ -199,11 +200,11 @@ func runSessionSnapshot(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create snapshot: %w", err)
 	}
 
-	fmt.Printf("\n%s Created session snapshot\n\n", color.GreenString("✓"))
-	fmt.Printf("  Snapshot ID: %d\n", snapshot.ID)
-	fmt.Printf("  Session ID:  %s\n", snapshot.SessionID)
-	fmt.Printf("  Tokens:      %d\n", snapshot.TokenCount)
-	fmt.Printf("  Created:     %s\n\n", snapshot.CreatedAt.Format("2006-01-02 15:04:05"))
+	out.Global().Printf("\n%s Created session snapshot\n\n", color.GreenString("✓"))
+	out.Global().Printf("  Snapshot ID: %d\n", snapshot.ID)
+	out.Global().Printf("  Session ID:  %s\n", snapshot.SessionID)
+	out.Global().Printf("  Tokens:      %d\n", snapshot.TokenCount)
+	out.Global().Printf("  Created:     %s\n\n", snapshot.CreatedAt.Format("2006-01-02 15:04:05"))
 
 	return nil
 }

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -45,26 +46,26 @@ func runCompare(cmd *cobra.Command, args []string) error {
 	command := args[0]
 
 	if compareDryRun {
-		fmt.Println("Would compare:")
-		fmt.Printf("  1. tok %s\n", command)
-		fmt.Printf("  2. %s (raw)\n", command)
+		out.Global().Println("Would compare:")
+		out.Global().Printf("  1. tok %s\n", command)
+		out.Global().Printf("  2. %s (raw)\n", command)
 		return nil
 	}
 
-	fmt.Printf("Comparing: %s\n", command)
-	fmt.Printf("Runs: %d\n", compareRuns)
-	fmt.Println()
+	out.Global().Printf("Comparing: %s\n", command)
+	out.Global().Printf("Runs: %d\n", compareRuns)
+	out.Global().Println()
 
 	var totalRawTokens, totalFilteredTokens int
 	var totalRawCost, totalFilteredCost float64
 
 	for i := 0; i < compareRuns; i++ {
 		if compareRuns > 1 {
-			fmt.Printf("Run %d/%d...\n", i+1, compareRuns)
+			out.Global().Printf("Run %d/%d...\n", i+1, compareRuns)
 		}
 
 		rawOut, rawTokens, rawCost := runVanilla(command)
-		tokOut, filteredTokens, filteredCost := runWithTokman(command)
+		tokOut, filteredTokens, filteredCost := runWithTok(command)
 
 		totalRawTokens += rawTokens
 		totalFilteredTokens += filteredTokens
@@ -72,12 +73,12 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		totalFilteredCost += filteredCost
 
 		if compareRuns == 1 {
-			fmt.Printf("  Raw:     %d tokens (~$%.4f)\n", rawTokens, rawCost)
-			fmt.Printf("  tok:  %d tokens (~$%.4f)\n", filteredTokens, filteredCost)
+			out.Global().Printf("  Raw:     %d tokens (~$%.4f)\n", rawTokens, rawCost)
+			out.Global().Printf("  tok:  %d tokens (~$%.4f)\n", filteredTokens, filteredCost)
 			saved := rawTokens - filteredTokens
 			savingsPct := float64(saved) / float64(rawTokens) * 100
-			fmt.Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
-			fmt.Println()
+			out.Global().Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
+			out.Global().Println()
 			showSample(rawOut, tokOut)
 		}
 	}
@@ -88,12 +89,12 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		avgRawCost := totalRawCost / float64(compareRuns)
 		avgFilteredCost := totalFilteredCost / float64(compareRuns)
 
-		fmt.Println("Averages:")
-		fmt.Printf("  Raw:     %d tokens (~$%.4f)\n", avgRawTokens, avgRawCost)
-		fmt.Printf("  tok:  %d tokens (~$%.4f)\n", avgFilteredTokens, avgFilteredCost)
+		out.Global().Println("Averages:")
+		out.Global().Printf("  Raw:     %d tokens (~$%.4f)\n", avgRawTokens, avgRawCost)
+		out.Global().Printf("  tok:  %d tokens (~$%.4f)\n", avgFilteredTokens, avgFilteredCost)
 		saved := avgRawTokens - avgFilteredTokens
 		savingsPct := float64(saved) / float64(avgRawTokens) * 100
-		fmt.Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
+		out.Global().Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
 	}
 
 	if compareJSON {
@@ -125,7 +126,7 @@ func runVanilla(cmd string) (output string, tokens int, cost float64) {
 	return
 }
 
-func runWithTokman(cmd string) (output string, tokens int, cost float64) {
+func runWithTok(cmd string) (output string, tokens int, cost float64) {
 	c := exec.Command("tok", strings.Fields(cmd)...)
 	out, err := c.CombinedOutput()
 	if err != nil {
@@ -148,20 +149,20 @@ func showSample(raw, filtered string) {
 	rawLines := strings.Split(raw, "\n")
 	filteredLines := strings.Split(filtered, "\n")
 
-	fmt.Println("Sample output (first 5 lines):")
-	fmt.Println("Raw:")
+	out.Global().Println("Sample output (first 5 lines):")
+	out.Global().Println("Raw:")
 	for i, line := range rawLines {
 		if i >= 5 {
 			break
 		}
-		fmt.Printf("  %s\n", line)
+		out.Global().Printf("  %s\n", line)
 	}
-	fmt.Println("tok:")
+	out.Global().Println("tok:")
 	for i, line := range filteredLines {
 		if i >= 5 {
 			break
 		}
-		fmt.Printf("  %s\n", line)
+		out.Global().Printf("  %s\n", line)
 	}
 }
 
@@ -170,7 +171,7 @@ func printCompareJSON(rawTokens, filteredTokens int, rawCost, filteredCost float
 	savedCost := rawCost - filteredCost
 	savingsPct := float64(savedTokens) / float64(rawTokens) * 100
 
-	fmt.Printf(`{
+	out.Global().Printf(`{
   "command": "comparison",
   "raw_tokens": %d,
   "filtered_tokens": %d,

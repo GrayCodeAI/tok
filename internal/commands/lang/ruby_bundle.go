@@ -2,7 +2,7 @@ package lang
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -17,7 +17,7 @@ func runBundleCmd(args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: bundle %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: bundle %s\n", strings.Join(args, " "))
 	}
 
 	// Route to specialized handlers
@@ -37,7 +37,7 @@ func runBundleInstallCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: bundle install %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: bundle install %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("bundle", append([]string{"install"}, args...)...)
@@ -53,7 +53,7 @@ func runBundleInstallCmd(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -133,7 +133,7 @@ func runBundleUpdateCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: bundle update %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: bundle update %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("bundle", append([]string{"update"}, args...)...)
@@ -142,7 +142,7 @@ func runBundleUpdateCmd(args []string) error {
 
 	filtered := filterBundleUpdateOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -185,7 +185,7 @@ func runBundleOutdatedCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: bundle outdated %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: bundle outdated %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("bundle", append([]string{"outdated"}, args...)...)
@@ -194,7 +194,7 @@ func runBundleOutdatedCmd(args []string) error {
 
 	filtered := filterBundleOutdatedOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -245,7 +245,7 @@ func runBundlePassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: bundle %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: bundle %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("bundle", args...)
@@ -253,7 +253,7 @@ func runBundlePassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterBundleOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

@@ -1,4 +1,4 @@
-# TokMan API Reference
+# Tok API Reference
 
 This document describes the internal package APIs for developers.
 
@@ -523,8 +523,8 @@ func Process(ctx context.Context, input string) (string, error)
 
 Priority order (last wins):
 1. Default values
-2. Config file (~/.config/tokman/config.toml)
-3. Environment variables (TOKMAN_*)
+2. Config file (~/.config/tok/config.toml)
+3. Environment variables (TOK_*)
 4. CLI flags
 
 ---

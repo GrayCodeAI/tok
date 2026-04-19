@@ -1,7 +1,7 @@
 package filtercmd
 
 import (
-	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -50,9 +50,9 @@ func init() {
 func runLayers(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 
-	fmt.Println("╔═══════════════════════════════════════════════════════════════════════╗")
-	fmt.Println("║            TOKMAN LAYERED COMPRESSION PIPELINE                       ║")
-	fmt.Println("╠═══════════════════════════════════════════════════════════════════════╣")
+	out.Global().Println("╔═══════════════════════════════════════════════════════════════════════╗")
+	out.Global().Println("║            TOK LAYERED COMPRESSION PIPELINE                       ║")
+	out.Global().Println("╠═══════════════════════════════════════════════════════════════════════╣")
 
 	layers := []struct {
 		num         int
@@ -104,29 +104,29 @@ func runLayers(cmd *cobra.Command, args []string) {
 	}
 
 	for _, l := range layers {
-		fmt.Printf("║ Layer %2d: %-20s %-15s         ║\n", l.num, l.name, "("+l.compression+")")
-		fmt.Printf("║   Research: %-56s ║\n", l.research)
+		out.Global().Printf("║ Layer %2d: %-20s %-15s         ║\n", l.num, l.name, "("+l.compression+")")
+		out.Global().Printf("║   Research: %-56s ║\n", l.research)
 		if verbose {
-			fmt.Printf("║   %-68s ║\n", wrapText(l.desc, 68))
+			out.Global().Printf("║   %-68s ║\n", wrapText(l.desc, 68))
 		}
-		fmt.Println("╟───────────────────────────────────────────────────────────────────────╢")
+		out.Global().Println("╟───────────────────────────────────────────────────────────────────────╢")
 	}
 
-	fmt.Println("║ PIPELINE ORDER:                                                       ║")
-	fmt.Println("║   Statistical -> Semantic -> Structural -> LLM -> Budget             ║")
-	fmt.Println("║                                                                       ║")
-	fmt.Println("║ FEATURES:                                                             ║")
-	fmt.Println("║   * Streaming for large inputs (up to 2M tokens)                     ║")
-	fmt.Println("║   * Automatic validation and fail-safe mode                          ║")
-	fmt.Println("║   * Query-aware compression for specific intents                     ║")
-	fmt.Println("║   * Configurable layer thresholds                                     ║")
-	fmt.Println("║   * Cache for repeated compressions                                  ║")
-	fmt.Println("║   * TOML declarative filter support                                   ║")
-	fmt.Println("║   * SIMD-optimized operations                                        ║")
-	fmt.Println("╚═══════════════════════════════════════════════════════════════════════╝")
+	out.Global().Println("║ PIPELINE ORDER:                                                       ║")
+	out.Global().Println("║   Statistical -> Semantic -> Structural -> LLM -> Budget             ║")
+	out.Global().Println("║                                                                       ║")
+	out.Global().Println("║ FEATURES:                                                             ║")
+	out.Global().Println("║   * Streaming for large inputs (up to 2M tokens)                     ║")
+	out.Global().Println("║   * Automatic validation and fail-safe mode                          ║")
+	out.Global().Println("║   * Query-aware compression for specific intents                     ║")
+	out.Global().Println("║   * Configurable layer thresholds                                     ║")
+	out.Global().Println("║   * Cache for repeated compressions                                  ║")
+	out.Global().Println("║   * TOML declarative filter support                                   ║")
+	out.Global().Println("║   * SIMD-optimized operations                                        ║")
+	out.Global().Println("╚═══════════════════════════════════════════════════════════════════════╝")
 
 	if !verbose {
-		fmt.Println("\nUse --verbose for detailed algorithm explanations")
+		out.Global().Println("\nUse --verbose for detailed algorithm explanations")
 	}
 }
 

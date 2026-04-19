@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
@@ -163,15 +164,15 @@ func enableTelemetry() error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s Telemetry enabled\n", green("✓"))
-	fmt.Println()
-	fmt.Println("tok will now collect anonymized usage data:")
-	fmt.Println("  • Command frequency (without arguments)")
-	fmt.Println("  • Token savings statistics")
-	fmt.Println("  • Error patterns (without sensitive data)")
-	fmt.Println()
-	fmt.Println("You can disable this at any time with: tok telemetry --disable")
-	fmt.Println("View your data with: tok telemetry --export my-data.json")
+	out.Global().Printf("%s Telemetry enabled\n", green("✓"))
+	out.Global().Println()
+	out.Global().Println("tok will now collect anonymized usage data:")
+	out.Global().Println("  • Command frequency (without arguments)")
+	out.Global().Println("  • Token savings statistics")
+	out.Global().Println("  • Error patterns (without sensitive data)")
+	out.Global().Println()
+	out.Global().Println("You can disable this at any time with: tok telemetry --disable")
+	out.Global().Println("View your data with: tok telemetry --export my-data.json")
 
 	return nil
 }
@@ -190,10 +191,10 @@ func disableTelemetry() error {
 	}
 
 	yellow := color.New(color.FgYellow).SprintFunc()
-	fmt.Printf("%s Telemetry disabled\n", yellow("⚠"))
-	fmt.Println()
-	fmt.Println("tok will no longer collect usage data.")
-	fmt.Println("Previously collected data can be exported with: tok telemetry --export")
+	out.Global().Printf("%s Telemetry disabled\n", yellow("⚠"))
+	out.Global().Println()
+	out.Global().Println("tok will no longer collect usage data.")
+	out.Global().Println("Previously collected data can be exported with: tok telemetry --export")
 
 	return nil
 }
@@ -208,54 +209,54 @@ func showTelemetryStatus() error {
 	green := color.New(color.FgGreen).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
 
-	fmt.Println()
-	fmt.Println(cyan("tok Telemetry Status"))
-	fmt.Println(strings.Repeat("═", 40))
+	out.Global().Println()
+	out.Global().Println(cyan("tok Telemetry Status"))
+	out.Global().Println(strings.Repeat("═", 40))
 
 	if cfg.Enabled {
-		fmt.Printf("Status:      %s\n", green("Enabled"))
+		out.Global().Printf("Status:      %s\n", green("Enabled"))
 		if !cfg.OptInAt.IsZero() {
-			fmt.Printf("Opt-in date: %s\n", cfg.OptInAt.Format("2006-01-02"))
+			out.Global().Printf("Opt-in date: %s\n", cfg.OptInAt.Format("2006-01-02"))
 		}
 	} else {
-		fmt.Printf("Status:      %s\n", red("Disabled"))
+		out.Global().Printf("Status:      %s\n", red("Disabled"))
 		if !cfg.OptOutAt.IsZero() {
-			fmt.Printf("Opt-out date: %s\n", cfg.OptOutAt.Format("2006-01-02"))
+			out.Global().Printf("Opt-out date: %s\n", cfg.OptOutAt.Format("2006-01-02"))
 		}
 	}
 
-	fmt.Printf("Data dir:    %s\n", cfg.DataDir)
+	out.Global().Printf("Data dir:    %s\n", cfg.DataDir)
 
 	// Check for existing data
 	dataSize := getTelemetryDataSize(cfg.DataDir)
 	if dataSize > 0 {
-		fmt.Printf("Data size:   %d KB\n", dataSize/1024)
+		out.Global().Printf("Data size:   %d KB\n", dataSize/1024)
 	}
 	if stats, err := telemetrylib.GetLocalEventStats(); err == nil && stats.TotalEvents > 0 {
-		fmt.Printf("Events:      %d\n", stats.TotalEvents)
+		out.Global().Printf("Events:      %d\n", stats.TotalEvents)
 		if stats.LastEventAt != "" {
-			fmt.Printf("Last event:  %s\n", stats.LastEventAt)
+			out.Global().Printf("Last event:  %s\n", stats.LastEventAt)
 		}
 		if len(stats.TopCommands) > 0 {
-			fmt.Printf("Top cmds:    %s\n", strings.Join(stats.TopCommands, ", "))
+			out.Global().Printf("Top cmds:    %s\n", strings.Join(stats.TopCommands, ", "))
 		}
 		if len(stats.TopTestRunners) > 0 {
-			fmt.Printf("Test use:    %s\n", strings.Join(stats.TopTestRunners, ", "))
+			out.Global().Printf("Test use:    %s\n", strings.Join(stats.TopTestRunners, ", "))
 		}
 	}
 
-	fmt.Println()
-	fmt.Println("GDPR Compliance:")
-	fmt.Println("  ✓ Explicit opt-in required")
-	fmt.Println("  ✓ Right to access (export your data)")
-	fmt.Println("  ✓ Right to erasure (delete on disable)")
-	fmt.Println("  ✓ No PII collected")
-	fmt.Println()
-	fmt.Println("Commands:")
-	fmt.Println("  tok telemetry --enable    Enable telemetry")
-	fmt.Println("  tok telemetry --disable   Disable telemetry")
-	fmt.Println("  tok telemetry --forget    Delete local telemetry data")
-	fmt.Println("  tok telemetry --export    Export your data")
+	out.Global().Println()
+	out.Global().Println("GDPR Compliance:")
+	out.Global().Println("  ✓ Explicit opt-in required")
+	out.Global().Println("  ✓ Right to access (export your data)")
+	out.Global().Println("  ✓ Right to erasure (delete on disable)")
+	out.Global().Println("  ✓ No PII collected")
+	out.Global().Println()
+	out.Global().Println("Commands:")
+	out.Global().Println("  tok telemetry --enable    Enable telemetry")
+	out.Global().Println("  tok telemetry --disable   Disable telemetry")
+	out.Global().Println("  tok telemetry --forget    Delete local telemetry data")
+	out.Global().Println("  tok telemetry --export    Export your data")
 
 	return nil
 }
@@ -269,8 +270,8 @@ func forgetTelemetry() error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s Local telemetry data deleted\n", green("✓"))
-	fmt.Println("Telemetry consent has been cleared.")
+	out.Global().Printf("%s Local telemetry data deleted\n", green("✓"))
+	out.Global().Println("Telemetry consent has been cleared.")
 	return nil
 }
 
@@ -316,7 +317,7 @@ func exportTelemetry(outputPath, format string) error {
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	fmt.Printf("%s Telemetry data exported to %s\n", green("✓"), outputPath)
+	out.Global().Printf("%s Telemetry data exported to %s\n", green("✓"), outputPath)
 
 	return nil
 }

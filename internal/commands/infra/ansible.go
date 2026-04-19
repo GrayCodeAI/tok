@@ -2,6 +2,7 @@ package infra
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -93,7 +94,7 @@ func runAnsiblePassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterAnsibleOutput(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -116,7 +117,7 @@ func runAnsiblePlaybook(args []string) error {
 	raw := string(output)
 
 	filtered := filterAnsiblePlaybook(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -125,7 +126,7 @@ func runAnsiblePlaybook(args []string) error {
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "ansible_playbook", err); hint != "" {
 			filtered = filtered + "\n" + hint
-			fmt.Print(filtered)
+			out.Global().Print(filtered)
 		}
 	}
 	return err
@@ -139,7 +140,7 @@ func runAnsibleInventory(args []string) error {
 	raw := string(output)
 
 	filtered := filterAnsibleInventory(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

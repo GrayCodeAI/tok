@@ -2,7 +2,7 @@ package system
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -39,7 +39,7 @@ func runDf(cmd *cobra.Command, args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: df %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: df %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("df", args...)
@@ -48,7 +48,7 @@ func runDf(cmd *cobra.Command, args []string) error {
 
 	filtered := filterDfOutput(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

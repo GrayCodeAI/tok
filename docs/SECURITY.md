@@ -5,17 +5,17 @@
 
 ## Overview
 
-This document outlines security best practices for operating TokMan in production environments.
+This document outlines security best practices for operating Tok in production environments.
 
 ## Authentication
 
 ### API Key Authentication
 
-TokMan uses API keys for authenticating HTTP API requests:
+Tok uses API keys for authenticating HTTP API requests:
 
 ```bash
 # Generate a new API key
-tokman config set api_key $(openssl rand -hex 32)
+tok config set api_key $(openssl rand -hex 32)
 
 # Use in requests
 curl -H "X-API-Key: your-api-key" http://localhost:8080/api/v1/compress
@@ -31,15 +31,15 @@ curl -H "X-API-Key: your-api-key" http://localhost:8080/api/v1/compress
 
 ### Local-Only Binding
 
-By default, TokMan binds to `localhost` only. Do not expose the HTTP API to untrusted networks without a reverse proxy and TLS termination.
+By default, Tok binds to `localhost` only. Do not expose the HTTP API to untrusted networks without a reverse proxy and TLS termination.
 
-For production deployments behind a reverse proxy (nginx, Caddy, etc.), terminate TLS at the proxy layer and forward to TokMan over localhost.
+For production deployments behind a reverse proxy (nginx, Caddy, etc.), terminate TLS at the proxy layer and forward to Tok over localhost.
 
 ## Input Validation
 
 ### Sanitization
 
-TokMan validates inputs before processing:
+Tok validates inputs before processing:
 
 1. **Command Injection Prevention**: Shell commands are validated against allowed patterns
 2. **Path Validation**: File paths are checked for safety
@@ -54,21 +54,21 @@ The HTTP server supports configurable rate limiting via the `X-RateLimit-*` head
 
 ```bash
 # Set via environment
-export TOKMAN_API_KEY="your-secure-key"
+export TOK_API_KEY="your-secure-key"
 ```
 
 ### Configuration File Security
 
 ```bash
 # Set restrictive permissions
-chmod 600 ~/.config/tokman/config.toml
+chmod 600 ~/.config/tok/config.toml
 ```
 
 ## Network Security
 
 ### Firewall Rules
 
-Restrict access to the TokMan HTTP server:
+Restrict access to the Tok HTTP server:
 
 ```bash
 # Allow only local access
@@ -107,7 +107,7 @@ go mod tidy
 
 ```bash
 # Revoke API key
-tokman config set api_key ""
+tok config set api_key ""
 ```
 
 ## Security Checklist
@@ -123,7 +123,7 @@ tokman config set api_key ""
 
 If you discover a security vulnerability, please report it responsibly:
 
-1. Email: security@tokman.dev
+1. Email: security@tok.dev
 2. Do not disclose publicly until patched
 3. Include steps to reproduce
 4. We aim to respond within 48 hours
@@ -131,5 +131,5 @@ If you discover a security vulnerability, please report it responsibly:
 ## Security Updates
 
 Subscribe to security advisories:
-- GitHub Security Advisories: https://github.com/GrayCodeAI/tokman/security/advisories
+- GitHub Security Advisories: https://github.com/lakshmanpatel/tok/security/advisories
 - Release notes include security fixes

@@ -2,17 +2,72 @@
 package input
 
 import (
+	"embed"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/lakshmanpatel/tok/internal/compressor"
 	"github.com/lakshmanpatel/tok/internal/git"
 	"github.com/lakshmanpatel/tok/internal/hooks"
 	"github.com/lakshmanpatel/tok/internal/review"
 )
+
+//go:embed agents
+var agentsFS embed.FS
+
+const maxInputSize = 50 << 20 // 50 MB
+
+// validateScriptPath checks that a script path is safe to execute.
+// It verifies the path is absolute, exists as a regular file, is within the
+// expected hooks directory (preventing path traversal), and is not writable
+// by others (preventing tampering).
+func validateScriptPath(scriptPath, hooksDir string) error {
+	// Check that scriptPath is absolute
+	if !filepath.IsAbs(scriptPath) {
+		return fmt.Errorf("script path must be absolute: %s", scriptPath)
+	}
+
+	// Check that scriptPath exists and is a regular file
+	info, err := os.Stat(scriptPath)
+	if err != nil {
+		return fmt.Errorf("script path not accessible: %s: %w", scriptPath, err)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("script path is not a regular file: %s", scriptPath)
+	}
+
+	// Check that scriptPath is within the expected hooks directory
+	absHooksDir, err := filepath.Abs(hooksDir)
+	if err != nil {
+		return fmt.Errorf("cannot resolve hooks directory: %w", err)
+	}
+	absScriptPath, err := filepath.Abs(scriptPath)
+	if err != nil {
+		return fmt.Errorf("cannot resolve script path: %w", err)
+	}
+	rel, err := filepath.Rel(absHooksDir, absScriptPath)
+	if err != nil {
+		return fmt.Errorf("cannot compute relative path: %w", err)
+	}
+	if strings.HasPrefix(rel, "..") {
+		return fmt.Errorf("script path is outside hooks directory (path traversal): %s", scriptPath)
+	}
+
+	// Check that scriptPath is not writable by others
+	perm := info.Mode().Perm()
+	if perm&0002 != 0 {
+		return fmt.Errorf("script path is world-writable (potential tampering): %s", scriptPath)
+	}
+
+	return nil
+}
 
 // Handler processes input commands.
 type Handler struct{}
@@ -96,9 +151,13 @@ func (h *Handler) Compress(args []string) error {
 	if *input != "" {
 		text = *input
 	} else {
-		bytes, err := io.ReadAll(os.Stdin)
+		limited := io.LimitReader(os.Stdin, maxInputSize+1)
+		bytes, err := io.ReadAll(limited)
 		if err != nil {
 			return fmt.Errorf("reading stdin: %w", err)
+		}
+		if len(bytes) > maxInputSize {
+			return fmt.Errorf("input exceeds maximum size of %d bytes (%.0f MB)", maxInputSize, float64(maxInputSize)/1024/1024)
 		}
 		text = string(bytes)
 	}
@@ -198,7 +257,22 @@ func (h *Handler) Statusline() error {
 
 // Template shows agent template.
 func (h *Handler) Template() error {
-	fmt.Println("Template: not implemented yet")
+	entries, err := agentsFS.ReadDir("agents")
+	if err != nil {
+		return fmt.Errorf("failed to read agents directory: %w", err)
+	}
+
+	fmt.Println("Available agent templates:")
+	for _, entry := range entries {
+		if entry.IsDir() {
+			subEntries, _ := agentsFS.ReadDir(filepath.Join("agents", entry.Name()))
+			for _, sub := range subEntries {
+				fmt.Printf("  %s/%s\n", entry.Name(), sub.Name())
+			}
+		}
+	}
+	fmt.Println()
+	fmt.Println("Usage: tok install-agents <agent>  (e.g., tok install-agents cursor)")
 	return nil
 }
 
@@ -304,42 +378,217 @@ func (h *Handler) CompressMemory(args []string) error {
 
 // Restore restores compressed content.
 func (h *Handler) Restore(args []string) error {
-	fmt.Println("Restore: not implemented yet")
+	if len(args) == 0 {
+		return errors.New("file required: tok restore <path>")
+	}
+
+	filename := args[0]
+	if err := compressor.RestoreFile(filename); err != nil {
+		return fmt.Errorf("failed to restore: %w", err)
+	}
 	return nil
 }
 
 // InstallAgents installs agents.
 func (h *Handler) InstallAgents() error {
-	fmt.Println("Install agents: not implemented yet")
+	agentDirs, err := agentsFS.ReadDir("agents")
+	if err != nil {
+		return fmt.Errorf("failed to read agents directory: %w", err)
+	}
+
+	for _, agentDir := range agentDirs {
+		if !agentDir.IsDir() {
+			continue
+		}
+
+		agentName := agentDir.Name()
+		targetDir := getAgentTargetDir(agentName)
+		if err := os.MkdirAll(targetDir, 0755); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to create dir for %s: %v\n", agentName, err)
+			continue
+		}
+
+		subEntries, _ := agentsFS.ReadDir(filepath.Join("agents", agentName))
+		for _, sub := range subEntries {
+			if sub.IsDir() {
+				continue
+			}
+			srcPath := filepath.Join("agents", agentName, sub.Name())
+			data, err := agentsFS.ReadFile(srcPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to read %s: %v\n", srcPath, err)
+				continue
+			}
+			dstPath := filepath.Join(targetDir, sub.Name())
+			if err := os.WriteFile(dstPath, data, 0644); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to write %s: %v\n", dstPath, err)
+				continue
+			}
+			fmt.Printf("Installed: %s/%s → %s\n", agentName, sub.Name(), dstPath)
+		}
+	}
+
+	fmt.Println("All agent rules installed.")
 	return nil
 }
 
 // UninstallAgents uninstalls agents.
 func (h *Handler) UninstallAgents() error {
-	fmt.Println("Uninstall agents: not implemented yet")
+	agentDirs, err := agentsFS.ReadDir("agents")
+	if err != nil {
+		return fmt.Errorf("failed to read agents directory: %w", err)
+	}
+
+	for _, agentDir := range agentDirs {
+		if !agentDir.IsDir() {
+			continue
+		}
+
+		agentName := agentDir.Name()
+		targetDir := getAgentTargetDir(agentName)
+
+		subEntries, _ := agentsFS.ReadDir(filepath.Join("agents", agentName))
+		for _, sub := range subEntries {
+			if sub.IsDir() {
+				continue
+			}
+			dstPath := filepath.Join(targetDir, sub.Name())
+			if err := os.Remove(dstPath); err != nil && !os.IsNotExist(err) {
+				fmt.Fprintf(os.Stderr, "Failed to remove %s: %v\n", dstPath, err)
+				continue
+			}
+			fmt.Printf("Removed: %s\n", dstPath)
+		}
+	}
+
+	fmt.Println("All agent rules removed.")
 	return nil
 }
 
 // HooksInstall installs hooks.
 func (h *Handler) HooksInstall() error {
-	fmt.Println("Hooks install: not implemented yet")
+	hooksDir := getHooksDir()
+	scriptPath := filepath.Join(hooksDir, "hooks", "install.sh")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf("hooks/install.sh not found at %s", scriptPath)
+	}
+	if err := validateScriptPath(scriptPath, hooksDir); err != nil {
+		return fmt.Errorf("hook script validation failed: %w", err)
+	}
+
+	cmd := exec.Command("bash", scriptPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run install.sh: %w", err)
+	}
 	return nil
 }
 
 // HooksUninstall uninstalls hooks.
 func (h *Handler) HooksUninstall() error {
-	fmt.Println("Hooks uninstall: not implemented yet")
+	hooksDir := getHooksDir()
+	scriptPath := filepath.Join(hooksDir, "hooks", "uninstall.sh")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf("hooks/uninstall.sh not found at %s", scriptPath)
+	}
+	if err := validateScriptPath(scriptPath, hooksDir); err != nil {
+		return fmt.Errorf("hook script validation failed: %w", err)
+	}
+
+	cmd := exec.Command("bash", scriptPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run uninstall.sh: %w", err)
+	}
 	return nil
 }
 
 // HooksInstallPwsh installs PowerShell hooks.
 func (h *Handler) HooksInstallPwsh() error {
-	fmt.Println("Hooks install pwsh: not implemented yet")
+	hooksDir := getHooksDir()
+	scriptPath := filepath.Join(hooksDir, "hooks", "install.ps1")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf("hooks/install.ps1 not found at %s", scriptPath)
+	}
+	if err := validateScriptPath(scriptPath, hooksDir); err != nil {
+		return fmt.Errorf("hook script validation failed: %w", err)
+	}
+
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	} else {
+		cmd = exec.Command("pwsh", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run install.ps1: %w", err)
+	}
 	return nil
 }
 
 // HooksUninstallPwsh uninstalls PowerShell hooks.
 func (h *Handler) HooksUninstallPwsh() error {
-	fmt.Println("Hooks uninstall pwsh: not implemented yet")
+	hooksDir := getHooksDir()
+	scriptPath := filepath.Join(hooksDir, "hooks", "uninstall.ps1")
+	if _, err := os.Stat(scriptPath); os.IsNotExist(err) {
+		return fmt.Errorf("hooks/uninstall.ps1 not found at %s", scriptPath)
+	}
+	if err := validateScriptPath(scriptPath, hooksDir); err != nil {
+		return fmt.Errorf("hook script validation failed: %w", err)
+	}
+
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("powershell", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	} else {
+		cmd = exec.Command("pwsh", "-ExecutionPolicy", "Bypass", "-File", scriptPath)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to run uninstall.ps1: %w", err)
+	}
 	return nil
+}
+
+func getAgentTargetDir(agentName string) string {
+	switch agentName {
+	case "cursor":
+		return filepath.Join(os.Getenv("HOME"), ".cursor", "rules")
+	case "windsurf":
+		return filepath.Join(os.Getenv("HOME"), ".codeium", "windsurf")
+	case "cline":
+		return filepath.Join(os.Getenv("HOME"), ".claude", "rules")
+	case "copilot":
+		return filepath.Join(os.Getenv("HOME"), ".github", "copilot-instructions")
+	case "claude-code":
+		return filepath.Join(os.Getenv("HOME"), ".claude")
+	case "aider":
+		return "."
+	case "continue":
+		return filepath.Join(os.Getenv("HOME"), ".continue")
+	case "roo-code":
+		return filepath.Join(os.Getenv("HOME"), ".roo", "rules")
+	case "cody":
+		return filepath.Join(os.Getenv("HOME"), ".sourcegraph", "cody")
+	case "code-whisperer":
+		return filepath.Join(os.Getenv("HOME"), ".aws", "codewhisperer")
+	case "tabnine":
+		return filepath.Join(os.Getenv("HOME"), ".tabnine")
+	case "codeium":
+		return filepath.Join(os.Getenv("HOME"), ".codeium")
+	default:
+		return filepath.Join(os.Getenv("HOME"), ".config", "tok", "agents", agentName)
+	}
+}
+
+func getHooksDir() string {
+	if exe, err := os.Executable(); err == nil {
+		return filepath.Dir(exe)
+	}
+	return "."
 }

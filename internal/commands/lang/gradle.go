@@ -1,8 +1,7 @@
 package lang
 
 import (
-	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -59,7 +58,7 @@ func runGradleBuild(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gradle build %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gradle build %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gradle", append([]string{"build"}, args...)...)
@@ -74,7 +73,7 @@ func runGradleBuild(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -139,7 +138,7 @@ func runGradleTest(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gradle test %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gradle test %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gradle", append([]string{"test"}, args...)...)
@@ -154,7 +153,7 @@ func runGradleTest(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -215,7 +214,7 @@ func runGradleDependencies(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gradle dependencies %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gradle dependencies %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gradle", append([]string{"dependencies"}, args...)...)
@@ -230,7 +229,7 @@ func runGradleDependencies(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -291,7 +290,7 @@ func runGradleTasks(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -340,7 +339,7 @@ func runGradlePassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: gradle %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: gradle %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("gradle", args...)
@@ -356,7 +355,7 @@ func runGradlePassthrough(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

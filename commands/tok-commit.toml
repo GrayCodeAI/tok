@@ -1,0 +1,2 @@
+description = "Generate terse commit message from staged changes"
+prompt = "Review staged git changes and output a concise conventional commit message. Keep subject <= 50 chars when possible, focus on why, no extra prose."

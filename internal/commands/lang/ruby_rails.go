@@ -2,7 +2,7 @@ package lang
 
 import (
 	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -17,7 +17,7 @@ func runRailsCmd(args []string) error {
 	}
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: rails %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: rails %s\n", strings.Join(args, " "))
 	}
 
 	// Route to specialized handlers
@@ -35,7 +35,7 @@ func runRailsTestCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: rails test %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: rails test %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("rails", append([]string{"test"}, args...)...)
@@ -51,7 +51,7 @@ func runRailsTestCmd(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -132,7 +132,7 @@ func runRailsDbMigrateCmd(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: rails db:migrate %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: rails db:migrate %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("rails", append([]string{"db:migrate"}, args...)...)
@@ -148,7 +148,7 @@ func runRailsDbMigrateCmd(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -196,7 +196,7 @@ func runRailsPassthrough(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: rails %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: rails %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("rails", args...)
@@ -204,7 +204,7 @@ func runRailsPassthrough(args []string) error {
 	raw := string(output)
 
 	filtered := filterRailsOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

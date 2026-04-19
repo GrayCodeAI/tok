@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -42,8 +43,8 @@ type checkResult struct {
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
-	fmt.Println("tok doctor — diagnosing setup")
-	fmt.Println("================================")
+	out.Global().Println("tok doctor — diagnosing setup")
+	out.Global().Println("================================")
 
 	results := collectDoctorResults()
 	if doctorFix {
@@ -64,15 +65,15 @@ func runDoctor(cmd *cobra.Command, args []string) error {
 			icon = "✗"
 			hasError = true
 		}
-		fmt.Printf("  %s %s: %s\n", icon, r.Name, r.Message)
+		out.Global().Printf("  %s %s: %s\n", icon, r.Name, r.Message)
 	}
 
-	fmt.Println()
+	out.Global().Println()
 	if hasError {
-		fmt.Println("Some checks failed. See messages above for fixes.")
+		out.Global().Println("Some checks failed. See messages above for fixes.")
 		return fmt.Errorf("doctor check failed")
 	}
-	fmt.Println("All checks passed!")
+	out.Global().Println("All checks passed!")
 	return nil
 }
 
@@ -234,7 +235,7 @@ func checkTokenizer() checkResult {
 }
 
 func checkTOMLFilters() checkResult {
-	srcDir := utils.GetTokmanSourceDir()
+	srcDir := utils.GetTokSourceDir()
 	if srcDir == "" {
 		// Installed binary with embedded filters - still functional
 		return checkResult{"TOML Filters", "ok", "embedded (installed binary)"}
@@ -278,7 +279,7 @@ func checkGoVersion() checkResult {
 func checkTierSystem() checkResult {
 	// Verify the filter system is working
 	// Test with sample content
-	testInput := "func main() { fmt.Println(\"hello\") }"
+	testInput := "func main() { out.Global().Println(\"hello\") }"
 	output, saved := filter.QuickProcessPreset(testInput, filter.ModeMinimal, filter.PresetFast)
 
 	if output != "" && saved >= 0 {

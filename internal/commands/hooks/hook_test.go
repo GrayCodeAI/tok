@@ -259,7 +259,7 @@ func TestProcessGeminiPayload_DenyRule(t *testing.T) {
 func TestRecordHookAudit(t *testing.T) {
 	dataHome := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", dataHome)
-	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
+	t.Setenv("TOK_HOOK_AUDIT", "1")
 
 	recordHookAudit("rewrite", "git status", "tok git status")
 
@@ -280,7 +280,7 @@ func TestRecordHookAudit(t *testing.T) {
 func TestRecordHookAuditEscapesFields(t *testing.T) {
 	dataHome := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", dataHome)
-	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
+	t.Setenv("TOK_HOOK_AUDIT", "1")
 
 	recordHookAudit("rewrite", "git status | head -n 1", "tok git status\n")
 
@@ -542,7 +542,7 @@ func TestGetAuditLogPath(t *testing.T) {
 
 func TestGetAuditLogPath_EnvOverride(t *testing.T) {
 	override := t.TempDir()
-	t.Setenv("TOKMAN_AUDIT_DIR", override)
+	t.Setenv("TOK_AUDIT_DIR", override)
 
 	got := getAuditLogPath()
 	want := filepath.Join(override, "hook-audit.log")

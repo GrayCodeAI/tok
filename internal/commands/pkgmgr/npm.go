@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strconv"
@@ -94,14 +95,14 @@ func runNpm(cmd *cobra.Command, args []string) error {
 	filtered := filterNpmOutput(output)
 
 	if npmJSON {
-		fmt.Println(formatAsJSONnpm(output))
+		out.Global().Println(formatAsJSONnpm(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tok npm", originalTokens, filteredTokens)
 		return err
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -116,7 +117,7 @@ func runNpmTest(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: npm test %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: npm test %s\n", strings.Join(args, " "))
 	}
 
 	npmArgs := append([]string{"test"}, args...)
@@ -138,7 +139,7 @@ func runNpmTest(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -335,7 +336,7 @@ func runNpmInstall(args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmInstallOutput(output)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -419,7 +420,7 @@ func runNpmList(args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmListOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -476,7 +477,7 @@ func runNpmOutdated(args []string) error {
 	raw := string(output)
 
 	filtered := filterNpmOutdatedOutput(raw)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -547,7 +548,7 @@ func runNpmRun(args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmRunOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -568,7 +569,7 @@ func runNpmPassthrough(args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	return err
 }
@@ -619,7 +620,7 @@ func runNpmAudit(args []string) error {
 	raw := string(output)
 
 	filtered := filterNpmAuditOutput(raw)
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -705,7 +706,7 @@ func runNpmPublish(args []string) error {
 	output := stdout.String() + stderr.String()
 
 	filtered := filterNpmPublishOutput(output)
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

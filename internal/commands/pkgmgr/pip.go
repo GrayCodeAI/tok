@@ -3,6 +3,7 @@ package pkgmgr
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -88,14 +89,14 @@ func runPip(cmd *cobra.Command, args []string) error {
 	}
 
 	if pipJSON {
-		fmt.Println(formatAsJSONpip(output))
+		out.Global().Println(formatAsJSONpip(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
 		timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tok pip", originalTokens, filteredTokens)
 		return err
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)

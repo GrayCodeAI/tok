@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
@@ -47,14 +48,14 @@ func runUndo(cmd *cobra.Command, args []string) error {
 	})
 
 	if undoList {
-		fmt.Printf("Tee files in %s:\n\n", teeDir)
+		out.Global().Printf("Tee files in %s:\n\n", teeDir)
 		for _, e := range entries {
 			info, _ := e.Info()
 			size := ""
 			if info != nil {
 				size = fmt.Sprintf(" (%d bytes)", info.Size())
 			}
-			fmt.Printf("  %s%s\n", e.Name(), size)
+			out.Global().Printf("  %s%s\n", e.Name(), size)
 		}
 		return nil
 	}
@@ -76,12 +77,12 @@ func runUndo(cmd *cobra.Command, args []string) error {
 		cmdName = strings.ReplaceAll(cmdName, "_", " ")
 	}
 
-	fmt.Printf("Last tee save: %s\n", latest.Name())
+	out.Global().Printf("Last tee save: %s\n", latest.Name())
 	if cmdName != "" {
-		fmt.Printf("Command: %s\n", cmdName)
+		out.Global().Printf("Command: %s\n", cmdName)
 	}
-	fmt.Printf("File: %s\n\n", path)
-	fmt.Println(content)
+	out.Global().Printf("File: %s\n\n", path)
+	out.Global().Println(content)
 
 	return nil
 }

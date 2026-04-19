@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
@@ -72,14 +73,14 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return fmt.Errorf("save snapshot: %w", err)
 		}
-		fmt.Printf("Snapshot saved: %s\n", path)
+		out.Global().Printf("Snapshot saved: %s\n", path)
 	}
 
 	if auditHTMLPath != "" {
 		if err := audit.RenderHTML(auditHTMLPath, report); err != nil {
 			return fmt.Errorf("render html: %w", err)
 		}
-		fmt.Printf("Dashboard written: %s\n", auditHTMLPath)
+		out.Global().Printf("Dashboard written: %s\n", auditHTMLPath)
 	}
 
 	if auditJSON {
@@ -87,7 +88,7 @@ func runAudit(cmd *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(string(b))
+		out.Global().Println(string(b))
 		return nil
 	}
 
@@ -114,107 +115,107 @@ func runAuditCompare() error {
 		if err != nil {
 			return err
 		}
-		fmt.Println(string(b))
+		out.Global().Println(string(b))
 		return nil
 	}
 
-	fmt.Println("tok Drift Validation")
-	fmt.Println("=======================")
-	fmt.Printf("Base:      %s\n", compare.BaseName)
-	fmt.Printf("Candidate: %s\n", compare.CandidateName)
-	fmt.Printf("Saved Tokens Delta:  %+d\n", compare.DeltaSavedTokens)
-	fmt.Printf("Reduction Delta:     %+0.2f%%\n", compare.DeltaReductionPct)
-	fmt.Printf("Quality Delta:       %+0.2f\n", compare.DeltaQualityScore)
-	fmt.Printf("Parse Failure Delta: %+d\n", compare.DeltaParseFailures)
-	fmt.Printf("Drift Changed:       %v\n", compare.DriftChanged)
-	fmt.Printf("Verdict:             %s\n", compare.Verdict)
+	out.Global().Println("tok Drift Validation")
+	out.Global().Println("=======================")
+	out.Global().Printf("Base:      %s\n", compare.BaseName)
+	out.Global().Printf("Candidate: %s\n", compare.CandidateName)
+	out.Global().Printf("Saved Tokens Delta:  %+d\n", compare.DeltaSavedTokens)
+	out.Global().Printf("Reduction Delta:     %+0.2f%%\n", compare.DeltaReductionPct)
+	out.Global().Printf("Quality Delta:       %+0.2f\n", compare.DeltaQualityScore)
+	out.Global().Printf("Parse Failure Delta: %+d\n", compare.DeltaParseFailures)
+	out.Global().Printf("Drift Changed:       %v\n", compare.DriftChanged)
+	out.Global().Printf("Verdict:             %s\n", compare.Verdict)
 	return nil
 }
 
 func printAuditReport(r *audit.Report) {
-	fmt.Println("tok Optimization Audit")
-	fmt.Println("=========================")
-	fmt.Printf("Window: %d days\n", r.Days)
-	fmt.Printf("Commands: %d\n", r.Summary.CommandCount)
-	fmt.Printf("Original Tokens: %d\n", r.Summary.Original)
-	fmt.Printf("Filtered Tokens: %d\n", r.Summary.Filtered)
-	fmt.Printf("Saved Tokens: %d\n", r.Summary.Saved)
-	fmt.Printf("Reduction: %.2f%%\n", r.Summary.ReductionPct)
-	fmt.Printf("Quality: %.1f (%s)\n", r.Quality.Score, r.Quality.Band)
-	fmt.Printf("Budget Controller: %s\n", r.BudgetController.RecommendedMode)
-	fmt.Printf("Anchor Retention: %s (keep-rate %.1f%%)\n", r.AnchorRetention.Grade, r.AnchorRetention.EstimatedKeepRate)
+	out.Global().Println("tok Optimization Audit")
+	out.Global().Println("=========================")
+	out.Global().Printf("Window: %d days\n", r.Days)
+	out.Global().Printf("Commands: %d\n", r.Summary.CommandCount)
+	out.Global().Printf("Original Tokens: %d\n", r.Summary.Original)
+	out.Global().Printf("Filtered Tokens: %d\n", r.Summary.Filtered)
+	out.Global().Printf("Saved Tokens: %d\n", r.Summary.Saved)
+	out.Global().Printf("Reduction: %.2f%%\n", r.Summary.ReductionPct)
+	out.Global().Printf("Quality: %.1f (%s)\n", r.Quality.Score, r.Quality.Band)
+	out.Global().Printf("Budget Controller: %s\n", r.BudgetController.RecommendedMode)
+	out.Global().Printf("Anchor Retention: %s (keep-rate %.1f%%)\n", r.AnchorRetention.Grade, r.AnchorRetention.EstimatedKeepRate)
 	if r.DriftFingerprint != "" {
-		fmt.Printf("Drift Fingerprint: %s\n", r.DriftFingerprint[:16])
+		out.Global().Printf("Drift Fingerprint: %s\n", r.DriftFingerprint[:16])
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Waste Findings")
-	fmt.Println("--------------")
+	out.Global().Println("Waste Findings")
+	out.Global().Println("--------------")
 	if len(r.WasteFindings) == 0 {
-		fmt.Println("No major waste findings.")
+		out.Global().Println("No major waste findings.")
 	} else {
 		for _, f := range r.WasteFindings {
-			fmt.Printf("[%s] %s | waste=%d tokens (~$%.4f)\n", f.Severity, f.Description, f.EstimatedWaste, f.EstimatedWasteD)
-			fmt.Printf("  Fix: %s\n", f.Recommendation)
+			out.Global().Printf("[%s] %s | waste=%d tokens (~$%.4f)\n", f.Severity, f.Description, f.EstimatedWaste, f.EstimatedWasteD)
+			out.Global().Printf("  Fix: %s\n", f.Recommendation)
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Checkpoint Policy")
-	fmt.Println("-----------------")
-	fmt.Printf("Recommended Triggers: %v\n", r.CheckpointPolicy.RecommendedTriggers)
+	out.Global().Println("Checkpoint Policy")
+	out.Global().Println("-----------------")
+	out.Global().Printf("Recommended Triggers: %v\n", r.CheckpointPolicy.RecommendedTriggers)
 	for _, note := range r.CheckpointPolicy.Notes {
-		fmt.Printf("- %s\n", note)
+		out.Global().Printf("- %s\n", note)
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Top Layers")
-	fmt.Println("----------")
+	out.Global().Println("Top Layers")
+	out.Global().Println("----------")
 	if len(r.TopLayers) == 0 {
-		fmt.Println("No layer data yet.")
+		out.Global().Println("No layer data yet.")
 	} else {
 		for _, l := range r.TopLayers {
-			fmt.Printf("%s | total=%d avg=%.1f calls=%d\n", l.LayerName, l.TotalSaved, l.AvgSaved, l.CallCount)
+			out.Global().Printf("%s | total=%d avg=%.1f calls=%d\n", l.LayerName, l.TotalSaved, l.AvgSaved, l.CallCount)
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Costly Prompts")
-	fmt.Println("-------------")
+	out.Global().Println("Costly Prompts")
+	out.Global().Println("-------------")
 	if len(r.CostlyPrompts) == 0 {
-		fmt.Println("No costly prompt data yet.")
+		out.Global().Println("No costly prompt data yet.")
 	} else {
 		for _, cp := range r.CostlyPrompts {
-			fmt.Printf("%s | count=%d original=%d est=$%.4f\n", cp.Command, cp.Count, cp.Original, cp.EstimatedUS)
+			out.Global().Printf("%s | count=%d original=%d est=$%.4f\n", cp.Command, cp.Count, cp.Original, cp.EstimatedUS)
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Intent Profiles")
-	fmt.Println("---------------")
+	out.Global().Println("Intent Profiles")
+	out.Global().Println("---------------")
 	if len(r.IntentProfiles) == 0 {
-		fmt.Println("No intent profile data yet.")
+		out.Global().Println("No intent profile data yet.")
 	} else {
 		for _, ip := range r.IntentProfiles {
-			fmt.Printf("%s | commands=%d reduction=%.1f%%\n", ip.Intent, ip.Commands, ip.ReductionPct)
+			out.Global().Printf("%s | commands=%d reduction=%.1f%%\n", ip.Intent, ip.Commands, ip.ReductionPct)
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Agent Budgets")
-	fmt.Println("-------------")
+	out.Global().Println("Agent Budgets")
+	out.Global().Println("-------------")
 	if len(r.AgentBudgets) == 0 {
-		fmt.Println("No agent budget data yet.")
+		out.Global().Println("No agent budget data yet.")
 	} else {
 		for _, a := range r.AgentBudgets {
-			fmt.Printf("%s | share=%.1f%% reduction=%.1f%% cost=$%.4f\n", a.Agent, a.BudgetShare, a.ReductionPct, a.EstimatedUS)
+			out.Global().Printf("%s | share=%.1f%% reduction=%.1f%% cost=$%.4f\n", a.Agent, a.BudgetShare, a.ReductionPct, a.EstimatedUS)
 		}
 	}
-	fmt.Println()
+	out.Global().Println()
 
-	fmt.Println("Recommendations")
-	fmt.Println("---------------")
+	out.Global().Println("Recommendations")
+	out.Global().Println("---------------")
 	for _, rec := range r.Recommendations {
-		fmt.Printf("- %s\n", rec)
+		out.Global().Printf("- %s\n", rec)
 	}
 }

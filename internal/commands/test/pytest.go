@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
@@ -93,10 +94,10 @@ func runPytest(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Print(filtered)
+	out.Global().Print(filtered)
 
 	if strings.TrimSpace(stderr.String()) != "" {
-		fmt.Fprint(os.Stderr, strings.TrimSpace(stderr.String()))
+		out.Global().Error(strings.TrimSpace(stderr.String()))
 	}
 
 	originalTokens := filter.EstimateTokens(output)

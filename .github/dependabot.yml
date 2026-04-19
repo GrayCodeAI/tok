@@ -11,9 +11,9 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 10
     reviewers:
-      - "GrayCodeAI/maintainers"
+      - "lakshmanpatel/maintainers"
     assignees:
-      - "GrayCodeAI/maintainers"
+      - "lakshmanpatel/maintainers"
     labels:
       - "dependencies"
       - "go"
@@ -38,7 +38,7 @@ updates:
       timezone: "UTC"
     open-pull-requests-limit: 5
     reviewers:
-      - "GrayCodeAI/maintainers"
+      - "lakshmanpatel/maintainers"
     labels:
       - "dependencies"
       - "github-actions"
@@ -53,7 +53,7 @@ updates:
       interval: "monthly"
     open-pull-requests-limit: 5
     reviewers:
-      - "GrayCodeAI/maintainers"
+      - "lakshmanpatel/maintainers"
     labels:
       - "dependencies"
       - "docker"

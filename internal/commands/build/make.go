@@ -1,8 +1,7 @@
 package build
 
 import (
-	"fmt"
-	"os"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
 
@@ -55,7 +54,7 @@ func runMakeTarget(args []string) error {
 	timer := tracking.Start()
 
 	if shared.Verbose > 0 {
-		fmt.Fprintf(os.Stderr, "Running: make %s\n", strings.Join(args, " "))
+		out.Global().Errorf("Running: make %s\n", strings.Join(args, " "))
 	}
 
 	execCmd := exec.Command("make", args...)
@@ -70,7 +69,7 @@ func runMakeTarget(args []string) error {
 		}
 	}
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
@@ -151,7 +150,7 @@ func runMakeHelp() error {
 	// Extract targets from make database dump
 	filtered := extractMakeTargets(raw)
 
-	fmt.Println(filtered)
+	out.Global().Println(filtered)
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)

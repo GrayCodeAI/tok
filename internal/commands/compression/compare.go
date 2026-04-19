@@ -2,6 +2,7 @@ package compression
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -43,14 +44,14 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Println("Running compression comparison...")
-	fmt.Printf("Input size: %s\n\n", formatBytes(len(data)))
+	out.Global().Println("Running compression comparison...")
+	out.Global().Printf("Input size: %s\n\n", formatBytes(len(data)))
 
 	result, err := compression.CompareAlgorithms(data)
 	if err != nil {
 		return fmt.Errorf("comparison failed: %w", err)
 	}
 
-	fmt.Print(result.PrintComparison())
+	out.Global().Print(result.PrintComparison())
 	return nil
 }

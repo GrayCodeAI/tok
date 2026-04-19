@@ -2,6 +2,7 @@ package filtercmd
 
 import (
 	"fmt"
+	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"strconv"
@@ -101,13 +102,13 @@ func runCompress(cmd *cobra.Command, args []string) error {
 	result, stats := pipeline.Process(input)
 
 	// Write compressed output to stdout
-	fmt.Print(result)
+	out.Global().Print(result)
 
 	// Optionally print stats to stderr
 	if compressStats {
 		origTokens := core.EstimateTokens(input)
 		pct := stats.ReductionPercent
-		fmt.Fprintf(os.Stderr, "[tok] %d → %d tokens (%.1f%% reduction, saved %s)\n",
+		out.Global().Errorf("[tok] %d → %d tokens (%.1f%% reduction, saved %s)\n",
 			origTokens,
 			stats.FinalTokens,
 			pct,
