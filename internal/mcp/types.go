@@ -1,5 +1,5 @@
-// Package mcp implements the Model Context Protocol (MCP) server for TokMan.
-// This allows AI assistants to use TokMan's filtering capabilities as MCP tools.
+// Package mcp implements the Model Context Protocol (MCP) server for tok.
+// This allows AI assistants to use tok's filtering capabilities as MCP tools.
 package mcp
 
 import (

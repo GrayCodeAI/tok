@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var duCmd = &cobra.Command{
@@ -24,9 +24,9 @@ Specialized filters for:
   - Sorted usage summary
 
 Examples:
-  tokman du -sh *
-  tokman du -h --max-depth=1
-  tokman du -k /var`,
+  tok du -sh *
+  tok du -h --max-depth=1
+  tok du -k /var`,
 	DisableFlagParsing: true,
 	RunE:               runDu,
 }
@@ -58,7 +58,7 @@ func runDu(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("du", "tokman du", originalTokens, filteredTokens)
+	timer.Track("du", "tok du", originalTokens, filteredTokens)
 
 	return err
 }

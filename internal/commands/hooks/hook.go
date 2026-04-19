@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/discover"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/discover"
 )
 
 var hookCmd = &cobra.Command{
@@ -57,10 +57,10 @@ var hookGeminiCmd = &cobra.Command{
 	Use:   "gemini",
 	Short: "Process Gemini CLI BeforeTool hook",
 	Long: `Reads JSON from stdin (Gemini CLI hook format), rewrites
-run_shell_command tool calls to TokMan equivalents, and outputs
+run_shell_command tool calls to tok equivalents, and outputs
 Gemini CLI JSON format to stdout.
 
-Used as a Gemini CLI BeforeTool hook — install with: tokman init -g --gemini`,
+Used as a Gemini CLI BeforeTool hook — install with: tok init -g --gemini`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runGeminiHook()
 	},
@@ -81,7 +81,7 @@ var hookCopilotCmd = &cobra.Command{
 (snake_case) vs Copilot CLI format (camelCase), and outputs the
 appropriate response.
 
-Used as a Copilot preToolUse hook — install with: tokman init -g --copilot`,
+Used as a Copilot preToolUse hook — install with: tok init -g --copilot`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runCopilotHook()
 	},
@@ -172,7 +172,7 @@ func readHookJSON() (map[string]any, bool) {
 
 	var payload map[string]any
 	if err := json.Unmarshal([]byte(inputStr), &payload); err != nil {
-		fmt.Fprintln(os.Stderr, "[tokman hook] Failed to parse JSON input:", err)
+		fmt.Fprintln(os.Stderr, "[tok hook] Failed to parse JSON input:", err)
 		return nil, false
 	}
 	return payload, true
@@ -256,7 +256,7 @@ func processGeminiPayload(payload map[string]any) (map[string]any, string, strin
 	if checkCommandPermissions(command) == PermissionDeny {
 		return map[string]any{
 			"decision": "deny",
-			"reason":   "Blocked by TokMan permission rule",
+			"reason":   "Blocked by tok permission rule",
 		}, "skip:deny_rule", command, ""
 	}
 
@@ -282,7 +282,7 @@ func processVSCodeCommand(command string) (map[string]any, string, string, bool)
 			"hookSpecificOutput": map[string]any{
 				"hookEventName":            "PreToolUse",
 				"permissionDecision":       "deny",
-				"permissionDecisionReason": "Command denied by TokMan permission rules",
+				"permissionDecisionReason": "Command denied by tok permission rules",
 			},
 		}, "skip:deny_rule", "", true
 	}
@@ -299,7 +299,7 @@ func processCopilotCLICommand(command string) (map[string]any, string, string) {
 	if checkCommandPermissions(command) == PermissionDeny {
 		return map[string]any{
 			"permissionDecision":       "deny",
-			"permissionDecisionReason": "Blocked by TokMan permission rule",
+			"permissionDecisionReason": "Blocked by tok permission rule",
 		}, "skip:deny_rule", ""
 	}
 
@@ -310,7 +310,7 @@ func processCopilotCLICommand(command string) (map[string]any, string, string) {
 
 	return map[string]any{
 		"permissionDecision":       "deny",
-		"permissionDecisionReason": fmt.Sprintf("Token savings: use `%s` instead (tokman saves 60-90%% tokens)", rewritten),
+		"permissionDecisionReason": fmt.Sprintf("Token savings: use `%s` instead (tok saves 60-90%% tokens)", rewritten),
 	}, "rewrite", rewritten
 }
 
@@ -351,7 +351,7 @@ func hookCommandFromPayload(payload map[string]any) string {
 
 func buildCopilotVSCodeResponse(originalCmd, rewritten string) map[string]any {
 	decision := checkCommandPermissions(originalCmd)
-	reason := "TokMan auto-rewrite"
+	reason := "tok auto-rewrite"
 
 	switch decision {
 	case PermissionDeny:
@@ -359,14 +359,14 @@ func buildCopilotVSCodeResponse(originalCmd, rewritten string) map[string]any {
 			"hookSpecificOutput": map[string]any{
 				"hookEventName":            "PreToolUse",
 				"permissionDecision":       "deny",
-				"permissionDecisionReason": "Command denied by TokMan permission rules",
+				"permissionDecisionReason": "Command denied by tok permission rules",
 			},
 		}
 	case PermissionAsk, PermissionDefault:
 		if decision == PermissionDefault {
-			reason = "TokMan rewrite prepared; confirm command under default least-privilege policy"
+			reason = "tok rewrite prepared; confirm command under default least-privilege policy"
 		} else {
-			reason = "TokMan rewrite prepared; command matches ask rule"
+			reason = "tok rewrite prepared; command matches ask rule"
 		}
 		return map[string]any{
 			"hookSpecificOutput": map[string]any{
@@ -399,7 +399,7 @@ func printGeminiAllow() {
 func writeHookJSON(output map[string]any) {
 	data, err := json.Marshal(output)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "[tokman hook] Failed to marshal output: %v\n", err)
+		fmt.Fprintf(os.Stderr, "[tok hook] Failed to marshal output: %v\n", err)
 		return
 	}
 	fmt.Println(string(data))

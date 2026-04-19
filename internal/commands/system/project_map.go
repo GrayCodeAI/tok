@@ -1,6 +1,6 @@
 package system
 
-// ProjectMapCommand implements `tokman project_map` - generate a compact
+// ProjectMapCommand implements `tok project_map` - generate a compact
 // tree-style map of an entire codebase with token usage estimates.
 //
 // Inspired by claude-context-optimizer's project_map tool (98% reduction:
@@ -22,9 +22,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 var (
@@ -47,11 +47,11 @@ fraction of the tokens of raw 'find' or 'tree' output.
 This answers: "How many tokens would it cost to read my entire codebase?"
 
 Examples:
-  tokman project_map              # Map current directory
-  tokman project_map /path/to/repo --depth 2
-  tokman project_map . --tokens   # Include token estimates
-  tokman project_map . --signatures  # Include function/class signatures
-  tokman project_map . --format json # JSON output for processing`,
+  tok project_map              # Map current directory
+  tok project_map /path/to/repo --depth 2
+  tok project_map . --tokens   # Include token estimates
+  tok project_map . --signatures  # Include function/class signatures
+  tok project_map . --format json # JSON output for processing`,
 	Aliases: []string{"pmap", "repo-map"},
 	RunE:    runProjectMap,
 }

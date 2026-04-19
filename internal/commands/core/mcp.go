@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/mcp"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/mcp"
 )
 
 func init() {
@@ -17,28 +17,28 @@ func init() {
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
-	Short: "Start TokMan as an MCP server",
-	Long: `Start TokMan as a Model Context Protocol (MCP) server.
+	Short: "Start tok as an MCP server",
+	Long: `Start tok as a Model Context Protocol (MCP) server.
 
-This allows AI assistants (Claude, Cursor, etc.) to use TokMan's filtering
+This allows AI assistants (Claude, Cursor, etc.) to use tok's filtering
 capabilities as MCP tools instead of wrapping CLI commands.
 
 The server exposes these tools:
-  - tokman_filter: Filter arbitrary text through compression pipeline
-  - tokman_compress_file: Read and compress file content
-  - tokman_analyze_output: Analyze structure without filtering
-  - tokman_get_stats: Get usage statistics
-  - tokman_explain_layers: Explain compression layers
+  - tok_filter: Filter arbitrary text through compression pipeline
+  - tok_compress_file: Read and compress file content
+  - tok_analyze_output: Analyze structure without filtering
+  - tok_get_stats: Get usage statistics
+  - tok_explain_layers: Explain compression layers
 
 Usage:
   # Start MCP server with stdio transport (default)
-  tokman mcp
+  tok mcp
 
   # Configure in Claude Code (.mcp.json)
   {
     "mcpServers": {
-      "tokman": {
-        "command": "tokman",
+      "tok": {
+        "command": "tok",
         "args": ["mcp"]
       }
     }
@@ -47,8 +47,8 @@ Usage:
   # Configure in Cursor (mcp.json)
   {
     "mcpServers": {
-      "tokman": {
-        "command": "tokman",
+      "tok": {
+        "command": "tok",
         "args": ["mcp"],
         "env": {
           "TOKMAN_MODE": "balanced"
@@ -65,7 +65,7 @@ Usage:
 		pipeline := filter.NewPipelineCoordinator(cfg)
 
 		// Create and run MCP server
-		server := mcp.NewServer("tokman", "1.0.0", pipeline)
+		server := mcp.NewServer("tok", "1.0.0", pipeline)
 
 		// Run stdio server (blocking)
 		if err := server.RunStdio(); err != nil {

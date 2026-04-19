@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var configShowCmd = &cobra.Command{
@@ -68,7 +68,7 @@ func runConfigInit(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	defaultConfig := `# TokMan Configuration
+	defaultConfig := `# tok Configuration
 [pipeline]
 max_context_tokens = 100000
 default_budget = 0
@@ -165,7 +165,7 @@ func runConfigSet(cmd *cobra.Command, args []string) error {
 	}
 
 	content := strings.Join(newLines, "\n")
-	// #nosec G703 -- configPath is resolved via shared.GetConfigPath and points to tokman config.
+	// #nosec G703 -- configPath is resolved via shared.GetConfigPath and points to tok config.
 	if err := os.WriteFile(configPath, []byte(content), 0600); err != nil {
 		return fmt.Errorf("cannot write config: %w", err)
 	}

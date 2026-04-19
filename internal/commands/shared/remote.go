@@ -50,7 +50,7 @@ func NewRemoteClient(cfg *RemoteConfig) (*RemoteClient, error) {
 
 // Remote executor for gRPC-based compression and analytics.
 // This is used when --remote flag is enabled to offload processing
-// to TokMan microservices.
+// to tok microservices.
 
 var (
 	globalRemoteClient *RemoteClient

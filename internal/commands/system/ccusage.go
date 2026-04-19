@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
 )
 
 var ccusageDaily bool
@@ -29,10 +29,10 @@ Requires ccusage to be installed: npm i -g ccusage
 Shows token consumption and costs for Claude Code sessions.
 
 Examples:
-  tokman ccusage --daily
-  tokman ccusage --weekly
-  tokman ccusage --monthly
-  tokman ccusage --all`,
+  tok ccusage --daily
+  tok ccusage --weekly
+  tok ccusage --monthly
+  tok ccusage --all`,
 	RunE: runCcusage,
 }
 

@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func atoi(s string) int {
@@ -48,10 +48,10 @@ Automatically prunes noise directories (node_modules, .git, etc.)
 and provides extension summary. Supports all native tree flags.
 
 Examples:
-  tokman tree
-  tokman tree -L 2
-  tokman tree --depth 3 --no-noise
-  tokman tree -a`,
+  tok tree
+  tok tree -L 2
+  tok tree --depth 3 --no-noise
+  tok tree -a`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	RunE:               runTree,
 }
@@ -102,7 +102,7 @@ func runTree(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("tree %s", strings.Join(args, " ")), "tokman tree", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("tree %s", strings.Join(args, " ")), "tok tree", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

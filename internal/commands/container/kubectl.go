@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var kubectlJSON bool
@@ -42,12 +42,12 @@ Specialized filters for common commands:
   - kubectl top pods/nodes: Resource usage
 
 Examples:
-  tokman kubectl get pods
-  tokman kubectl get pods -n production
-  tokman kubectl get services
-  tokman kubectl logs <pod>
-  tokman kubectl describe pod <name>
-  tokman kubectl top pods`,
+  tok kubectl get pods
+  tok kubectl get pods -n production
+  tok kubectl get services
+  tok kubectl logs <pod>
+  tok kubectl describe pod <name>
+  tok kubectl top pods`,
 	DisableFlagParsing: true,
 	RunE:               runKubectl,
 }
@@ -149,14 +149,14 @@ func runKubectlPassthrough(args []string) error {
 	if kubectlJSON {
 		fmt.Println(formatAsJSONKubectl(output))
 		originalTokens := filter.EstimateTokens(output)
-		timer.Track(fmt.Sprintf("kubectl %s", strings.Join(args, " ")), "tokman kubectl", originalTokens, originalTokens)
+		timer.Track(fmt.Sprintf("kubectl %s", strings.Join(args, " ")), "tok kubectl", originalTokens, originalTokens)
 		return err
 	}
 
 	fmt.Print(output)
 
 	originalTokens := filter.EstimateTokens(output)
-	timer.Track(fmt.Sprintf("kubectl %s", strings.Join(args, " ")), "tokman kubectl", originalTokens, originalTokens)
+	timer.Track(fmt.Sprintf("kubectl %s", strings.Join(args, " ")), "tok kubectl", originalTokens, originalTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -197,7 +197,7 @@ func runKubectlPods(args []string) error {
 	}
 	if len(podList.Items) == 0 {
 		fmt.Println("No pods found")
-		timer.Track("kubectl get pods", "tokman kubectl pods", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get pods", "tok kubectl pods", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -245,7 +245,7 @@ func runKubectlPods(args []string) error {
 		fmt.Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("kubectl get pods", "tokman kubectl pods", originalTokens, filteredTokens)
+		timer.Track("kubectl get pods", "tok kubectl pods", originalTokens, filteredTokens)
 		return nil
 	}
 
@@ -270,7 +270,7 @@ func runKubectlPods(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get pods", "tokman kubectl pods", originalTokens, filteredTokens)
+	timer.Track("kubectl get pods", "tok kubectl pods", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -305,7 +305,7 @@ func runKubectlServices(args []string) error {
 	}
 	if len(svcList.Items) == 0 {
 		fmt.Println("No services found")
-		timer.Track("kubectl get services", "tokman kubectl services", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get services", "tok kubectl services", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -325,7 +325,7 @@ func runKubectlServices(args []string) error {
 		fmt.Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("kubectl get services", "tokman kubectl services", originalTokens, filteredTokens)
+		timer.Track("kubectl get services", "tok kubectl services", originalTokens, filteredTokens)
 		return nil
 	}
 
@@ -366,7 +366,7 @@ func runKubectlServices(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get services", "tokman kubectl services", originalTokens, filteredTokens)
+	timer.Track("kubectl get services", "tok kubectl services", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -389,7 +389,7 @@ func runKubectlDeployments(args []string) error {
 	}
 	if len(deployList.Items) == 0 {
 		fmt.Println("No deployments found")
-		timer.Track("kubectl get deployments", "tokman kubectl deployments", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get deployments", "tok kubectl deployments", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -411,7 +411,7 @@ func runKubectlDeployments(args []string) error {
 		fmt.Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("kubectl get deployments", "tokman kubectl deployments", originalTokens, filteredTokens)
+		timer.Track("kubectl get deployments", "tok kubectl deployments", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -450,7 +450,7 @@ func runKubectlDeployments(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get deployments", "tokman kubectl deployments", originalTokens, filteredTokens)
+	timer.Track("kubectl get deployments", "tok kubectl deployments", originalTokens, filteredTokens)
 
 	return err
 }
@@ -473,7 +473,7 @@ func runKubectlNodes(args []string) error {
 	}
 	if len(nodeList.Items) == 0 {
 		fmt.Println("No nodes found")
-		timer.Track("kubectl get nodes", "tokman kubectl nodes", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get nodes", "tok kubectl nodes", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -534,7 +534,7 @@ func runKubectlNodes(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get nodes", "tokman kubectl nodes", originalTokens, filteredTokens)
+	timer.Track("kubectl get nodes", "tok kubectl nodes", originalTokens, filteredTokens)
 
 	return err
 }
@@ -557,7 +557,7 @@ func runKubectlNamespaces(args []string) error {
 	}
 	if len(nsList.Items) == 0 {
 		fmt.Println("No namespaces found")
-		timer.Track("kubectl get namespaces", "tokman kubectl namespaces", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get namespaces", "tok kubectl namespaces", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -577,7 +577,7 @@ func runKubectlNamespaces(args []string) error {
 		fmt.Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("kubectl get namespaces", "tokman kubectl namespaces", originalTokens, filteredTokens)
+		timer.Track("kubectl get namespaces", "tok kubectl namespaces", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -602,7 +602,7 @@ func runKubectlNamespaces(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get namespaces", "tokman kubectl namespaces", originalTokens, filteredTokens)
+	timer.Track("kubectl get namespaces", "tok kubectl namespaces", originalTokens, filteredTokens)
 
 	return err
 }
@@ -625,7 +625,7 @@ func runKubectlConfigMaps(args []string) error {
 	}
 	if len(cmList.Items) == 0 {
 		fmt.Println("No configmaps found")
-		timer.Track("kubectl get configmaps", "tokman kubectl configmaps", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get configmaps", "tok kubectl configmaps", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -634,7 +634,7 @@ func runKubectlConfigMaps(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get configmaps", "tokman kubectl configmaps", originalTokens, filteredTokens)
+	timer.Track("kubectl get configmaps", "tok kubectl configmaps", originalTokens, filteredTokens)
 
 	return err
 }
@@ -657,7 +657,7 @@ func runKubectlSecrets(args []string) error {
 	}
 	if len(secretList.Items) == 0 {
 		fmt.Println("No secrets found")
-		timer.Track("kubectl get secrets", "tokman kubectl secrets", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get secrets", "tok kubectl secrets", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -666,7 +666,7 @@ func runKubectlSecrets(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get secrets", "tokman kubectl secrets", originalTokens, filteredTokens)
+	timer.Track("kubectl get secrets", "tok kubectl secrets", originalTokens, filteredTokens)
 
 	return err
 }
@@ -689,7 +689,7 @@ func runKubectlIngress(args []string) error {
 	}
 	if len(ingressList.Items) == 0 {
 		fmt.Println("No ingress found")
-		timer.Track("kubectl get ingress", "tokman kubectl ingress", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get ingress", "tok kubectl ingress", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -737,7 +737,7 @@ func runKubectlIngress(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get ingress", "tokman kubectl ingress", originalTokens, filteredTokens)
+	timer.Track("kubectl get ingress", "tok kubectl ingress", originalTokens, filteredTokens)
 
 	return err
 }
@@ -760,7 +760,7 @@ func runKubectlEvents(args []string) error {
 	}
 	if len(eventList.Items) == 0 {
 		fmt.Println("No events found")
-		timer.Track("kubectl get events", "tokman kubectl events", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get events", "tok kubectl events", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -793,7 +793,7 @@ func runKubectlEvents(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get events", "tokman kubectl events", originalTokens, filteredTokens)
+	timer.Track("kubectl get events", "tok kubectl events", originalTokens, filteredTokens)
 
 	return err
 }
@@ -802,7 +802,7 @@ func runKubectlLogs(args []string) error {
 	timer := tracking.Start()
 
 	if len(args) == 0 {
-		fmt.Println("Usage: tokman kubectl logs <pod>")
+		fmt.Println("Usage: tok kubectl logs <pod>")
 		return nil
 	}
 
@@ -828,7 +828,7 @@ func runKubectlLogs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("kubectl logs %s", pod), "tokman kubectl logs", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("kubectl logs %s", pod), "tok kubectl logs", originalTokens, filteredTokens)
 
 	return err
 }
@@ -854,7 +854,7 @@ func runKubectlDescribe(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("kubectl describe %s", strings.Join(args, " ")), "tokman kubectl describe", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("kubectl describe %s", strings.Join(args, " ")), "tok kubectl describe", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -886,7 +886,7 @@ func runKubectlTop(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("kubectl top %s", strings.Join(args, " ")), "tokman kubectl top", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("kubectl top %s", strings.Join(args, " ")), "tok kubectl top", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -918,7 +918,7 @@ func runKubectlJobs(args []string) error {
 	}
 	if len(jobList.Items) == 0 {
 		fmt.Println("No jobs found")
-		timer.Track("kubectl get jobs", "tokman kubectl jobs", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get jobs", "tok kubectl jobs", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -927,7 +927,7 @@ func runKubectlJobs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get jobs", "tokman kubectl jobs", originalTokens, filteredTokens)
+	timer.Track("kubectl get jobs", "tok kubectl jobs", originalTokens, filteredTokens)
 
 	return err
 }
@@ -949,7 +949,7 @@ func runKubectlCronJobs(args []string) error {
 	}
 	if len(cjList.Items) == 0 {
 		fmt.Println("No cronjobs found")
-		timer.Track("kubectl get cronjobs", "tokman kubectl cronjobs", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get cronjobs", "tok kubectl cronjobs", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -958,7 +958,7 @@ func runKubectlCronJobs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get cronjobs", "tokman kubectl cronjobs", originalTokens, filteredTokens)
+	timer.Track("kubectl get cronjobs", "tok kubectl cronjobs", originalTokens, filteredTokens)
 
 	return err
 }
@@ -980,7 +980,7 @@ func runKubectlPVs(args []string) error {
 	}
 	if len(pvList.Items) == 0 {
 		fmt.Println("No PVs found")
-		timer.Track("kubectl get pv", "tokman kubectl pv", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get pv", "tok kubectl pv", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -989,7 +989,7 @@ func runKubectlPVs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get pv", "tokman kubectl pv", originalTokens, filteredTokens)
+	timer.Track("kubectl get pv", "tok kubectl pv", originalTokens, filteredTokens)
 
 	return err
 }
@@ -1011,7 +1011,7 @@ func runKubectlPVCs(args []string) error {
 	}
 	if len(pvcList.Items) == 0 {
 		fmt.Println("No PVCs found")
-		timer.Track("kubectl get pvc", "tokman kubectl pvc", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get pvc", "tok kubectl pvc", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -1020,7 +1020,7 @@ func runKubectlPVCs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get pvc", "tokman kubectl pvc", originalTokens, filteredTokens)
+	timer.Track("kubectl get pvc", "tok kubectl pvc", originalTokens, filteredTokens)
 
 	return err
 }
@@ -1070,7 +1070,7 @@ func runKubectlCRDs(args []string) error {
 	}
 	if len(crdList.Items) == 0 {
 		fmt.Println("No CRDs found")
-		timer.Track("kubectl get crds", "tokman kubectl crds", filter.EstimateTokens(raw), 0)
+		timer.Track("kubectl get crds", "tok kubectl crds", filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -1079,7 +1079,7 @@ func runKubectlCRDs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("kubectl get crds", "tokman kubectl crds", originalTokens, filteredTokens)
+	timer.Track("kubectl get crds", "tok kubectl crds", originalTokens, filteredTokens)
 
 	return err
 }
@@ -1101,7 +1101,7 @@ func runKubectlGenericGet(resource, shortName string, args []string) error {
 	}
 	if len(list.Items) == 0 {
 		fmt.Printf("No %s found\n", resource)
-		timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tokman kubectl %s", shortName), filter.EstimateTokens(raw), 0)
+		timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tok kubectl %s", shortName), filter.EstimateTokens(raw), 0)
 		return nil
 	}
 
@@ -1110,7 +1110,7 @@ func runKubectlGenericGet(resource, shortName string, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tokman kubectl %s", shortName), originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("kubectl get %s", resource), fmt.Sprintf("tok kubectl %s", shortName), originalTokens, filteredTokens)
 
 	return err
 }

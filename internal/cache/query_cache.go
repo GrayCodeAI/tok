@@ -1,4 +1,4 @@
-// Package cache provides persistent query caching for TokMan.
+// Package cache provides persistent query caching for tok.
 // Caches filtered command outputs for instant retrieval on repeated commands.
 package cache
 
@@ -89,7 +89,7 @@ func NewQueryCache(dbPath string) (*QueryCache, error) {
 // defaultCachePath returns the default cache database path
 func defaultCachePath() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".local", "share", "tokman", "cache.db")
+	return filepath.Join(home, ".local", "share", "tok", "cache.db")
 }
 
 // migrate creates the cache schema

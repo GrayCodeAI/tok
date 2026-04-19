@@ -1,4 +1,4 @@
-// Package core provides core interfaces and utilities for TokMan.
+// Package core provides core interfaces and utilities for tok.
 //
 // The core package defines fundamental abstractions used throughout the codebase,
 // including the CommandRunner interface for shell command execution and token

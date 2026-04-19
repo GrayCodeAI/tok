@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var depsCmd = &cobra.Command{
@@ -21,8 +21,8 @@ var depsCmd = &cobra.Command{
 Auto-detects package manager from project files (go.mod, package.json, Cargo.toml, etc).
 
 Examples:
-  tokman deps
-  tokman deps /path/to/project`,
+  tok deps
+  tok deps /path/to/project`,
 	RunE: runDeps,
 }
 
@@ -63,7 +63,7 @@ func runDeps(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(result)
 	filteredTokens := filter.EstimateTokens(result)
-	timer.Track("deps", "tokman deps", originalTokens, filteredTokens)
+	timer.Track("deps", "tok deps", originalTokens, filteredTokens)
 
 	return nil
 }

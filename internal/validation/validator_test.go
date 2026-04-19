@@ -156,12 +156,12 @@ func TestValidateConfigPath(t *testing.T) {
 		},
 		{
 			name:    "home config path",
-			path:    "~/.config/tokman/config.toml",
+			path:    "~/.config/tok/config.toml",
 			wantErr: false,
 		},
 		{
 			name:    "relative config path",
-			path:    ".tokman/config.toml",
+			path:    ".tok/config.toml",
 			wantErr: false,
 		},
 	}

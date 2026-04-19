@@ -3,7 +3,7 @@ package filter
 import (
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 func TestToFilterPipelineConfigMapsKeyFields(t *testing.T) {

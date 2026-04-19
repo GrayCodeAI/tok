@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/contextread"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/contextread"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var (
@@ -40,11 +40,11 @@ Supports multiple filter levels:
   - aggressive: Strip imports, function bodies, keep signatures
 
 Examples:
-  tokman read main.go
-  tokman read main.go --level aggressive --max-lines 50
-  tokman read main.go --mode map
-  tokman read main.go --mode delta
-  tokman read main.go -n  # show line numbers`,
+  tok read main.go
+  tok read main.go --level aggressive --max-lines 50
+  tok read main.go --mode map
+  tok read main.go --mode delta
+  tok read main.go -n  # show line numbers`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runRead,
 }
@@ -114,7 +114,7 @@ func runRead(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 	}
 
-	recordSmartRead("tokman read", filePath, content, opts, originalTokens, filteredTokens, time.Since(start).Milliseconds())
+	recordSmartRead("tok read", filePath, content, opts, originalTokens, filteredTokens, time.Since(start).Milliseconds())
 
 	if shared.Verbose > 0 {
 		originalLines := len(strings.Split(content, "\n"))

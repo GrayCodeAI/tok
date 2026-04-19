@@ -8,8 +8,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var searchCmd = &cobra.Command{
@@ -63,7 +63,7 @@ func runSearch(cmd *cobra.Command, args []string) error {
 
 	if found == 0 {
 		fmt.Printf("No filters found for '%s'.\n", query)
-		fmt.Println("\nTip: Use 'tokman marketplace search <query>' to find community filters.")
+		fmt.Println("\nTip: Use 'tok marketplace search <query>' to find community filters.")
 		fmt.Printf("     Or create a custom filter in %s\n", filepath.Join(config.FiltersDir(), "<name>.toml"))
 	}
 

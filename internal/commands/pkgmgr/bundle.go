@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var bundleCmd = &cobra.Command{
@@ -28,9 +28,9 @@ Subcommands:
   exec      - Passthrough with tracking
 
 Examples:
-  tokman bundle install
-  tokman bundle update rails
-  tokman bundle outdated`,
+  tok bundle install
+  tok bundle update rails
+  tok bundle outdated`,
 	DisableFlagParsing: true,
 	RunE:               runBundle,
 }
@@ -76,7 +76,7 @@ func runBundle(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("bundle %s", strings.Join(args, " ")), "tokman bundle", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("bundle %s", strings.Join(args, " ")), "tok bundle", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

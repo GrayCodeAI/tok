@@ -1,4 +1,4 @@
-// Package filter provides the core token compression pipeline for TokMan.
+// Package filter provides the core token compression pipeline for tok.
 //
 // The filter package implements a multi-layer compression architecture
 // inspired by 120+ research papers from top institutions. It processes

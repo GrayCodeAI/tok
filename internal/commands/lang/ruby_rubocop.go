@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func runRubocopCmd(args []string) error {
@@ -31,7 +31,7 @@ func runRubocopCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("rubocop %s", strings.Join(args, " ")), "tokman ruby rubocop", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("rubocop %s", strings.Join(args, " ")), "tok ruby rubocop", originalTokens, filteredTokens)
 
 	return err
 }

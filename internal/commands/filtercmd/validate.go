@@ -9,9 +9,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/toml"
 )
 
 var (
@@ -33,10 +33,10 @@ Checks performed:
   - Conflicting configuration detection
 
 Usage:
-  tokman filter validate                    # Validate all filters
-  tokman filter validate git.toml           # Validate specific file
-  tokman filter validate --all              # Validate all (builtin + user)
-  tokman filter validate -v                 # Verbose output`,
+  tok filter validate                    # Validate all filters
+  tok filter validate git.toml           # Validate specific file
+  tok filter validate --all              # Validate all (builtin + user)
+  tok filter validate -v                 # Verbose output`,
 	RunE: runValidate,
 }
 

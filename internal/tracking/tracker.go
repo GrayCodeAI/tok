@@ -15,10 +15,10 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/retry"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/retry"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 // HistoryRetentionDays is the number of days to retain tracking data.
@@ -68,7 +68,7 @@ func Start() *TimedExecution {
 //   - TOKMAN_AGENT: AI agent name (e.g., "Claude Code", "OpenCode", "Cursor")
 //   - TOKMAN_MODEL: Model name (e.g., "claude-3-opus", "gpt-4")
 //   - TOKMAN_PROVIDER: Provider name (e.g., "Anthropic", "OpenAI")
-func (t *TimedExecution) Track(command, tokmanCmd string, originalTokens, filteredTokens int) {
+func (t *TimedExecution) Track(command, tokCmd string, originalTokens, filteredTokens int) {
 	t.once.Do(func() {
 		execTime := time.Since(t.startTime)
 		saved := originalTokens - filteredTokens

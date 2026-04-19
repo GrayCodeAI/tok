@@ -8,10 +8,10 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/toml"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func resetConfigCacheForTest() {

@@ -11,8 +11,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var (
@@ -28,7 +28,7 @@ var learnCmd = &cobra.Command{
 	Short: "ML-based command corrections and suggestions",
 	Long: `Learn from command history to provide intelligent corrections.
 
-TokMan analyzes your command patterns and common mistakes to suggest
+tok analyzes your command patterns and common mistakes to suggest
 corrections and optimizations. All learning is local and private.
 
 Features:
@@ -38,12 +38,12 @@ Features:
   • Export/import learned rules
 
 Examples:
-  tokman learn --rules       # Show learned rules
-  tokman learn --stats       # Show learning statistics
-  tokman learn --reset       # Reset all learned data
-  tokman learn --export rules.json  # Export learned rules`,
+  tok learn --rules       # Show learned rules
+  tok learn --stats       # Show learning statistics
+  tok learn --reset       # Reset all learned data
+  tok learn --export rules.json  # Export learned rules`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runLearn,
 }
@@ -155,7 +155,7 @@ func showLearnedRules() error {
 
 	if len(rules) == 0 {
 		fmt.Println("No learned rules yet.")
-		fmt.Println("TokMan will learn from your command patterns over time.")
+		fmt.Println("tok will learn from your command patterns over time.")
 		return nil
 	}
 
@@ -189,7 +189,7 @@ func showLearningStats() error {
 	green := color.New(color.FgGreen).SprintFunc()
 
 	fmt.Println()
-	fmt.Println(cyan("TokMan Learning Statistics"))
+	fmt.Println(cyan("tok Learning Statistics"))
 	fmt.Println(strings.Repeat("═", 40))
 
 	fmt.Printf("Learned rules:     %s\n", green(len(rules)))

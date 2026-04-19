@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var ghCmd = &cobra.Command{
@@ -23,9 +23,9 @@ var ghCmd = &cobra.Command{
 Provides specialized filtering for pr, issue, run, and repo commands.
 
 Examples:
-  tokman gh pr list
-  tokman gh issue list --repo owner/repo
-  tokman gh run list`,
+  tok gh pr list
+  tok gh issue list --repo owner/repo
+  tok gh run list`,
 	DisableFlagParsing: true,
 	RunE:               runGh,
 }
@@ -89,7 +89,7 @@ func runGhPr(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh pr %s", strings.Join(args, " ")), "tokman gh pr", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh pr %s", strings.Join(args, " ")), "tok gh pr", originalTokens, filteredTokens)
 
 	return err
 }
@@ -121,7 +121,7 @@ func runGhIssue(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh issue %s", strings.Join(args, " ")), "tokman gh issue", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh issue %s", strings.Join(args, " ")), "tok gh issue", originalTokens, filteredTokens)
 
 	return err
 }
@@ -154,7 +154,7 @@ func runGhRun(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh run %s", strings.Join(args, " ")), "tokman gh run", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh run %s", strings.Join(args, " ")), "tok gh run", originalTokens, filteredTokens)
 
 	return err
 }
@@ -182,7 +182,7 @@ func runGhRepo(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh repo %s", strings.Join(args, " ")), "tokman gh repo", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh repo %s", strings.Join(args, " ")), "tok gh repo", originalTokens, filteredTokens)
 
 	return err
 }
@@ -210,7 +210,7 @@ func runGhPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh %s", strings.Join(args, " ")), "tokman gh", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh %s", strings.Join(args, " ")), "tok gh", originalTokens, filteredTokens)
 
 	return err
 }
@@ -547,7 +547,7 @@ func runGhRelease(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh release %s", strings.Join(args, " ")), "tokman gh release", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh release %s", strings.Join(args, " ")), "tok gh release", originalTokens, filteredTokens)
 
 	return err
 }
@@ -627,7 +627,7 @@ func runGhApi(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gh api %s", strings.Join(args, " ")), "tokman gh api", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gh api %s", strings.Join(args, " ")), "tok gh api", originalTokens, filteredTokens)
 
 	return err
 }

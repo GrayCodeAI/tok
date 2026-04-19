@@ -246,12 +246,12 @@ func TestFormatHint(t *testing.T) {
 		expected string
 	}{
 		{
-			path:     filepath.Join(home, ".local", "share", "tokman", "tee", "test.log"),
-			expected: "[full output: ~/.local/share/tokman/tee/test.log]",
+			path:     filepath.Join(home, ".local", "share", "tok", "tee", "test.log"),
+			expected: "[full output: ~/.local/share/tok/tee/test.log]",
 		},
 		{
-			path:     "/tmp/tokman/tee/123_cargo_test.log",
-			expected: "[full output: /tmp/tokman/tee/123_cargo_test.log]",
+			path:     "/tmp/tok/tee/123_cargo_test.log",
+			expected: "[full output: /tmp/tok/tee/123_cargo_test.log]",
 		},
 	}
 

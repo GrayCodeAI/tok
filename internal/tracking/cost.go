@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	corepricing "github.com/GrayCodeAI/tokman/internal/core"
+	corepricing "github.com/lakshmanpatel/tok/internal/core"
 )
 
 // CostEstimator estimates API costs based on token usage.

@@ -13,24 +13,24 @@ import (
 func ConfigPath() string {
 	// Check for explicit override first
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "tokman", "config.toml")
+		return filepath.Join(xdg, "tok", "config.toml")
 	}
 
 	// Windows: use %APPDATA%
 	if runtime.GOOS == "windows" {
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "tokman", "config.toml")
+			return filepath.Join(appData, "tok", "config.toml")
 		}
 	}
 
 	// Unix: default to ~/.config
 	home, err := os.UserHomeDir()
 	if err == nil {
-		return filepath.Join(home, ".config", "tokman", "config.toml")
+		return filepath.Join(home, ".config", "tok", "config.toml")
 	}
 
 	// Last resort: use temp directory
-	return filepath.Join(os.TempDir(), "tokman-config", "config.toml")
+	return filepath.Join(os.TempDir(), "tok-config", "config.toml")
 }
 
 // DataPath returns the path to the data directory.
@@ -40,33 +40,33 @@ func ConfigPath() string {
 func DataPath() string {
 	// Check for explicit override first
 	if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
-		return filepath.Join(xdg, "tokman")
+		return filepath.Join(xdg, "tok")
 	}
 
 	// Windows: use %LOCALAPPDATA%
 	if runtime.GOOS == "windows" {
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return filepath.Join(localAppData, "tokman")
+			return filepath.Join(localAppData, "tok")
 		}
 		// Fallback to APPDATA if LOCALAPPDATA not set
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "tokman", "data")
+			return filepath.Join(appData, "tok", "data")
 		}
 	}
 
 	// Unix: default to ~/.local/share
 	home, err := os.UserHomeDir()
 	if err == nil {
-		return filepath.Join(home, ".local", "share", "tokman")
+		return filepath.Join(home, ".local", "share", "tok")
 	}
 
-	// Last resort: use temp directory with tokman subdirectory
-	return filepath.Join(os.TempDir(), "tokman-data")
+	// Last resort: use temp directory with tok subdirectory
+	return filepath.Join(os.TempDir(), "tok-data")
 }
 
 // DatabasePath returns the path to the SQLite database.
 func DatabasePath() string {
-	if custom := os.Getenv("TOKMAN_DATABASE_PATH"); custom != "" {
+	if custom := os.Getenv("TOK_DATABASE_PATH"); custom != "" {
 		return custom
 	}
 	return filepath.Join(DataPath(), "tracking.db")
@@ -74,7 +74,7 @@ func DatabasePath() string {
 
 // LogPath returns the path to the log file.
 func LogPath() string {
-	return filepath.Join(DataPath(), "tokman.log")
+	return filepath.Join(DataPath(), "tok.log")
 }
 
 // HooksPath returns the path to the hooks directory.
@@ -96,21 +96,21 @@ func ProjectPath() string {
 	return canonical
 }
 
-// ConfigDir returns the path to the tokman config directory.
+// ConfigDir returns the path to the tok config directory.
 func ConfigDir() string {
 	if xdg := os.Getenv("XDG_CONFIG_HOME"); xdg != "" {
-		return filepath.Join(xdg, "tokman")
+		return filepath.Join(xdg, "tok")
 	}
 	if runtime.GOOS == "windows" {
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "tokman")
+			return filepath.Join(appData, "tok")
 		}
 	}
 	home, err := os.UserHomeDir()
 	if err != nil {
-		return filepath.Join(".config", "tokman")
+		return filepath.Join(".config", "tok")
 	}
-	return filepath.Join(home, ".config", "tokman")
+	return filepath.Join(home, ".config", "tok")
 }
 
 // FiltersDir returns the path to the user filters directory.

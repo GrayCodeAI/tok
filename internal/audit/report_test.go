@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func TestSaveLoadAndCompareSnapshots(t *testing.T) {
@@ -58,7 +58,7 @@ func TestSaveLoadAndCompareSnapshots(t *testing.T) {
 }
 
 func TestGenerateWithTrackerData(t *testing.T) {
-	dbPath := filepath.Join(t.TempDir(), "tokman.db")
+	dbPath := filepath.Join(t.TempDir(), "tok.db")
 	tr, err := tracking.NewTracker(dbPath)
 	if err != nil {
 		t.Fatalf("new tracker: %v", err)

@@ -4,7 +4,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "DiffAdapt: Difficulty-Adaptive Token Compression for LLM Inference"

@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var gtCmd = &cobra.Command{
@@ -22,9 +22,9 @@ var gtCmd = &cobra.Command{
 Provides specialized filtering for log, submit, sync, restack, create, and branch.
 
 Examples:
-  tokman gt log
-  tokman gt submit
-  tokman gt sync`,
+  tok gt log
+  tok gt submit
+  tok gt sync`,
 	DisableFlagParsing: true,
 	RunE:               runGt,
 }
@@ -80,7 +80,7 @@ func runGtLog(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt log %s", strings.Join(args, " ")), "tokman gt log", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt log %s", strings.Join(args, " ")), "tok gt log", originalTokens, filteredTokens)
 
 	return err
 }
@@ -108,7 +108,7 @@ func runGtSubmit(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt submit %s", strings.Join(args, " ")), "tokman gt submit", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt submit %s", strings.Join(args, " ")), "tok gt submit", originalTokens, filteredTokens)
 
 	return err
 }
@@ -136,7 +136,7 @@ func runGtSync(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt sync %s", strings.Join(args, " ")), "tokman gt sync", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt sync %s", strings.Join(args, " ")), "tok gt sync", originalTokens, filteredTokens)
 
 	return err
 }
@@ -164,7 +164,7 @@ func runGtRestack(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt restack %s", strings.Join(args, " ")), "tokman gt restack", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt restack %s", strings.Join(args, " ")), "tok gt restack", originalTokens, filteredTokens)
 
 	return err
 }
@@ -192,7 +192,7 @@ func runGtCreate(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt create %s", strings.Join(args, " ")), "tokman gt create", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt create %s", strings.Join(args, " ")), "tok gt create", originalTokens, filteredTokens)
 
 	return err
 }
@@ -220,7 +220,7 @@ func runGtBranch(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt branch %s", strings.Join(args, " ")), "tokman gt branch", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt branch %s", strings.Join(args, " ")), "tok gt branch", originalTokens, filteredTokens)
 
 	return err
 }
@@ -248,7 +248,7 @@ func runGtPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("gt %s", strings.Join(args, " ")), "tokman gt", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("gt %s", strings.Join(args, " ")), "tok gt", originalTokens, filteredTokens)
 
 	return err
 }

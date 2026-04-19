@@ -1,6 +1,6 @@
 package tracking
 
-import "github.com/GrayCodeAI/tokman/internal/session"
+import "github.com/lakshmanpatel/tok/internal/session"
 
 // WorkspaceDashboardSnapshot joins token analytics with persisted session analytics.
 type WorkspaceDashboardSnapshot struct {

@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var logCmd = &cobra.Command{
@@ -23,8 +23,8 @@ var logCmd = &cobra.Command{
 Reads from stdin or file. Strips timestamps, deduplicates lines.
 
 Examples:
-  tokman log app.log
-  cat debug.log | tokman log`,
+  tok log app.log
+  cat debug.log | tok log`,
 	RunE: runLog,
 }
 
@@ -58,7 +58,7 @@ func runLog(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(input)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("log", "tokman log", originalTokens, filteredTokens)
+	timer.Track("log", "tok log", originalTokens, filteredTokens)
 
 	if shared.Verbose > 0 {
 		origLines := len(strings.Split(input, "\n"))

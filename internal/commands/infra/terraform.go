@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var terraformCmd = &cobra.Command{
@@ -32,9 +32,9 @@ Specialized filters for common commands:
 Also handles 'tf' as an alias.
 
 Examples:
-  tokman terraform plan
-  tokman terraform apply
-  tokman terraform state list`,
+  tok terraform plan
+  tok terraform apply
+  tok terraform state list`,
 	Aliases:            []string{"tf"},
 	DisableFlagParsing: true,
 	RunE:               runTerraform,
@@ -87,7 +87,7 @@ func runTerraformPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("terraform %s", strings.Join(args, " ")), "tokman terraform", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("terraform %s", strings.Join(args, " ")), "tok terraform", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -111,7 +111,7 @@ func runTerraformPlan(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform plan", "tokman terraform plan", originalTokens, filteredTokens)
+	timer.Track("terraform plan", "tok terraform plan", originalTokens, filteredTokens)
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_plan", err); hint != "" {
@@ -135,7 +135,7 @@ func runTerraformApply(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform apply", "tokman terraform apply", originalTokens, filteredTokens)
+	timer.Track("terraform apply", "tok terraform apply", originalTokens, filteredTokens)
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "terraform_apply", err); hint != "" {
@@ -159,7 +159,7 @@ func runTerraformShow(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("terraform show %s", strings.Join(args, " ")), "tokman terraform show", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("terraform show %s", strings.Join(args, " ")), "tok terraform show", originalTokens, filteredTokens)
 
 	return err
 }
@@ -177,7 +177,7 @@ func runTerraformOutput(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform output", "tokman terraform output", originalTokens, filteredTokens)
+	timer.Track("terraform output", "tok terraform output", originalTokens, filteredTokens)
 
 	return err
 }
@@ -197,7 +197,7 @@ func runTerraformState(args []string) error {
 
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("terraform state list", "tokman terraform state list", originalTokens, filteredTokens)
+		timer.Track("terraform state list", "tok terraform state list", originalTokens, filteredTokens)
 
 		return err
 	}
@@ -218,7 +218,7 @@ func runTerraformImport(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("terraform import %s", strings.Join(args, " ")), "tokman terraform import", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("terraform import %s", strings.Join(args, " ")), "tok terraform import", originalTokens, filteredTokens)
 
 	return err
 }
@@ -236,7 +236,7 @@ func runTerraformInit(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform init", "tokman terraform init", originalTokens, filteredTokens)
+	timer.Track("terraform init", "tok terraform init", originalTokens, filteredTokens)
 
 	return err
 }
@@ -254,7 +254,7 @@ func runTerraformValidate(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform validate", "tokman terraform validate", originalTokens, filteredTokens)
+	timer.Track("terraform validate", "tok terraform validate", originalTokens, filteredTokens)
 
 	return err
 }
@@ -272,7 +272,7 @@ func runTerraformGraph(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("terraform graph", "tokman terraform graph", originalTokens, filteredTokens)
+	timer.Track("terraform graph", "tok terraform graph", originalTokens, filteredTokens)
 
 	return err
 }

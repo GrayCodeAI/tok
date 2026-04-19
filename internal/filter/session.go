@@ -44,7 +44,7 @@ type SessionConfig struct {
 func NewSessionTracker() *SessionTracker {
 	// Default session file in user's cache directory
 	cacheDir := getCacheDir()
-	sessionFile := filepath.Join(cacheDir, "tokman", "session.json")
+	sessionFile := filepath.Join(cacheDir, "tok", "session.json")
 
 	return &SessionTracker{
 		sessionFile: sessionFile,

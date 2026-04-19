@@ -11,8 +11,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var smartFileCmd = &cobra.Command{
@@ -26,10 +26,10 @@ This command analyzes file content and produces a brief summary:
 - For docs: shows headings and key points
 
 Examples:
-  tokman smart main.go           # Go file summary
-  tokman smart package.json      # NPM package summary
-  tokman smart README.md         # Documentation summary
-  tokman smart Cargo.toml        # Rust project summary`,
+  tok smart main.go           # Go file summary
+  tok smart package.json      # NPM package summary
+  tok smart README.md         # Documentation summary
+  tok smart Cargo.toml        # Rust project summary`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSmart,
 }
@@ -67,7 +67,7 @@ func runSmart(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	// Track usage
-	timer.Track("smart "+filePath, "tokman smart", 100, 50)
+	timer.Track("smart "+filePath, "tok smart", 100, 50)
 
 	return nil
 }

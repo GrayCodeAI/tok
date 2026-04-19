@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 func TestServer_Initialize(t *testing.T) {
@@ -71,11 +71,11 @@ func TestServer_ToolsList(t *testing.T) {
 	}
 
 	expectedTools := []string{
-		"tokman_filter",
-		"tokman_compress_file",
-		"tokman_analyze_output",
-		"tokman_get_stats",
-		"tokman_explain_layers",
+		"tok_filter",
+		"tok_compress_file",
+		"tok_analyze_output",
+		"tok_get_stats",
+		"tok_explain_layers",
 	}
 
 	for _, name := range expectedTools {
@@ -104,7 +104,7 @@ func TestServer_ToolsCall_Filter(t *testing.T) {
 		JSONRPC: "2.0",
 		ID:      2,
 		Method:  MessageTypeToolsCall,
-		Params:  json.RawMessage(`{"name":"tokman_filter","arguments":{"text":"Hello world test","mode":"minimal"}}`),
+		Params:  json.RawMessage(`{"name":"tok_filter","arguments":{"text":"Hello world test","mode":"minimal"}}`),
 	}
 
 	resp := server.handleRequest(&req)

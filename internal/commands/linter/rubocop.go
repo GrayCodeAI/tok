@@ -12,10 +12,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var rubocopCmd = &cobra.Command{
@@ -27,9 +27,9 @@ Injects --format json for structured parsing, groups offenses by
 file and severity. Falls back to text parsing for autocorrect mode.
 
 Examples:
-  tokman rubocop
-  tokman rubocop app/models/
-  tokman rubocop -A`,
+  tok rubocop
+  tok rubocop app/models/
+  tok rubocop -A`,
 	DisableFlagParsing: true,
 	RunE:               runRubocop,
 }
@@ -119,7 +119,7 @@ func runRubocop(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("rubocop %s", strings.Join(args, " ")), "tokman rubocop", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("rubocop %s", strings.Join(args, " ")), "tok rubocop", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

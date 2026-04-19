@@ -54,7 +54,7 @@ func TestComputeHashChangesOnModification(t *testing.T) {
 func TestStoreAndVerifyOK(t *testing.T) {
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
-	os.WriteFile(hook, []byte("#!/bin/bash\n# tokman-hook-version: 1\necho test\n"), 0644)
+	os.WriteFile(hook, []byte("#!/bin/bash\n# tok-hook-version: 1\necho test\n"), 0644)
 
 	if err := StoreHash(hook); err != nil {
 		t.Fatalf("StoreHash failed: %v", err)
@@ -103,7 +103,7 @@ func TestVerifyDetectsTampering(t *testing.T) {
 func TestVerifyNoBaseline(t *testing.T) {
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
-	content := "#!/bin/bash\n# tokman-hook-version: 1\necho test\n"
+	content := "#!/bin/bash\n# tok-hook-version: 1\necho test\n"
 	os.WriteFile(hook, []byte(content), 0644)
 
 	// No hash file stored
@@ -154,7 +154,7 @@ func TestVerifyOrphanedHash(t *testing.T) {
 func TestVerifyOutdatedHookVersion(t *testing.T) {
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
-	content := "#!/bin/bash\n# tokman-hook-version: 0\necho test\n"
+	content := "#!/bin/bash\n# tok-hook-version: 0\necho test\n"
 	if err := os.WriteFile(hook, []byte(content), 0644); err != nil {
 		t.Fatalf("write hook: %v", err)
 	}
@@ -189,7 +189,7 @@ func TestStoreHashCreatesSha256sumFormat(t *testing.T) {
 		t.Fatalf("Failed to read hash file: %v", err)
 	}
 
-	// Format: "<64 hex chars>  tokman-rewrite.sh\n"
+	// Format: "<64 hex chars>  tok-rewrite.sh\n"
 	strContent := string(content)
 	if strContent[len(strContent)-1] != '\n' {
 		t.Error("Hash file should end with newline")
@@ -205,13 +205,13 @@ func TestStoreHashOverwritesExisting(t *testing.T) {
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 
-	os.WriteFile(hook, []byte("#!/bin/bash\n# tokman-hook-version: 1\nversion 1"), 0644)
+	os.WriteFile(hook, []byte("#!/bin/bash\n# tok-hook-version: 1\nversion 1"), 0644)
 	if err := StoreHash(hook); err != nil {
 		t.Fatalf("StoreHash failed: %v", err)
 	}
 	hash1, _ := ComputeHash(hook)
 
-	os.WriteFile(hook, []byte("#!/bin/bash\n# tokman-hook-version: 1\nversion 2"), 0644)
+	os.WriteFile(hook, []byte("#!/bin/bash\n# tok-hook-version: 1\nversion 2"), 0644)
 	if err := StoreHash(hook); err != nil {
 		t.Fatalf("StoreHash failed: %v", err)
 	}

@@ -10,10 +10,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var curlCmd = &cobra.Command{
@@ -25,9 +25,9 @@ Auto-detects JSON responses and formats them for readability.
 Preserves standard curl behavior while adding token-efficient output.
 
 Examples:
-  tokman curl https://api.example.com/users
-  tokman curl -H "Authorization: Bearer token" https://api.example.com/data
-  tokman curl -X POST -d '{"key":"value"}' https://api.example.com/create`,
+  tok curl https://api.example.com/users
+  tok curl -H "Authorization: Bearer token" https://api.example.com/data
+  tok curl -X POST -d '{"key":"value"}' https://api.example.com/create`,
 	DisableFlagParsing: true,
 	RunE:               runCurl,
 }
@@ -60,7 +60,7 @@ func runCurl(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("curl %s", strings.Join(args, " ")), "tokman curl", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("curl %s", strings.Join(args, " ")), "tok curl", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

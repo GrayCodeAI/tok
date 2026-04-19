@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var rakeCmd = &cobra.Command{
@@ -26,9 +26,9 @@ Parses standard Minitest output, filtering down to failures/errors
 and the summary line. Auto-detects rails test for positional files.
 
 Examples:
-  tokman rake test
-  tokman rake test TEST=test/models/user_test.rb
-  tokman rake test test/models/user_test.rb:15`,
+  tok rake test
+  tok rake test TEST=test/models/user_test.rb
+  tok rake test test/models/user_test.rb:15`,
 	DisableFlagParsing: true,
 	RunE:               runRake,
 }
@@ -62,7 +62,7 @@ func runRake(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("rake %s", strings.Join(args, " ")), "tokman rake", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("rake %s", strings.Join(args, " ")), "tok rake", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

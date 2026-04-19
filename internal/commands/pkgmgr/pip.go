@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var pipJSON bool
@@ -34,10 +34,10 @@ Specialized filters for common commands:
   - pip audit: Security audit summary
 
 Examples:
-  tokman pip list
-  tokman pip install package
-  tokman pip show package
-  tokman pip outdated`,
+  tok pip list
+  tok pip install package
+  tok pip show package
+  tok pip outdated`,
 	DisableFlagParsing: true,
 	RunE:               runPip,
 }
@@ -91,7 +91,7 @@ func runPip(cmd *cobra.Command, args []string) error {
 		fmt.Println(formatAsJSONpip(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tokman pip", originalTokens, filteredTokens)
+		timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tok pip", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -99,7 +99,7 @@ func runPip(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tokman pip", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("pip %s", strings.Join(args, " ")), "tok pip", originalTokens, filteredTokens)
 
 	return err
 }

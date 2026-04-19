@@ -12,8 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var trustList bool
@@ -22,7 +22,7 @@ var trustList bool
 var trustCmd = &cobra.Command{
 	Use:   "trust",
 	Short: "Trust project-local TOML filters in current directory",
-	Long: `Review and trust the .tokman/filters.toml file in the current directory.
+	Long: `Review and trust the .tok/filters.toml file in the current directory.
 
 Trust-before-load security model:
 - Untrusted filters are SKIPPED (not loaded with warning)
@@ -31,10 +31,10 @@ Trust-before-load security model:
 - TOKMAN_TRUST_PROJECT_FILTERS=1 overrides for CI pipelines
 
 Examples:
-  tokman trust          # Review and trust .tokman/filters.toml
-  tokman trust --list   # List all trusted projects`,
+  tok trust          # Review and trust .tok/filters.toml
+  tok trust --list   # List all trusted projects`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runTrust,
 }
@@ -71,15 +71,15 @@ func runTrust(cmd *cobra.Command, args []string) error {
 		return listTrusted()
 	}
 
-	filterPath := ".tokman/filters.toml"
+	filterPath := ".tok/filters.toml"
 
 	// Check if file exists
 	content, err := os.ReadFile(filterPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return fmt.Errorf("no .tokman/filters.toml found in current directory")
+			return fmt.Errorf("no .tok/filters.toml found in current directory")
 		}
-		return fmt.Errorf("failed to read .tokman/filters.toml: %w", err)
+		return fmt.Errorf("failed to read .tok/filters.toml: %w", err)
 	}
 
 	cyan := color.New(color.FgCyan).SprintFunc()
@@ -87,7 +87,7 @@ func runTrust(cmd *cobra.Command, args []string) error {
 
 	// Display file content
 	fmt.Println()
-	fmt.Println(cyan("=== .tokman/filters.toml ==="))
+	fmt.Println(cyan("=== .tok/filters.toml ==="))
 	fmt.Println(string(content))
 	fmt.Println(cyan("==========================="))
 	fmt.Println()
@@ -115,7 +115,7 @@ func runTrust(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Println()
-	fmt.Printf("%s Trusted .tokman/filters.toml (sha256:%s)\n",
+	fmt.Printf("%s Trusted .tok/filters.toml (sha256:%s)\n",
 		green("✓"), hash[:16])
 	fmt.Println("Project-local filters will now be applied.")
 

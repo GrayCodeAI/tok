@@ -9,8 +9,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var (
@@ -22,7 +22,7 @@ var (
 var benchCmd = &cobra.Command{
 	Use:   "pipeline-bench",
 	Short: "Run stage-by-stage pipeline benchmark report",
-	Long:  "Runs TokMan pipeline on synthetic mixed content and prints per-stage token savings and time.",
+	Long:  "Runs tok pipeline on synthetic mixed content and prints per-stage token savings and time.",
 	RunE:  runBenchmark,
 }
 
@@ -66,7 +66,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	_, stats := p.Process(input)
 	totalDur := time.Since(start)
 
-	fmt.Printf("TokMan Pipeline Benchmark\n")
+	fmt.Printf("tok Pipeline Benchmark\n")
 	fmt.Printf("Profile=%s Mode=%s Lines=%d\n\n", profile, mode, benchLines)
 	fusion := filter.ClawFusionStageCoverage()
 	fmt.Printf("Fusion Coverage: %d/14 stages mapped\n\n", len(fusion))

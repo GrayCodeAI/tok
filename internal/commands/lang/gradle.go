@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var gradleCmd = &cobra.Command{
@@ -25,9 +25,9 @@ Specialized filters for:
   - dependencies: Compact dependency tree
 
 Examples:
-  tokman gradle build
-  tokman gradle test
-  tokman gradle dependencies`,
+  tok gradle build
+  tok gradle test
+  tok gradle dependencies`,
 	DisableFlagParsing: true,
 	RunE:               runGradle,
 }
@@ -78,7 +78,7 @@ func runGradleBuild(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("gradle build", "tokman gradle build", originalTokens, filteredTokens)
+	timer.Track("gradle build", "tok gradle build", originalTokens, filteredTokens)
 
 	return err
 }
@@ -158,7 +158,7 @@ func runGradleTest(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("gradle test", "tokman gradle test", originalTokens, filteredTokens)
+	timer.Track("gradle test", "tok gradle test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -234,7 +234,7 @@ func runGradleDependencies(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("gradle dependencies", "tokman gradle dependencies", originalTokens, filteredTokens)
+	timer.Track("gradle dependencies", "tok gradle dependencies", originalTokens, filteredTokens)
 
 	return err
 }
@@ -295,7 +295,7 @@ func runGradleTasks(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("gradle tasks", "tokman gradle tasks", originalTokens, filteredTokens)
+	timer.Track("gradle tasks", "tok gradle tasks", originalTokens, filteredTokens)
 
 	return err
 }
@@ -360,7 +360,7 @@ func runGradlePassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("gradle", "tokman gradle", originalTokens, filteredTokens)
+	timer.Track("gradle", "tok gradle", originalTokens, filteredTokens)
 
 	return err
 }

@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var helmCmd = &cobra.Command{
@@ -27,10 +27,10 @@ Specialized filters for common commands:
   - helm values: Compact values output
 
 Examples:
-  tokman helm list
-  tokman helm status my-release
-  tokman helm search repo stable
-  tokman helm values my-chart`,
+  tok helm list
+  tok helm status my-release
+  tok helm search repo stable
+  tok helm values my-chart`,
 	DisableFlagParsing: true,
 	RunE:               runHelm,
 }
@@ -76,7 +76,7 @@ func runHelmPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm %s", strings.Join(args, " ")), "tokman helm", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm %s", strings.Join(args, " ")), "tok helm", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -104,7 +104,7 @@ func runHelmList(args []string) error {
 		fmt.Print(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track("helm list", "tokman helm list", originalTokens, filteredTokens)
+		timer.Track("helm list", "tok helm list", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -113,7 +113,7 @@ func runHelmList(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("helm list", "tokman helm list", originalTokens, filteredTokens)
+	timer.Track("helm list", "tok helm list", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -131,7 +131,7 @@ func runHelmStatus(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm status %s", strings.Join(args, " ")), "tokman helm status", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm status %s", strings.Join(args, " ")), "tok helm status", originalTokens, filteredTokens)
 
 	return err
 }
@@ -149,7 +149,7 @@ func runHelmHistory(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm history %s", strings.Join(args, " ")), "tokman helm history", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm history %s", strings.Join(args, " ")), "tok helm history", originalTokens, filteredTokens)
 
 	return err
 }
@@ -167,7 +167,7 @@ func runHelmSearch(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm search %s", strings.Join(args, " ")), "tokman helm search", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm search %s", strings.Join(args, " ")), "tok helm search", originalTokens, filteredTokens)
 
 	return err
 }
@@ -196,7 +196,7 @@ func runHelmValues(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm values %s", strings.Join(args, " ")), "tokman helm values", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm values %s", strings.Join(args, " ")), "tok helm values", originalTokens, filteredTokens)
 
 	return err
 }
@@ -214,7 +214,7 @@ func runHelmInstall(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm install %s", strings.Join(args, " ")), "tokman helm install", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm install %s", strings.Join(args, " ")), "tok helm install", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -232,7 +232,7 @@ func runHelmUpgrade(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("helm upgrade %s", strings.Join(args, " ")), "tokman helm upgrade", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("helm upgrade %s", strings.Join(args, " ")), "tok helm upgrade", originalTokens, filteredTokens)
 
 	return nil
 }

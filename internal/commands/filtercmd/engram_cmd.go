@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // engramCmd manages EngramLearner rules and statistics.
@@ -18,10 +18,10 @@ var engramCmd = &cobra.Command{
 	Long: `EngramLearner learns from compression patterns and generates evidence-based rules.
 
 Examples:
-  tokman filter engram stats              # Show learning statistics
-  tokman filter engram rules              # List all learned rules
-  tokman filter engram analyze <file>     # Analyze a file for patterns
-  tokman filter engram reset              # Clear all learned rules`,
+  tok filter engram stats              # Show learning statistics
+  tok filter engram rules              # List all learned rules
+  tok filter engram analyze <file>     # Analyze a file for patterns
+  tok filter engram reset              # Clear all learned rules`,
 }
 
 var (

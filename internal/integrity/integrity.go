@@ -1,13 +1,13 @@
 // Package integrity provides hook integrity verification via SHA-256.
 //
-// TokMan installs a PreToolUse hook (tokman-rewrite.sh) that auto-approves
+// tok installs a PreToolUse hook (tok-rewrite.sh) that auto-approves
 // rewritten commands. Because this hook bypasses Claude Code's permission
 // prompts, any unauthorized modification represents a command injection vector.
 //
 // This module provides:
 //   - SHA-256 hash computation and storage at install time
 //   - Runtime verification before command execution
-//   - Manual verification via `tokman verify`
+//   - Manual verification via `tok verify`
 package integrity
 
 import (
@@ -20,10 +20,10 @@ import (
 )
 
 // HashFilename is the filename for the stored hash (dotfile alongside hook)
-const HashFilename = ".tokman-hook.sha256"
+const HashFilename = ".tok-hook.sha256"
 
 // HookFilename is the expected hook script filename
-const HookFilename = "tokman-rewrite.sh"
+const HookFilename = "tok-rewrite.sh"
 
 // CurrentHookVersion is the minimum supported generated hook version.
 const CurrentHookVersion = 1
@@ -34,11 +34,11 @@ type IntegrityStatus int
 const (
 	// StatusVerified indicates hash matches - hook is unmodified since last install
 	StatusVerified IntegrityStatus = iota
-	// StatusTampered indicates hash mismatch - hook has been modified outside of tokman init
+	// StatusTampered indicates hash mismatch - hook has been modified outside of tok init
 	StatusTampered
 	// StatusNoBaseline indicates hook exists but no stored hash (installed before integrity checks)
 	StatusNoBaseline
-	// StatusNotInstalled indicates neither hook nor hash file exist (TokMan not installed)
+	// StatusNotInstalled indicates neither hook nor hash file exist (tok not installed)
 	StatusNotInstalled
 	// StatusOrphanedHash indicates hash file exists but hook was deleted
 	StatusOrphanedHash
@@ -98,7 +98,7 @@ func HashPath(hookPath string) string {
 //
 // Format is compatible with `sha256sum -c`:
 //
-//	<hex_hash>  tokman-rewrite.sh
+//	<hex_hash>  tok-rewrite.sh
 //
 // The hash file is set to read-only (0444) as a speed bump
 // against casual modification. Not a security boundary — an
@@ -191,7 +191,7 @@ func readStoredHash(path string) (string, error) {
 	return hash, nil
 }
 
-// ResolveHookPath resolves the default hook path (~/.claude/hooks/tokman-rewrite.sh)
+// ResolveHookPath resolves the default hook path (~/.claude/hooks/tok-rewrite.sh)
 func ResolveHookPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -277,7 +277,7 @@ func VerifyHook() (*VerificationResult, error) {
 //   - OrphanedHash: logs warning, continues (returns nil)
 //
 // No env-var bypass is provided — if the hook is legitimately modified,
-// re-run `tokman init` to re-establish the baseline.
+// re-run `tok init` to re-establish the baseline.
 func RuntimeCheck() error {
 	result, err := VerifyHook()
 	if err != nil {
@@ -294,11 +294,11 @@ func RuntimeCheck() error {
   Installed version: %d
   Required version:  %d
 
-  The hook at ~/.claude/hooks/tokman-rewrite.sh is from an older TokMan install.
-  Re-run TokMan setup before executing commands.
+  The hook at ~/.claude/hooks/tok-rewrite.sh is from an older tok install.
+  Re-run tok setup before executing commands.
 
-  To restore:  tokman init --claude
-  To inspect:  tokman verify`,
+  To restore:  tok init --claude
+  To inspect:  tok verify`,
 			result.HookVersion,
 			result.RequiredVersion)
 
@@ -307,18 +307,18 @@ func RuntimeCheck() error {
   Expected hash: %s...
   Actual hash:   %s...
 
-  The hook at ~/.claude/hooks/tokman-rewrite.sh has been modified.
-  This may indicate tampering. TokMan will not execute.
+  The hook at ~/.claude/hooks/tok-rewrite.sh has been modified.
+  This may indicate tampering. tok will not execute.
 
-  To restore:  tokman init
-  To inspect:  tokman verify`,
+  To restore:  tok init
+  To inspect:  tok verify`,
 			truncateHash(result.Expected, 16),
 			truncateHash(result.Actual, 16))
 
 	case StatusOrphanedHash:
 		// Log warning but don't block - hook is gone, nothing to exploit
-		fmt.Fprintln(os.Stderr, "tokman: warning: hash file exists but hook is missing")
-		fmt.Fprintln(os.Stderr, "  Run `tokman init` to reinstall.")
+		fmt.Fprintln(os.Stderr, "tok: warning: hash file exists but hook is missing")
+		fmt.Fprintln(os.Stderr, "  Run `tok init` to reinstall.")
 		return nil
 
 	default:
@@ -350,9 +350,9 @@ func readHookVersion(path string) (int, error) {
 		if line == "" {
 			continue
 		}
-		if strings.HasPrefix(line, "# tokman-hook-version:") {
+		if strings.HasPrefix(line, "# tok-hook-version:") {
 			var version int
-			_, err := fmt.Sscanf(line, "# tokman-hook-version: %d", &version)
+			_, err := fmt.Sscanf(line, "# tok-hook-version: %d", &version)
 			if err != nil {
 				return 0, fmt.Errorf("invalid hook version marker in %s: %w", path, err)
 			}

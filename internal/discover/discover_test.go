@@ -17,57 +17,57 @@ func TestRewriteCommand(t *testing.T) {
 			name:     "git status",
 			cmd:      "git status",
 			opts:     nil,
-			wantCmd:  "tokman git status",
+			wantCmd:  "tok git status",
 			wantBool: true,
 		},
 		{
 			name:     "cargo test",
 			cmd:      "cargo test",
 			opts:     nil,
-			wantCmd:  "tokman test-runner cargo test",
+			wantCmd:  "tok test-runner cargo test",
 			wantBool: true,
 		},
 		{
 			name:     "npm test",
 			cmd:      "npm test",
 			opts:     nil,
-			wantCmd:  "tokman test-runner npm test",
+			wantCmd:  "tok test-runner npm test",
 			wantBool: true,
 		},
 		{
 			name:     "go test",
 			cmd:      "go test ./...",
 			opts:     nil,
-			wantCmd:  "tokman test-runner go test ./...",
+			wantCmd:  "tok test-runner go test ./...",
 			wantBool: true,
 		},
 		{
 			name:     "pytest",
 			cmd:      "pytest -v",
 			opts:     nil,
-			wantCmd:  "tokman test-runner pytest -v",
+			wantCmd:  "tok test-runner pytest -v",
 			wantBool: true,
 		},
 		{
 			name:     "docker ps",
 			cmd:      "docker ps -a",
 			opts:     nil,
-			wantCmd:  "tokman docker ps -a",
+			wantCmd:  "tok docker ps -a",
 			wantBool: true,
 		},
 		{
 			name:     "ls command",
 			cmd:      "ls -la",
 			opts:     nil,
-			wantCmd:  "tokman ls -la",
+			wantCmd:  "tok ls -la",
 			wantBool: true,
 		},
 		// Commands that should NOT be rewritten
 		{
-			name:     "already tokman prefixed",
-			cmd:      "tokman git status",
+			name:     "already tok prefixed",
+			cmd:      "tok git status",
 			opts:     nil,
-			wantCmd:  "tokman git status",
+			wantCmd:  "tok git status",
 			wantBool: false,
 		},
 		{
@@ -121,15 +121,15 @@ func TestRewriteCommandWithOptions(t *testing.T) {
 			name: "disable test runner",
 			cmd:  "cargo test",
 			opts: &RewriteOptions{DisableTestRunner: true},
-			// When test runner is disabled, it should use explicit tokman cargo test
-			wantCmd:  "tokman cargo test",
+			// When test runner is disabled, it should use explicit tok cargo test
+			wantCmd:  "tok cargo test",
 			wantBool: true,
 		},
 		{
 			name:     "prefer explicit",
 			cmd:      "npm test",
 			opts:     &RewriteOptions{PreferExplicit: true},
-			wantCmd:  "tokman npm test",
+			wantCmd:  "tok npm test",
 			wantBool: true,
 		},
 	}
@@ -187,8 +187,8 @@ func TestDetectCommand(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "already tokman prefixed",
-			cmd:  "tokman git status",
+			name: "already tok prefixed",
+			cmd:  "tok git status",
 			want: false,
 		},
 	}
@@ -212,13 +212,13 @@ func TestClassifyCommand(t *testing.T) {
 		{
 			name:      "optimized command",
 			cmd:       "git status",
-			wantCmd:   "tokman git status",
+			wantCmd:   "tok git status",
 			wantLevel: SupportOptimized,
 		},
 		{
 			name:      "passthrough command",
 			cmd:       "terraform plan",
-			wantCmd:   "tokman terraform plan",
+			wantCmd:   "tok terraform plan",
 			wantLevel: SupportPassthrough,
 		},
 		{

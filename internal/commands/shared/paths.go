@@ -3,7 +3,7 @@ package shared
 import (
 	"path/filepath"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 // GetConfigPath returns the effective config path, honoring the shared
@@ -20,7 +20,7 @@ func GetConfigDir() string {
 	return filepath.Dir(GetConfigPath())
 }
 
-// GetDataPath returns the TokMan data directory.
+// GetDataPath returns the tok data directory.
 func GetDataPath() string {
 	return config.DataPath()
 }
@@ -30,7 +30,7 @@ func GetProjectPath() string {
 	return config.ProjectPath()
 }
 
-// GetHooksPath returns the TokMan hooks directory.
+// GetHooksPath returns the tok hooks directory.
 func GetHooksPath() string {
 	return config.HooksPath()
 }

@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func runRailsCmd(args []string) error {
@@ -55,7 +55,7 @@ func runRailsTestCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("rails test", "tokman ruby rails test", originalTokens, filteredTokens)
+	timer.Track("rails test", "tok ruby rails test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -152,7 +152,7 @@ func runRailsDbMigrateCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("rails db:migrate", "tokman ruby rails db:migrate", originalTokens, filteredTokens)
+	timer.Track("rails db:migrate", "tok ruby rails db:migrate", originalTokens, filteredTokens)
 
 	return err
 }
@@ -208,7 +208,7 @@ func runRailsPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("rails %s", args[0]), "tokman ruby rails", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("rails %s", args[0]), "tok ruby rails", originalTokens, filteredTokens)
 
 	return err
 }

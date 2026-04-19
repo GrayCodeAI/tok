@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var ruffCmd = &cobra.Command{
@@ -25,9 +25,9 @@ var ruffCmd = &cobra.Command{
 Groups issues by rule and file for easy scanning.
 
 Examples:
-  tokman ruff check .
-  tokman ruff format --check .
-  tokman ruff check --fix src/`,
+  tok ruff check .
+  tok ruff format --check .
+  tok ruff check --fix src/`,
 	RunE: runRuff,
 }
 
@@ -122,7 +122,7 @@ func runRuff(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("ruff %s", strings.Join(args, " ")), "tokman ruff", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("ruff %s", strings.Join(args, " ")), "tok ruff", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

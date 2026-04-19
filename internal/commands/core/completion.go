@@ -6,31 +6,31 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
 )
 
 var completionCmd = &cobra.Command{
 	Use:   "completion [bash|zsh|fish|powershell]",
 	Short: "Generate shell completion scripts",
-	Long: `Generate shell completion scripts for tokman.
+	Long: `Generate shell completion scripts for tok.
 
 To load completions:
 
 Bash:
-  source <(tokman completion bash)
+  source <(tok completion bash)
   # Add to ~/.bashrc for permanent effect
 
 Zsh:
-  source <(tokman completion zsh)
+  source <(tok completion zsh)
   # Add to ~/.zshrc for permanent effect
 
 Fish:
-  tokman completion fish | source
+  tok completion fish | source
   # Add to ~/.config/fish/config.fish for permanent effect
 
 PowerShell:
-  tokman completion powershell | Out-String | Invoke-Expression
+  tok completion powershell | Out-String | Invoke-Expression
   # Add to profile for permanent effect`,
 	ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),

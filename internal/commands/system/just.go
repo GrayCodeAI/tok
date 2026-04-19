@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var justCmd = &cobra.Command{
@@ -24,9 +24,9 @@ Specialized filters for:
   - List: Compact recipe listing
 
 Examples:
-  tokman just build
-  tokman just test
-  tokman just --list`,
+  tok just build
+  tok just test
+  tok just --list`,
 	DisableFlagParsing: true,
 	RunE:               runJust,
 }
@@ -73,7 +73,7 @@ func runJustRecipe(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("just", "tokman just", originalTokens, filteredTokens)
+	timer.Track("just", "tok just", originalTokens, filteredTokens)
 
 	return err
 }
@@ -123,7 +123,7 @@ func runJustList() error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("just list", "tokman just list", originalTokens, filteredTokens)
+	timer.Track("just list", "tok just list", originalTokens, filteredTokens)
 
 	return err
 }

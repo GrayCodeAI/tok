@@ -7,7 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // Detector evaluates audit data and returns findings.
@@ -80,7 +80,7 @@ type auditConfigFile struct {
 	} `toml:"audit"`
 }
 
-// LoadDetectorConfig reads [audit.detectors] config from tokman config file.
+// LoadDetectorConfig reads [audit.detectors] config from tok config file.
 func LoadDetectorConfig(configPath string) (DetectorConfig, error) {
 	cfg := DetectorConfig{Detectors: map[string]DetectorRule{}}
 	if strings.TrimSpace(configPath) == "" {

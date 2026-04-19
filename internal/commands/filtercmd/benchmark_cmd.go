@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // benchmarkCmd runs comprehensive compression benchmarks.
@@ -17,10 +17,10 @@ var benchmarkCmd = &cobra.Command{
 	Long: `Run comprehensive multi-dimensional benchmarks on input files or built-in test suite.
 
 Examples:
-  tokman filter benchmark                    # Run built-in test suite
-  tokman filter benchmark *.go               # Benchmark specific files
-  tokman filter benchmark --json             # Output results as JSON
-  tokman filter benchmark --mode=aggressive  # Use aggressive compression`,
+  tok filter benchmark                    # Run built-in test suite
+  tok filter benchmark *.go               # Benchmark specific files
+  tok filter benchmark --json             # Output results as JSON
+  tok filter benchmark --mode=aggressive  # Use aggressive compression`,
 	RunE: runBenchmark,
 }
 

@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var configCmd = &cobra.Command{
@@ -15,7 +15,7 @@ var configCmd = &cobra.Command{
 	Short: "Show or create configuration file",
 	Long:  "",
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		create, _ := cmd.Flags().GetBool("create")
@@ -36,7 +36,7 @@ var configCmd = &cobra.Command{
 
 func init() {
 	registry.Add(func() { registry.Register(configCmd) })
-	configCmd.Long = fmt.Sprintf(`Display the current TokMan configuration or create a default config file.
+	configCmd.Long = fmt.Sprintf(`Display the current tok configuration or create a default config file.
 
 The configuration file is stored at %s and controls:
 - Token tracking behavior

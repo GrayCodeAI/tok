@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var awsCmd = &cobra.Command{
@@ -49,12 +49,12 @@ Supports compact output for common AWS services:
   kinesis    - Kinesis streams
 
 Examples:
-  tokman aws sts get-caller-identity
-  tokman aws s3 ls
-  tokman aws ec2 describe-instances
-  tokman aws lambda list-functions
-  tokman aws ec2 describe-security-groups
-  tokman aws route53 list-hosted-zones`,
+  tok aws sts get-caller-identity
+  tok aws s3 ls
+  tok aws ec2 describe-instances
+  tok aws lambda list-functions
+  tok aws ec2 describe-security-groups
+  tok aws route53 list-hosted-zones`,
 	DisableFlagParsing: true,
 	RunE:               runAws,
 }
@@ -93,7 +93,7 @@ func runAws(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("aws %s", strings.Join(args, " ")), "tokman aws", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("aws %s", strings.Join(args, " ")), "tok aws", originalTokens, filteredTokens)
 
 	return err
 }

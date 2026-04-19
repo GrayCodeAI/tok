@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/metrics"
+	"github.com/lakshmanpatel/tok/internal/metrics"
 )
 
 func TestRecordCommandProcessed(t *testing.T) {

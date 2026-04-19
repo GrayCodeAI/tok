@@ -12,8 +12,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
 )
 
 var hookAuditCmd = &cobra.Command{
@@ -53,7 +53,7 @@ func runHookAudit(sinceDays int, verbose int) {
 
 	if _, err := os.Stat(logPath); os.IsNotExist(err) {
 		fmt.Printf("No audit log found at %s\n", logPath)
-		fmt.Println("Enable audit mode: export TOKMAN_HOOK_AUDIT=1 in your shell, then use TokMan.")
+		fmt.Println("Enable audit mode: export TOKMAN_HOOK_AUDIT=1 in your shell, then use tok.")
 		return
 	}
 

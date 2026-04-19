@@ -3,9 +3,9 @@ package tui
 import (
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/session"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 type Options struct {

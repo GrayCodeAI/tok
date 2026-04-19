@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var playwrightCmd = &cobra.Command{
@@ -22,9 +22,9 @@ var playwrightCmd = &cobra.Command{
 Shows only test results, failures, and per-browser breakdown.
 
 Examples:
-  tokman playwright test
-  tokman playwright test --project=chromium
-  tokman playwright test --reporter=json`,
+  tok playwright test
+  tok playwright test --project=chromium
+  tok playwright test --reporter=json`,
 	DisableFlagParsing: true,
 	RunE:               runPlaywright,
 }
@@ -60,7 +60,7 @@ func runPlaywright(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("playwright %s", strings.Join(args, " ")), "tokman playwright", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("playwright %s", strings.Join(args, " ")), "tok playwright", originalTokens, filteredTokens)
 
 	return err
 }

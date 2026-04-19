@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var wcCmd = &cobra.Command{
@@ -20,9 +20,9 @@ var wcCmd = &cobra.Command{
 Strips paths and padding for minimal token usage.
 
 Examples:
-  tokman wc -l file.go
-  tokman wc -w *.go
-  tokman wc *.py  (shows: 30L 96W 978B file.py)`,
+  tok wc -l file.go
+  tok wc -w *.go
+  tok wc *.py  (shows: 30L 96W 978B file.py)`,
 	RunE: runWc,
 }
 
@@ -57,7 +57,7 @@ func runWc(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("wc %s", strings.Join(args, " ")), "tokman wc", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("wc %s", strings.Join(args, " ")), "tok wc", originalTokens, filteredTokens)
 
 	return err
 }

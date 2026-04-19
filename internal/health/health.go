@@ -1,4 +1,4 @@
-// Package health provides health check functionality for TokMan.
+// Package health provides health check functionality for tok.
 package health
 
 import (
@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // Status represents the health status of a component

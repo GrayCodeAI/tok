@@ -153,5 +153,5 @@ func GetModelFamily(modelName string) string {
 
 func GetTokmanSourceDir() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".local", "share", "tokman")
+	return filepath.Join(home, ".local", "share", "tok")
 }

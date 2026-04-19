@@ -1,6 +1,6 @@
 package filter
 
-import "github.com/GrayCodeAI/tokman/internal/simd"
+import "github.com/lakshmanpatel/tok/internal/simd"
 
 // ANSIFilter strips ANSI escape sequences from output.
 // Uses SIMD-optimized byte scanning for ~10-40x speedup over regex.

@@ -6,14 +6,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var configValidateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Check config files for errors",
-	Long: `Validate tokman configuration files for syntax errors,
+	Long: `Validate tok configuration files for syntax errors,
 invalid values, and deprecated options.`,
 	RunE: runConfigValidate,
 }
@@ -23,7 +23,7 @@ func init() {
 }
 
 func runConfigValidate(cmd *cobra.Command, args []string) error {
-	fmt.Println("Validating tokman configuration...")
+	fmt.Println("Validating tok configuration...")
 	fmt.Println()
 
 	hasErrors := false

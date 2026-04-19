@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var npxCmd = &cobra.Command{
@@ -20,16 +20,16 @@ var npxCmd = &cobra.Command{
 	Long: `Execute npx with intelligent command routing.
 
 Routes common tools to specialized filters:
-- tsc, typescript → tokman tsc
-- eslint → tokman lint
-- prettier → tokman prettier
+- tsc, typescript → tok tsc
+- eslint → tok lint
+- prettier → tok prettier
 - prisma → specialized prisma filter
-- next → tokman next
+- next → tok next
 
 Examples:
-  tokman npx tsc --noEmit
-  tokman npx eslint src/
-  tokman npx prisma generate`,
+  tok npx tsc --noEmit
+  tok npx eslint src/
+  tok npx prisma generate`,
 	DisableFlagParsing: true,
 	RunE:               runNpx,
 }
@@ -75,7 +75,7 @@ func runTscCommand(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx tsc %s", strings.Join(args, " ")), "tokman npx tsc", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx tsc %s", strings.Join(args, " ")), "tok npx tsc", originalTokens, filteredTokens)
 
 	return err
 }
@@ -96,7 +96,7 @@ func runLintCommand(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx eslint %s", strings.Join(args, " ")), "tokman npx eslint", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx eslint %s", strings.Join(args, " ")), "tok npx eslint", originalTokens, filteredTokens)
 
 	return err
 }
@@ -117,7 +117,7 @@ func runPrettierCommand(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx prettier %s", strings.Join(args, " ")), "tokman npx prettier", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx prettier %s", strings.Join(args, " ")), "tok npx prettier", originalTokens, filteredTokens)
 
 	return err
 }
@@ -138,7 +138,7 @@ func runPrismaCommand(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx prisma %s", strings.Join(args, " ")), "tokman npx prisma", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx prisma %s", strings.Join(args, " ")), "tok npx prisma", originalTokens, filteredTokens)
 
 	return err
 }
@@ -159,7 +159,7 @@ func runNextCommand(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx next %s", strings.Join(args, " ")), "tokman npx next", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx next %s", strings.Join(args, " ")), "tok npx next", originalTokens, filteredTokens)
 
 	return err
 }
@@ -180,7 +180,7 @@ func runNpxPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npx %s", strings.Join(args, " ")), "tokman npx", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npx %s", strings.Join(args, " ")), "tok npx", originalTokens, filteredTokens)
 
 	return err
 }

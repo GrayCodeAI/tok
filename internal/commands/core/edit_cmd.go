@@ -9,8 +9,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var editCmd = &cobra.Command{
@@ -22,10 +22,10 @@ This command groups multiple file modifications together and applies
 them efficiently, reducing token overhead for AI assistants.
 
 Examples:
-  tokman edit --dry-run              # Show what would be changed
-  tokman edit file1.go file2.go      # Edit multiple files
-  tokman edit --batch                # Batch all pending edits
-  tokman edit --atomic               # Use atomic file writes`,
+  tok edit --dry-run              # Show what would be changed
+  tok edit file1.go file2.go      # Edit multiple files
+  tok edit --batch                # Batch all pending edits
+  tok edit --atomic               # Use atomic file writes`,
 	RunE: runEdit,
 }
 
@@ -55,8 +55,8 @@ func runEdit(cmd *cobra.Command, args []string) error {
 
 	editCfg := cfg.Edit
 	if !editCfg.BatchEnabled && !editDryRun {
-		fmt.Println("Edit batching is disabled. Enable with: tokman config set edit.batch_enabled true")
-		fmt.Println("Or run with explicit flags: tokman edit --batch")
+		fmt.Println("Edit batching is disabled. Enable with: tok config set edit.batch_enabled true")
+		fmt.Println("Or run with explicit flags: tok edit --batch")
 	}
 
 	if editDryRun {
@@ -123,7 +123,7 @@ type editResult struct {
 
 func getPendingEditPath() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "tokman", "pending_edits.json")
+	return filepath.Join(home, ".config", "tok", "pending_edits.json")
 }
 
 func getPendingEdits() []string {

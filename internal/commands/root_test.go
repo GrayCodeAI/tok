@@ -40,7 +40,7 @@ func TestExtractUnknownCommandArgsFallsBackToOSArgs(t *testing.T) {
 	})
 
 	fallbackArgs = nil
-	os.Args = []string{"tokman", "echo", "hi"}
+	os.Args = []string{"tok", "echo", "hi"}
 
 	got := extractUnknownCommandArgs()
 	if len(got) != 2 || got[0] != "echo" || got[1] != "hi" {

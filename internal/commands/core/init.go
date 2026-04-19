@@ -10,9 +10,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/integrity"
 )
 
 var (
@@ -36,8 +36,8 @@ var (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Initialize TokMan for AI agents",
-	Long: `Set up TokMan integration with AI coding assistants.
+	Short: "Initialize tok for AI agents",
+	Long: `Set up tok integration with AI coding assistants.
 
 Installs hooks and configuration for various AI agents to enable
 token compression and optimization.
@@ -57,12 +57,12 @@ Supported agents:
   --all            All detected agents
 
 Examples:
-  tokman init                    # Interactive setup (detects agents)
-  tokman init --claude           # Setup for Claude Code only
-  tokman init --cursor --windsurf # Setup for multiple agents
-  tokman init --all              # Setup for all detected agents
-  tokman init --global --all     # Global installation for all agents
-  tokman init --claude --uninstall # Remove Claude integration`,
+  tok init                    # Interactive setup (detects agents)
+  tok init --claude           # Setup for Claude Code only
+  tok init --cursor --windsurf # Setup for multiple agents
+  tok init --all              # Setup for all detected agents
+  tok init --global --all     # Global installation for all agents
+  tok init --claude --uninstall # Remove Claude integration`,
 	RunE: runInit,
 }
 
@@ -83,7 +83,7 @@ func init() {
 	initCmd.Flags().BoolVar(&initAntigravity, "antigravity", false, "Setup for Google Antigravity")
 	initCmd.Flags().BoolVarP(&initAll, "all", "a", false, "Setup for all detected agents")
 	initCmd.Flags().BoolVar(&initShow, "show", false, "Show current configuration")
-	initCmd.Flags().BoolVar(&initUninstall, "uninstall", false, "Remove TokMan integration for selected agents")
+	initCmd.Flags().BoolVar(&initUninstall, "uninstall", false, "Remove tok integration for selected agents")
 }
 
 // AgentInfo holds information about an AI agent
@@ -134,14 +134,14 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			Flag:         &initWindsurf,
 			DetectDir:    filepath.Join(home, ".windsurf"),
 			ConfigDir:    cwd,
-			Instructions: "Patched project .windsurfrules with TokMan instructions",
+			Instructions: "Patched project .windsurfrules with tok instructions",
 		},
 		{
 			Name:         "Cline",
 			Flag:         &initCline,
 			DetectDir:    filepath.Join(home, ".cline"),
 			ConfigDir:    cwd,
-			Instructions: "Patched project .clinerules with TokMan instructions",
+			Instructions: "Patched project .clinerules with tok instructions",
 		},
 		{
 			Name:         "Gemini CLI",
@@ -156,14 +156,14 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			Flag:         &initCodex,
 			DetectDir:    resolveCodexConfigDir(home),
 			ConfigDir:    codexDir,
-			Instructions: "Patched AGENTS.md with a TokMan instructions reference",
+			Instructions: "Patched AGENTS.md with a tok instructions reference",
 		},
 		{
 			Name:         "GitHub Copilot",
 			Flag:         &initCopilot,
 			DetectDir:    filepath.Join(cwd, ".github"),
 			ConfigDir:    cwd,
-			Instructions: "Installed .github/hooks/tokman-rewrite.json and .github/copilot-instructions.md",
+			Instructions: "Installed .github/hooks/tok-rewrite.json and .github/copilot-instructions.md",
 		},
 		{
 			Name:         "OpenCode",
@@ -171,7 +171,7 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			DetectDir:    filepath.Join(home, ".config", "opencode"),
 			ConfigDir:    filepath.Join(home, ".config", "opencode"),
 			HookDir:      filepath.Join(home, ".config", "opencode", "plugins"),
-			Instructions: "Installed ~/.config/opencode/plugins/tokman.ts",
+			Instructions: "Installed ~/.config/opencode/plugins/tok.ts",
 		},
 		{
 			Name:         "OpenClaw",
@@ -186,14 +186,14 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			Flag:         &initKilocode,
 			DetectDir:    filepath.Join(home, ".kilocode"),
 			ConfigDir:    cwd,
-			Instructions: "Installed .kilocode/rules/tokman-rules.md",
+			Instructions: "Installed .kilocode/rules/tok-rules.md",
 		},
 		{
 			Name:         "Google Antigravity",
 			Flag:         &initAntigravity,
 			DetectDir:    filepath.Join(home, ".antigravity"),
 			ConfigDir:    cwd,
-			Instructions: "Installed .agents/rules/antigravity-tokman-rules.md",
+			Instructions: "Installed .agents/rules/antigravity-tok-rules.md",
 		},
 	}
 
@@ -252,15 +252,15 @@ func runInit(cmd *cobra.Command, args []string) error {
 	if len(toSetup) == 0 {
 		fmt.Println("No agents selected or detected.")
 		fmt.Println("\nTo setup a specific agent, use:")
-		fmt.Println("  tokman init --claude     # For Claude Code")
-		fmt.Println("  tokman init --cursor     # For Cursor")
-		fmt.Println("  tokman init --windsurf   # For Windsurf")
-		fmt.Println("  tokman init --opencode   # For OpenCode")
-		fmt.Println("  tokman init --openclaw   # For OpenClaw")
-		fmt.Println("  tokman init --kilocode   # For Kilo Code")
-		fmt.Println("  tokman init --antigravity # For Google Antigravity")
+		fmt.Println("  tok init --claude     # For Claude Code")
+		fmt.Println("  tok init --cursor     # For Cursor")
+		fmt.Println("  tok init --windsurf   # For Windsurf")
+		fmt.Println("  tok init --opencode   # For OpenCode")
+		fmt.Println("  tok init --openclaw   # For OpenClaw")
+		fmt.Println("  tok init --kilocode   # For Kilo Code")
+		fmt.Println("  tok init --antigravity # For Google Antigravity")
 		fmt.Println("\nOr detect all installed agents:")
-		fmt.Println("  tokman init --all")
+		fmt.Println("  tok init --all")
 		return nil
 	}
 
@@ -273,7 +273,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 
 	fmt.Println()
-	fmt.Println("Setting up TokMan for AI agents...")
+	fmt.Println("Setting up tok for AI agents...")
 	fmt.Println()
 
 	for _, agent := range toSetup {
@@ -291,7 +291,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	// Create default config if it doesn't exist
 	configPath := config.ConfigPath()
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
-		if err := createDefaultTokManConfig(); err == nil {
+		if err := createDefaulttokConfig(); err == nil {
 			fmt.Printf("%s Created default config at %s\n", green("✓"), configPath)
 		}
 	}
@@ -299,7 +299,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 	fmt.Println(green("🎉 Setup complete!"))
 	fmt.Println()
-	fmt.Println("TokMan is now integrated with your AI agents.")
+	fmt.Println("tok is now integrated with your AI agents.")
 	fmt.Println("Token compression will be applied automatically.")
 
 	return nil
@@ -310,7 +310,7 @@ func runInitUninstall(toSetup []AgentInfo) error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 
 	fmt.Println()
-	fmt.Println("Removing TokMan integration...")
+	fmt.Println("Removing tok integration...")
 	fmt.Println()
 
 	for _, agent := range toSetup {
@@ -342,13 +342,13 @@ func runInteractiveInit(agents []AgentInfo) error {
 	if len(detected) == 0 {
 		fmt.Println("No AI agents detected in standard locations.")
 		fmt.Println("\nPlease specify which agent to setup:")
-		fmt.Println("  tokman init --claude     # For Claude Code")
-		fmt.Println("  tokman init --cursor     # For Cursor")
-		fmt.Println("  tokman init --windsurf   # For Windsurf")
-		fmt.Println("  tokman init --opencode   # For OpenCode")
-		fmt.Println("  tokman init --openclaw   # For OpenClaw")
-		fmt.Println("  tokman init --kilocode   # For Kilo Code")
-		fmt.Println("  tokman init --antigravity # For Google Antigravity")
+		fmt.Println("  tok init --claude     # For Claude Code")
+		fmt.Println("  tok init --cursor     # For Cursor")
+		fmt.Println("  tok init --windsurf   # For Windsurf")
+		fmt.Println("  tok init --opencode   # For OpenCode")
+		fmt.Println("  tok init --openclaw   # For OpenClaw")
+		fmt.Println("  tok init --kilocode   # For Kilo Code")
+		fmt.Println("  tok init --antigravity # For Google Antigravity")
 		return nil
 	}
 
@@ -389,13 +389,13 @@ func setupAgent(agent AgentInfo, global bool) error {
 	case "OpenCode":
 		return setupOpenCodeAgent(agent, global)
 	case "Windsurf":
-		return upsertManagedBlockFile(filepath.Join(agent.ConfigDir, ".windsurfrules"), "tokman:windsurf", generateWorkspaceRules(agent.Name))
+		return upsertManagedBlockFile(filepath.Join(agent.ConfigDir, ".windsurfrules"), "tok:windsurf", generateWorkspaceRules(agent.Name))
 	case "Cline":
-		return upsertManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tokman:cline", generateWorkspaceRules(agent.Name))
+		return upsertManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tok:cline", generateWorkspaceRules(agent.Name))
 	case "Kilo Code":
-		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tokman-rules.md"), generateWorkspaceRules(agent.Name), 0644)
+		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tok-rules.md"), generateWorkspaceRules(agent.Name), 0644)
 	case "Google Antigravity":
-		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tokman-rules.md"), generateWorkspaceRules(agent.Name), 0644)
+		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tok-rules.md"), generateWorkspaceRules(agent.Name), 0644)
 	}
 
 	// Create hooks directory
@@ -404,7 +404,7 @@ func setupAgent(agent AgentInfo, global bool) error {
 	}
 
 	// Create hook script
-	hookPath := filepath.Join(agent.HookDir, "tokman-rewrite.sh")
+	hookPath := filepath.Join(agent.HookDir, "tok-rewrite.sh")
 	hookScript := generateAgentHookScript(agent.Name)
 
 	if err := os.WriteFile(hookPath, []byte(hookScript), 0755); err != nil {
@@ -432,13 +432,13 @@ func setupAgent(agent AgentInfo, global bool) error {
 func generateAgentHookScript(agentName string) string {
 	handler := hookHandlerForAgent(agentName)
 	return fmt.Sprintf(`#!/bin/bash
-# TokMan hook for %s
-# Auto-generated by 'tokman init'
-# tokman-hook-version: %d
+# tok hook for %s
+# Auto-generated by 'tok init'
+# tok-hook-version: %d
 
-# Delegate structured hook payloads to TokMan hook processors.
+# Delegate structured hook payloads to tok hook processors.
 # If stdin is a TTY, fall back to direct CLI execution.
-if ! command -v tokman >/dev/null 2>&1; then
+if ! command -v tok >/dev/null 2>&1; then
     if [ ! -t 0 ]; then
         cat >/dev/null
     fi
@@ -446,10 +446,10 @@ if ! command -v tokman >/dev/null 2>&1; then
 fi
 
 if [ -t 0 ]; then
-    exec tokman "$@"
+    exec tok "$@"
 fi
 
-exec tokman hook %s "$@"
+exec tok hook %s "$@"
 `, agentName, integrity.CurrentHookVersion, handler)
 }
 
@@ -496,18 +496,18 @@ func uninstallAgent(agent AgentInfo) ([]string, error) {
 	case "OpenCode":
 		return uninstallOpenCodeAgent(agent)
 	case "Windsurf":
-		return uninstallManagedBlockFile(filepath.Join(agent.ConfigDir, ".windsurfrules"), "tokman:windsurf")
+		return uninstallManagedBlockFile(filepath.Join(agent.ConfigDir, ".windsurfrules"), "tok:windsurf")
 	case "Cline":
-		return uninstallManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tokman:cline")
+		return uninstallManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tok:cline")
 	case "Kilo Code":
-		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tokman-rules.md"))
+		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tok-rules.md"))
 	case "Google Antigravity":
-		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tokman-rules.md"))
+		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tok-rules.md"))
 	}
 
 	var removed []string
-	hookPath := filepath.Join(agent.HookDir, "tokman-rewrite.sh")
-	legacyHookPath := filepath.Join(agent.HookDir, "tokman.sh")
+	hookPath := filepath.Join(agent.HookDir, "tok-rewrite.sh")
+	legacyHookPath := filepath.Join(agent.HookDir, "tok.sh")
 
 	if ok, err := removeFile(hookPath); err != nil {
 		return removed, err
@@ -663,7 +663,7 @@ func writeJSONObject(path string, root map[string]any) error {
 	if err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(path), ".tokman-json-*")
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".tok-json-*")
 	if err != nil {
 		return err
 	}
@@ -1034,14 +1034,14 @@ func setupCodexAgent(agent AgentInfo, global bool) error {
 		configDir = resolveCodexConfigDir(home)
 	}
 
-	tokmanPath := filepath.Join(configDir, "TOKMAN.md")
-	if err := writeOwnedFile(tokmanPath, generateInstructions(agent.Name), 0644); err != nil {
+	tokPath := filepath.Join(configDir, "TOKMAN.md")
+	if err := writeOwnedFile(tokPath, generateInstructions(agent.Name), 0644); err != nil {
 		return err
 	}
 
 	reference := "@TOKMAN.md"
 	if global {
-		reference = "@" + tokmanPath
+		reference = "@" + tokPath
 	}
 	if err := ensureReferenceFileContains(filepath.Join(configDir, "AGENTS.md"), reference); err != nil {
 		return err
@@ -1051,7 +1051,7 @@ func setupCodexAgent(agent AgentInfo, global bool) error {
 
 func setupCopilotAgent(agent AgentInfo) error {
 	hooksDir := filepath.Join(agent.ConfigDir, ".github", "hooks")
-	hookConfigPath := filepath.Join(hooksDir, "tokman-rewrite.json")
+	hookConfigPath := filepath.Join(hooksDir, "tok-rewrite.json")
 	instructionsPath := filepath.Join(agent.ConfigDir, ".github", "copilot-instructions.md")
 
 	if err := writeOwnedFile(hookConfigPath, generateCopilotHookConfig(), 0644); err != nil {
@@ -1062,9 +1062,9 @@ func setupCopilotAgent(agent AgentInfo) error {
 
 func setupOpenCodeAgent(agent AgentInfo, global bool) error {
 	if !global {
-		return fmt.Errorf("OpenCode plugin is global-only; run 'tokman init --global --opencode'")
+		return fmt.Errorf("OpenCode plugin is global-only; run 'tok init --global --opencode'")
 	}
-	pluginPath := filepath.Join(agent.ConfigDir, "plugins", "tokman.ts")
+	pluginPath := filepath.Join(agent.ConfigDir, "plugins", "tok.ts")
 	return writeOwnedFile(pluginPath, generateOpenCodePlugin(), 0644)
 }
 
@@ -1090,11 +1090,11 @@ func uninstallCodexAgent(agent AgentInfo) ([]string, error) {
 	}
 
 	for _, item := range dirs {
-		tokmanPath := filepath.Join(item.dir, "TOKMAN.md")
-		if ok, err := removeFile(tokmanPath); err != nil {
+		tokPath := filepath.Join(item.dir, "TOKMAN.md")
+		if ok, err := removeFile(tokPath); err != nil {
 			return removed, err
 		} else if ok {
-			removed = append(removed, tokmanPath)
+			removed = append(removed, tokPath)
 		}
 
 		agentsPath := filepath.Join(item.dir, "AGENTS.md")
@@ -1112,13 +1112,13 @@ func uninstallCodexAgent(agent AgentInfo) ([]string, error) {
 
 func uninstallCopilotAgent(agent AgentInfo) ([]string, error) {
 	return uninstallOwnedFiles(
-		filepath.Join(agent.ConfigDir, ".github", "hooks", "tokman-rewrite.json"),
+		filepath.Join(agent.ConfigDir, ".github", "hooks", "tok-rewrite.json"),
 		filepath.Join(agent.ConfigDir, ".github", "copilot-instructions.md"),
 	)
 }
 
 func uninstallOpenCodeAgent(agent AgentInfo) ([]string, error) {
-	return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, "plugins", "tokman.ts"))
+	return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, "plugins", "tok.ts"))
 }
 
 func uninstallOwnedFiles(paths ...string) ([]string, error) {
@@ -1237,48 +1237,48 @@ func removeReferencesFromFile(path string, references ...string) (bool, error) {
 }
 
 func generateInstructions(agentName string) string {
-	return fmt.Sprintf(`# TokMan Integration for %s
+	return fmt.Sprintf(`# tok Integration for %s
 
-TokMan is a token-aware CLI proxy that reduces LLM token consumption.
+tok is a token-aware CLI proxy that reduces LLM token consumption.
 
 ## Quick Start
 
-1. TokMan hooks are installed in the hooks/ directory
+1. tok hooks are installed in the hooks/ directory
 2. Commands are automatically compressed before being sent to the LLM
-3. View savings with: tokman gain
+3. View savings with: tok gain
 
 ## Available Commands
 
-- tokman status    - Check TokMan status
-- tokman gain      - View token savings
-- tokman doctor    - Run diagnostics
-- tokman cc-economics - Compare Claude Code costs vs savings
+- tok status    - Check tok status
+- tok gain      - View token savings
+- tok doctor    - Run diagnostics
+- tok cc-economics - Compare Claude Code costs vs savings
 
 ## Configuration
 
-Edit ~/.config/tokman/config.toml to customize behavior.
+Edit ~/.config/tok/config.toml to customize behavior.
 
 ## Documentation
 
-https://github.com/GrayCodeAI/tokman
+https://github.com/lakshmanpatel/tok
 `, agentName)
 }
 
 func generateWorkspaceRules(agentName string) string {
 	return fmt.Sprintf(
-		"# TokMan Rules for %s\n\n"+
-			"TokMan sits between your coding agent and the LLM provider. Prefer `tokman`-prefixed shell commands so large terminal output is reduced before it reaches the model.\n\n"+
+		"# tok Rules for %s\n\n"+
+			"tok sits between your coding agent and the LLM provider. Prefer `tok`-prefixed shell commands so large terminal output is reduced before it reaches the model.\n\n"+
 			"Use:\n"+
-			"- `tokman git status`\n"+
-			"- `tokman git diff --stat`\n"+
-			"- `tokman npm test`\n"+
-			"- `tokman go test ./...`\n"+
-			"- `tokman docker ps`\n\n"+
-			"Use direct TokMan commands for analysis:\n"+
-			"- `tokman status`\n"+
-			"- `tokman gain`\n"+
-			"- `tokman discover`\n"+
-			"- `tokman cc-economics`\n",
+			"- `tok git status`\n"+
+			"- `tok git diff --stat`\n"+
+			"- `tok npm test`\n"+
+			"- `tok go test ./...`\n"+
+			"- `tok docker ps`\n\n"+
+			"Use direct tok commands for analysis:\n"+
+			"- `tok status`\n"+
+			"- `tok gain`\n"+
+			"- `tok discover`\n"+
+			"- `tok cc-economics`\n",
 		agentName,
 	)
 }
@@ -1289,7 +1289,7 @@ func generateCopilotHookConfig() string {
     "PreToolUse": [
       {
         "type": "command",
-        "command": "tokman hook copilot",
+        "command": "tok hook copilot",
         "cwd": ".",
         "timeout": 5
       }
@@ -1300,34 +1300,34 @@ func generateCopilotHookConfig() string {
 }
 
 func generateCopilotInstructions() string {
-	return "# TokMan for GitHub Copilot\n\n" +
-		"TokMan rewrites shell commands before Copilot executes them so large terminal output is compressed before it is sent to an LLM.\n\n" +
-		"Prefer TokMan-prefixed commands:\n\n" +
+	return "# tok for GitHub Copilot\n\n" +
+		"tok rewrites shell commands before Copilot executes them so large terminal output is compressed before it is sent to an LLM.\n\n" +
+		"Prefer tok-prefixed commands:\n\n" +
 		"```bash\n" +
-		"tokman git status\n" +
-		"tokman git diff --stat\n" +
-		"tokman npm test\n" +
-		"tokman go test ./...\n" +
+		"tok git status\n" +
+		"tok git diff --stat\n" +
+		"tok npm test\n" +
+		"tok go test ./...\n" +
 		"```\n\n" +
-		"Useful TokMan commands:\n\n" +
+		"Useful tok commands:\n\n" +
 		"```bash\n" +
-		"tokman status\n" +
-		"tokman gain\n" +
-		"tokman discover\n" +
-		"tokman cc-economics\n" +
+		"tok status\n" +
+		"tok gain\n" +
+		"tok discover\n" +
+		"tok cc-economics\n" +
 		"```\n"
 }
 
 func generateOpenCodePlugin() string {
 	return `import type { Plugin } from "@opencode-ai/plugin"
 
-// TokMan OpenCode plugin — rewrites commands to use tokman for token savings.
+// tok OpenCode plugin — rewrites commands to use tok for token savings.
 
 export const TokmanOpenCodePlugin: Plugin = async ({ $ }) => {
   try {
-    await $` + "`which tokman`" + `.quiet()
+    await $` + "`which tok`" + `.quiet()
   } catch {
-    console.warn("[tokman] tokman binary not found in PATH — plugin disabled")
+    console.warn("[tok] tok binary not found in PATH — plugin disabled")
     return {}
   }
 
@@ -1342,13 +1342,13 @@ export const TokmanOpenCodePlugin: Plugin = async ({ $ }) => {
       if (typeof command !== "string" || !command) return
 
       try {
-        const result = await $` + "`tokman rewrite ${command}`" + `.quiet().nothrow()
+        const result = await $` + "`tok rewrite ${command}`" + `.quiet().nothrow()
         const rewritten = String(result.stdout).trim()
         if (rewritten && rewritten !== command) {
           ;(args as Record<string, unknown>).command = rewritten
         }
       } catch {
-        // tokman rewrite failed — pass through unchanged
+        // tok rewrite failed — pass through unchanged
       }
     },
   }
@@ -1356,7 +1356,7 @@ export const TokmanOpenCodePlugin: Plugin = async ({ $ }) => {
 `
 }
 
-func createDefaultTokManConfig() error {
+func createDefaulttokConfig() error {
 	configPath := config.ConfigPath()
 	configDir := filepath.Dir(configPath)
 
@@ -1364,8 +1364,8 @@ func createDefaultTokManConfig() error {
 		return err
 	}
 
-	defaultConfig := `# TokMan Configuration
-# https://github.com/GrayCodeAI/tokman
+	defaultConfig := `# tok Configuration
+# https://github.com/lakshmanpatel/tok
 
 [tracking]
 enabled = true
@@ -1394,7 +1394,7 @@ func showInitConfig() error {
 		return err
 	}
 
-	fmt.Println("TokMan Agent Configuration")
+	fmt.Println("tok Agent Configuration")
 	fmt.Println("==========================")
 	fmt.Println()
 
@@ -1408,7 +1408,7 @@ func showInitConfig() error {
 	}
 
 	fmt.Println()
-	fmt.Println("Run 'tokman init --all' to setup all detected agents")
+	fmt.Println("Run 'tok init --all' to setup all detected agents")
 
 	return nil
 }
@@ -1419,16 +1419,16 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 		detectDir = agent.ConfigDir
 	}
 	detected := fileExists(detectDir)
-	hookPath := filepath.Join(agent.ConfigDir, "hooks", "tokman-rewrite.sh")
-	legacyHookPath := filepath.Join(agent.ConfigDir, "hooks", "tokman.sh")
+	hookPath := filepath.Join(agent.ConfigDir, "hooks", "tok-rewrite.sh")
+	legacyHookPath := filepath.Join(agent.ConfigDir, "hooks", "tok.sh")
 	switch agent.Name {
 	case "Windsurf":
 		rulesPath := filepath.Join(agent.ConfigDir, ".windsurfrules")
 		switch {
-		case managedBlockPresent(rulesPath, "tokman:windsurf"):
+		case managedBlockPresent(rulesPath, "tok:windsurf"):
 			return "configured", ".windsurfrules patched"
 		case fileExists(rulesPath):
-			return "partial", ".windsurfrules exists without TokMan block"
+			return "partial", ".windsurfrules exists without tok block"
 		case detected:
 			return "detected", "not configured"
 		default:
@@ -1437,10 +1437,10 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 	case "Cline":
 		rulesPath := filepath.Join(agent.ConfigDir, ".clinerules")
 		switch {
-		case managedBlockPresent(rulesPath, "tokman:cline"):
+		case managedBlockPresent(rulesPath, "tok:cline"):
 			return "configured", ".clinerules patched"
 		case fileExists(rulesPath):
-			return "partial", ".clinerules exists without TokMan block"
+			return "partial", ".clinerules exists without tok block"
 		case detected:
 			return "detected", "not configured"
 		default:
@@ -1533,7 +1533,7 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 	case "GitHub Copilot":
 		return describeCopilotStatus(agent)
 	case "OpenCode":
-		pluginPath := filepath.Join(agent.ConfigDir, "plugins", "tokman.ts")
+		pluginPath := filepath.Join(agent.ConfigDir, "plugins", "tok.ts")
 		switch {
 		case fileExists(pluginPath):
 			return "configured", "plugin installed"
@@ -1543,20 +1543,20 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 			return "not detected", ""
 		}
 	case "Kilo Code":
-		rulesPath := filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tokman-rules.md")
+		rulesPath := filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tok-rules.md")
 		switch {
 		case fileExists(rulesPath):
-			return "configured", ".kilocode/rules/tokman-rules.md installed"
+			return "configured", ".kilocode/rules/tok-rules.md installed"
 		case detected:
 			return "detected", "not configured"
 		default:
 			return "not detected", ""
 		}
 	case "Google Antigravity":
-		rulesPath := filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tokman-rules.md")
+		rulesPath := filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tok-rules.md")
 		switch {
 		case fileExists(rulesPath):
-			return "configured", ".agents/rules/antigravity-tokman-rules.md installed"
+			return "configured", ".agents/rules/antigravity-tok-rules.md installed"
 		case detected:
 			return "detected", "not configured"
 		default:
@@ -1611,7 +1611,7 @@ func describeCodexStatus(agent AgentInfo) (string, string) {
 }
 
 func describeCopilotStatus(agent AgentInfo) (string, string) {
-	hookConfigPath := filepath.Join(agent.ConfigDir, ".github", "hooks", "tokman-rewrite.json")
+	hookConfigPath := filepath.Join(agent.ConfigDir, ".github", "hooks", "tok-rewrite.json")
 	instructionsPath := filepath.Join(agent.ConfigDir, ".github", "copilot-instructions.md")
 	switch {
 	case fileExists(hookConfigPath) && fileExists(instructionsPath):

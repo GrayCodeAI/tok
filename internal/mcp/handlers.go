@@ -6,11 +6,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
-// FilterParams for tokman_filter tool
+// FilterParams for tok_filter tool
 type FilterParams struct {
 	Text   string `json:"text"`
 	Mode   string `json:"mode,omitempty"`
@@ -18,14 +18,14 @@ type FilterParams struct {
 	Query  string `json:"query,omitempty"`
 }
 
-// CompressFileParams for tokman_compress_file tool
+// CompressFileParams for tok_compress_file tool
 type CompressFileParams struct {
 	Path     string `json:"path"`
 	Mode     string `json:"mode,omitempty"`
 	MaxLines int    `json:"max_lines,omitempty"`
 }
 
-// AnalyzeParams for tokman_analyze_output tool
+// AnalyzeParams for tok_analyze_output tool
 type AnalyzeParams struct {
 	Text string `json:"text"`
 }
@@ -40,7 +40,7 @@ type FilterResult struct {
 	LayersApplied  []string `json:"layers_applied"`
 }
 
-// handleFilter processes the tokman_filter tool
+// handleFilter processes the tok_filter tool
 func (s *Server) handleFilter(arguments json.RawMessage) (*ToolsCallResult, error) {
 	var params FilterParams
 	if err := json.Unmarshal(arguments, &params); err != nil {
@@ -100,7 +100,7 @@ func (s *Server) handleFilter(arguments json.RawMessage) (*ToolsCallResult, erro
 	}, nil
 }
 
-// handleCompressFile processes the tokman_compress_file tool
+// handleCompressFile processes the tok_compress_file tool
 func (s *Server) handleCompressFile(arguments json.RawMessage) (*ToolsCallResult, error) {
 	var params CompressFileParams
 	if err := json.Unmarshal(arguments, &params); err != nil {
@@ -260,17 +260,17 @@ For detailed stats, enable tracking in config:
 enabled = true`
 	}
 
-	stats := fmt.Sprintf(`TokMan Statistics
+	stats := fmt.Sprintf(`tok Statistics
 =================
 
 %s
 
 Available Tools:
-- tokman_filter: Filter arbitrary text
-- tokman_compress_file: Compress file content
-- tokman_analyze_output: Analyze without filtering
-- tokman_get_stats: This tool
-- tokman_explain_layers: Explain compression layers
+- tok_filter: Filter arbitrary text
+- tok_compress_file: Compress file content
+- tok_analyze_output: Analyze without filtering
+- tok_get_stats: This tool
+- tok_explain_layers: Explain compression layers
 `, sessionStats)
 
 	return &ToolsCallResult{
@@ -282,7 +282,7 @@ Available Tools:
 
 // handleExplainLayers explains the compression pipeline
 func (s *Server) handleExplainLayers(arguments json.RawMessage) (*ToolsCallResult, error) {
-	explanation := `TokMan Compression Pipeline (20 Layers)
+	explanation := `tok Compression Pipeline (20 Layers)
 ========================================
 
 LAYER 1: Entropy Filtering

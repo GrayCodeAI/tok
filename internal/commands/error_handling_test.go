@@ -152,7 +152,7 @@ func TestEnvironmentValidation(t *testing.T) {
 		},
 		{
 			name:  "lowercase key",
-			key:   "tokman_mode",
+			key:   "tok_mode",
 			value: "minimal",
 			valid: false,
 		},

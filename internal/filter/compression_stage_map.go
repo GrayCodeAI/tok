@@ -1,6 +1,6 @@
 package filter
 
-// FusionStageMap describes Claw-style 14-stage coverage mapped onto TokMan layers.
+// FusionStageMap describes Claw-style 14-stage coverage mapped onto tok layers.
 type FusionStageMap struct {
 	Stage    string
 	LayerIDs []string

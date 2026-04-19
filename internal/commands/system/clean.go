@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var (
@@ -26,10 +26,10 @@ var cleanCmd = &cobra.Command{
 	Long: `Remove old tracking records, tee files, and reversible compression entries.
 
 Examples:
-  tokman clean           # Clean data older than 30 days
-  tokman clean -d 7      # Clean data older than 7 days
-  tokman clean --all     # Remove all tracking data
-  tokman clean --tee     # Remove all tee files`,
+  tok clean           # Clean data older than 30 days
+  tok clean -d 7      # Clean data older than 7 days
+  tok clean --all     # Remove all tracking data
+  tok clean --tee     # Remove all tee files`,
 	RunE: runClean,
 }
 

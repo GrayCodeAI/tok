@@ -7,22 +7,22 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 var compareCmd = &cobra.Command{
 	Use:   "compare",
-	Short: "Compare TokMan filtered vs unfiltered output",
-	Long: `Run the same command both through TokMan and directly, then compare the results.
+	Short: "Compare tok filtered vs unfiltered output",
+	Long: `Run the same command both through tok and directly, then compare the results.
 
-This benchmark shows exactly how many tokens and cost you're saving by using TokMan.
+This benchmark shows exactly how many tokens and cost you're saving by using tok.
 
 Examples:
-  tokman benchmark compare "git status"              # Compare git status
-  tokman benchmark compare "git log --oneline -20"  # Compare git log
-  tokman benchmark compare "docker ps"               # Compare docker output
-  tokman benchmark compare --runs 3                 # Run 3 times for avg`,
+  tok benchmark compare "git status"              # Compare git status
+  tok benchmark compare "git log --oneline -20"  # Compare git log
+  tok benchmark compare "docker ps"               # Compare docker output
+  tok benchmark compare --runs 3                 # Run 3 times for avg`,
 	Args: cobra.ExactArgs(1),
 	RunE: runCompare,
 }
@@ -46,7 +46,7 @@ func runCompare(cmd *cobra.Command, args []string) error {
 
 	if compareDryRun {
 		fmt.Println("Would compare:")
-		fmt.Printf("  1. tokman %s\n", command)
+		fmt.Printf("  1. tok %s\n", command)
 		fmt.Printf("  2. %s (raw)\n", command)
 		return nil
 	}
@@ -64,7 +64,7 @@ func runCompare(cmd *cobra.Command, args []string) error {
 		}
 
 		rawOut, rawTokens, rawCost := runVanilla(command)
-		tokmanOut, filteredTokens, filteredCost := runWithTokman(command)
+		tokOut, filteredTokens, filteredCost := runWithTokman(command)
 
 		totalRawTokens += rawTokens
 		totalFilteredTokens += filteredTokens
@@ -73,12 +73,12 @@ func runCompare(cmd *cobra.Command, args []string) error {
 
 		if compareRuns == 1 {
 			fmt.Printf("  Raw:     %d tokens (~$%.4f)\n", rawTokens, rawCost)
-			fmt.Printf("  TokMan:  %d tokens (~$%.4f)\n", filteredTokens, filteredCost)
+			fmt.Printf("  tok:  %d tokens (~$%.4f)\n", filteredTokens, filteredCost)
 			saved := rawTokens - filteredTokens
 			savingsPct := float64(saved) / float64(rawTokens) * 100
 			fmt.Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
 			fmt.Println()
-			showSample(rawOut, tokmanOut)
+			showSample(rawOut, tokOut)
 		}
 	}
 
@@ -90,7 +90,7 @@ func runCompare(cmd *cobra.Command, args []string) error {
 
 		fmt.Println("Averages:")
 		fmt.Printf("  Raw:     %d tokens (~$%.4f)\n", avgRawTokens, avgRawCost)
-		fmt.Printf("  TokMan:  %d tokens (~$%.4f)\n", avgFilteredTokens, avgFilteredCost)
+		fmt.Printf("  tok:  %d tokens (~$%.4f)\n", avgFilteredTokens, avgFilteredCost)
 		saved := avgRawTokens - avgFilteredTokens
 		savingsPct := float64(saved) / float64(avgRawTokens) * 100
 		fmt.Printf("  Saved:   %d tokens (%.1f%%)\n", saved, savingsPct)
@@ -126,7 +126,7 @@ func runVanilla(cmd string) (output string, tokens int, cost float64) {
 }
 
 func runWithTokman(cmd string) (output string, tokens int, cost float64) {
-	c := exec.Command("tokman", strings.Fields(cmd)...)
+	c := exec.Command("tok", strings.Fields(cmd)...)
 	out, err := c.CombinedOutput()
 	if err != nil {
 		output = fmt.Sprintf("error: %v\n%s", err, out)
@@ -156,7 +156,7 @@ func showSample(raw, filtered string) {
 		}
 		fmt.Printf("  %s\n", line)
 	}
-	fmt.Println("TokMan:")
+	fmt.Println("tok:")
 	for i, line := range filteredLines {
 		if i >= 5 {
 			break

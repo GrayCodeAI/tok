@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var mavenCmd = &cobra.Command{
@@ -25,9 +25,9 @@ Specialized filters for:
   - dependency: Compact dependency tree
 
 Examples:
-  tokman mvn compile
-  tokman mvn test
-  tokman mvn dependency:tree`,
+  tok mvn compile
+  tok mvn test
+  tok mvn dependency:tree`,
 	DisableFlagParsing: true,
 	RunE:               runMaven,
 }
@@ -77,7 +77,7 @@ func runMavenBuild(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mvn", "tokman mvn", originalTokens, filteredTokens)
+	timer.Track("mvn", "tok mvn", originalTokens, filteredTokens)
 
 	return err
 }
@@ -168,7 +168,7 @@ func runMavenTest(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mvn test", "tokman mvn test", originalTokens, filteredTokens)
+	timer.Track("mvn test", "tok mvn test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -251,7 +251,7 @@ func runMavenDependency(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mvn dependency", "tokman mvn dependency", originalTokens, filteredTokens)
+	timer.Track("mvn dependency", "tok mvn dependency", originalTokens, filteredTokens)
 
 	return err
 }
@@ -322,7 +322,7 @@ func runMavenPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mvn", "tokman mvn", originalTokens, filteredTokens)
+	timer.Track("mvn", "tok mvn", originalTokens, filteredTokens)
 
 	return err
 }

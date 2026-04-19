@@ -8,16 +8,16 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/discover"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/discover"
 )
 
 // Exit codes for rewrite command (protocol for hook scripts)
 const (
 	ExitRewriteAllow      = 0 // Rewrite found, auto-allow
-	ExitNoRewrite         = 1 // No tokman equivalent, pass-through
+	ExitNoRewrite         = 1 // No tok equivalent, pass-through
 	ExitDeny              = 2 // Deny rule matched
 	ExitRewriteAsk        = 3 // Rewrite found, ask user for confirmation
 	ExitInvalidInput      = 4 // Invalid input
@@ -28,8 +28,8 @@ const (
 
 var rewriteCmd = &cobra.Command{
 	Use:   "rewrite <command>",
-	Short: "Rewrite a command to use TokMan wrappers (for hook scripts)",
-	Long: `Check if a command should be rewritten and output the TokMan version.
+	Short: "Rewrite a command to use tok wrappers (for hook scripts)",
+	Long: `Check if a command should be rewritten and output the tok version.
 Used by shell hooks to automatically intercept commands.
 
 This is the single source of truth for command rewriting logic.
@@ -38,7 +38,7 @@ rewrite rules in shell code.
 
 Exit codes:
   0 - Rewrite found, auto-allow
-  1 - No tokman equivalent, pass-through unchanged
+  1 - No tok equivalent, pass-through unchanged
   2 - Deny rule matched (dangerous command)
   3 - Rewrite found, ask user for confirmation
   4 - Invalid input
@@ -47,10 +47,10 @@ Exit codes:
   7 - Resource-intensive operation
 
 Examples:
-  tokman rewrite "git status"          # Output: tokman git status, exit 0
-  tokman rewrite "echo hello"          # No output, exit 1
-  tokman rewrite "rm -rf /"            # No output, exit 2
-  tokman rewrite "sudo apt upgrade"    # Output: tokman sudo apt upgrade, exit 3`,
+  tok rewrite "git status"          # Output: tok git status, exit 0
+  tok rewrite "echo hello"          # No output, exit 1
+  tok rewrite "rm -rf /"            # No output, exit 2
+  tok rewrite "sudo apt upgrade"    # Output: tok sudo apt upgrade, exit 3`,
 	Args:               cobra.MinimumNArgs(1),
 	RunE:               runRewrite,
 	SilenceUsage:       true,
@@ -72,8 +72,8 @@ func runRewrite(cmd *cobra.Command, args []string) error {
 
 	baseCmd := parts[0]
 
-	// Check if command is already using tokman
-	if baseCmd == "tokman" {
+	// Check if command is already using tok
+	if baseCmd == "tok" {
 		os.Exit(ExitNoRewrite)
 	}
 

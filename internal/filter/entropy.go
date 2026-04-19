@@ -5,8 +5,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/simd"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/simd"
 )
 
 // Cached token frequencies (initialized once, shared across all EntropyFilter instances)

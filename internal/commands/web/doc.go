@@ -1,4 +1,4 @@
-// Package web provides HTTP-related commands for TokMan.
+// Package web provides HTTP-related commands for tok.
 //
 // This package includes commands for making HTTP requests with
 // token-efficient output formatting and auto-detection of response types.

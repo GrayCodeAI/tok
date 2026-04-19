@@ -6,13 +6,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 var layersCmd = &cobra.Command{
 	Use:   "layers",
-	Short: "Show TokMan compression layer architecture",
-	Long: `Display information about TokMan's compression layer architecture.
+	Short: "Show tok compression layer architecture",
+	Long: `Display information about tok's compression layer architecture.
 
 Each layer is based on cutting-edge research from 2023-2026:
 

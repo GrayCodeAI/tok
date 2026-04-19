@@ -1,4 +1,4 @@
-// Package tracking provides command execution tracking and token usage analytics for TokMan.
+// Package tracking provides command execution tracking and token usage analytics for tok.
 //
 // The tracking package records command execution metrics to a SQLite database,
 // enabling token usage analysis, savings reports, and checkpoint events.
@@ -23,7 +23,7 @@
 //
 //	timer := tracking.Start()
 //	// ... execute command ...
-//	timer.Track("git status", "tokman git status", originalTokens, filteredTokens)
+//	timer.Track("git status", "tok git status", originalTokens, filteredTokens)
 //
 // # Global Tracker
 //

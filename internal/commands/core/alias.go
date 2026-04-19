@@ -8,19 +8,19 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var aliasCmd = &cobra.Command{
 	Use:   "alias",
 	Short: "Manage command aliases for common filter+command combos",
-	Long: `Create shorthand aliases for frequently used tokman commands.
+	Long: `Create shorthand aliases for frequently used tok commands.
 
 Examples:
-  tokman alias set gs "git status"
-  tokman alias set dl "docker logs --tail 50"
-  tokman alias list`,
+  tok alias set gs "git status"
+  tok alias set dl "docker logs --tail 50"
+  tok alias list`,
 }
 
 var aliasListCmd = &cobra.Command{
@@ -97,7 +97,7 @@ func runAliasList(cmd *cobra.Command, args []string) error {
 	aliases := loadAliases()
 	if len(aliases) == 0 {
 		fmt.Println("No aliases configured.")
-		fmt.Println("Create one with: tokman alias set <name> <command>")
+		fmt.Println("Create one with: tok alias set <name> <command>")
 		return nil
 	}
 	fmt.Println("Aliases:")

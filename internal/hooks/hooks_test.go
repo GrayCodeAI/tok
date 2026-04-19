@@ -1,0 +1,124 @@
+package hooks
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+func TestGetFlagPath(t *testing.T) {
+	// Test with env var
+	testDir := t.TempDir()
+	os.Setenv("TORK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TORK_CONFIG_DIR")
+	
+	path := GetFlagPath()
+	expected := filepath.Join(testDir, ".tork-active")
+	if path != expected {
+		t.Errorf("GetFlagPath() = %q, want %q", path, expected)
+	}
+}
+
+func TestActivateDeactivate(t *testing.T) {
+	testDir := t.TempDir()
+	os.Setenv("TORK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TORK_CONFIG_DIR")
+	
+	// Test activation
+	if err := Activate("full"); err != nil {
+		t.Errorf("Activate() error = %v", err)
+	}
+	
+	if !IsActive() {
+		t.Error("IsActive() = false after Activate()")
+	}
+	
+	// Test get mode
+	mode := GetMode()
+	if mode != "full" {
+		t.Errorf("GetMode() = %q, want full", mode)
+	}
+	
+	// Test deactivation
+	if err := Deactivate(); err != nil {
+		t.Errorf("Deactivate() error = %v", err)
+	}
+	
+	if IsActive() {
+		t.Error("IsActive() = true after Deactivate()")
+	}
+}
+
+func TestGetStatusLine(t *testing.T) {
+	testDir := t.TempDir()
+	os.Setenv("TORK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TORK_CONFIG_DIR")
+	
+	// Not active
+	if status := GetStatusLine(); status != "" {
+		t.Errorf("GetStatusLine() inactive = %q, want empty", status)
+	}
+	
+	// Active with full mode
+	Activate("full")
+	if status := GetStatusLine(); status != "[TORK]" {
+		t.Errorf("GetStatusLine() full = %q, want [TORK]", status)
+	}
+	
+	// Active with ultra mode
+	Activate("ultra")
+	if status := GetStatusLine(); status != "[TORK:ULTRA]" {
+		t.Errorf("GetStatusLine() ultra = %q, want [TORK:ULTRA]", status)
+	}
+}
+
+func TestAutoActivateOnStartup(t *testing.T) {
+	testDir := t.TempDir()
+	os.Setenv("TORK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TORK_CONFIG_DIR")
+	
+	// Without env var
+	Deactivate()
+	if err := AutoActivateOnStartup(); err != nil {
+		t.Errorf("AutoActivateOnStartup() error = %v", err)
+	}
+	if IsActive() {
+		t.Error("AutoActivateOnStartup() activated without env var")
+	}
+	
+	// With env var
+	os.Setenv("TORK_AUTO_ACTIVATE", "1")
+	os.Setenv("TORK_DEFAULT_MODE", "lite")
+	defer os.Unsetenv("TORK_AUTO_ACTIVATE")
+	defer os.Unsetenv("TORK_DEFAULT_MODE")
+	
+	if err := AutoActivateOnStartup(); err != nil {
+		t.Errorf("AutoActivateOnStartup() error = %v", err)
+	}
+	if !IsActive() {
+		t.Error("AutoActivateOnStartup() did not activate with env var")
+	}
+	if mode := GetMode(); mode != "lite" {
+		t.Errorf("GetMode() = %q, want lite", mode)
+	}
+}
+
+func TestResolveDefaultMode(t *testing.T) {
+	testDir := t.TempDir()
+	os.Setenv("TORK_CONFIG_DIR", testDir)
+	defer os.Unsetenv("TORK_CONFIG_DIR")
+	defer os.Unsetenv("TORK_DEFAULT_MODE")
+
+	_ = Deactivate()
+	os.Setenv("TORK_DEFAULT_MODE", "ultra")
+	if got := ResolveDefaultMode(); got != "ultra" {
+		t.Errorf("ResolveDefaultMode() = %q, want ultra", got)
+	}
+
+	if err := Activate("lite"); err != nil {
+		t.Fatalf("Activate(lite) error = %v", err)
+	}
+	if got := ResolveDefaultMode(); got != "lite" {
+		t.Errorf("ResolveDefaultMode() active = %q, want lite", got)
+	}
+}

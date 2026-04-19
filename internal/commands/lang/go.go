@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var goCmd = &cobra.Command{
@@ -23,9 +23,9 @@ var goCmd = &cobra.Command{
 Provides compact output for test, build, vet, and other go commands.
 
 Examples:
-  tokman go test ./...
-  tokman go build ./...
-  tokman go vet ./...`,
+  tok go test ./...
+  tok go build ./...
+  tok go vet ./...`,
 	DisableFlagParsing: true,
 	RunE:               runGo,
 }
@@ -86,7 +86,7 @@ func runGoTestCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go test %s", strings.Join(args, " ")), "tokman go test", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go test %s", strings.Join(args, " ")), "tok go test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -115,7 +115,7 @@ func runGoBuildCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go build %s", strings.Join(args, " ")), "tokman go build", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go build %s", strings.Join(args, " ")), "tok go build", originalTokens, filteredTokens)
 
 	return err
 }
@@ -136,7 +136,7 @@ func runGoVet(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go vet %s", strings.Join(args, " ")), "tokman go vet", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go vet %s", strings.Join(args, " ")), "tok go vet", originalTokens, filteredTokens)
 
 	return err
 }
@@ -158,7 +158,7 @@ func runGoPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go %s", strings.Join(args, " ")), "tokman go", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go %s", strings.Join(args, " ")), "tok go", originalTokens, filteredTokens)
 
 	return err
 }
@@ -420,7 +420,7 @@ func runGoMod(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go mod %s", strings.Join(args, " ")), "tokman go mod", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go mod %s", strings.Join(args, " ")), "tok go mod", originalTokens, filteredTokens)
 
 	return err
 }
@@ -484,7 +484,7 @@ func runGoDoc(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go doc %s", strings.Join(args, " ")), "tokman go doc", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go doc %s", strings.Join(args, " ")), "tok go doc", originalTokens, filteredTokens)
 
 	return err
 }
@@ -502,13 +502,13 @@ func runGoList(args []string) error {
 		fmt.Println(filtered)
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tokman go list", originalTokens, filteredTokens)
+		timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tok go list", originalTokens, filteredTokens)
 		return err
 	}
 
 	fmt.Print(raw)
 	originalTokens := filter.EstimateTokens(raw)
-	timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tokman go list", originalTokens, originalTokens)
+	timer.Track(fmt.Sprintf("go list %s", strings.Join(args, " ")), "tok go list", originalTokens, originalTokens)
 
 	return err
 }
@@ -534,7 +534,7 @@ func runGoEnv(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("go %s", strings.Join(args, " ")), "tokman go", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("go %s", strings.Join(args, " ")), "tok go", originalTokens, filteredTokens)
 
 	return err
 }

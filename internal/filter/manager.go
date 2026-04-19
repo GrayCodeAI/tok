@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 // CommandContext is now imported from config package to avoid duplication.
@@ -419,7 +419,7 @@ func (m *PipelineManager) saveTee(input string, ctx config.CommandContext, reaso
 	timestamp := time.Now().Format("20060102-150405")
 	// Sanitize command to prevent path traversal in filename
 	safeCommand := strings.NewReplacer("/", "_", "\\", "_", "..", "_", " ", "_").Replace(ctx.Command)
-	filename := fmt.Sprintf("tokman-tee-%s-%s-%s.txt", timestamp, safeCommand, reason)
+	filename := fmt.Sprintf("tok-tee-%s-%s-%s.txt", timestamp, safeCommand, reason)
 	path := filepath.Join(m.teeDir, filename)
 
 	// Validate the resolved path is within tee directory
@@ -552,7 +552,7 @@ func (c *CompressionCache) Size() int {
 
 // ProcessWithBudget processes with a specific token budget.
 // NOTE: Sets the coordinator budget and calls Process sequentially.
-// In TokMan's CLI context, each invocation is isolated per process,
+// In tok's CLI context, each invocation is isolated per process,
 // so concurrent budget races are not a practical concern.
 func (m *PipelineManager) ProcessWithBudget(input string, mode Mode, budget int, ctx config.CommandContext) (*ProcessResult, error) {
 	m.mu.Lock()

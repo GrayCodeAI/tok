@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/compression"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/compression"
 )
 
 var (
@@ -43,10 +43,10 @@ Quality levels:
   9-11 = Maximum compression (slowest)
 
 Examples:
-  tokman brotli file.txt                    # Compress file.txt to file.txt.br
-  tokman brotli file.txt -o output.br       # Compress to specific output
-  tokman brotli file.txt -l 11              # Use maximum compression
-  tokman brotli file.txt.br -d              # Decompress`,
+  tok brotli file.txt                    # Compress file.txt to file.txt.br
+  tok brotli file.txt -o output.br       # Compress to specific output
+  tok brotli file.txt -l 11              # Use maximum compression
+  tok brotli file.txt.br -d              # Decompress`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runBrotli,
 }

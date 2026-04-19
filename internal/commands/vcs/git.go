@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 // Git status codes
@@ -48,7 +48,7 @@ Global flags (applied before subcommand):
   --literal-pathspecs         Treat pathspecs literally
   -c, --config <key=value>    Set git config option
 
-Note: All git commands are supported. Commands with explicit TokMan
+Note: All git commands are supported. Commands with explicit tok
 filters (status, diff, log, etc.) use optimized output. Other commands
 pass through to git with global flags applied.`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
@@ -103,7 +103,7 @@ func buildGitCmd(subCmd string, args ...string) *exec.Cmd {
 	return exec.Command("git", gitArgs...)
 }
 
-// extractGitArgs filters tokman-specific flags from args, leaving only git-compatible ones
+// extractGitArgs filters tok-specific flags from args, leaving only git-compatible ones
 func extractGitArgs(args []string) []string {
 	var gitArgs []string
 	skipNext := false
@@ -112,7 +112,7 @@ func extractGitArgs(args []string) []string {
 			skipNext = false
 			continue
 		}
-		// Skip tokman-specific flags that take values
+		// Skip tok-specific flags that take values
 		if arg == "--query" || arg == "--budget" || arg == "--preset" ||
 			arg == "--output" || arg == "-o" ||
 			arg == "--compaction-threshold" || arg == "--compaction-preserve" ||
@@ -120,7 +120,7 @@ func extractGitArgs(args []string) []string {
 			skipNext = true
 			continue
 		}
-		// Skip tokman-specific boolean flags
+		// Skip tok-specific boolean flags
 		if strings.HasPrefix(arg, "--ultra-compact") ||
 			arg == "-u" ||
 			strings.HasPrefix(arg, "--verbose") ||
@@ -138,7 +138,7 @@ func extractGitArgs(args []string) []string {
 			arg == "--compaction-auto-detect" {
 			continue
 		}
-		// Skip tokman flags with values
+		// Skip tok flags with values
 		if strings.HasPrefix(arg, "--query=") ||
 			strings.HasPrefix(arg, "--config=") ||
 			strings.HasPrefix(arg, "-c=") ||
@@ -151,7 +151,7 @@ func extractGitArgs(args []string) []string {
 			strings.HasPrefix(arg, "--compaction-max-tokens=") {
 			continue
 		}
-		// Skip tokman flags with values (positional form)
+		// Skip tok flags with values (positional form)
 		if (arg == "--budget" || arg == "--preset" || arg == "--output" || arg == "-o" ||
 			arg == "--compaction-threshold" || arg == "--compaction-preserve" ||
 			arg == "--compaction-max-tokens") && i+1 < len(args) {
@@ -262,7 +262,7 @@ func init() {
 // addGitPassthroughCommands adds passthrough subcommands for git operations without explicit filters
 func addGitPassthroughCommands() {
 	passthroughCommands := []string{
-		// All official git commands (excluding the 12 with explicit TokMan filters)
+		// All official git commands (excluding the 12 with explicit tok filters)
 		"am", "annotate", "apply", "archimport", "archive", "backfill",
 		"bisect", "blame", "bugreport", "bundle",
 		"checkout", "cherry", "cherry-pick", "citool", "clean", "clone", "column",

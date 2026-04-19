@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func init() {
@@ -46,7 +46,7 @@ func runHaskell(args []string) error {
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
 
-	timer.Track("haskell", "tokman haskell", originalTokens, filteredTokens)
+	timer.Track("haskell", "tok haskell", originalTokens, filteredTokens)
 
 	if shared.IsUltraCompact() {
 		filtered = compactOutput(filtered)

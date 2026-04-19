@@ -5,8 +5,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/GrayCodeAI/tokman/internal/simd"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/simd"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 // Pre-compiled keywords for SIMD matching

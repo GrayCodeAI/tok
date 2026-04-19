@@ -219,7 +219,7 @@ func getEngramStoragePath() string {
 		return path
 	}
 	if home, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(home, ".config", "tokman", "engram_rules.json")
+		return filepath.Join(home, ".config", "tok", "engram_rules.json")
 	}
 	return "engram_rules.json"
 }

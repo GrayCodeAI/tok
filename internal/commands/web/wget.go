@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var wgetCmd = &cobra.Command{
@@ -22,8 +22,8 @@ Shows download progress in a condensed format while preserving
 important information like file size and download speed.
 
 Examples:
-  tokman wget https://example.com/file.zip
-  tokman wget -O output.txt https://example.com/data`,
+  tok wget https://example.com/file.zip
+  tok wget -O output.txt https://example.com/data`,
 	DisableFlagParsing: true,
 	RunE:               runWget,
 }
@@ -53,7 +53,7 @@ func runWget(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("wget %s", strings.Join(args, " ")), "tokman wget", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("wget %s", strings.Join(args, " ")), "tok wget", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

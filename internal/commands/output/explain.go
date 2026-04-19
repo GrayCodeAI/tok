@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var explainCmd = &cobra.Command{
@@ -21,7 +21,7 @@ var explainCmd = &cobra.Command{
 to understand what each pipeline stage does.
 
 Example:
-  tokman explain git log --oneline -50`,
+  tok explain git log --oneline -50`,
 	RunE: runExplain,
 }
 
@@ -31,7 +31,7 @@ func init() {
 
 func runExplain(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: tokman explain <command> [args...]")
+		return fmt.Errorf("usage: tok explain <command> [args...]")
 	}
 
 	exePath, err := exec.LookPath(args[0])

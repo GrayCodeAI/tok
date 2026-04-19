@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/tee"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/tee"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var errCmd = &cobra.Command{
@@ -32,9 +32,9 @@ Supports language-specific error patterns for:
 - Go (file.go:line: message)
 
 Examples:
-  tokman err npm run build
-  tokman err cargo build
-  tokman err go test ./...`,
+  tok err npm run build
+  tok err cargo build
+  tok err go test ./...`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return fmt.Errorf("err requires a command to run")
@@ -146,7 +146,7 @@ func runErrContext(ctx context.Context, args []string, verbose bool) error {
 
 	fmt.Print(result.String())
 
-	timer.Track(strings.Join(args, " "), "tokman err", tracking.EstimateTokens(raw), tracking.EstimateTokens(filtered))
+	timer.Track(strings.Join(args, " "), "tok err", tracking.EstimateTokens(raw), tracking.EstimateTokens(filtered))
 
 	return waitErr
 }

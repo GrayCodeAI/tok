@@ -8,12 +8,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter" // NEW: for progress callback
-	"github.com/GrayCodeAI/tokman/internal/tee"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter" // NEW: for progress callback
+	"github.com/lakshmanpatel/tok/internal/tee"
+	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 // Command execution, recording, and tee-on-failure.

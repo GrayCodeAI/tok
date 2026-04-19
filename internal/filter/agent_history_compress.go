@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // AgentOCRHistoryFilter compacts older conversation turns while preserving recent turns.

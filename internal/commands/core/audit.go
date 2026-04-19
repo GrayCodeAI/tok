@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/audit"
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/audit"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 var auditCmd = &cobra.Command{
 	Use:   "audit",
 	Short: "Run optimization audit with waste, quality, context, and checkpoint analysis",
-	Long: `Runs TokMan's optimization audit engine:
+	Long: `Runs tok's optimization audit engine:
 - waste detector framework
 - context overhead audit
 - quality score
@@ -32,7 +32,7 @@ var auditCmd = &cobra.Command{
 - drift snapshots and comparisons
 - optional HTML dashboard`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runAudit,
 }
@@ -118,7 +118,7 @@ func runAuditCompare() error {
 		return nil
 	}
 
-	fmt.Println("TokMan Drift Validation")
+	fmt.Println("tok Drift Validation")
 	fmt.Println("=======================")
 	fmt.Printf("Base:      %s\n", compare.BaseName)
 	fmt.Printf("Candidate: %s\n", compare.CandidateName)
@@ -132,7 +132,7 @@ func runAuditCompare() error {
 }
 
 func printAuditReport(r *audit.Report) {
-	fmt.Println("TokMan Optimization Audit")
+	fmt.Println("tok Optimization Audit")
 	fmt.Println("=========================")
 	fmt.Printf("Window: %d days\n", r.Days)
 	fmt.Printf("Commands: %d\n", r.Summary.CommandCount)

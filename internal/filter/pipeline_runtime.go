@@ -1,6 +1,6 @@
 package filter
 
-import "github.com/GrayCodeAI/tokman/internal/config"
+import "github.com/lakshmanpatel/tok/internal/config"
 
 // PipelineRuntimeOptions carries per-request overrides for the runtime pipeline.
 type PipelineRuntimeOptions struct {

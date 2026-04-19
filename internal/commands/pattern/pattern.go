@@ -7,8 +7,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/pattern"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/pattern"
 )
 
 var (
@@ -81,7 +81,7 @@ func runPatternList(cmd *cobra.Command, args []string) error {
 
 	if len(patterns) == 0 {
 		fmt.Println("\nNo patterns discovered yet.")
-		fmt.Println("Run 'tokman pattern discover <file>' to analyze content.")
+		fmt.Println("Run 'tok pattern discover <file>' to analyze content.")
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func runPatternDiscover(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("\n%s Analyzed %s\n\n", color.GreenString("✓"), source)
 	fmt.Println("Patterns have been submitted for analysis.")
-	fmt.Println("Run 'tokman pattern list' to see discovered patterns.")
+	fmt.Println("Run 'tok pattern list' to see discovered patterns.")
 
 	return nil
 }

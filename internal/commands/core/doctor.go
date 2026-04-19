@@ -10,21 +10,21 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
-	"github.com/GrayCodeAI/tokman/internal/session"
-	"github.com/GrayCodeAI/tokman/internal/telemetry"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/lakshmanpatel/tok/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 var doctorFix bool
 
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
-	Short: "Diagnose tokman setup issues",
+	Short: "Diagnose tok setup issues",
 	Long: `Check system configuration, shell hooks, database connectivity,
 tokenizer availability, and common setup problems.`,
 	RunE: runDoctor,
@@ -42,7 +42,7 @@ type checkResult struct {
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
-	fmt.Println("tokman doctor — diagnosing setup")
+	fmt.Println("tok doctor — diagnosing setup")
 	fmt.Println("================================")
 
 	results := collectDoctorResults()
@@ -102,7 +102,7 @@ func applyDoctorFixes(results []checkResult) error {
 	configCreated := false
 	for _, result := range results {
 		if result.Name == "Config Dir" && result.Status == "warn" {
-			if err := createDefaultTokManConfig(); err != nil {
+			if err := createDefaulttokConfig(); err != nil {
 				return fmt.Errorf("doctor --fix: create config: %w", err)
 			}
 			configCreated = true
@@ -133,7 +133,7 @@ func checkConfigDir() checkResult {
 		return checkResult{"Config Dir", "error", "cannot determine config directory"}
 	}
 	if _, err := os.Stat(configDir); os.IsNotExist(err) {
-		return checkResult{"Config Dir", "warn", configDir + " (not found — run 'tokman init')"}
+		return checkResult{"Config Dir", "warn", configDir + " (not found — run 'tok init')"}
 	}
 	return checkResult{"Config Dir", "ok", configDir}
 }
@@ -186,21 +186,21 @@ func checkShellHook() checkResult {
 		}
 	}
 
-	return checkResult{"Agent Hooks", "warn", "no agent integrations found — run 'tokman init'"}
+	return checkResult{"Agent Hooks", "warn", "no agent integrations found — run 'tok init'"}
 }
 
 func doctorHookPaths() []string {
 	var hookPaths []string
 	if home, err := os.UserHomeDir(); err == nil && home != "" {
 		hookPaths = append(hookPaths,
-			filepath.Join(home, ".claude", "hooks", "tokman-rewrite.sh"),
-			filepath.Join(home, ".claude", "hooks", "tokman.sh"),
+			filepath.Join(home, ".claude", "hooks", "tok-rewrite.sh"),
+			filepath.Join(home, ".claude", "hooks", "tok.sh"),
 		)
 	}
 
 	hooksDir := shared.GetHooksPath()
 	if hooksDir != "" {
-		hookPaths = append(hookPaths, filepath.Join(hooksDir, "tokman-rewrite.sh"))
+		hookPaths = append(hookPaths, filepath.Join(hooksDir, "tok-rewrite.sh"))
 	}
 
 	configDir := shared.GetConfigDir()
@@ -212,9 +212,9 @@ func doctorHookPaths() []string {
 }
 
 func checkPath() checkResult {
-	path, err := exec.LookPath("tokman")
+	path, err := exec.LookPath("tok")
 	if err != nil {
-		return checkResult{"PATH", "warn", "tokman not in PATH (may need symlink or PATH update)"}
+		return checkResult{"PATH", "warn", "tok not in PATH (may need symlink or PATH update)"}
 	}
 	return checkResult{"PATH", "ok", path}
 }
@@ -260,7 +260,7 @@ func checkDiskSpace() checkResult {
 	if info, err := os.Stat(dbPath); err == nil {
 		sizeMB := float64(info.Size()) / 1024 / 1024
 		if sizeMB > 100 {
-			return checkResult{"Disk Space", "warn", fmt.Sprintf("database is %.1fMB — consider 'tokman clean'", sizeMB)}
+			return checkResult{"Disk Space", "warn", fmt.Sprintf("database is %.1fMB — consider 'tok clean'", sizeMB)}
 		}
 		return checkResult{"Disk Space", "ok", fmt.Sprintf("database is %.1fMB", sizeMB)}
 	}
@@ -348,7 +348,7 @@ func checkIntegrityBaselines() checkResult {
 		if agent.HookDir == "" {
 			continue
 		}
-		hookPath := filepath.Join(agent.HookDir, "tokman-rewrite.sh")
+		hookPath := filepath.Join(agent.HookDir, "tok-rewrite.sh")
 		if _, err := os.Stat(hookPath); err != nil {
 			continue
 		}

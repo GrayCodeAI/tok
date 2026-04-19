@@ -9,8 +9,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var attributionCmd = &cobra.Command{
@@ -18,14 +18,14 @@ var attributionCmd = &cobra.Command{
 	Short: "Manage commit attribution (Co-Authored-By)",
 	Long: `Configure AI attribution on git commits.
 
-When enabled, adds "Co-Authored-By: TokMan <tokman@ai>" to commit messages
+When enabled, adds "Co-Authored-By: tok <tok@ai>" to commit messages
 to credit the AI assistant for code contributions.
 
 Examples:
-  tokman attribution                 # Show current settings
-  tokman attribution enable          # Enable Co-Authored-By
-  tokman attribution disable         # Disable attribution
-  tokman attribution set "AI <ai>"   # Set custom author`,
+  tok attribution                 # Show current settings
+  tok attribution enable          # Enable Co-Authored-By
+  tok attribution disable         # Disable attribution
+  tok attribution set "AI <ai>"   # Set custom author`,
 	RunE: runAttribution,
 }
 
@@ -45,7 +45,7 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 	}
 
 	enabled := cfg.Pipeline.EnableAttribution
-	author := "TokMan <tokman@ai>" // Default author
+	author := "tok <tok@ai>" // Default author
 
 	if attrEnable {
 		cfg.Pipeline.EnableAttribution = true
@@ -82,8 +82,8 @@ func runAttribution(cmd *cobra.Command, args []string) error {
 	fmt.Println("  Author:", author)
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  tokman attribution enable   - Enable Co-Authored-By")
-	fmt.Println("  tokman attribution disable  - Disable attribution")
+	fmt.Println("  tok attribution enable   - Enable Co-Authored-By")
+	fmt.Println("  tok attribution disable  - Disable attribution")
 
 	return nil
 }
@@ -93,7 +93,7 @@ func ApplyAttribution(msg string, cfg *config.Config) string {
 		return msg
 	}
 
-	author := "TokMan <tokman@ai>"
+	author := "tok <tok@ai>"
 
 	coAuthor := fmt.Sprintf("\n\nCo-Authored-By: %s", author)
 	if !strings.Contains(msg, coAuthor) {
@@ -107,7 +107,7 @@ func AmendCommitWithAttribution(cfg *config.Config) error {
 		return nil
 	}
 
-	author := "TokMan <tokman@ai>"
+	author := "tok <tok@ai>"
 
 	cmd := exec.Command("git", "commit", "--amend", "--no-edit")
 	env := os.Environ()

@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var markdownlintCmd = &cobra.Command{
@@ -24,9 +24,9 @@ Specialized filters for:
   - File-based grouping
 
 Examples:
-  tokman markdownlint .
-  tokman markdownlint README.md
-  tokman markdownlint --fix .`,
+  tok markdownlint .
+  tok markdownlint README.md
+  tok markdownlint --fix .`,
 	DisableFlagParsing: true,
 	RunE:               runMarkdownlint,
 }
@@ -62,7 +62,7 @@ func runMarkdownlint(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("markdownlint", "tokman markdownlint", originalTokens, filteredTokens)
+	timer.Track("markdownlint", "tok markdownlint", originalTokens, filteredTokens)
 
 	return err
 }

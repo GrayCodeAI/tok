@@ -64,12 +64,12 @@ func TestDoctorHookPathsIncludeRewriteLocations(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
 	paths := doctorHookPaths()
-	wantDataHook := filepath.Join(dataHome, "tokman", "hooks", "tokman-rewrite.sh")
+	wantDataHook := filepath.Join(dataHome, "tok", "hooks", "tok-rewrite.sh")
 
 	foundRewrite := false
 	foundDataHook := false
 	for _, path := range paths {
-		if strings.HasSuffix(path, "tokman-rewrite.sh") {
+		if strings.HasSuffix(path, "tok-rewrite.sh") {
 			foundRewrite = true
 		}
 		if path == wantDataHook {
@@ -78,7 +78,7 @@ func TestDoctorHookPathsIncludeRewriteLocations(t *testing.T) {
 	}
 
 	if !foundRewrite {
-		t.Fatal("doctorHookPaths() did not include any tokman-rewrite.sh path")
+		t.Fatal("doctorHookPaths() did not include any tok-rewrite.sh path")
 	}
 	if !foundDataHook {
 		t.Fatalf("doctorHookPaths() missing data hook path %q", wantDataHook)

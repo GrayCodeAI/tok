@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func atoi(s string) int {
@@ -36,10 +36,10 @@ Specialized filters for:
   - publish: Show publish summary
 
 Examples:
-  tokman dotnet build
-  tokman dotnet test
-  tokman dotnet run
-  tokman dotnet publish -c Release`,
+  tok dotnet build
+  tok dotnet test
+  tok dotnet run
+  tok dotnet publish -c Release`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 }
 
@@ -142,7 +142,7 @@ func runDotnetSubcommand(subCmd string, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("dotnet %s", subCmd), "tokman dotnet", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("dotnet %s", subCmd), "tok dotnet", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
