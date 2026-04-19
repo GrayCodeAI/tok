@@ -3,7 +3,7 @@ package filter
 import (
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/cache"
+	"github.com/lakshmanpatel/tok/internal/cache"
 )
 
 // Pipeline defines the interface for compression pipelines.

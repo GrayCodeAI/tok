@@ -7,10 +7,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func atoi(s string) int {
@@ -32,9 +32,9 @@ Specialized filters for common commands:
   - ansible ad-hoc: Compact ad-hoc output
 
 Examples:
-  tokman ansible-playbook site.yml
-  tokman ansible all -m ping
-  tokman ansible-inventory --list`,
+  tok ansible-playbook site.yml
+  tok ansible all -m ping
+  tok ansible-inventory --list`,
 	DisableFlagParsing: true,
 	RunE:               runAnsible,
 }
@@ -63,8 +63,8 @@ Shows play summary, task results, and errors only.
 Strips verbose task headers and ok/changed detail lines.
 
 Examples:
-  tokman ansible-playbook site.yml
-  tokman ansible-playbook playbook.yml --limit production`,
+  tok ansible-playbook site.yml
+  tok ansible-playbook playbook.yml --limit production`,
 	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runAnsiblePlaybook(args)
@@ -77,8 +77,8 @@ var ansibleInventoryCmd = &cobra.Command{
 	Long: `Ansible inventory with token-optimized output.
 
 Examples:
-  tokman ansible-inventory --list
-  tokman ansible-inventory --host myhost`,
+  tok ansible-inventory --list
+  tok ansible-inventory --host myhost`,
 	DisableFlagParsing: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runAnsibleInventory(args)
@@ -97,7 +97,7 @@ func runAnsiblePassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("ansible %s", strings.Join(args, " ")), "tokman ansible", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("ansible %s", strings.Join(args, " ")), "tok ansible", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -120,7 +120,7 @@ func runAnsiblePlaybook(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("ansible-playbook %s", strings.Join(args, " ")), "tokman ansible-playbook", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("ansible-playbook %s", strings.Join(args, " ")), "tok ansible-playbook", originalTokens, filteredTokens)
 
 	if err != nil {
 		if hint := shared.TeeOnFailure(raw, "ansible_playbook", err); hint != "" {
@@ -143,7 +143,7 @@ func runAnsibleInventory(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("ansible-inventory %s", strings.Join(args, " ")), "tokman ansible-inventory", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("ansible-inventory %s", strings.Join(args, " ")), "tok ansible-inventory", originalTokens, filteredTokens)
 
 	return err
 }

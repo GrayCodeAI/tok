@@ -6,7 +6,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 // Paper: "H2O: Heavy-Hitter Oracle" — Zhang et al., NeurIPS, 2023

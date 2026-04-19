@@ -7,8 +7,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var agentCmd = &cobra.Command{
@@ -23,10 +23,10 @@ Agent modes control which compression layers are active:
   ultra    - Experimental (layers 1-20 + research), ~90%+ reduction
 
 Examples:
-  tokman agent               # Show current agent mode
-  tokman agent set fast      # Use fast compression for speed
-  tokman agent set balanced  # Balanced (default)
-  tokman agent set deep      # Maximum compression`,
+  tok agent               # Show current agent mode
+  tok agent set fast      # Use fast compression for speed
+  tok agent set balanced  # Balanced (default)
+  tok agent set deep      # Maximum compression`,
 	RunE: runAgent,
 }
 
@@ -54,7 +54,7 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		fmt.Println("  deep    - Maximum compression (85-95% savings)")
 		fmt.Println("  ultra   - Experimental research layers (90%+ savings)")
 		fmt.Println()
-		fmt.Println("Use: tokman agent set <mode>")
+		fmt.Println("Use: tok agent set <mode>")
 		return nil
 	}
 
@@ -62,7 +62,7 @@ func runAgent(cmd *cobra.Command, args []string) error {
 	switch args[0] {
 	case "set", "use":
 		if len(args) < 2 {
-			return fmt.Errorf("usage: tokman agent set <fast|balanced|deep|ultra>")
+			return fmt.Errorf("usage: tok agent set <fast|balanced|deep|ultra>")
 		}
 		mode := args[1]
 		// Validate mode

@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var toonCmd = &cobra.Command{
@@ -18,8 +18,8 @@ var toonCmd = &cobra.Command{
 Achieves 40-80% compression on structured data.
 
 Examples:
-  cat data.json | tokman toon
-  tokman toon data.json`,
+  cat data.json | tok toon
+  tok toon data.json`,
 	RunE: runToon,
 }
 
@@ -57,8 +57,8 @@ var tddCmd = &cobra.Command{
 for 8-25% extra token savings.
 
 Examples:
-  cat code.go | tokman tdd
-  tokman tdd code.go`,
+  cat code.go | tok tdd
+  tok tdd code.go`,
 	RunE: runTDD,
 }
 

@@ -2,7 +2,6 @@ package registry
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -18,8 +17,11 @@ func Register(cmd *cobra.Command) {
 	if globalRoot != nil {
 		for _, existing := range globalRoot.Commands() {
 			if existing.Name() == cmd.Name() {
-				fmt.Fprintf(os.Stderr, "warning: command %q already registered, skipping (first-wins policy)\n", cmd.Name())
-				log.Printf("DEBUG: duplicate command registration skipped: %q", cmd.Name())
+				// Keep first registration deterministically and ignore subsequent duplicates.
+				// Avoid noisy startup warnings when optional command packs overlap.
+				if os.Getenv("TOK_DEBUG_REGISTRY") == "1" {
+					fmt.Fprintf(os.Stderr, "registry debug: duplicate command %q skipped\n", cmd.Name())
+				}
 				return
 			}
 		}

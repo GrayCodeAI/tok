@@ -7,7 +7,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // SemanticFilter prunes low-information segments using statistical analysis.

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "DART: Stop Looking for Important Tokens, Duplication Matters More"

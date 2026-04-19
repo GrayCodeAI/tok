@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/cache"
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/cache"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 func init() {
@@ -25,7 +25,7 @@ func init() {
 var cacheCmd = &cobra.Command{
 	Use:   "cache",
 	Short: "Manage the query cache",
-	Long: `Manage TokMan's persistent query cache for instant command retrieval.
+	Long: `Manage tok's persistent query cache for instant command retrieval.
 
 The cache stores filtered command outputs keyed by command fingerprint.
 This enables 56s → 1s speedup on repeated commands in the same git state.

@@ -1,5 +1,5 @@
-// Package integration_test provides integration tests for TokMan.
-package tokman_test
+// Package integration_test provides integration tests for tok.
+package tok_test
 
 import (
 	"context"
@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/metrics"
-	"github.com/GrayCodeAI/tokman/internal/security"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/metrics"
+	"github.com/lakshmanpatel/tok/internal/security"
 )
 
 // TestPipelineCompression tests the full compression pipeline

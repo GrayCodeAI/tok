@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/toml"
 )
 
 var benchmarkIterations int
@@ -26,9 +26,9 @@ Benchmarks measure:
 - Throughput (chars/sec)
 
 Examples:
-  tokman filter-bench "git status"      # Benchmark git status filter
-  tokman filter-bench "cargo build"     # Benchmark cargo build filter
-  tokman filter-bench -n 1000 "git log" # Run 1000 iterations`,
+  tok filter-bench "git status"      # Benchmark git status filter
+  tok filter-bench "cargo build"     # Benchmark cargo build filter
+  tok filter-bench -n 1000 "git log" # Run 1000 iterations`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runFilterBench,
 }

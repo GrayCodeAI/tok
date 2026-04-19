@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
 )
 
 var profileCmd = &cobra.Command{
@@ -32,13 +32,13 @@ func runProfile(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		// Table might not exist yet
 		fmt.Println("No layer statistics available yet.")
-		fmt.Println("Run some commands through tokman to collect data.")
+		fmt.Println("Run some commands through tok to collect data.")
 		return nil
 	}
 
 	if len(layers) == 0 {
 		fmt.Println("No layer statistics available yet.")
-		fmt.Println("Run some commands through tokman to collect data.")
+		fmt.Println("Run some commands through tok to collect data.")
 		return nil
 	}
 

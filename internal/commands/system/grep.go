@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var (
@@ -29,10 +29,10 @@ Strips whitespace, truncates long lines, and groups results by file.
 Passes native grep/ripgrep flags through.
 
 Examples:
-  tokman grep -r "TODO" .
-  tokman grep "func " . -t go
-  tokman grep -r "error" . --max-len 60 --max 20 --group
-  tokman grep -C 2 "func main" main.go`,
+  tok grep -r "TODO" .
+  tok grep "func " . -t go
+  tok grep -r "error" . --max-len 60 --max 20 --group
+  tok grep -C 2 "func main" main.go`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	RunE:               runGrep,
 }
@@ -109,7 +109,7 @@ func runGrep(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("grep %s", strings.Join(args, " ")), "tokman grep", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("grep %s", strings.Join(args, " ")), "tok grep", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

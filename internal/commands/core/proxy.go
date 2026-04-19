@@ -7,27 +7,27 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // proxyCmd executes commands without filtering but tracks usage
 var proxyCmd = &cobra.Command{
 	Use:   "proxy <command> [args...]",
 	Short: "Execute command without filtering but track usage",
-	Long: `Execute any command without applying TokMan filters, but still track
+	Long: `Execute any command without applying tok filters, but still track
 usage metrics for analytics.
 
 This is useful when you want raw command output but still want to:
-- Track command usage in TokMan analytics
+- Track command usage in tok analytics
 - Record token counts for reporting
 - Maintain a history of executed commands
 
 Examples:
-  tokman proxy ls -la
-  tokman proxy cargo build --release
-  tokman proxy ./custom-script.sh`,
+  tok proxy ls -la
+  tok proxy cargo build --release
+  tok proxy ./custom-script.sh`,
 	RunE: runProxy,
 }
 
@@ -60,7 +60,7 @@ func runProxy(cmd *cobra.Command, args []string) error {
 	tokenCount := filter.EstimateTokens(cmdStr)
 
 	// Track usage (even though we didn't filter, we track that it was executed)
-	timer.Track(cmdStr, "tokman proxy", tokenCount, tokenCount)
+	timer.Track(cmdStr, "tok proxy", tokenCount, tokenCount)
 
 	return err
 }

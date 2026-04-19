@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var summaryCmd = &cobra.Command{
@@ -26,9 +26,9 @@ Analyzes output type and provides appropriate summarization for tests,
 builds, logs, lists, JSON, or generic output.
 
 Examples:
-  tokman summary npm test
-  tokman summary cargo build
-  tokman summary cat largefile.txt`,
+  tok summary npm test
+  tok summary cargo build
+  tok summary cat largefile.txt`,
 	DisableFlagParsing: true,
 	RunE:               runSummary,
 }
@@ -62,7 +62,7 @@ func runSummary(cmd *cobra.Command, args []string) error {
 
 		originalTokens := filter.EstimateTokens(raw)
 		filteredTokens := filter.EstimateTokens(summary)
-		timer.Track(command, "tokman summary", originalTokens, filteredTokens)
+		timer.Track(command, "tok summary", originalTokens, filteredTokens)
 		return nil
 	}
 
@@ -77,7 +77,7 @@ func runSummary(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(summary)
-	timer.Track(command, "tokman summary", originalTokens, filteredTokens)
+	timer.Track(command, "tok summary", originalTokens, filteredTokens)
 
 	return err
 }

@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var jestCmd = &cobra.Command{
@@ -22,9 +22,9 @@ var jestCmd = &cobra.Command{
 Shows only test failures and summary.
 
 Examples:
-  tokman jest
-  tokman jest --coverage
-  tokman jest src/__tests__/mytest.test.ts`,
+  tok jest
+  tok jest --coverage
+  tok jest src/__tests__/mytest.test.ts`,
 	DisableFlagParsing: true,
 	RunE:               runJest,
 }
@@ -56,7 +56,7 @@ func runJest(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("jest %s", strings.Join(args, " ")), "tokman jest", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("jest %s", strings.Join(args, " ")), "tok jest", originalTokens, filteredTokens)
 
 	return err
 }

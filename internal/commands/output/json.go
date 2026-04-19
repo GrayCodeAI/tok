@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var (
@@ -27,9 +27,9 @@ var jsonCmd = &cobra.Command{
 Useful for understanding large JSON responses without consuming tokens on values.
 
 Examples:
-  tokman json response.json
-  tokman json response.json --depth 3
-  tokman json response.json --keys-only`,
+  tok json response.json
+  tok json response.json --depth 3
+  tok json response.json --keys-only`,
 	Args: cobra.ExactArgs(1),
 	RunE: runJSON,
 }
@@ -67,7 +67,7 @@ func runJSON(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(string(data))
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(filePath, "tokman json", originalTokens, filteredTokens)
+	timer.Track(filePath, "tok json", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

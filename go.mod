@@ -1,4 +1,4 @@
-module github.com/GrayCodeAI/tokman
+module github.com/lakshmanpatel/tok
 
 go 1.25.0
 

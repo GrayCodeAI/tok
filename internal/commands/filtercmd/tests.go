@@ -11,9 +11,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/toml"
 )
 
 var (
@@ -48,9 +48,9 @@ Example filter with tests (git.toml):
   expected = "nothing to commit, working tree clean"
 
 Usage:
-  tokman filter tests              # Run all tests in all filters
-  tokman filter tests git_status   # Run tests for specific filter
-  tokman filter tests -v           # Verbose output`,
+  tok filter tests              # Run all tests in all filters
+  tok filter tests git_status   # Run tests for specific filter
+  tok filter tests -v           # Verbose output`,
 	RunE: runFilterTests,
 }
 

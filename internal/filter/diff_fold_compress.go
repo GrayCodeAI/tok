@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // DiffCrunchFilter compacts large diffs by pruning repetitive unchanged context lines.

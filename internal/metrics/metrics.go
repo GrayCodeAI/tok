@@ -1,4 +1,4 @@
-// Package metrics provides comprehensive metrics for TokMan.
+// Package metrics provides comprehensive metrics for tok.
 package metrics
 
 import (
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// Metrics holds all metrics for TokMan
+// Metrics holds all metrics for tok
 type Metrics struct {
 	// Counters
 	commandsProcessed atomic.Int64

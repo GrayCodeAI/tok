@@ -9,10 +9,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var pytestCmd = &cobra.Command{
@@ -23,9 +23,9 @@ var pytestCmd = &cobra.Command{
 Summarizes test results and highlights failures.
 
 Examples:
-  tokman pytest tests/
-  tokman pytest -v
-  tokman pytest --tb=short`,
+  tok pytest tests/
+  tok pytest -v
+  tok pytest --tb=short`,
 	RunE: runPytest,
 }
 
@@ -101,7 +101,7 @@ func runPytest(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("pytest %s", strings.Join(args, " ")), "tokman pytest", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("pytest %s", strings.Join(args, " ")), "tok pytest", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

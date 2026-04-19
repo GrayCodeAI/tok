@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var diffCmd = &cobra.Command{
@@ -23,8 +23,8 @@ If file2 is omitted, reads from stdin.
 Strips context lines, shows only additions/deletions.
 
 Examples:
-  tokman diff file1.go file2.go
-  git diff | tokman diff -`,
+  tok diff file1.go file2.go
+  git diff | tok diff -`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runDiff,
 }
@@ -61,7 +61,7 @@ func runDiff(cmd *cobra.Command, args []string) error {
 
 	originalTokens := core.EstimateTokens(output)
 	filteredTokens := core.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("diff %s", strings.Join(args, " ")), "tokman diff", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("diff %s", strings.Join(args, " ")), "tok diff", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

@@ -18,7 +18,7 @@ func TestDetectAgentsRecognizesLegacyQuickstartHook(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	legacyHookPath := filepath.Join(home, ".claude", "hooks", "tokman.sh")
+	legacyHookPath := filepath.Join(home, ".claude", "hooks", "tok.sh")
 	if err := os.MkdirAll(filepath.Dir(legacyHookPath), 0755); err != nil {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
@@ -37,8 +37,8 @@ func TestDetectAgentsRecognizesLegacyQuickstartHook(t *testing.T) {
 		if !agent.Configured {
 			t.Fatal("legacy quickstart hook should mark Claude Code as configured")
 		}
-		if filepath.Base(agent.MarkerPath) != "tokman-rewrite.sh" {
-			t.Fatalf("MarkerPath = %q, want tokman-rewrite.sh", agent.MarkerPath)
+		if filepath.Base(agent.MarkerPath) != "tok-rewrite.sh" {
+			t.Fatalf("MarkerPath = %q, want tok-rewrite.sh", agent.MarkerPath)
 		}
 		return
 	}

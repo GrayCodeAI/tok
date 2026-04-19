@@ -3,9 +3,9 @@ package configcmd
 // migrate_cmd.go implements Task #161: configuration migration tool.
 // Usage:
 //
-//	tokman config migrate
-//	tokman config migrate --from v1 --to v2
-//	tokman config migrate --dry-run
+//	tok config migrate
+//	tok config migrate --from v1 --to v2
+//	tok config migrate --dry-run
 
 import (
 	"fmt"
@@ -16,14 +16,14 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var migrateCmd = &cobra.Command{
 	Use:   "migrate",
 	Short: "Migrate configuration file from an older format",
-	Long: `Apply migration rules to upgrade a tokman config file to the current format.
+	Long: `Apply migration rules to upgrade a tok config file to the current format.
 
 Migration rules applied:
   token_limit  → budget

@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var npmJSON bool
@@ -40,10 +40,10 @@ Strips boilerplate and progress bars from npm output.
 Special handling for npm test with 90% token reduction.
 
 Examples:
-  tokman npm run build
-  tokman npm install
-  tokman npm test
-  tokman npm test -- --coverage`,
+  tok npm run build
+  tok npm install
+  tok npm test
+  tok npm test -- --coverage`,
 	DisableFlagParsing: true,
 	RunE:               runNpm,
 }
@@ -97,7 +97,7 @@ func runNpm(cmd *cobra.Command, args []string) error {
 		fmt.Println(formatAsJSONnpm(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tokman npm", originalTokens, filteredTokens)
+		timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tok npm", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -105,7 +105,7 @@ func runNpm(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tokman npm", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm %s", strings.Join(args, " ")), "tok npm", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 
@@ -142,7 +142,7 @@ func runNpmTest(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm test %s", strings.Join(args, " ")), "tokman npm test", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm test %s", strings.Join(args, " ")), "tok npm test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -339,7 +339,7 @@ func runNpmInstall(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm install %s", strings.Join(args, " ")), "tokman npm install", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm install %s", strings.Join(args, " ")), "tok npm install", originalTokens, filteredTokens)
 
 	return err
 }
@@ -423,7 +423,7 @@ func runNpmList(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm ls %s", strings.Join(args, " ")), "tokman npm ls", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm ls %s", strings.Join(args, " ")), "tok npm ls", originalTokens, filteredTokens)
 
 	return err
 }
@@ -480,7 +480,7 @@ func runNpmOutdated(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm outdated %s", strings.Join(args, " ")), "tokman npm outdated", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm outdated %s", strings.Join(args, " ")), "tok npm outdated", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -551,7 +551,7 @@ func runNpmRun(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm run %s", strings.Join(args, " ")), "tokman npm run", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm run %s", strings.Join(args, " ")), "tok npm run", originalTokens, filteredTokens)
 
 	return err
 }
@@ -623,7 +623,7 @@ func runNpmAudit(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm audit %s", strings.Join(args, " ")), "tokman npm audit", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm audit %s", strings.Join(args, " ")), "tok npm audit", originalTokens, filteredTokens)
 
 	return nil
 }
@@ -709,7 +709,7 @@ func runNpmPublish(args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("npm publish %s", strings.Join(args, " ")), "tokman npm publish", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("npm publish %s", strings.Join(args, " ")), "tok npm publish", originalTokens, filteredTokens)
 
 	return err
 }

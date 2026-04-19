@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var miseCmd = &cobra.Command{
@@ -25,9 +25,9 @@ Specialized filters for:
   - outdated: Compact outdated tools
 
 Examples:
-  tokman mise install
-  tokman mise ls
-  tokman mise outdated`,
+  tok mise install
+  tok mise ls
+  tok mise outdated`,
 	DisableFlagParsing: true,
 	RunE:               runMise,
 }
@@ -76,7 +76,7 @@ func runMiseInstall(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mise install", "tokman mise install", originalTokens, filteredTokens)
+	timer.Track("mise install", "tok mise install", originalTokens, filteredTokens)
 
 	return err
 }
@@ -141,7 +141,7 @@ func runMiseLs(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mise ls", "tokman mise ls", originalTokens, filteredTokens)
+	timer.Track("mise ls", "tok mise ls", originalTokens, filteredTokens)
 
 	return err
 }
@@ -200,7 +200,7 @@ func runMiseOutdated(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mise outdated", "tokman mise outdated", originalTokens, filteredTokens)
+	timer.Track("mise outdated", "tok mise outdated", originalTokens, filteredTokens)
 
 	return err
 }
@@ -257,7 +257,7 @@ func runMisePassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mise", "tokman mise", originalTokens, filteredTokens)
+	timer.Track("mise", "tok mise", originalTokens, filteredTokens)
 
 	return err
 }

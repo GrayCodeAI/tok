@@ -13,23 +13,23 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/discover"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/discover"
 )
 
 var adoptionCmd = &cobra.Command{
 	Use:   "adoption",
-	Short: "Show TokMan adoption across Claude Code sessions",
-	Long: `Analyze Claude Code session history to show TokMan adoption statistics.
+	Short: "Show tok adoption across Claude Code sessions",
+	Long: `Analyze Claude Code session history to show tok adoption statistics.
 
 This command scans Claude Code JSONL session files and calculates:
-- Percentage of commands routed through TokMan
+- Percentage of commands routed through tok
 - Token savings by session
 - Adoption trends over time
 
 Examples:
-  tokman adoption              # Show last 10 sessions
-  tokman adoption --limit 20   # Show last 20 sessions`,
+  tok adoption              # Show last 10 sessions
+  tok adoption --limit 20   # Show last 20 sessions`,
 	RunE: runAdoption,
 }
 
@@ -45,7 +45,7 @@ type SessionSummary struct {
 	ID           string
 	Date         string
 	TotalCmds    int
-	TokManCmds   int
+	tokCmds   int
 	OutputTokens int
 }
 
@@ -53,7 +53,7 @@ func (s *SessionSummary) AdoptionPct() float64 {
 	if s.TotalCmds == 0 {
 		return 0
 	}
-	return float64(s.TokManCmds) / float64(s.TotalCmds) * 100
+	return float64(s.tokCmds) / float64(s.TotalCmds) * 100
 }
 
 // ClaudeJSONLMessage represents the structure of Claude Code JSONL files
@@ -114,7 +114,7 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 			continue
 		}
 
-		total, tokman := countTokManCommands(cmds)
+		total, tok := counttokCommands(cmds)
 
 		// Extract session ID from filename
 		id := filepath.Base(path)
@@ -134,7 +134,7 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 			ID:           id,
 			Date:         dateStr,
 			TotalCmds:    total,
-			TokManCmds:   tokman,
+			tokCmds:   tok,
 			OutputTokens: estimateTokens(cmds),
 		})
 	}
@@ -146,25 +146,25 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 
 	// Display table
 	fmt.Println()
-	fmt.Println(color.New(color.Bold).Sprint("TokMan Adoption Overview"))
+	fmt.Println(color.New(color.Bold).Sprint("tok Adoption Overview"))
 	fmt.Println(strings.Repeat("─", 70))
 	fmt.Printf("%-12s %-12s %5s %5s %9s %-7s %8s\n",
 		"Session", "Date", "Cmds", "TokM", "Adoption", "", "Output")
 	fmt.Println(strings.Repeat("─", 70))
 
-	var totalCmds, totalTokMan int
+	var totalCmds, totaltok int
 
 	for _, s := range summaries {
 		pct := s.AdoptionPct()
 		bar := progressBar(pct, 5)
 		totalCmds += s.TotalCmds
-		totalTokMan += s.TokManCmds
+		totaltok += s.tokCmds
 
 		fmt.Printf("%-12s %-12s %5d %5d %8.0f%% %-7s %8s\n",
 			s.ID,
 			s.Date,
 			s.TotalCmds,
-			s.TokManCmds,
+			s.tokCmds,
 			pct,
 			bar,
 			formatTokensInt(s.OutputTokens),
@@ -175,11 +175,11 @@ func runAdoption(cmd *cobra.Command, args []string) error {
 
 	avgAdoption := 0.0
 	if totalCmds > 0 {
-		avgAdoption = float64(totalTokMan) / float64(totalCmds) * 100
+		avgAdoption = float64(totaltok) / float64(totalCmds) * 100
 	}
 	fmt.Printf("Average adoption: %.0f%%\n", avgAdoption)
 	fmt.Println()
-	fmt.Println("Tip: Run 'tokman discover' to find missed optimization opportunities")
+	fmt.Println("Tip: Run 'tok discover' to find missed optimization opportunities")
 
 	return nil
 }
@@ -247,25 +247,25 @@ func extractCommandsFromSession(path string) ([]string, error) {
 	return commands, scanner.Err()
 }
 
-// countTokManCommands counts how many commands are TokMan-covered
-func countTokManCommands(commands []string) (total, tokman int) {
+// counttokCommands counts how many commands are tok-covered
+func counttokCommands(commands []string) (total, tok int) {
 	for _, cmd := range commands {
 		parts := splitCommandChain(cmd)
 		for _, part := range parts {
 			total++
-			// Check if command starts with "tokman" or would be rewritten
-			if strings.HasPrefix(strings.TrimSpace(part), "tokman ") {
-				tokman++
+			// Check if command starts with "tok" or would be rewritten
+			if strings.HasPrefix(strings.TrimSpace(part), "tok ") {
+				tok++
 			} else {
 				// Check if discover would rewrite this command
 				rewritten, changed := discover.RewriteCommand(part, nil)
 				if changed && rewritten != part {
-					tokman++
+					tok++
 				}
 			}
 		}
 	}
-	return total, tokman
+	return total, tok
 }
 
 // splitCommandChain splits chained commands (&&, ;, ||)

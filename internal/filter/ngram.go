@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/simd"
+	"github.com/lakshmanpatel/tok/internal/simd"
 )
 
 // NgramAbbreviator compresses output by abbreviating common patterns.

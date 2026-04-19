@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var filterCreateMatch string
@@ -84,7 +84,7 @@ return = "%s: completed successfully"
 	fmt.Println("\nEdit the filter to customize:")
 	fmt.Printf("  %s\n", filterPath)
 	fmt.Println("\nTest it with:")
-	fmt.Printf("  tokman filter-test %s\n", name)
+	fmt.Printf("  tok filter-test %s\n", name)
 
 	return nil
 }

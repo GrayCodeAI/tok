@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "Gisting" — Mu et al., Stanford, 2023

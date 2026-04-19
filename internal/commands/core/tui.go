@@ -6,8 +6,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	appui "github.com/GrayCodeAI/tokman/internal/tui"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	appui "github.com/lakshmanpatel/tok/internal/tui"
 )
 
 var (
@@ -22,8 +22,8 @@ var (
 
 var tuiCmd = &cobra.Command{
 	Use:   "tui",
-	Short: "Launch the TokMan token intelligence TUI",
-	Long: `Launch the new TokMan terminal dashboard.
+	Short: "Launch the tok token intelligence TUI",
+	Long: `Launch the new tok terminal dashboard.
 
 Phase 1 includes:
 - shared Bubble Tea shell

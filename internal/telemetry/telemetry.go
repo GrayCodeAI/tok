@@ -16,14 +16,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 const (
-	TelemetryEndpoint = "https://api.tokman.dev/v1/telemetry"
+	TelemetryEndpoint = "https://api.tok.dev/v1/telemetry"
 	ConsentFile       = "telemetry_consent"
 	LocalEventsFile   = "events.jsonl"
 )
@@ -424,10 +424,10 @@ func getDeviceHash() string {
 // ShowConsentPrompt displays the interactive consent prompt
 func ShowConsentPrompt() {
 	fmt.Println()
-	fmt.Println("📊 TokMan Telemetry")
+	fmt.Println("📊 tok Telemetry")
 	fmt.Println("═══════════════════════════════════════════════════")
 	fmt.Println()
-	fmt.Println("Help improve TokMan by sharing anonymous usage data:")
+	fmt.Println("Help improve tok by sharing anonymous usage data:")
 	fmt.Println()
 	fmt.Println("What we collect:")
 	fmt.Println("  • Command counts and token savings (aggregate)")

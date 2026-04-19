@@ -11,18 +11,18 @@ import (
 func TestEnsureClaudeHook(t *testing.T) {
 	root := map[string]any{}
 
-	changed, err := ensureClaudeHook(root, "/tmp/tokman-rewrite.sh")
+	changed, err := ensureClaudeHook(root, "/tmp/tok-rewrite.sh")
 	if err != nil {
 		t.Fatalf("ensureClaudeHook() error = %v", err)
 	}
 	if !changed {
 		t.Fatal("ensureClaudeHook() should report a change")
 	}
-	if !hasClaudeHook(root, "/tmp/tokman-rewrite.sh") {
+	if !hasClaudeHook(root, "/tmp/tok-rewrite.sh") {
 		t.Fatal("Claude hook should be present after patch")
 	}
 
-	changed, err = ensureClaudeHook(root, "/tmp/tokman-rewrite.sh")
+	changed, err = ensureClaudeHook(root, "/tmp/tok-rewrite.sh")
 	if err != nil {
 		t.Fatalf("ensureClaudeHook() second call error = %v", err)
 	}
@@ -34,7 +34,7 @@ func TestEnsureClaudeHook(t *testing.T) {
 func TestEnsureCursorHook(t *testing.T) {
 	root := map[string]any{}
 
-	changed, err := ensureCursorHook(root, "/tmp/tokman-rewrite.sh")
+	changed, err := ensureCursorHook(root, "/tmp/tok-rewrite.sh")
 	if err != nil {
 		t.Fatalf("ensureCursorHook() error = %v", err)
 	}
@@ -44,7 +44,7 @@ func TestEnsureCursorHook(t *testing.T) {
 	if version, ok := root["version"].(int); ok && version != 1 {
 		t.Fatalf("version = %d, want 1", version)
 	}
-	if !hasCursorHook(root, "/tmp/tokman-rewrite.sh") {
+	if !hasCursorHook(root, "/tmp/tok-rewrite.sh") {
 		t.Fatal("Cursor hook should be present after patch")
 	}
 }
@@ -52,14 +52,14 @@ func TestEnsureCursorHook(t *testing.T) {
 func TestEnsureGeminiHook(t *testing.T) {
 	root := map[string]any{}
 
-	changed, err := ensureGeminiHook(root, "/tmp/tokman-rewrite.sh")
+	changed, err := ensureGeminiHook(root, "/tmp/tok-rewrite.sh")
 	if err != nil {
 		t.Fatalf("ensureGeminiHook() error = %v", err)
 	}
 	if !changed {
 		t.Fatal("ensureGeminiHook() should report a change")
 	}
-	if !hasGeminiHook(root, "/tmp/tokman-rewrite.sh") {
+	if !hasGeminiHook(root, "/tmp/tok-rewrite.sh") {
 		t.Fatal("Gemini hook should be present after patch")
 	}
 }
@@ -101,7 +101,7 @@ func TestGenerateAgentHookScriptSelectsHandler(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			script := generateAgentHookScript(tt.agent)
-			want := "exec tokman hook " + tt.handler
+			want := "exec tok hook " + tt.handler
 			if !strings.Contains(script, want) {
 				t.Fatalf("generateAgentHookScript(%q) missing %q", tt.agent, want)
 			}
@@ -116,14 +116,14 @@ func TestUninstallAgentClaudeRemovesArtifacts(t *testing.T) {
 		ConfigDir: filepath.Join(home, ".claude"),
 		HookDir:   filepath.Join(home, ".claude", "hooks"),
 	}
-	hookPath := filepath.Join(agent.HookDir, "tokman-rewrite.sh")
+	hookPath := filepath.Join(agent.HookDir, "tok-rewrite.sh")
 	if err := os.MkdirAll(agent.HookDir, 0755); err != nil {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
 	if err := os.WriteFile(hookPath, []byte("#!/bin/sh\n"), 0755); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
-	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "TOKMAN.md"), []byte("tokman"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "TOKMAN.md"), []byte("tok"), 0644); err != nil {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(agent.ConfigDir, "CLAUDE.md"), []byte("# Notes\n\n@TOKMAN.md\n"), 0644); err != nil {
@@ -162,7 +162,7 @@ func TestUninstallAgentClaudeRemovesArtifacts(t *testing.T) {
 func TestRemoveCursorHook(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "hooks.json")
 	root := map[string]any{}
-	if _, err := ensureCursorHook(root, "/tmp/tokman-rewrite.sh"); err != nil {
+	if _, err := ensureCursorHook(root, "/tmp/tok-rewrite.sh"); err != nil {
 		t.Fatalf("ensureCursorHook() error = %v", err)
 	}
 	data, err := json.Marshal(root)
@@ -173,7 +173,7 @@ func TestRemoveCursorHook(t *testing.T) {
 		t.Fatalf("WriteFile() error = %v", err)
 	}
 
-	changed, err := removeCursorHook(path, "/tmp/tokman-rewrite.sh")
+	changed, err := removeCursorHook(path, "/tmp/tok-rewrite.sh")
 	if err != nil {
 		t.Fatalf("removeCursorHook() error = %v", err)
 	}
@@ -184,7 +184,7 @@ func TestRemoveCursorHook(t *testing.T) {
 	if err != nil {
 		t.Fatalf("loadJSONObject() error = %v", err)
 	}
-	if hasCursorHook(root, "/tmp/tokman-rewrite.sh") {
+	if hasCursorHook(root, "/tmp/tok-rewrite.sh") {
 		t.Fatal("Cursor hook should be removed")
 	}
 }
@@ -254,7 +254,7 @@ func TestSetupAgentCopilotWritesProjectFiles(t *testing.T) {
 		t.Fatalf("setupAgent() error = %v", err)
 	}
 
-	hookConfig := filepath.Join(projectDir, ".github", "hooks", "tokman-rewrite.json")
+	hookConfig := filepath.Join(projectDir, ".github", "hooks", "tok-rewrite.json")
 	instructions := filepath.Join(projectDir, ".github", "copilot-instructions.md")
 	if !fileExists(hookConfig) || !fileExists(instructions) {
 		t.Fatal("Copilot files should be written in .github/")
@@ -263,8 +263,8 @@ func TestSetupAgentCopilotWritesProjectFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if !strings.Contains(string(content), "tokman hook copilot") {
-		t.Fatal("Copilot hook config should invoke 'tokman hook copilot'")
+	if !strings.Contains(string(content), "tok hook copilot") {
+		t.Fatal("Copilot hook config should invoke 'tok hook copilot'")
 	}
 }
 
@@ -282,7 +282,7 @@ func TestSetupAgentOpenCodeRequiresGlobal(t *testing.T) {
 	if err := setupAgent(agent, true); err != nil {
 		t.Fatalf("setupAgent() global error = %v", err)
 	}
-	pluginPath := filepath.Join(configDir, "plugins", "tokman.ts")
+	pluginPath := filepath.Join(configDir, "plugins", "tok.ts")
 	if !fileExists(pluginPath) {
 		t.Fatal("OpenCode plugin should be installed")
 	}
@@ -302,8 +302,8 @@ func TestSetupAgentClineWritesManagedRules(t *testing.T) {
 	if err := setupAgent(agent, false); err != nil {
 		t.Fatalf("setupAgent() error = %v", err)
 	}
-	if !managedBlockPresent(rulesPath, "tokman:cline") {
-		t.Fatal(".clinerules should contain TokMan managed block")
+	if !managedBlockPresent(rulesPath, "tok:cline") {
+		t.Fatal(".clinerules should contain tok managed block")
 	}
 
 	removed, err := uninstallAgent(agent)
@@ -317,7 +317,7 @@ func TestSetupAgentClineWritesManagedRules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if strings.Contains(string(content), "tokman:cline") {
-		t.Fatal(".clinerules should not contain TokMan block after uninstall")
+	if strings.Contains(string(content), "tok:cline") {
+		t.Fatal(".clinerules should not contain tok block after uninstall")
 	}
 }

@@ -10,7 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 type section struct {
@@ -139,7 +139,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) View() string {
 	if !m.ready {
-		return "\n  Loading TokMan TUI…"
+		return "\n  Loading tok TUI…"
 	}
 
 	contentWidth := max(20, m.width)
@@ -189,7 +189,7 @@ func sectionShortcutLabel(index int) string {
 }
 
 func (m model) renderHeader(width int) string {
-	title := m.theme.Title.Render("TokMan")
+	title := m.theme.Title.Render("tok")
 	sectionTitle := m.theme.Focus.Render(m.sections[m.navIndex].Title)
 
 	statusParts := []string{
@@ -351,7 +351,7 @@ func (m model) renderFooter(width int) string {
 
 func (m model) renderHelp(width int) string {
 	lines := []string{
-		m.theme.SectionTitle.Render("TokMan TUI Help"),
+		m.theme.SectionTitle.Render("tok TUI Help"),
 		"",
 		"Phase 1 is live:",
 		"- shared shell",

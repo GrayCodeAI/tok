@@ -4,7 +4,7 @@ import (
 	"math"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "ACON: Optimizing Context Compression for Long-Context LLMs" — ICLR 2026

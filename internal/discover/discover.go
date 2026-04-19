@@ -1,5 +1,5 @@
 // Package discover provides command discovery and auto-rewrite functionality.
-// It implements transparent TokMan command rewriting for supported shells and agents.
+// It implements transparent tok command rewriting for supported shells and agents.
 package discover
 
 import (
@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/telemetry"
 )
 
 // rewriteCache caches command rewrite results to avoid reprocessing
@@ -39,7 +39,7 @@ type CommandPattern struct {
 	Priority    int // Higher priority patterns are checked first
 }
 
-// SupportLevel describes how well TokMan handles a command family.
+// SupportLevel describes how well tok handles a command family.
 type SupportLevel string
 
 const (
@@ -48,71 +48,71 @@ const (
 	SupportUnsupported SupportLevel = "unsupported"
 )
 
-// Common rewrite patterns for TokMan auto-rewrite
+// Common rewrite patterns for tok auto-rewrite
 var rewritePatterns = []CommandPattern{
 	// Test runners - high priority
-	{Name: "cargo test", Pattern: regexp.MustCompile(`^cargo\s+test`), Rewrite: "tokman cargo test", Description: "Rust tests", Priority: 100},
-	{Name: "go test", Pattern: regexp.MustCompile(`^go\s+test`), Rewrite: "tokman go test", Description: "Go tests", Priority: 100},
-	{Name: "npm test", Pattern: regexp.MustCompile(`^npm\s+test`), Rewrite: "tokman npm test", Description: "npm tests", Priority: 100},
-	{Name: "pnpm test", Pattern: regexp.MustCompile(`^pnpm\s+test`), Rewrite: "tokman pnpm test", Description: "pnpm tests", Priority: 100},
-	{Name: "pytest", Pattern: regexp.MustCompile(`^pytest`), Rewrite: "tokman pytest", Description: "Python tests", Priority: 100},
-	{Name: "vitest", Pattern: regexp.MustCompile(`^vitest|^npx\s+vitest`), Rewrite: "tokman vitest", Description: "Vitest tests", Priority: 100},
-	{Name: "jest", Pattern: regexp.MustCompile(`^jest|^npx\s+jest`), Rewrite: "tokman jest", Description: "Jest tests", Priority: 100},
-	{Name: "playwright", Pattern: regexp.MustCompile(`^playwright\s+test|^npx\s+playwright\s+test`), Rewrite: "tokman playwright", Description: "Playwright tests", Priority: 100},
-	{Name: "rspec", Pattern: regexp.MustCompile(`^rspec`), Rewrite: "tokman rspec", Description: "RSpec tests", Priority: 100},
-	{Name: "rake test", Pattern: regexp.MustCompile(`^rake\s+test`), Rewrite: "tokman rake test", Description: "Rake tests", Priority: 100},
+	{Name: "cargo test", Pattern: regexp.MustCompile(`^cargo\s+test`), Rewrite: "tok cargo test", Description: "Rust tests", Priority: 100},
+	{Name: "go test", Pattern: regexp.MustCompile(`^go\s+test`), Rewrite: "tok go test", Description: "Go tests", Priority: 100},
+	{Name: "npm test", Pattern: regexp.MustCompile(`^npm\s+test`), Rewrite: "tok npm test", Description: "npm tests", Priority: 100},
+	{Name: "pnpm test", Pattern: regexp.MustCompile(`^pnpm\s+test`), Rewrite: "tok pnpm test", Description: "pnpm tests", Priority: 100},
+	{Name: "pytest", Pattern: regexp.MustCompile(`^pytest`), Rewrite: "tok pytest", Description: "Python tests", Priority: 100},
+	{Name: "vitest", Pattern: regexp.MustCompile(`^vitest|^npx\s+vitest`), Rewrite: "tok vitest", Description: "Vitest tests", Priority: 100},
+	{Name: "jest", Pattern: regexp.MustCompile(`^jest|^npx\s+jest`), Rewrite: "tok jest", Description: "Jest tests", Priority: 100},
+	{Name: "playwright", Pattern: regexp.MustCompile(`^playwright\s+test|^npx\s+playwright\s+test`), Rewrite: "tok playwright", Description: "Playwright tests", Priority: 100},
+	{Name: "rspec", Pattern: regexp.MustCompile(`^rspec`), Rewrite: "tok rspec", Description: "RSpec tests", Priority: 100},
+	{Name: "rake test", Pattern: regexp.MustCompile(`^rake\s+test`), Rewrite: "tok rake test", Description: "Rake tests", Priority: 100},
 
 	// Build commands
-	{Name: "cargo build", Pattern: regexp.MustCompile(`^cargo\s+build`), Rewrite: "tokman cargo build", Description: "Rust build", Priority: 90},
-	{Name: "cargo clippy", Pattern: regexp.MustCompile(`^cargo\s+clippy`), Rewrite: "tokman cargo clippy", Description: "Rust lint", Priority: 90},
-	{Name: "npm run build", Pattern: regexp.MustCompile(`^npm\s+run\s+build`), Rewrite: "tokman err npm run build", Description: "npm build", Priority: 90},
-	{Name: "pnpm build", Pattern: regexp.MustCompile(`^pnpm\s+(run\s+)?build`), Rewrite: "tokman err pnpm build", Description: "pnpm build", Priority: 90},
-	{Name: "tsc", Pattern: regexp.MustCompile(`^tsc`), Rewrite: "tokman tsc", Description: "TypeScript compiler", Priority: 90},
-	{Name: "next build", Pattern: regexp.MustCompile(`^next\s+build`), Rewrite: "tokman next build", Description: "Next.js build", Priority: 90},
-	{Name: "golangci-lint", Pattern: regexp.MustCompile(`^golangci-lint`), Rewrite: "tokman golangci-lint", Description: "Go linter", Priority: 90},
-	{Name: "ruff", Pattern: regexp.MustCompile(`^ruff\s+(check|format)`), Rewrite: "tokman ruff", Description: "Python linter", Priority: 90},
+	{Name: "cargo build", Pattern: regexp.MustCompile(`^cargo\s+build`), Rewrite: "tok cargo build", Description: "Rust build", Priority: 90},
+	{Name: "cargo clippy", Pattern: regexp.MustCompile(`^cargo\s+clippy`), Rewrite: "tok cargo clippy", Description: "Rust lint", Priority: 90},
+	{Name: "npm run build", Pattern: regexp.MustCompile(`^npm\s+run\s+build`), Rewrite: "tok err npm run build", Description: "npm build", Priority: 90},
+	{Name: "pnpm build", Pattern: regexp.MustCompile(`^pnpm\s+(run\s+)?build`), Rewrite: "tok err pnpm build", Description: "pnpm build", Priority: 90},
+	{Name: "tsc", Pattern: regexp.MustCompile(`^tsc`), Rewrite: "tok tsc", Description: "TypeScript compiler", Priority: 90},
+	{Name: "next build", Pattern: regexp.MustCompile(`^next\s+build`), Rewrite: "tok next build", Description: "Next.js build", Priority: 90},
+	{Name: "golangci-lint", Pattern: regexp.MustCompile(`^golangci-lint`), Rewrite: "tok golangci-lint", Description: "Go linter", Priority: 90},
+	{Name: "ruff", Pattern: regexp.MustCompile(`^ruff\s+(check|format)`), Rewrite: "tok ruff", Description: "Python linter", Priority: 90},
 
 	// Git commands
-	{Name: "git status", Pattern: regexp.MustCompile(`^git\s+status`), Rewrite: "tokman git status", Description: "Git status", Priority: 80},
-	{Name: "git log", Pattern: regexp.MustCompile(`^git\s+log`), Rewrite: "tokman git log", Description: "Git log", Priority: 80},
-	{Name: "git diff", Pattern: regexp.MustCompile(`^git\s+diff`), Rewrite: "tokman git diff", Description: "Git diff", Priority: 80},
-	{Name: "git add", Pattern: regexp.MustCompile(`^git\s+add`), Rewrite: "tokman git add", Description: "Git add", Priority: 80},
-	{Name: "git commit", Pattern: regexp.MustCompile(`^git\s+commit`), Rewrite: "tokman git commit", Description: "Git commit", Priority: 80},
-	{Name: "git push", Pattern: regexp.MustCompile(`^git\s+push`), Rewrite: "tokman git push", Description: "Git push", Priority: 80},
-	{Name: "git pull", Pattern: regexp.MustCompile(`^git\s+pull`), Rewrite: "tokman git pull", Description: "Git pull", Priority: 80},
+	{Name: "git status", Pattern: regexp.MustCompile(`^git\s+status`), Rewrite: "tok git status", Description: "Git status", Priority: 80},
+	{Name: "git log", Pattern: regexp.MustCompile(`^git\s+log`), Rewrite: "tok git log", Description: "Git log", Priority: 80},
+	{Name: "git diff", Pattern: regexp.MustCompile(`^git\s+diff`), Rewrite: "tok git diff", Description: "Git diff", Priority: 80},
+	{Name: "git add", Pattern: regexp.MustCompile(`^git\s+add`), Rewrite: "tok git add", Description: "Git add", Priority: 80},
+	{Name: "git commit", Pattern: regexp.MustCompile(`^git\s+commit`), Rewrite: "tok git commit", Description: "Git commit", Priority: 80},
+	{Name: "git push", Pattern: regexp.MustCompile(`^git\s+push`), Rewrite: "tok git push", Description: "Git push", Priority: 80},
+	{Name: "git pull", Pattern: regexp.MustCompile(`^git\s+pull`), Rewrite: "tok git pull", Description: "Git pull", Priority: 80},
 
 	// GitHub CLI
-	{Name: "gh pr", Pattern: regexp.MustCompile(`^gh\s+pr`), Rewrite: "tokman gh pr", Description: "GitHub PR", Priority: 80},
-	{Name: "gh issue", Pattern: regexp.MustCompile(`^gh\s+issue`), Rewrite: "tokman gh issue", Description: "GitHub issue", Priority: 80},
-	{Name: "gh run", Pattern: regexp.MustCompile(`^gh\s+run`), Rewrite: "tokman gh run", Description: "GitHub Actions", Priority: 80},
+	{Name: "gh pr", Pattern: regexp.MustCompile(`^gh\s+pr`), Rewrite: "tok gh pr", Description: "GitHub PR", Priority: 80},
+	{Name: "gh issue", Pattern: regexp.MustCompile(`^gh\s+issue`), Rewrite: "tok gh issue", Description: "GitHub issue", Priority: 80},
+	{Name: "gh run", Pattern: regexp.MustCompile(`^gh\s+run`), Rewrite: "tok gh run", Description: "GitHub Actions", Priority: 80},
 
 	// Docker/Kubernetes
-	{Name: "docker ps", Pattern: regexp.MustCompile(`^docker\s+ps`), Rewrite: "tokman docker ps", Description: "Docker containers", Priority: 70},
-	{Name: "docker images", Pattern: regexp.MustCompile(`^docker\s+images`), Rewrite: "tokman docker images", Description: "Docker images", Priority: 70},
-	{Name: "docker logs", Pattern: regexp.MustCompile(`^docker\s+(logs|compose\s+logs)`), Rewrite: "tokman docker logs", Description: "Docker logs", Priority: 70},
-	{Name: "kubectl", Pattern: regexp.MustCompile(`^kubectl\s+(get|logs|describe)`), Rewrite: "tokman kubectl", Description: "Kubernetes", Priority: 70},
+	{Name: "docker ps", Pattern: regexp.MustCompile(`^docker\s+ps`), Rewrite: "tok docker ps", Description: "Docker containers", Priority: 70},
+	{Name: "docker images", Pattern: regexp.MustCompile(`^docker\s+images`), Rewrite: "tok docker images", Description: "Docker images", Priority: 70},
+	{Name: "docker logs", Pattern: regexp.MustCompile(`^docker\s+(logs|compose\s+logs)`), Rewrite: "tok docker logs", Description: "Docker logs", Priority: 70},
+	{Name: "kubectl", Pattern: regexp.MustCompile(`^kubectl\s+(get|logs|describe)`), Rewrite: "tok kubectl", Description: "Kubernetes", Priority: 70},
 
 	// Package managers
-	{Name: "npm ls", Pattern: regexp.MustCompile(`^npm\s+ls`), Rewrite: "tokman npm ls", Description: "npm list", Priority: 60},
-	{Name: "pnpm list", Pattern: regexp.MustCompile(`^pnpm\s+list`), Rewrite: "tokman pnpm list", Description: "pnpm list", Priority: 60},
-	{Name: "pip list", Pattern: regexp.MustCompile(`^pip\s+list`), Rewrite: "tokman pip list", Description: "pip list", Priority: 60},
-	{Name: "bundle install", Pattern: regexp.MustCompile(`^bundle\s+install`), Rewrite: "tokman bundle install", Description: "Bundle install", Priority: 60},
+	{Name: "npm ls", Pattern: regexp.MustCompile(`^npm\s+ls`), Rewrite: "tok npm ls", Description: "npm list", Priority: 60},
+	{Name: "pnpm list", Pattern: regexp.MustCompile(`^pnpm\s+list`), Rewrite: "tok pnpm list", Description: "pnpm list", Priority: 60},
+	{Name: "pip list", Pattern: regexp.MustCompile(`^pip\s+list`), Rewrite: "tok pip list", Description: "pip list", Priority: 60},
+	{Name: "bundle install", Pattern: regexp.MustCompile(`^bundle\s+install`), Rewrite: "tok bundle install", Description: "Bundle install", Priority: 60},
 
 	// System commands
-	{Name: "ls", Pattern: regexp.MustCompile(`^ls\b`), Rewrite: "tokman ls", Description: "List directory", Priority: 50},
-	{Name: "tree", Pattern: regexp.MustCompile(`^tree`), Rewrite: "tokman tree", Description: "Directory tree", Priority: 50},
-	{Name: "cat", Pattern: regexp.MustCompile(`^cat\s`), Rewrite: "tokman read", Description: "Read file", Priority: 50},
-	{Name: "grep", Pattern: regexp.MustCompile(`^grep\s`), Rewrite: "tokman grep", Description: "Search files", Priority: 50},
-	{Name: "find", Pattern: regexp.MustCompile(`^find\s`), Rewrite: "tokman find", Description: "Find files", Priority: 50},
-	{Name: "wc", Pattern: regexp.MustCompile(`^wc\s`), Rewrite: "tokman wc", Description: "Word count", Priority: 50},
-	{Name: "env", Pattern: regexp.MustCompile(`^env$`), Rewrite: "tokman env", Description: "Environment variables", Priority: 50},
+	{Name: "ls", Pattern: regexp.MustCompile(`^ls\b`), Rewrite: "tok ls", Description: "List directory", Priority: 50},
+	{Name: "tree", Pattern: regexp.MustCompile(`^tree`), Rewrite: "tok tree", Description: "Directory tree", Priority: 50},
+	{Name: "cat", Pattern: regexp.MustCompile(`^cat\s`), Rewrite: "tok read", Description: "Read file", Priority: 50},
+	{Name: "grep", Pattern: regexp.MustCompile(`^grep\s`), Rewrite: "tok grep", Description: "Search files", Priority: 50},
+	{Name: "find", Pattern: regexp.MustCompile(`^find\s`), Rewrite: "tok find", Description: "Find files", Priority: 50},
+	{Name: "wc", Pattern: regexp.MustCompile(`^wc\s`), Rewrite: "tok wc", Description: "Word count", Priority: 50},
+	{Name: "env", Pattern: regexp.MustCompile(`^env$`), Rewrite: "tok env", Description: "Environment variables", Priority: 50},
 }
 
 // RewriteOptions provides options for command rewriting
 type RewriteOptions struct {
 	// DisableTestRunner disables automatic test-runner detection
 	DisableTestRunner bool
-	// PreferExplicit prefers explicit tokman commands over test-runner
+	// PreferExplicit prefers explicit tok commands over test-runner
 	PreferExplicit bool
 	// DisableCache disables caching for this rewrite
 	DisableCache bool
@@ -120,7 +120,7 @@ type RewriteOptions struct {
 	SkipTelemetry bool
 }
 
-// RewriteCommand rewrites a command using TokMan equivalents.
+// RewriteCommand rewrites a command using tok equivalents.
 // Returns the rewritten command and true if a rewrite occurred.
 // Results are cached for performance.
 func RewriteCommand(cmd string, opts interface{}) (string, bool) {
@@ -136,8 +136,8 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 
 	trimmed := strings.TrimSpace(cmd)
 
-	// Skip if already starts with tokman
-	if strings.HasPrefix(trimmed, "tokman ") {
+	// Skip if already starts with tok
+	if strings.HasPrefix(trimmed, "tok ") {
 		return cmd, false
 	}
 
@@ -186,7 +186,7 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 	// Try test-runner auto-detection for unknown test commands
 	if !options.DisableTestRunner {
 		if testCmd := detectTestRunner(trimmed); testCmd != "" {
-			rewritten := "tokman test-runner " + trimmed
+			rewritten := "tok test-runner " + trimmed
 
 			// Cache the result
 			if !options.DisableCache {
@@ -212,7 +212,7 @@ func RewriteCommand(cmd string, opts interface{}) (string, bool) {
 	return cmd, false
 }
 
-// ClassifyCommand returns TokMan support level and the recommended TokMan equivalent when known.
+// ClassifyCommand returns tok support level and the recommended tok equivalent when known.
 func ClassifyCommand(cmd string) (string, SupportLevel) {
 	rewritten, changed := RewriteCommand(cmd, &RewriteOptions{
 		DisableCache:      true,
@@ -268,7 +268,7 @@ func isTestCommand(cmd string) bool {
 
 // rewriteWithTestRunner rewrites a test command to use test-runner
 func rewriteWithTestRunner(cmd string) string {
-	return "tokman test-runner " + cmd
+	return "tok test-runner " + cmd
 }
 
 // detectTestRunner attempts to detect the appropriate test runner for a command
@@ -332,7 +332,7 @@ func detectPassthroughCommand(cmd string) (string, bool) {
 	if fields[0] == "git" && isExplicitGitOptimization(fields[1]) {
 		return "", false
 	}
-	return "tokman " + strings.TrimSpace(cmd), true
+	return "tok " + strings.TrimSpace(cmd), true
 }
 
 func isKnownPassthroughRoot(root string) bool {

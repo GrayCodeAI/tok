@@ -46,7 +46,7 @@ func TestLoaderLoadAll_EmptyDir(t *testing.T) {
 func TestLoaderLoadAll_WithProjectDir(t *testing.T) {
 	tmpDir := t.TempDir()
 	projectDir := filepath.Join(tmpDir, "project")
-	os.MkdirAll(filepath.Join(projectDir, ".tokman"), 0755)
+	os.MkdirAll(filepath.Join(projectDir, ".tok"), 0755)
 
 	// Create a project filter file
 	filterContent := `schema_version = 1
@@ -56,7 +56,7 @@ match_command = "^my-tool.*"
 strip_ansi = true
 max_lines = 10
 `
-	os.WriteFile(filepath.Join(projectDir, ".tokman", "filters.toml"), []byte(filterContent), 0644)
+	os.WriteFile(filepath.Join(projectDir, ".tok", "filters.toml"), []byte(filterContent), 0644)
 
 	loader := NewLoader(tmpDir)
 	// Project is not trusted, so filters won't load
@@ -114,7 +114,7 @@ func TestLoaderLoadTrusted(t *testing.T) {
 	os.MkdirAll(projectPath, 0755)
 
 	// Write a trusted file
-	trustedContent := "# TokMan Trusted Projects\n" + projectPath + "\n"
+	trustedContent := "# tok Trusted Projects\n" + projectPath + "\n"
 	os.WriteFile(loader.trustedFile, []byte(trustedContent), 0600)
 
 	if err := loader.LoadTrusted(); err != nil {
@@ -137,7 +137,7 @@ func TestGetLoader(t *testing.T) {
 func TestLoaderLoadAll_WithUserFilters(t *testing.T) {
 	tmpDir := t.TempDir()
 	homeDir := filepath.Join(tmpDir, "home")
-	configDir := filepath.Join(homeDir, ".config", "tokman")
+	configDir := filepath.Join(homeDir, ".config", "tok")
 	os.MkdirAll(configDir, 0755)
 
 	// Create user filters file
@@ -168,7 +168,7 @@ max_lines = 20
 func TestLoaderLoadAll_WithXDGUserFilters(t *testing.T) {
 	tmpDir := t.TempDir()
 	xdgConfigHome := filepath.Join(tmpDir, "xdg-config")
-	configDir := filepath.Join(xdgConfigHome, "tokman")
+	configDir := filepath.Join(xdgConfigHome, "tok")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
@@ -203,7 +203,7 @@ keep_lines_matching = ["^ERROR:"]
 func TestLoaderLoadAll_InvalidTOML(t *testing.T) {
 	tmpDir := t.TempDir()
 	homeDir := filepath.Join(tmpDir, "home")
-	configDir := filepath.Join(homeDir, ".config", "tokman")
+	configDir := filepath.Join(homeDir, ".config", "tok")
 	os.MkdirAll(configDir, 0755)
 
 	// Create invalid TOML file

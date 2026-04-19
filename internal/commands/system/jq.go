@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var jqCmd = &cobra.Command{
@@ -24,9 +24,9 @@ Specialized filters for:
   - Arrays: Compact representation
 
 Examples:
-  tokman jq '.[] | .name' data.json
-  tokman jq 'keys' package.json
-  cat data.json | tokman jq '.items'`,
+  tok jq '.[] | .name' data.json
+  tok jq 'keys' package.json
+  cat data.json | tok jq '.items'`,
 	DisableFlagParsing: true,
 	RunE:               runJq,
 }
@@ -58,7 +58,7 @@ func runJq(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("jq", "tokman jq", originalTokens, filteredTokens)
+	timer.Track("jq", "tok jq", originalTokens, filteredTokens)
 
 	return err
 }

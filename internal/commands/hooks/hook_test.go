@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/discover"
+	"github.com/lakshmanpatel/tok/internal/discover"
 )
 
 // ── detectCopilotFormat ────────────────────────────────────────
@@ -210,7 +210,7 @@ func TestRunClaudeInner_RewritesCommand(t *testing.T) {
 	if output == "" {
 		t.Fatal("runClaudeInner() returned empty output")
 	}
-	if !strings.Contains(output, `"updatedInput":{"command":"tokman git status"}`) {
+	if !strings.Contains(output, `"updatedInput":{"command":"tok git status"}`) {
 		t.Fatalf("runClaudeInner() = %s", output)
 	}
 }
@@ -222,7 +222,7 @@ func TestRunCursorInner_RewritesCommand(t *testing.T) {
 	if output == "{}" {
 		t.Fatal("runCursorInner() returned empty response")
 	}
-	if !strings.Contains(output, `"updated_input":{"command":"tokman git status"}`) {
+	if !strings.Contains(output, `"updated_input":{"command":"tok git status"}`) {
 		t.Fatalf("runCursorInner() = %s", output)
 	}
 }
@@ -261,7 +261,7 @@ func TestRecordHookAudit(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", dataHome)
 	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
 
-	recordHookAudit("rewrite", "git status", "tokman git status")
+	recordHookAudit("rewrite", "git status", "tok git status")
 
 	content, err := os.ReadFile(getAuditLogPath())
 	if err != nil {
@@ -282,13 +282,13 @@ func TestRecordHookAuditEscapesFields(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", dataHome)
 	t.Setenv("TOKMAN_HOOK_AUDIT", "1")
 
-	recordHookAudit("rewrite", "git status | head -n 1", "tokman git status\n")
+	recordHookAudit("rewrite", "git status | head -n 1", "tok git status\n")
 
 	content, err := os.ReadFile(getAuditLogPath())
 	if err != nil {
 		t.Fatalf("ReadFile() error = %v", err)
 	}
-	if strings.Contains(string(content), " | head -n 1 | tokman git status\n") {
+	if strings.Contains(string(content), " | head -n 1 | tok git status\n") {
 		t.Fatal("audit content should escape separators and newlines")
 	}
 }
@@ -306,12 +306,12 @@ func TestHandleCopilotVsCode_RewriteLogic(t *testing.T) {
 		{
 			name:    "git status rewrite",
 			cmd:     "git status",
-			wantOut: "tokman git status",
+			wantOut: "tok git status",
 		},
 		{
 			name:    "cargo test rewrite",
 			cmd:     "cargo test",
-			wantOut: "tokman test-runner cargo test",
+			wantOut: "tok test-runner cargo test",
 		},
 	}
 	for _, tt := range tests {
@@ -382,7 +382,7 @@ func TestBuildCopilotVSCodeResponse_Ask(t *testing.T) {
 		return PermissionAsk
 	}
 
-	output := buildCopilotVSCodeResponse("git status", "tokman git status")
+	output := buildCopilotVSCodeResponse("git status", "tok git status")
 	payload, _ := output["hookSpecificOutput"].(map[string]any)
 	if decision, _ := payload["permissionDecision"].(string); decision != "ask" {
 		t.Fatalf("permissionDecision = %q, want ask", decision)
@@ -392,10 +392,10 @@ func TestBuildCopilotVSCodeResponse_Ask(t *testing.T) {
 func TestPrintGeminiRewrite_Structure(t *testing.T) {
 	// Test the structure of printGeminiRewrite output
 	// The output should contain the rewritten command
-	cmd := "tokman git status"
+	cmd := "tok git status"
 	// We can't easily capture stdout, but we can verify the logic
-	if !strings.Contains(cmd, "tokman") {
-		t.Error("rewritten command should contain 'tokman'")
+	if !strings.Contains(cmd, "tok") {
+		t.Error("rewritten command should contain 'tok'")
 	}
 }
 
@@ -409,12 +409,12 @@ func TestParseAuditLine(t *testing.T) {
 	}{
 		{
 			name: "valid line",
-			line: "2026-01-15T10:30:00Z | rewrite | git status | tokman git status",
+			line: "2026-01-15T10:30:00Z | rewrite | git status | tok git status",
 			want: &AuditEntry{
 				Timestamp:    "2026-01-15T10:30:00Z",
 				Action:       "rewrite",
 				OriginalCmd:  "git status",
-				RewrittenCmd: "tokman git status",
+				RewrittenCmd: "tok git status",
 			},
 		},
 		{
@@ -534,7 +534,7 @@ func TestGetAuditLogPath(t *testing.T) {
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
 	path := getAuditLogPath()
-	want := filepath.Join(dataHome, "tokman", "hook-audit.log")
+	want := filepath.Join(dataHome, "tok", "hook-audit.log")
 	if path != want {
 		t.Errorf("getAuditLogPath() = %q, want %q", path, want)
 	}
@@ -602,7 +602,7 @@ func BenchmarkDetectCopilotFormat_PassThrough(b *testing.B) {
 }
 
 func BenchmarkParseAuditLine(b *testing.B) {
-	line := "2026-01-15T10:30:00Z | rewrite | git status | tokman git status"
+	line := "2026-01-15T10:30:00Z | rewrite | git status | tok git status"
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		parseAuditLine(line)

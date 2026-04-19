@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 func TestGetLocalEventStats(t *testing.T) {
@@ -18,8 +18,8 @@ func TestGetLocalEventStats(t *testing.T) {
 		t.Fatalf("MkdirAll() error = %v", err)
 	}
 	content := strings.Join([]string{
-		`{"feature":"command_invocation","category":"meta","command_path":"tokman status","timestamp":"2026-04-18T10:00:00Z"}`,
-		`{"feature":"command_invocation","category":"operational","command_path":"tokman gain","timestamp":"2026-04-18T12:00:00Z"}`,
+		`{"feature":"command_invocation","category":"meta","command_path":"tok status","timestamp":"2026-04-18T10:00:00Z"}`,
+		`{"feature":"command_invocation","category":"operational","command_path":"tok gain","timestamp":"2026-04-18T12:00:00Z"}`,
 		`{"feature":"test_runner","runner_type":"go test","timestamp":"2026-04-17T09:00:00Z"}`,
 	}, "\n") + "\n"
 	if err := os.WriteFile(eventsPath, []byte(content), 0644); err != nil {
@@ -45,7 +45,7 @@ func TestGetLocalEventStats(t *testing.T) {
 	if stats.LastEventAt != "2026-04-18T12:00:00Z" {
 		t.Fatalf("LastEventAt = %q", stats.LastEventAt)
 	}
-	if len(stats.TopCommands) == 0 || !strings.Contains(stats.TopCommands[0], "tokman gain") {
+	if len(stats.TopCommands) == 0 || !strings.Contains(stats.TopCommands[0], "tok gain") {
 		t.Fatalf("TopCommands = %#v", stats.TopCommands)
 	}
 	if len(stats.TopTestRunners) == 0 || !strings.Contains(stats.TopTestRunners[0], "go test") {

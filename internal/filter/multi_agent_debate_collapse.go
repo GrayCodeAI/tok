@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "S2-MAD: Semantic-Similarity Multi-Agent Debate Compression"

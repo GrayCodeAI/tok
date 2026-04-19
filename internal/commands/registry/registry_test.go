@@ -7,7 +7,7 @@ import (
 )
 
 func TestRegisterSkipsDuplicateCommandNames(t *testing.T) {
-	root := &cobra.Command{Use: "tokman"}
+	root := &cobra.Command{Use: "tok"}
 	Init(root)
 
 	first := &cobra.Command{Use: "gain", Short: "first"}

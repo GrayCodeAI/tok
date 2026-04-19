@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // pipOutdatedCmd represents the pip outdated command
@@ -26,8 +26,8 @@ Auto-detects uv and uses it if available for faster results.
 Shows package name, current version, and latest version in a condensed format.
 
 Examples:
-  tokman pip-outdated
-  tokman pip-outdated --format json`,
+  tok pip-outdated
+  tok pip-outdated --format json`,
 	RunE: runPipOutdated,
 }
 
@@ -72,7 +72,7 @@ func runPipOutdated(cmd *cobra.Command, args []string) error {
 	// Track metrics
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("pip list --outdated", "tokman pip-outdated", originalTokens, filteredTokens)
+	timer.Track("pip list --outdated", "tok pip-outdated", originalTokens, filteredTokens)
 
 	return nil
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func TestCheckpointTelemetryAutoRecord(t *testing.T) {
-	dbPath := filepath.Join(t.TempDir(), "tokman.db")
+	dbPath := filepath.Join(t.TempDir(), "tok.db")
 	tr, err := NewTracker(dbPath)
 	if err != nil {
 		t.Fatalf("new tracker: %v", err)

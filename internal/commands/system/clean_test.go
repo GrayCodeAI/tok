@@ -10,10 +10,10 @@ func TestCleanDirHelpersUseDataPath(t *testing.T) {
 	dataHome := t.TempDir()
 	t.Setenv("XDG_DATA_HOME", dataHome)
 
-	if got := cleanTeeDir(); got != filepath.Join(dataHome, "tokman", "tee") {
+	if got := cleanTeeDir(); got != filepath.Join(dataHome, "tok", "tee") {
 		t.Fatalf("cleanTeeDir() = %q", got)
 	}
-	if got := cleanReversibleDir(); got != filepath.Join(dataHome, "tokman", "reversible") {
+	if got := cleanReversibleDir(); got != filepath.Join(dataHome, "tok", "reversible") {
 		t.Fatalf("cleanReversibleDir() = %q", got)
 	}
 }

@@ -3,9 +3,9 @@ package filtercmd
 // watch_cmd.go implements Task #162: --watch mode for continuous compression.
 // Usage:
 //
-//	tokman watch <file>
-//	tokman watch --mode aggressive --interval 2s file.txt
-//	tokman watch --outdir compressed/ file.txt
+//	tok watch <file>
+//	tok watch --mode aggressive --interval 2s file.txt
+//	tok watch --outdir compressed/ file.txt
 
 import (
 	"fmt"
@@ -18,9 +18,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var watchCmd = &cobra.Command{
@@ -30,9 +30,9 @@ var watchCmd = &cobra.Command{
 Compressed output is written to stdout or --outdir.
 
 Examples:
-  tokman watch input.txt
-  tokman watch --mode aggressive --interval 2s input.txt
-  tokman watch --outdir out/ input.txt`,
+  tok watch input.txt
+  tok watch --mode aggressive --interval 2s input.txt
+  tok watch --outdir out/ input.txt`,
 	Args: cobra.ExactArgs(1),
 	RunE: runWatch,
 }
@@ -84,13 +84,13 @@ func runWatch(cmd *cobra.Command, args []string) error {
 	var totalEvents int
 	var totalOrigTokens, totalFinalTokens int
 
-	fmt.Fprintf(os.Stderr, "[tokman watch] Watching %s (interval: %s)\n", filePath, watchInterval)
+	fmt.Fprintf(os.Stderr, "[tok watch] Watching %s (interval: %s)\n", filePath, watchInterval)
 
 	for {
 		select {
 		case <-sigCh:
 			// Print summary and exit.
-			fmt.Fprintf(os.Stderr, "\n[tokman watch] Stopped. Summary:\n")
+			fmt.Fprintf(os.Stderr, "\n[tok watch] Stopped. Summary:\n")
 			fmt.Fprintf(os.Stderr, "  Events:       %d\n", totalEvents)
 			fmt.Fprintf(os.Stderr, "  Total input:  %d tokens\n", totalOrigTokens)
 			fmt.Fprintf(os.Stderr, "  Total output: %d tokens\n", totalFinalTokens)
@@ -105,7 +105,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 		case <-ticker.C:
 			info, err := os.Stat(filePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[tokman watch] stat error: %v\n", err)
+				fmt.Fprintf(os.Stderr, "[tok watch] stat error: %v\n", err)
 				continue
 			}
 
@@ -118,7 +118,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 
 			raw, err := os.ReadFile(filePath)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "[tokman watch] read error: %v\n", err)
+				fmt.Fprintf(os.Stderr, "[tok watch] read error: %v\n", err)
 				continue
 			}
 
@@ -143,7 +143,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 				outPath := filepath.Join(watchOutDir, filepath.Base(filePath))
 				// #nosec G703 -- destination is constrained to watchOutDir + basename(filePath).
 				if err := os.WriteFile(outPath, []byte(result), 0600); err != nil {
-					fmt.Fprintf(os.Stderr, "[tokman watch] write error: %v\n", err)
+					fmt.Fprintf(os.Stderr, "[tok watch] write error: %v\n", err)
 				}
 			} else {
 				fmt.Print(result)

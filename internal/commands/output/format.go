@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var formatCmd = &cobra.Command{
@@ -27,10 +27,10 @@ Detects formatter from project files:
 - go.mod → gofmt
 
 Examples:
-  tokman format --check .
-  tokman format --write .
-  tokman format prettier .      # Explicit formatter
-  tokman format ruff --check .`,
+  tok format --check .
+  tok format --write .
+  tok format prettier .      # Explicit formatter
+  tok format ruff --check .`,
 	DisableFlagParsing: true,
 	RunE:               runFormat,
 }
@@ -117,7 +117,7 @@ func runFormat(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("%s %s", formatter, strings.Join(formatterArgs, " ")), "tokman format", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("%s %s", formatter, strings.Join(formatterArgs, " ")), "tok format", originalTokens, filteredTokens)
 
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {

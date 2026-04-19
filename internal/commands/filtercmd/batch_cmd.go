@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // batchCmd implements Task #173: multi-file batch compression.
@@ -25,9 +25,9 @@ var batchCmd = &cobra.Command{
 	Long: `Compress one or more files (or glob patterns) through the token-reduction pipeline.
 
 Examples:
-  tokman batch *.txt
-  tokman batch --outdir compressed/ src/**/*.go
-  tokman batch --stats file1.txt file2.txt file3.txt`,
+  tok batch *.txt
+  tok batch --outdir compressed/ src/**/*.go
+  tok batch --stats file1.txt file2.txt file3.txt`,
 	Args: cobra.MinimumNArgs(1),
 	RunE: runBatch,
 }
@@ -161,7 +161,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 	var totalOrig, totalFinal, errCount int
 	for r := range results {
 		if r.err != nil {
-			fmt.Fprintf(os.Stderr, "[tokman batch] error: %s: %v\n", r.path, r.err)
+			fmt.Fprintf(os.Stderr, "[tok batch] error: %s: %v\n", r.path, r.err)
 			errCount++
 			continue
 		}
@@ -172,13 +172,13 @@ func runBatch(cmd *cobra.Command, args []string) error {
 		switch {
 		case batchInPlace:
 			if err := os.WriteFile(r.path, []byte(r.compressed), 0600); err != nil {
-				fmt.Fprintf(os.Stderr, "[tokman batch] write error: %s: %v\n", r.path, err)
+				fmt.Fprintf(os.Stderr, "[tok batch] write error: %s: %v\n", r.path, err)
 				errCount++
 			}
 		case batchOutDir != "":
 			outPath := filepath.Join(batchOutDir, filepath.Base(r.path))
 			if err := os.WriteFile(outPath, []byte(r.compressed), 0600); err != nil {
-				fmt.Fprintf(os.Stderr, "[tokman batch] write error: %s: %v\n", outPath, err)
+				fmt.Fprintf(os.Stderr, "[tok batch] write error: %s: %v\n", outPath, err)
 				errCount++
 			}
 		default:
@@ -192,7 +192,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 			if r.origTokens > 0 {
 				pct = float64(saved) / float64(r.origTokens) * 100
 			}
-			fmt.Fprintf(os.Stderr, "[tokman] %-40s %d→%d tokens (%.1f%% reduction)\n",
+			fmt.Fprintf(os.Stderr, "[tok] %-40s %d→%d tokens (%.1f%% reduction)\n",
 				r.path, r.origTokens, r.finalTokens, pct)
 		}
 	}
@@ -203,7 +203,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 		if totalOrig > 0 {
 			pct = float64(saved) / float64(totalOrig) * 100
 		}
-		fmt.Fprintf(os.Stderr, "[tokman] TOTAL: %d files, %d→%d tokens (%.1f%% reduction)\n",
+		fmt.Fprintf(os.Stderr, "[tok] TOTAL: %d files, %d→%d tokens (%.1f%% reduction)\n",
 			len(paths)-errCount, totalOrig, totalFinal, pct)
 	}
 

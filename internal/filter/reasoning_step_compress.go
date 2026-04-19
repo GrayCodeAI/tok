@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "LightThinker: Thinking Step-by-Step Compression"

@@ -10,9 +10,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var psqlCmd = &cobra.Command{
@@ -25,8 +25,8 @@ Automatically detects and compresses:
   - Expanded format (\x): Converts to one-liner key=val
 
 Examples:
-  tokman psql -c "SELECT * FROM users"
-  tokman psql -d mydb -c "SELECT * FROM orders LIMIT 100"`,
+  tok psql -c "SELECT * FROM users"
+  tok psql -d mydb -c "SELECT * FROM orders LIMIT 100"`,
 	RunE: runPsql,
 }
 
@@ -71,7 +71,7 @@ func runPsql(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("psql %s", strings.Join(args, " ")), "tokman psql", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("psql %s", strings.Join(args, " ")), "tok psql", originalTokens, filteredTokens)
 
 	return nil
 }

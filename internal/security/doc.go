@@ -1,4 +1,4 @@
-// Package security provides content scanning and PII redaction for TokMan.
+// Package security provides content scanning and PII redaction for tok.
 //
 // The security package detects sensitive information in command output such as
 // API keys, tokens, credentials, and personally identifiable information (PII).

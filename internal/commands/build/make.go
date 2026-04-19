@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var makeCmd = &cobra.Command{
@@ -24,9 +24,9 @@ Specialized filters for:
   - help: Compact target listing
 
 Examples:
-  tokman make build
-  tokman make test
-  tokman make help`,
+  tok make build
+  tok make test
+  tok make help`,
 	DisableFlagParsing: true,
 	RunE:               runMake,
 }
@@ -74,7 +74,7 @@ func runMakeTarget(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("make", "tokman make", originalTokens, filteredTokens)
+	timer.Track("make", "tok make", originalTokens, filteredTokens)
 
 	return err
 }
@@ -155,7 +155,7 @@ func runMakeHelp() error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("make help", "tokman make help", originalTokens, filteredTokens)
+	timer.Track("make help", "tok make help", originalTokens, filteredTokens)
 
 	return nil
 }

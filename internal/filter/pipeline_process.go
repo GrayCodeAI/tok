@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Process runs the full compression pipeline with early-exit support.

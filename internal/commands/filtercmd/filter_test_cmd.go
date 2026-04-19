@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/toml"
 )
 
 var filterTestInput string
@@ -22,8 +22,8 @@ This command loads a TOML filter and applies it to the provided input text,
 showing both the original and filtered output with token savings.
 
 Examples:
-  echo "git status output" | tokman filter-test git --command "git status"
-  tokman filter-test cargo --input "$(cat cargo_output.txt)" --command "cargo build"`,
+  echo "git status output" | tok filter-test git --command "git status"
+  tok filter-test cargo --input "$(cat cargo_output.txt)" --command "cargo build"`,
 	Args: cobra.ExactArgs(1),
 	RunE: runFilterTest,
 }

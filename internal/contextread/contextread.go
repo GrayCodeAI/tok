@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 // Options defines context reading options.
@@ -41,11 +41,11 @@ func IsStub() bool {
 func TrackedCommandPatternsForKind(kind string) []string {
 	switch strings.ToLower(strings.TrimSpace(kind)) {
 	case "read":
-		return []string{"tokman read", "tokman ctx read"}
+		return []string{"tok read", "tok ctx read"}
 	case "delta":
-		return []string{"tokman ctx delta"}
+		return []string{"tok ctx delta"}
 	case "mcp":
-		return []string{"tokman mcp", "tokman proxy"}
+		return []string{"tok mcp", "tok proxy"}
 	default:
 		return nil
 	}
@@ -54,11 +54,11 @@ func TrackedCommandPatternsForKind(kind string) []string {
 // TrackedCommandPatterns returns all tracked command patterns.
 func TrackedCommandPatterns() []string {
 	return []string{
-		"tokman read",
-		"tokman ctx read",
-		"tokman ctx delta",
-		"tokman mcp",
-		"tokman proxy",
+		"tok read",
+		"tok ctx read",
+		"tok ctx delta",
+		"tok mcp",
+		"tok proxy",
 	}
 }
 

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "LongLLMLingua" — Jiang et al., Microsoft, 2024

@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func runRakeCmd(args []string) error {
@@ -39,7 +39,7 @@ func runRakeCmd(args []string) error {
 	if len(args) > 0 {
 		taskName = fmt.Sprintf("rake %s", args[0])
 	}
-	timer.Track(taskName, "tokman ruby rake", originalTokens, filteredTokens)
+	timer.Track(taskName, "tok ruby rake", originalTokens, filteredTokens)
 
 	return err
 }

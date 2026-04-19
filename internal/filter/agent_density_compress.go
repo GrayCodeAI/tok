@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "AgentOCR: Content-Density Aware Compression for Multi-Turn Agent Trajectories"

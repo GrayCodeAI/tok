@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var mixCmd = &cobra.Command{
@@ -25,9 +25,9 @@ Specialized filters for:
   - deps: Compact dependency listing
 
 Examples:
-  tokman mix compile
-  tokman mix test
-  tokman mix deps.get`,
+  tok mix compile
+  tok mix test
+  tok mix deps.get`,
 	DisableFlagParsing: true,
 	RunE:               runMix,
 }
@@ -78,7 +78,7 @@ func runMixCompile(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mix compile", "tokman mix compile", originalTokens, filteredTokens)
+	timer.Track("mix compile", "tok mix compile", originalTokens, filteredTokens)
 
 	return err
 }
@@ -145,7 +145,7 @@ func runMixTest(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mix test", "tokman mix test", originalTokens, filteredTokens)
+	timer.Track("mix test", "tok mix test", originalTokens, filteredTokens)
 
 	return err
 }
@@ -217,7 +217,7 @@ func runMixDeps(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mix deps", "tokman mix deps", originalTokens, filteredTokens)
+	timer.Track("mix deps", "tok mix deps", originalTokens, filteredTokens)
 
 	return err
 }
@@ -281,7 +281,7 @@ func runMixFormat(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(raw)
-	timer.Track("mix format", "tokman mix format", originalTokens, filteredTokens)
+	timer.Track("mix format", "tok mix format", originalTokens, filteredTokens)
 
 	return err
 }
@@ -309,7 +309,7 @@ func runMixPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("mix", "tokman mix", originalTokens, filteredTokens)
+	timer.Track("mix", "tok mix", originalTokens, filteredTokens)
 
 	return err
 }

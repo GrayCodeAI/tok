@@ -524,7 +524,7 @@ func Load(cfgFile string) (*Config, error) {
 		// Keep the legacy HOME-based path as a fallback when XDG points
 		// somewhere else, so existing setups still load.
 		if home, err := os.UserHomeDir(); err == nil {
-			legacyDir := filepath.Join(home, ".config", "tokman")
+			legacyDir := filepath.Join(home, ".config", "tok")
 			if legacyDir != configDir {
 				v.AddConfigPath(legacyDir)
 			}

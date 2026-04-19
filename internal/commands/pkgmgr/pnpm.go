@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var pnpmCmd = &cobra.Command{
@@ -22,10 +22,10 @@ var pnpmCmd = &cobra.Command{
 Provides compact output for list, outdated, install, and other pnpm commands.
 
 Examples:
-  tokman pnpm list
-  tokman pnpm list --depth 1
-  tokman pnpm outdated
-  tokman pnpm install`,
+  tok pnpm list
+  tok pnpm list --depth 1
+  tok pnpm outdated
+  tok pnpm install`,
 	DisableFlagParsing: true,
 	RunE:               runPnpm,
 }
@@ -54,7 +54,7 @@ func runPnpm(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("pnpm %s", strings.Join(args, " ")), "tokman pnpm", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("pnpm %s", strings.Join(args, " ")), "tok pnpm", originalTokens, filteredTokens)
 
 	if err != nil {
 		return err

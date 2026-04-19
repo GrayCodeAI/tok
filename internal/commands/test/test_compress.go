@@ -7,9 +7,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var testAll bool
@@ -28,7 +28,7 @@ func init() {
 
 func runCompressTest(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("usage: tokman test <command> [args...]")
+		return fmt.Errorf("usage: tok test <command> [args...]")
 	}
 
 	exePath, err := exec.LookPath(args[0])

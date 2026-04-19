@@ -11,9 +11,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var recallCmd = &cobra.Command{
@@ -25,11 +25,11 @@ This helps you remember what commands you ran, what worked, and reuse solutions
 from previous sessions.
 
 Examples:
-  tokman recall "git commit"              # Find git commit commands
-  tokman recall "docker run"             # Find docker commands
-  tokman recall "npm install"            # Find npm commands
-  tokman recall --limit 5                # Show last 5 commands
-  tokman recall --days 7                 # Search last 7 days only`,
+  tok recall "git commit"              # Find git commit commands
+  tok recall "docker run"             # Find docker commands
+  tok recall "npm install"            # Find npm commands
+  tok recall --limit 5                # Show last 5 commands
+  tok recall --days 7                 # Search last 7 days only`,
 	Args: cobra.RangeArgs(0, 1),
 	RunE: runRecall,
 }
@@ -52,7 +52,7 @@ func runRecall(cmd *cobra.Command, args []string) error {
 	dbPath := config.DatabasePath()
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		fmt.Println("No command history found.")
-		fmt.Println("Run some commands through TokMan to start building history!")
+		fmt.Println("Run some commands through tok to start building history!")
 		return nil
 	}
 

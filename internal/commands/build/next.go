@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var nextCmd = &cobra.Command{
@@ -22,8 +22,8 @@ var nextCmd = &cobra.Command{
 Strips build noise and shows route summary.
 
 Examples:
-  tokman next build
-  tokman next dev`,
+  tok next build
+  tok next dev`,
 	DisableFlagParsing: true,
 	RunE:               runNext,
 }
@@ -59,7 +59,7 @@ func runNext(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("next %s", strings.Join(args, " ")), "tokman next", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("next %s", strings.Join(args, " ")), "tok next", originalTokens, filteredTokens)
 
 	return err
 }

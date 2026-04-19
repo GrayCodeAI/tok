@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 var (
@@ -24,14 +24,14 @@ var (
 var profileCmd = &cobra.Command{
 	Use:   "profile",
 	Short: "Run performance profiling",
-	Long: `Run CPU, memory, or execution trace profiling on TokMan.
+	Long: `Run CPU, memory, or execution trace profiling on tok.
 
 This command is used for performance analysis and optimization.
 
 Examples:
-  tokman profile --cpu --duration=30s --output=cpu.prof
-  tokman profile --mem --duration=10s --output=mem.prof
-  tokman profile --trace --duration=5s --output=trace.out`,
+  tok profile --cpu --duration=30s --output=cpu.prof
+  tok profile --mem --duration=10s --output=mem.prof
+  tok profile --trace --duration=5s --output=trace.out`,
 	RunE: runProfile,
 }
 
@@ -149,7 +149,7 @@ func runTraceProfile() error {
 	return nil
 }
 
-// runWorkload simulates TokMan workload for profiling
+// runWorkload simulates tok workload for profiling
 func runWorkload(duration time.Duration) {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
@@ -173,7 +173,7 @@ func runWorkload(duration time.Duration) {
 	}
 }
 
-// simulateCommandProcessing simulates typical TokMan operations
+// simulateCommandProcessing simulates typical tok operations
 func simulateCommandProcessing() {
 	// Simulate discover operations
 	for i := 0; i < 100; i++ {

@@ -6,30 +6,30 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
-	"github.com/GrayCodeAI/tokman/internal/session"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Show tokman status",
-	Long:  `Display tokman status and configuration`,
+	Short: "Show tok status",
+	Long:  `Display tok status and configuration`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("TokMan: Enabled")
+		fmt.Println("tok: Enabled")
 		fmt.Printf("Project: %s\n", config.ProjectPath())
 		fmt.Printf("Config path: %s\n", config.ConfigPath())
 		fmt.Printf("Data path: %s\n", config.DataPath())
 		fmt.Printf("Tracking DB: %s\n", config.DatabasePath())
 
 		if _, err := os.Stat(config.ConfigPath()); os.IsNotExist(err) {
-			fmt.Println("Config: Not found (run 'tokman config --create')")
+			fmt.Println("Config: Not found (run 'tok config --create')")
 		} else {
 			fmt.Println("Config: Found")
 		}

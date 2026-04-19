@@ -25,7 +25,7 @@ func TestConfigPath(t *testing.T) {
 		{
 			name:     "XDG override",
 			xdg:      "/custom/config",
-			expected: "/custom/config/tokman/config.toml",
+			expected: "/custom/config/tok/config.toml",
 		},
 	}
 
@@ -77,7 +77,7 @@ func TestDataPath(t *testing.T) {
 		os.Unsetenv("APPDATA")
 
 		result := DataPath()
-		expected := "/custom/data/tokman"
+		expected := "/custom/data/tok"
 		if result != expected {
 			t.Errorf("DataPath() = %q, want %q", result, expected)
 		}
@@ -125,8 +125,8 @@ func TestLogPath(t *testing.T) {
 	if !filepath.IsAbs(result) {
 		t.Errorf("LogPath() = %q, expected absolute path", result)
 	}
-	if filepath.Base(result) != "tokman.log" {
-		t.Errorf("LogPath() = %q, expected to end with tokman.log", result)
+	if filepath.Base(result) != "tok.log" {
+		t.Errorf("LogPath() = %q, expected to end with tok.log", result)
 	}
 }
 

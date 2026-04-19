@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/contextread"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/contextread"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var (
@@ -39,13 +39,13 @@ var contextCmd = &cobra.Command{
 var contextReadCmd = &cobra.Command{
 	Use:   "read <file>",
 	Short: "Produce smart, budgeted file context",
-	Long: `Read a file using TokMan's smart context modes.
+	Long: `Read a file using tok's smart context modes.
 
 Examples:
-  tokman ctx read main.go --mode auto
-  tokman ctx read main.go --mode signatures --max-tokens 300
-  tokman ctx read main.go --start-line 20 --end-line 80
-  tokman ctx read main.go --mode graph --related-files 4`,
+  tok ctx read main.go --mode auto
+  tok ctx read main.go --mode signatures --max-tokens 300
+  tok ctx read main.go --start-line 20 --end-line 80
+  tok ctx read main.go --mode graph --related-files 4`,
 	Args: cobra.ExactArgs(1),
 	RunE: runContextRead,
 }
@@ -53,11 +53,11 @@ Examples:
 var contextDeltaCmd = &cobra.Command{
 	Use:   "delta <file>",
 	Short: "Show what changed since the last saved file snapshot",
-	Long: `Compare a file to TokMan's last saved snapshot and emit a compact delta.
+	Long: `Compare a file to tok's last saved snapshot and emit a compact delta.
 
 Examples:
-  tokman ctx delta main.go
-  tokman ctx delta main.go --max-tokens 200`,
+  tok ctx delta main.go
+  tok ctx delta main.go --max-tokens 200`,
 	Args: cobra.ExactArgs(1),
 	RunE: runContextDelta,
 }
@@ -88,7 +88,7 @@ func runContext(cmd *cobra.Command, args []string) error {
 	fmt.Println()
 
 	if savings.TotalCommands == 0 {
-		fmt.Println("No data yet. Run some commands through tokman first.")
+		fmt.Println("No data yet. Run some commands through tok first.")
 		return nil
 	}
 
@@ -123,7 +123,7 @@ func runContext(cmd *cobra.Command, args []string) error {
 		{"Gemini 1.5 (1M)", 1000000},
 	}
 
-	fmt.Println("Context window capacity with tokman:")
+	fmt.Println("Context window capacity with tok:")
 	fmt.Printf("%-25s %12s %12s %10s\n", "Model", "Without", "With", "Extra")
 	fmt.Printf("%-25s %12s %12s %10s\n", "─────────────────────────", "────────────", "────────────", "──────────")
 
@@ -199,9 +199,9 @@ func emitContextFile(path string, opts contextread.Options) error {
 		fmt.Println()
 	}
 
-	commandName := "tokman ctx read"
+	commandName := "tok ctx read"
 	if strings.EqualFold(opts.Mode, "delta") {
-		commandName = "tokman ctx delta"
+		commandName = "tok ctx delta"
 	}
 	recordContextRead(commandName, path, rawContent, opts, originalTokens, filteredTokens, time.Since(start).Milliseconds())
 	return nil

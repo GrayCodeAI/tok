@@ -11,11 +11,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/simd"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/simd"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var mypyCmd = &cobra.Command{
@@ -26,9 +26,9 @@ var mypyCmd = &cobra.Command{
 Groups errors by file and shows error code summaries.
 
 Examples:
-  tokman mypy src/
-  tokman mypy --strict .
-  tokman mypy -p mypackage`,
+  tok mypy src/
+  tok mypy --strict .
+  tok mypy -p mypackage`,
 	RunE: runMypy,
 }
 
@@ -84,7 +84,7 @@ func runMypy(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("mypy %s", strings.Join(args, " ")), "tokman mypy", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("mypy %s", strings.Join(args, " ")), "tok mypy", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

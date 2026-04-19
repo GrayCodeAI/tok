@@ -12,10 +12,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
-// Report is TokMan's consolidated optimization audit view.
+// Report is tok's consolidated optimization audit view.
 type Report struct {
 	GeneratedAt      time.Time              `json:"generated_at"`
 	Days             int                    `json:"days"`
@@ -82,7 +82,7 @@ type QualityReport struct {
 	Signals []QualitySignal `json:"signals"`
 }
 
-// CheckpointPolicyReport mirrors imported checkpoint-trigger strategy in TokMan form.
+// CheckpointPolicyReport mirrors imported checkpoint-trigger strategy in tok form.
 type CheckpointPolicyReport struct {
 	RecommendedTriggers []string         `json:"recommended_triggers"`
 	ObservedBands       map[string]int64 `json:"observed_bands"`
@@ -851,14 +851,14 @@ func RenderHTML(path string, report *Report) error {
 		return err
 	}
 	const tmpl = `<!doctype html>
-<html><head><meta charset="utf-8"><title>TokMan Audit</title>
+<html><head><meta charset="utf-8"><title>tok Audit</title>
 <style>
 body{font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:24px;background:#f7f8fb;color:#111827}
 .card{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:14px}
 table{width:100%;border-collapse:collapse}th,td{padding:8px;border-bottom:1px solid #eee;text-align:left}
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;background:#eef2ff}
 </style></head><body>
-<h1>TokMan Audit</h1>
+<h1>tok Audit</h1>
 <div class="card"><b>Window:</b> {{.Days}} days | <b>Generated:</b> {{.GeneratedAt}}</div>
 <div class="card"><h2>Summary</h2>
 <p>Commands: {{.Summary.CommandCount}} | Original: {{.Summary.Original}} | Filtered: {{.Summary.Filtered}} | Saved: {{.Summary.Saved}}</p>

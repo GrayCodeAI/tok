@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var golangciCmd = &cobra.Command{
@@ -22,8 +22,8 @@ var golangciCmd = &cobra.Command{
 Groups issues by linter and provides compact summary.
 
 Examples:
-  tokman golangci-lint run ./...
-  tokman golangci-lint run --timeout 5m`,
+  tok golangci-lint run ./...
+  tok golangci-lint run --timeout 5m`,
 	DisableFlagParsing: true,
 	RunE:               runGolangci,
 }
@@ -59,7 +59,7 @@ func runGolangci(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("golangci-lint %s", strings.Join(args, " ")), "tokman golangci-lint", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("golangci-lint %s", strings.Join(args, " ")), "tok golangci-lint", originalTokens, filteredTokens)
 
 	return err
 }

@@ -33,7 +33,7 @@ type StoredEntry struct {
 	LayerStats   map[string]int `json:"layer_stats,omitempty"`
 }
 
-// NewReversibleStore creates a store in the tokman data directory.
+// NewReversibleStore creates a store in the tok data directory.
 func NewReversibleStore() *ReversibleStore {
 	baseDir := filepath.Join(reversibleDataPath(), "reversible")
 	if err := os.MkdirAll(baseDir, 0700); err != nil {
@@ -140,21 +140,21 @@ func (s *ReversibleStore) computeHash(content string) string {
 
 func reversibleDataPath() string {
 	if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
-		return filepath.Join(xdg, "tokman")
+		return filepath.Join(xdg, "tok")
 	}
 
 	if runtime.GOOS == "windows" {
 		if localAppData := os.Getenv("LOCALAPPDATA"); localAppData != "" {
-			return filepath.Join(localAppData, "tokman")
+			return filepath.Join(localAppData, "tok")
 		}
 		if appData := os.Getenv("APPDATA"); appData != "" {
-			return filepath.Join(appData, "tokman", "data")
+			return filepath.Join(appData, "tok", "data")
 		}
 	}
 
 	if home, err := os.UserHomeDir(); err == nil {
-		return filepath.Join(home, ".local", "share", "tokman")
+		return filepath.Join(home, ".local", "share", "tok")
 	}
 
-	return filepath.Join(os.TempDir(), "tokman-data")
+	return filepath.Join(os.TempDir(), "tok-data")
 }

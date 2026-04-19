@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // GraphCoTFilter keeps high-centrality reasoning lines in long traces.

@@ -100,7 +100,7 @@ func TestRequiresConfirmation(t *testing.T) {
 	}
 }
 
-// TestRewriteCommandE2E tests the actual tokman rewrite command via subprocess
+// TestRewriteCommandE2E tests the actual tok rewrite command via subprocess
 func TestRewriteCommandE2E(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -111,8 +111,8 @@ func TestRewriteCommandE2E(t *testing.T) {
 		{
 			name:       "git status rewrites",
 			command:    "git status",
-			expectCode: 0, // ExitRewriteAllow - will rewrite to tokman git status
-			expectOut:  "tokman git status",
+			expectCode: 0, // ExitRewriteAllow - will rewrite to tok git status
+			expectOut:  "tok git status",
 		},
 		{
 			name:       "dangerous rm denied",
@@ -124,22 +124,22 @@ func TestRewriteCommandE2E(t *testing.T) {
 			name:       "sudo asks",
 			command:    "sudo apt upgrade",
 			expectCode: 3, // ExitRewriteAsk
-			expectOut:  "tokman sudo apt upgrade",
+			expectOut:  "tok sudo apt upgrade",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Build the binary first
-			buildCmd := exec.Command("go", "build", "-o", "/tmp/tokman-test", "../../cmd/tokman")
+			buildCmd := exec.Command("go", "build", "-o", "/tmp/tok-test", "../../cmd/tok")
 			buildCmd.Dir = "../.."
 			if err := buildCmd.Run(); err != nil {
-				t.Skipf("Could not build tokman: %v", err)
+				t.Skipf("Could not build tok: %v", err)
 				return
 			}
 
-			// Run tokman rewrite
-			cmd := exec.Command("/tmp/tokman-test", "rewrite", tt.command)
+			// Run tok rewrite
+			cmd := exec.Command("/tmp/tok-test", "rewrite", tt.command)
 			out, err := cmd.Output()
 
 			// Get actual exit code

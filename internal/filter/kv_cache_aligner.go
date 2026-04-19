@@ -4,7 +4,7 @@ import (
 	"hash/fnv"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 // KVCacheAligner implements KV-cache alignment for LLM prompt caching.

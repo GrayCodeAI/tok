@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 func (p *PipelineCoordinator) applyAdaptiveRouting(input string, stats *PipelineStats) string {

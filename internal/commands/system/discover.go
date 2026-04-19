@@ -13,9 +13,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/discover"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/discover"
 )
 
 var (
@@ -30,16 +30,16 @@ var discoverCmd = &cobra.Command{
 	Use:   "discover",
 	Short: "Discover missed token savings from Claude Code history",
 	Long: `Analyze Claude Code session history to find commands that could have
-used TokMan wrappers for token savings.
+used tok wrappers for token savings.
 
 Scans Claude Code JSONL session files to identify commands that weren't
 rewritten and estimates potential savings.
 
 Examples:
-  tokman discover                 # Scan current project
-  tokman discover --all           # Scan all projects
-  tokman discover --since 7       # Last 7 days only
-  tokman discover --format json   # JSON output`,
+  tok discover                 # Scan current project
+  tok discover --all           # Scan all projects
+  tok discover --since 7       # Last 7 days only
+  tok discover --format json   # JSON output`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runDiscoverEnhanced()
 	},
@@ -79,7 +79,7 @@ type DiscoveredCommand struct {
 	Command      string  `json:"command"`
 	Count        int     `json:"count"`
 	Category     string  `json:"category"`
-	TokManEquiv  string  `json:"tokman_equivalent,omitempty"`
+	tokEquiv  string  `json:"tok_equivalent,omitempty"`
 	EstSavings   float64 `json:"estimated_savings_pct"`
 	TokensSaved  int     `json:"tokens_saved,omitempty"`
 	SupportLevel string  `json:"support_level,omitempty"`
@@ -89,16 +89,16 @@ type DiscoveredCommand struct {
 type DiscoverResult struct {
 	SessionsScanned   int                 `json:"sessions_scanned"`
 	TotalCommands     int                 `json:"total_commands"`
-	AlreadyTokMan     int                 `json:"already_tokman"`
+	Alreadytok     int                 `json:"already_tok"`
 	SupportedMissed   []DiscoveredCommand `json:"supported_missed"`
 	PassthroughMissed []DiscoveredCommand `json:"passthrough_missed,omitempty"`
 	Unsupported       []DiscoveredCommand `json:"unsupported,omitempty"`
 	ParseErrors       int                 `json:"parse_errors"`
-	TokManBypassCount int                 `json:"tokman_bypass_count,omitempty"`
-	TokManBypassCmds  []string            `json:"tokman_bypass_commands,omitempty"`
+	tokBypassCount int                 `json:"tok_bypass_count,omitempty"`
+	tokBypassCmds  []string            `json:"tok_bypass_commands,omitempty"`
 }
 
-// runDiscoverEnhanced scans Claude Code JSONL files for missed TokMan usage.
+// runDiscoverEnhanced scans Claude Code JSONL files for missed tok usage.
 func runDiscoverEnhanced() error {
 	sessions, err := findClaudeSessions()
 	if err != nil {
@@ -141,7 +141,7 @@ func runDiscoverEnhanced() error {
 	supportedMap := make(map[string]*DiscoveredCommand)
 	passthroughMap := make(map[string]*DiscoveredCommand)
 	unsupportedMap := make(map[string]*DiscoveredCommand)
-	tokmanBypassMap := make(map[string]int)
+	tokBypassMap := make(map[string]int)
 
 	for _, sessionPath := range sessions {
 		commands, err := extractCommandsFromSession(sessionPath)
@@ -159,15 +159,15 @@ func runDiscoverEnhanced() error {
 				if hasDisabledPrefix(part) {
 					actualCmd := stripDisabledPrefix(part)
 					if isSupportedCommand(actualCmd) {
-						result.TokManBypassCount++
-						tokmanBypassMap[actualCmd]++
+						result.tokBypassCount++
+						tokBypassMap[actualCmd]++
 					}
 					continue
 				}
 
-				// Check if already using TokMan
-				if strings.HasPrefix(strings.TrimSpace(part), "tokman ") {
-					result.AlreadyTokMan++
+				// Check if already using tok
+				if strings.HasPrefix(strings.TrimSpace(part), "tok ") {
+					result.Alreadytok++
 					continue
 				}
 
@@ -186,7 +186,7 @@ func runDiscoverEnhanced() error {
 							Command:      part,
 							Count:        1,
 							Category:     cat,
-							TokManEquiv:  rewritten,
+							tokEquiv:  rewritten,
 							EstSavings:   savings,
 							TokensSaved:  estimateTokens(part) * int(savings) / 100,
 							SupportLevel: string(discover.SupportOptimized),
@@ -202,7 +202,7 @@ func runDiscoverEnhanced() error {
 							Command:      part,
 							Count:        1,
 							Category:     cat,
-							TokManEquiv:  rewritten,
+							tokEquiv:  rewritten,
 							SupportLevel: string(discover.SupportPassthrough),
 						}
 					}
@@ -246,10 +246,10 @@ func runDiscoverEnhanced() error {
 	})
 
 	// Get top bypass commands
-	for cmd, count := range tokmanBypassMap {
-		result.TokManBypassCmds = append(result.TokManBypassCmds, fmt.Sprintf("%s (%dx)", cmd, count))
+	for cmd, count := range tokBypassMap {
+		result.tokBypassCmds = append(result.tokBypassCmds, fmt.Sprintf("%s (%dx)", cmd, count))
 	}
-	sort.Strings(result.TokManBypassCmds)
+	sort.Strings(result.tokBypassCmds)
 
 	// Limit results
 	if len(result.SupportedMissed) > discoverLimit {
@@ -435,12 +435,12 @@ func printDiscoverText(result *DiscoverResult) error {
 	cyan := color.New(color.FgCyan).SprintFunc()
 
 	fmt.Println()
-	fmt.Printf("%s\n", yellow("🔍 TokMan Discovery Report"))
+	fmt.Printf("%s\n", yellow("🔍 tok Discovery Report"))
 	fmt.Println(strings.Repeat("═", 60))
 	fmt.Printf("Sessions scanned: %d\n", result.SessionsScanned)
 	fmt.Printf("Total commands:   %d\n", result.TotalCommands)
-	fmt.Printf("Already TokMan:   %d (%.0f%%)\n", result.AlreadyTokMan,
-		float64(result.AlreadyTokMan)/float64(result.TotalCommands)*100)
+	fmt.Printf("Already tok:   %d (%.0f%%)\n", result.Alreadytok,
+		float64(result.Alreadytok)/float64(result.TotalCommands)*100)
 	fmt.Println()
 
 	if len(result.SupportedMissed) > 0 {
@@ -470,15 +470,15 @@ func printDiscoverText(result *DiscoverResult) error {
 				shared.Truncate(cmd.Command, 24),
 				cmd.Count,
 				cmd.Category,
-				shared.Truncate(cmd.TokManEquiv, 12),
+				shared.Truncate(cmd.tokEquiv, 12),
 			)
 		}
 		fmt.Println()
 	}
 
-	if result.TokManBypassCount > 0 {
-		fmt.Printf("%s %d\n", yellow("⚠️  TOKMAN_DISABLED bypasses detected:"), result.TokManBypassCount)
-		for _, cmd := range result.TokManBypassCmds {
+	if result.tokBypassCount > 0 {
+		fmt.Printf("%s %d\n", yellow("⚠️  TOKMAN_DISABLED bypasses detected:"), result.tokBypassCount)
+		for _, cmd := range result.tokBypassCmds {
 			fmt.Printf("   %s\n", cmd)
 		}
 		fmt.Println()
@@ -493,7 +493,7 @@ func printDiscoverText(result *DiscoverResult) error {
 		fmt.Println()
 	}
 
-	if len(result.SupportedMissed) == 0 && len(result.PassthroughMissed) == 0 && result.TokManBypassCount == 0 {
+	if len(result.SupportedMissed) == 0 && len(result.PassthroughMissed) == 0 && result.tokBypassCount == 0 {
 		fmt.Printf("%s\n", green("✓ All commands are optimized!"))
 	}
 
@@ -567,8 +567,8 @@ func runDiscover() error {
 		Opportunities: []DiscoveredCommand{},
 	}
 
-	// Known TokMan wrappers for analysis
-	tokmanWrappers := map[string]string{
+	// Known tok wrappers for analysis
+	tokWrappers := map[string]string{
 		"git":     "Git",
 		"gh":      "GitHub",
 		"cargo":   "Cargo",
@@ -598,8 +598,8 @@ func runDiscover() error {
 	for _, stat := range stats {
 		totalCommands += stat.ExecutionCount
 
-		// Check if this command was already using tokman
-		if strings.HasPrefix(stat.Command, "tokman ") {
+		// Check if this command was already using tok
+		if strings.HasPrefix(stat.Command, "tok ") {
 			continue // Already optimized
 		}
 
@@ -611,7 +611,7 @@ func runDiscover() error {
 		baseCmd := parts[0]
 
 		// Check if it's a known wrapper opportunity
-		if category, ok := tokmanWrappers[baseCmd]; ok {
+		if category, ok := tokWrappers[baseCmd]; ok {
 			result.Opportunities = append(result.Opportunities, DiscoveredCommand{
 				Command:     stat.Command,
 				Count:       stat.ExecutionCount,
@@ -658,7 +658,7 @@ func runDiscover() error {
 
 	// Text output
 	fmt.Println()
-	fmt.Printf("%s\n", green("🔍 TokMan Discovery Report"))
+	fmt.Printf("%s\n", green("🔍 tok Discovery Report"))
 	fmt.Println("════════════════════════════════════════════════════")
 	fmt.Println()
 
@@ -669,7 +669,7 @@ func runDiscover() error {
 	fmt.Println()
 
 	if len(result.Opportunities) > 0 {
-		fmt.Printf("  %s\n", yellow("Missed Opportunities (could use TokMan):"))
+		fmt.Printf("  %s\n", yellow("Missed Opportunities (could use tok):"))
 		fmt.Println("  ─────────────────────────────────────────")
 		for _, opp := range result.Opportunities {
 			pct := ""
@@ -682,7 +682,7 @@ func runDiscover() error {
 	}
 
 	if len(result.UnsupportedCmds) > 0 && shared.Verbose > 0 {
-		fmt.Printf("  %s\n", cyan("Unsupported Commands (frequent but no TokMan wrapper):"))
+		fmt.Printf("  %s\n", cyan("Unsupported Commands (frequent but no tok wrapper):"))
 		fmt.Println("  ─────────────────────────────────────────")
 		for _, cmd := range result.UnsupportedCmds {
 			fmt.Printf("    %-30s  %3dx\n", shared.Truncate(cmd.Command, 30), cmd.Count)

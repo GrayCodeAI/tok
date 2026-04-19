@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // PathShortenFilter aliases repeated long paths/identifiers for compactness.

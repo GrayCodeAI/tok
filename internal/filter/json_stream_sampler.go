@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // JSONSamplerFilter down-samples dense JSON line streams while preserving anchors.

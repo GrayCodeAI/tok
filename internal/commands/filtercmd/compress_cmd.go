@@ -9,26 +9,26 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // compressCmd implements Task #187: compression pipeline as a Unix pipe filter.
 // Usage:
 //
-//	echo "some text" | tokman compress
-//	cat big-output.txt | tokman compress --mode aggressive
-//	tokman compress --file input.txt --stats
+//	echo "some text" | tok compress
+//	cat big-output.txt | tok compress --mode aggressive
+//	tok compress --file input.txt --stats
 var compressCmd = &cobra.Command{
 	Use:   "compress [file]",
 	Short: "Compress text via stdin or file (Unix pipe filter)",
 	Long: `Read text from stdin (or a file) and write compressed output to stdout.
 Designed for use in Unix pipelines:
 
-  cat output.txt | tokman compress | llm-tool
-  tokman compress --mode aggressive < big_file.txt`,
+  cat output.txt | tok compress | llm-tool
+  tok compress --mode aggressive < big_file.txt`,
 	RunE: runCompress,
 }
 
@@ -107,7 +107,7 @@ func runCompress(cmd *cobra.Command, args []string) error {
 	if compressStats {
 		origTokens := core.EstimateTokens(input)
 		pct := stats.ReductionPercent
-		fmt.Fprintf(os.Stderr, "[tokman] %d → %d tokens (%.1f%% reduction, saved %s)\n",
+		fmt.Fprintf(os.Stderr, "[tok] %d → %d tokens (%.1f%% reduction, saved %s)\n",
 			origTokens,
 			stats.FinalTokens,
 			pct,

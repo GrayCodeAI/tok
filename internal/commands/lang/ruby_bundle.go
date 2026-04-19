@@ -6,9 +6,9 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 func runBundleCmd(args []string) error {
@@ -57,7 +57,7 @@ func runBundleInstallCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("bundle install", "tokman ruby bundle install", originalTokens, filteredTokens)
+	timer.Track("bundle install", "tok ruby bundle install", originalTokens, filteredTokens)
 
 	return err
 }
@@ -146,7 +146,7 @@ func runBundleUpdateCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("bundle update", "tokman ruby bundle update", originalTokens, filteredTokens)
+	timer.Track("bundle update", "tok ruby bundle update", originalTokens, filteredTokens)
 
 	return err
 }
@@ -198,7 +198,7 @@ func runBundleOutdatedCmd(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track("bundle outdated", "tokman ruby bundle outdated", originalTokens, filteredTokens)
+	timer.Track("bundle outdated", "tok ruby bundle outdated", originalTokens, filteredTokens)
 
 	return err
 }
@@ -257,7 +257,7 @@ func runBundlePassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("bundle %s", args[0]), "tokman ruby bundle", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("bundle %s", args[0]), "tok ruby bundle", originalTokens, filteredTokens)
 
 	return err
 }

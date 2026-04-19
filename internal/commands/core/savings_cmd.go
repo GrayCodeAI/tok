@@ -10,10 +10,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/telemetry"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var (
@@ -36,15 +36,15 @@ var gainCmd = &cobra.Command{
 	Long: `Display comprehensive token savings statistics with various views.
 
 Examples:
-  tokman gain                    # Default summary view
-  tokman gain --graph            # ASCII bar chart of last 30 days
-  tokman gain --daily            # Day-by-day breakdown
-  tokman gain --history          # Recent command history
-  tokman gain --format json      # JSON export
-  tokman gain --project          # Show only current project
-  tokman gain --quota pro        # Estimate quota usage (pro, 5x, 20x)`,
+  tok gain                    # Default summary view
+  tok gain --graph            # ASCII bar chart of last 30 days
+  tok gain --daily            # Day-by-day breakdown
+  tok gain --history          # Recent command history
+  tok gain --format json      # JSON export
+  tok gain --project          # Show only current project
+  tok gain --quota pro        # Estimate quota usage (pro, 5x, 20x)`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runGain,
 }
@@ -54,7 +54,7 @@ func runGain(cmd *cobra.Command, args []string) error {
 
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
 		fmt.Println("No tracking data found.")
-		fmt.Println("Run some commands through TokMan to start tracking token savings!")
+		fmt.Println("Run some commands through tok to start tracking token savings!")
 		fmt.Printf("\nExample: %s git status\n", os.Args[0])
 		return nil
 	}
@@ -108,9 +108,9 @@ func runGain(cmd *cobra.Command, args []string) error {
 
 func printGainText(summary *tracking.GainSummary, opts tracking.GainSummaryOptions) error {
 	// Print header
-	title := "TokMan Token Savings"
+	title := "tok Token Savings"
 	if opts.ProjectPath != "" {
-		title = "TokMan Token Savings (Project Scope)"
+		title = "tok Token Savings (Project Scope)"
 	}
 
 	fmt.Println()
@@ -423,7 +423,7 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 
 	fmt.Printf("  Tier usage:       [%s] %.1f%%\n", bar, usagePct)
 
-	// Savings from TokMan
+	// Savings from tok
 	savingsTokens := summary.TotalSaved
 	savingsPct := float64(0)
 	if inputTokens > 0 {
@@ -431,14 +431,14 @@ func printQuotaEstimation(summary *tracking.GainSummary, tier string) error {
 	}
 
 	fmt.Println()
-	fmt.Println(bold("TokMan Savings Impact:"))
+	fmt.Println(bold("tok Savings Impact:"))
 	fmt.Printf("  Tokens saved:     %s (%.1f%%)\n", green(formatTokensInt(savingsTokens)), savingsPct)
 
-	// Calculate effective cost without TokMan
+	// Calculate effective cost without tok
 	if savingsTokens > 0 {
-		effectiveWithoutTokMan := monthlyProjection + (savingsTokens / days * 30)
-		fmt.Printf("  Without TokMan:   ~%s tokens/month\n", formatTokensInt(effectiveWithoutTokMan))
-		fmt.Printf("  Effective tier:   %s\n", cyan(getTierForTokens(effectiveWithoutTokMan, tierLimits)))
+		effectiveWithouttok := monthlyProjection + (savingsTokens / days * 30)
+		fmt.Printf("  Without tok:   ~%s tokens/month\n", formatTokensInt(effectiveWithouttok))
+		fmt.Printf("  Effective tier:   %s\n", cyan(getTierForTokens(effectiveWithouttok, tierLimits)))
 	}
 
 	// Recommendation

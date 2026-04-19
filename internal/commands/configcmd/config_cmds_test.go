@@ -11,7 +11,7 @@ func TestConfigSetCreatesFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	t.Setenv("HOME", tmpDir)
 
-	configDir := filepath.Join(tmpDir, ".config", "tokman")
+	configDir := filepath.Join(tmpDir, ".config", "tok")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create config dir: %v", err)
 	}

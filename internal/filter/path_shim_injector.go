@@ -42,7 +42,7 @@ func (psi *PATHShimInjector) Install(commands []string) error {
 
 		shimPath := filepath.Join(psi.shimDir, cmd)
 		shimContent := fmt.Sprintf(`#!/bin/sh
-exec tokman %s "$@"
+exec tok %s "$@"
 `, cmd)
 		if err := os.WriteFile(shimPath, []byte(shimContent), 0700); err != nil {
 			return fmt.Errorf("failed to write shim for %q: %w", cmd, err)
@@ -132,7 +132,7 @@ func NewTaskRunnerWrapping(runner, filterCmd string) *TaskRunnerWrapping {
 	return &TaskRunnerWrapping{runner: runner, filterCmd: filterCmd}
 }
 
-// Wrap wraps a Makefile or Justfile for tokman filtering.
+// Wrap wraps a Makefile or Justfile for tok filtering.
 func (trw *TaskRunnerWrapping) Wrap(content string) string {
 	lines := strings.Split(content, "\n")
 	var result []string
@@ -146,9 +146,9 @@ func (trw *TaskRunnerWrapping) Wrap(content string) string {
 
 		// Wrap recipe lines
 		if strings.HasPrefix(trimmed, "\t") && trw.runner == "make" {
-			result = append(result, "\ttokman proxy "+trimmed[1:])
+			result = append(result, "\ttok proxy "+trimmed[1:])
 		} else if !strings.HasPrefix(trimmed, "#") && !strings.Contains(trimmed, ":") && trw.runner == "just" {
-			result = append(result, "tokman proxy "+trimmed)
+			result = append(result, "tok proxy "+trimmed)
 		} else {
 			result = append(result, line)
 		}

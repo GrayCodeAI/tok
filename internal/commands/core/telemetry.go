@@ -11,10 +11,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	telemetrylib "github.com/GrayCodeAI/tokman/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
+	telemetrylib "github.com/lakshmanpatel/tok/internal/telemetry"
 )
 
 var (
@@ -29,9 +29,9 @@ var (
 var telemetryCmd = &cobra.Command{
 	Use:   "telemetry",
 	Short: "Manage telemetry settings (GDPR-compliant)",
-	Long: `Manage TokMan telemetry collection settings.
+	Long: `Manage tok telemetry collection settings.
 
-TokMan collects anonymized usage data to improve the tool.
+tok collects anonymized usage data to improve the tool.
 All data collection is opt-in and GDPR-compliant.
 
 Collected data:
@@ -45,13 +45,13 @@ No data collected:
   - Personal information
 
 Examples:
-  tokman telemetry --status     # Check current telemetry status
-  tokman telemetry --enable     # Enable telemetry
-  tokman telemetry --disable    # Disable telemetry
-  tokman telemetry --forget     # Delete local telemetry data and consent
-  tokman telemetry --export data.json  # Export collected data`,
+  tok telemetry --status     # Check current telemetry status
+  tok telemetry --enable     # Enable telemetry
+  tok telemetry --disable    # Disable telemetry
+  tok telemetry --forget     # Delete local telemetry data and consent
+  tok telemetry --export data.json  # Export collected data`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runTelemetry,
 }
@@ -165,13 +165,13 @@ func enableTelemetry() error {
 	green := color.New(color.FgGreen).SprintFunc()
 	fmt.Printf("%s Telemetry enabled\n", green("✓"))
 	fmt.Println()
-	fmt.Println("TokMan will now collect anonymized usage data:")
+	fmt.Println("tok will now collect anonymized usage data:")
 	fmt.Println("  • Command frequency (without arguments)")
 	fmt.Println("  • Token savings statistics")
 	fmt.Println("  • Error patterns (without sensitive data)")
 	fmt.Println()
-	fmt.Println("You can disable this at any time with: tokman telemetry --disable")
-	fmt.Println("View your data with: tokman telemetry --export my-data.json")
+	fmt.Println("You can disable this at any time with: tok telemetry --disable")
+	fmt.Println("View your data with: tok telemetry --export my-data.json")
 
 	return nil
 }
@@ -192,8 +192,8 @@ func disableTelemetry() error {
 	yellow := color.New(color.FgYellow).SprintFunc()
 	fmt.Printf("%s Telemetry disabled\n", yellow("⚠"))
 	fmt.Println()
-	fmt.Println("TokMan will no longer collect usage data.")
-	fmt.Println("Previously collected data can be exported with: tokman telemetry --export")
+	fmt.Println("tok will no longer collect usage data.")
+	fmt.Println("Previously collected data can be exported with: tok telemetry --export")
 
 	return nil
 }
@@ -209,7 +209,7 @@ func showTelemetryStatus() error {
 	red := color.New(color.FgRed).SprintFunc()
 
 	fmt.Println()
-	fmt.Println(cyan("TokMan Telemetry Status"))
+	fmt.Println(cyan("tok Telemetry Status"))
 	fmt.Println(strings.Repeat("═", 40))
 
 	if cfg.Enabled {
@@ -252,10 +252,10 @@ func showTelemetryStatus() error {
 	fmt.Println("  ✓ No PII collected")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  tokman telemetry --enable    Enable telemetry")
-	fmt.Println("  tokman telemetry --disable   Disable telemetry")
-	fmt.Println("  tokman telemetry --forget    Delete local telemetry data")
-	fmt.Println("  tokman telemetry --export    Export your data")
+	fmt.Println("  tok telemetry --enable    Enable telemetry")
+	fmt.Println("  tok telemetry --disable   Disable telemetry")
+	fmt.Println("  tok telemetry --forget    Delete local telemetry data")
+	fmt.Println("  tok telemetry --export    Export your data")
 
 	return nil
 }

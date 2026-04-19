@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 const (
@@ -89,7 +89,7 @@ func getTeeDir(cfg *config.Config) (string, error) {
 		return cfg.Hooks.TeeDir, nil
 	}
 
-	// Default: ~/.local/share/tokman/tee/
+	// Default: ~/.local/share/tok/tee/
 	return filepath.Join(config.DataPath(), "tee"), nil
 }
 
@@ -270,7 +270,7 @@ func TeeRaw(raw string, commandSlug string, exitCode int) string {
 // TeeAndHint writes raw output to a tee file and returns a formatted hint.
 // Returns the hint string if file was written, empty string if skipped.
 //
-// Example output: "[full output: ~/.local/share/tokman/tee/1234567890_cargo_test.log]"
+// Example output: "[full output: ~/.local/share/tok/tee/1234567890_cargo_test.log]"
 func TeeAndHint(raw string, commandSlug string, exitCode int) string {
 	path := TeeRaw(raw, commandSlug, exitCode)
 	if path == "" {

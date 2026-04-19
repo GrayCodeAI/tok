@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var rubyCmd = &cobra.Command{
@@ -22,11 +22,11 @@ var rubyCmd = &cobra.Command{
 Provides compact output for rspec, rubocop, rake, bundle, and rails commands.
 
 Examples:
-  tokman ruby rspec
-  tokman ruby rubocop
-  tokman ruby rake test
-  tokman ruby bundle install
-  tokman ruby rails test`,
+  tok ruby rspec
+  tok ruby rubocop
+  tok ruby rake test
+  tok ruby bundle install
+  tok ruby rails test`,
 	DisableFlagParsing: true,
 	RunE:               runRuby,
 }
@@ -77,7 +77,7 @@ func runRubyPassthrough(args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("ruby %s", strings.Join(args, " ")), "tokman ruby", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("ruby %s", strings.Join(args, " ")), "tok ruby", originalTokens, filteredTokens)
 
 	return err
 }

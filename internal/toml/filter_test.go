@@ -3,7 +3,7 @@ package toml
 import (
 	"testing"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 func TestTOMLFilterEngine_Apply(t *testing.T) {

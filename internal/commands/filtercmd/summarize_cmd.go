@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // summarizeCmd generates tiered summaries (L0/L1/L2).
@@ -22,9 +22,9 @@ L1 (Structural): Sections, outline, hierarchy
 L2 (Deep): Semantic summary with key points
 
 Examples:
-  tokman filter summarize document.txt           # Auto-select tier
-  tokman filter summarize document.txt --tier=l2 # Force L2 deep summary
-  tokman filter summarize document.txt --json    # JSON output`,
+  tok filter summarize document.txt           # Auto-select tier
+  tok filter summarize document.txt --tier=l2 # Force L2 deep summary
+  tok filter summarize document.txt --json    # JSON output`,
 	Args: cobra.ExactArgs(1),
 	RunE: runSummarize,
 }

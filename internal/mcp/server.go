@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 // Server implements an MCP server
@@ -61,12 +61,12 @@ func (s *Server) RegisterTool(tool Tool, handler ToolHandler) error {
 	return nil
 }
 
-// registerBuiltinTools registers TokMan's built-in tools
+// registerBuiltinTools registers tok's built-in tools
 func (s *Server) registerBuiltinTools() {
-	// Tool: tokman_filter
+	// Tool: tok_filter
 	s.RegisterTool(Tool{
-		Name:        "tokman_filter",
-		Description: "Filter and compress text using TokMan's compression pipeline. Reduces token usage by 60-90%.",
+		Name:        "tok_filter",
+		Description: "Filter and compress text using tok's compression pipeline. Reduces token usage by 60-90%.",
 		InputSchema: json.RawMessage(`{
 			"type": "object",
 			"properties": {
@@ -93,9 +93,9 @@ func (s *Server) registerBuiltinTools() {
 		}`),
 	}, s.handleFilter)
 
-	// Tool: tokman_compress_file
+	// Tool: tok_compress_file
 	s.RegisterTool(Tool{
-		Name:        "tokman_compress_file",
+		Name:        "tok_compress_file",
 		Description: "Read and compress a file. Returns filtered content with token savings report.",
 		InputSchema: json.RawMessage(`{
 			"type": "object",
@@ -119,9 +119,9 @@ func (s *Server) registerBuiltinTools() {
 		}`),
 	}, s.handleCompressFile)
 
-	// Tool: tokman_analyze_output
+	// Tool: tok_analyze_output
 	s.RegisterTool(Tool{
-		Name:        "tokman_analyze_output",
+		Name:        "tok_analyze_output",
 		Description: "Analyze command output structure without filtering. Returns metrics on what would be filtered.",
 		InputSchema: json.RawMessage(`{
 			"type": "object",
@@ -135,19 +135,19 @@ func (s *Server) registerBuiltinTools() {
 		}`),
 	}, s.handleAnalyzeOutput)
 
-	// Tool: tokman_get_stats
+	// Tool: tok_get_stats
 	s.RegisterTool(Tool{
-		Name:        "tokman_get_stats",
-		Description: "Get TokMan usage statistics including total tokens saved and compression ratio.",
+		Name:        "tok_get_stats",
+		Description: "Get tok usage statistics including total tokens saved and compression ratio.",
 		InputSchema: json.RawMessage(`{
 			"type": "object",
 			"properties": {}
 		}`),
 	}, s.handleGetStats)
 
-	// Tool: tokman_explain_layers
+	// Tool: tok_explain_layers
 	s.RegisterTool(Tool{
-		Name:        "tokman_explain_layers",
+		Name:        "tok_explain_layers",
 		Description: "Explain what each compression layer does and which are enabled.",
 		InputSchema: json.RawMessage(`{
 			"type": "object",

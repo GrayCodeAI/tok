@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/compression"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/compression"
 )
 
 func init() {
@@ -22,8 +22,8 @@ var compareCmd = &cobra.Command{
 	Long: `Compare different compression algorithms (Brotli, Gzip) at various levels.
 
 Shows compression ratio, speed, and space saved for each algorithm.`,
-	Example: `  tokman compression-compare file.txt
-  cat file.txt | tokman compression-compare`,
+	Example: `  tok compression-compare file.txt
+  cat file.txt | tok compression-compare`,
 	RunE: runCompare,
 }
 

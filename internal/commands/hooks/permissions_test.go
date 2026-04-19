@@ -69,7 +69,7 @@ func TestBuildCopilotVSCodeResponse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			checkCommandPermissions = func(string) PermissionVerdict { return tt.verdict }
-			out := buildCopilotVSCodeResponse("git status", "tokman git status")
+			out := buildCopilotVSCodeResponse("git status", "tok git status")
 			hookOutput := out["hookSpecificOutput"].(map[string]any)
 			if hookOutput["permissionDecision"] != tt.want {
 				t.Fatalf("permissionDecision = %v, want %s", hookOutput["permissionDecision"], tt.want)

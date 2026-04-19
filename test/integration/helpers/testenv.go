@@ -19,7 +19,7 @@ type TestEnvironment struct {
 func NewTestEnvironment(t *testing.T) *TestEnvironment {
 	t.Helper()
 
-	rootDir, err := os.MkdirTemp("", "tokman-integration-*")
+	rootDir, err := os.MkdirTemp("", "tok-integration-*")
 	if err != nil {
 		t.Fatalf("Failed to create test directory: %v", err)
 	}

@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "COMI: Coarse-to-fine Context Compression via Marginal Information Gain"

@@ -10,11 +10,11 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/telemetry"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // genericTestCmd provides a generic test wrapper
@@ -33,9 +33,9 @@ and runs it with optimized output. Supports:
 - Ruby (rspec, rake test)
 
 Examples:
-  tokman test-runner cargo test      # Run Rust tests
-  tokman test-runner npm test        # Run npm tests
-  tokman test-runner                 # Auto-detect and run tests`,
+  tok test-runner cargo test      # Run Rust tests
+  tok test-runner npm test        # Run npm tests
+  tok test-runner                 # Auto-detect and run tests`,
 	DisableFlagParsing: true,
 	RunE:               runGenericTest,
 }
@@ -312,7 +312,7 @@ func runPassthroughTest(command string, args []string, timer *tracking.TimedExec
 	// Track usage
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fullCommand, "tokman test", originalTokens, filteredTokens)
+	timer.Track(fullCommand, "tok test", originalTokens, filteredTokens)
 
 	return err
 }

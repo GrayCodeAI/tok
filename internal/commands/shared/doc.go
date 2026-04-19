@@ -1,4 +1,4 @@
-// Package shared provides shared state and configuration for TokMan CLI commands.
+// Package shared provides shared state and configuration for tok CLI commands.
 //
 // The shared package centralizes CLI flag state management through the AppState
 // struct, replacing global variables with a testable, concurrent design.

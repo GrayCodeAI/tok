@@ -8,9 +8,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var (
@@ -38,16 +38,16 @@ This gives you an advantage over tools that process files independently.
 
 Examples:
   # Merge all .go files in current directory
-  tokman merge *.go
+  tok merge *.go
 
   # Merge recursively with budget
-  tokman merge -r --max-tokens 5000 src/
+  tok merge -r --max-tokens 5000 src/
 
   # Intelligent merging (analyzes dependencies)
-  tokman merge --intelligent src/*.go
+  tok merge --intelligent src/*.go
 
   # Custom format
-  tokman merge --format xml src/*.go`,
+  tok merge --format xml src/*.go`,
 	RunE: runMerge,
 }
 

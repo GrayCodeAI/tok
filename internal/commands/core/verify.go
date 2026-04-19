@@ -8,9 +8,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/integrity"
 )
 
 var verifyRequireAll bool
@@ -18,9 +18,9 @@ var verifyRequireAll bool
 var verifyCmd = &cobra.Command{
 	Use:   "verify",
 	Short: "Verify hook integrity",
-	Long: `Verify the integrity of the TokMan hook script.
+	Long: `Verify the integrity of the tok hook script.
 
-This command checks that the hook file (~/.claude/hooks/tokman-rewrite.sh)
+This command checks that the hook file (~/.claude/hooks/tok-rewrite.sh)
 matches its stored SHA-256 hash to detect any unauthorized modifications.
 
 The integrity check protects against command injection attacks where
@@ -68,10 +68,10 @@ func runVerify(cmd *cobra.Command, args []string) error {
 		fmt.Fprintf(os.Stderr, "  Expected: %s\n", result.Expected)
 		fmt.Fprintf(os.Stderr, "  Actual:   %s\n", result.Actual)
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "  The hook file has been modified outside of `tokman init`.")
+		fmt.Fprintln(os.Stderr, "  The hook file has been modified outside of `tok init`.")
 		fmt.Fprintln(os.Stderr, "  This could indicate tampering or a manual edit.")
 		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "  To restore: tokman init")
+		fmt.Fprintln(os.Stderr, "  To restore: tok init")
 		fmt.Fprintf(os.Stderr, "  To inspect: cat %s\n", result.HookPath)
 		allPassed = false
 		if !verifyRequireAll {
@@ -81,24 +81,24 @@ func runVerify(cmd *cobra.Command, args []string) error {
 	case integrity.StatusNoBaseline:
 		fmt.Printf("%s  no baseline hash found\n", yellow("WARN"))
 		fmt.Println("      Hook exists but was installed before integrity checks.")
-		fmt.Println("      Run `tokman init` to establish baseline.")
+		fmt.Println("      Run `tok init` to establish baseline.")
 		allPassed = false
 
 	case integrity.StatusNotInstalled:
-		fmt.Printf("%s  TokMan hook not installed\n", yellow("SKIP"))
-		fmt.Println("      Run `tokman init` to install.")
+		fmt.Printf("%s  tok hook not installed\n", yellow("SKIP"))
+		fmt.Println("      Run `tok init` to install.")
 		allPassed = false
 
 	case integrity.StatusOrphanedHash:
 		fmt.Fprintf(os.Stderr, "%s  hash file exists but hook is missing\n", yellow("WARN"))
-		fmt.Fprintln(os.Stderr, "      Run `tokman init` to reinstall.")
+		fmt.Fprintln(os.Stderr, "      Run `tok init` to reinstall.")
 		allPassed = false
 
 	case integrity.StatusOutdated:
 		fmt.Printf("%s  hook is outdated\n", yellow("WARN"))
 		fmt.Printf("      Installed version: %d\n", result.HookVersion)
 		fmt.Printf("      Required version:  %d\n", result.RequiredVersion)
-		fmt.Println("      Run `tokman init --claude` to refresh the generated hook.")
+		fmt.Println("      Run `tok init --claude` to refresh the generated hook.")
 		allPassed = false
 	}
 

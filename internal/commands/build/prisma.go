@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var prismaCmd = &cobra.Command{
@@ -27,10 +27,10 @@ Specialized filters for:
   - prisma validate: Compact validation
 
 Examples:
-  tokman prisma generate
-  tokman prisma migrate dev --name init
-  tokman prisma db push
-  tokman prisma validate`,
+  tok prisma generate
+  tok prisma migrate dev --name init
+  tok prisma db push
+  tok prisma validate`,
 	DisableFlagParsing: true,
 	RunE:               runPrisma,
 }
@@ -84,7 +84,7 @@ func runPrisma(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("prisma %s", strings.Join(args, " ")), "tokman prisma", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("prisma %s", strings.Join(args, " ")), "tok prisma", originalTokens, filteredTokens)
 
 	return err
 }

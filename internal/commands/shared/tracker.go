@@ -3,8 +3,8 @@ package shared
 import (
 	"fmt"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 // GetDatabasePath returns the effective tracking database path using the

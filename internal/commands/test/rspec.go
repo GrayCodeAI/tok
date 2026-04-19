@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var rspecCmd = &cobra.Command{
@@ -26,9 +26,9 @@ Injects --format json for structured output, shows only failures.
 Falls back to text parsing when JSON is unavailable.
 
 Examples:
-  tokman rspec
-  tokman rspec spec/models/
-  tokman rspec spec/models/user_spec.rb:15`,
+  tok rspec
+  tok rspec spec/models/
+  tok rspec spec/models/user_spec.rb:15`,
 	DisableFlagParsing: true,
 	RunE:               runRspec,
 }
@@ -123,7 +123,7 @@ func runRspec(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("rspec %s", strings.Join(args, " ")), "tokman rspec", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("rspec %s", strings.Join(args, " ")), "tok rspec", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

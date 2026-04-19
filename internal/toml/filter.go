@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/simd"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/simd"
 )
 
 // TOMLFilterEngine applies TOML-defined filter rules to output

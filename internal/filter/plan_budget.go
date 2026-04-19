@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // PlanBudgetFilter applies dynamic test-time budget allocation based on input difficulty.

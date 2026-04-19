@@ -11,9 +11,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var (
@@ -27,24 +27,24 @@ var (
 var ccEconCmd = &cobra.Command{
 	Use:   "cc-economics",
 	Short: "Claude Code economics: spending vs savings analysis",
-	Long: `Analyze the economics of using Claude Code with TokMan.
+	Long: `Analyze the economics of using Claude Code with tok.
 
 Compares your Claude Code API spending (via ccusage) with the token savings
-achieved by using TokMan's compression pipeline.
+achieved by using tok's compression pipeline.
 
 Shows:
 - Claude Code API costs (input/output/cache tokens)
-- TokMan token savings (tokens filtered/compressed)
+- tok token savings (tokens filtered/compressed)
 - Effective cost reduction percentage
 - ROI analysis
 
 Examples:
-  tokman cc-economics --daily
-  tokman cc-economics --weekly
-  tokman cc-economics --monthly
-  tokman cc-economics --all`,
+  tok cc-economics --daily
+  tok cc-economics --weekly
+  tok cc-economics --monthly
+  tok cc-economics --all`,
 	Annotations: map[string]string{
-		"tokman:skip_integrity": "true",
+		"tok:skip_integrity": "true",
 	},
 	RunE: runCcEconomics,
 }
@@ -69,8 +69,8 @@ type CcUsagePeriod struct {
 	TotalCost           float64 `json:"totalCost"`
 }
 
-// TokManSavings represents TokMan savings for a period
-type TokManSavings struct {
+// tokSavings represents tok savings for a period
+type tokSavings struct {
 	Date         string `json:"date"`
 	Commands     int    `json:"commands"`
 	SavedTokens  uint64 `json:"savedTokens"`
@@ -78,11 +78,11 @@ type TokManSavings struct {
 	FilteredSize uint64 `json:"filteredSize"`
 }
 
-// EconomicsReport combines ccusage and TokMan data
+// EconomicsReport combines ccusage and tok data
 type EconomicsReport struct {
 	Period         string        `json:"period"`
 	CcUsage        CcUsagePeriod `json:"ccUsage"`
-	TokManSavings  TokManSavings `json:"tokManSavings"`
+	tokSavings  tokSavings `json:"tokManSavings"`
 	EffectiveCost  float64       `json:"effectiveCost"`
 	SavingsPercent float64       `json:"savingsPercent"`
 }
@@ -106,20 +106,20 @@ func runCcEconomics(cmd *cobra.Command, args []string) error {
 	// Get ccusage data
 	ccusageData, err := fetchCcusageData(granularities)
 	if err != nil {
-		// Don't fail if ccusage is not available, just show TokMan data
+		// Don't fail if ccusage is not available, just show tok data
 		if shared.Verbose > 0 {
 			fmt.Fprintf(os.Stderr, "Note: ccusage not available: %v\n", err)
 		}
 	}
 
-	// Get TokMan savings data
-	tokmanData, err := fetchTokManSavings(granularities)
+	// Get tok savings data
+	tokData, err := fetchtokSavings(granularities)
 	if err != nil {
-		return fmt.Errorf("failed to fetch TokMan savings: %w", err)
+		return fmt.Errorf("failed to fetch tok savings: %w", err)
 	}
 
 	// Generate reports
-	reports := generateEconomicsReports(ccusageData, tokmanData)
+	reports := generateEconomicsReports(ccusageData, tokData)
 
 	// Output
 	switch ccEconFormat {
@@ -234,8 +234,8 @@ func parseCcusageOutput(jsonStr, granularity string) ([]CcUsagePeriod, error) {
 	return periods, nil
 }
 
-func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, error) {
-	result := make(map[string][]TokManSavings)
+func fetchtokSavings(granularities []string) (map[string][]tokSavings, error) {
+	result := make(map[string][]tokSavings)
 
 	dbPath := config.DatabasePath()
 	if _, err := os.Stat(dbPath); os.IsNotExist(err) {
@@ -273,16 +273,16 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 		`)
 		if err == nil {
 			defer rows.Close()
-			var daily []TokManSavings
+			var daily []tokSavings
 			for rows.Next() {
-				var s TokManSavings
+				var s tokSavings
 				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
-					return nil, fmt.Errorf("scan daily TokMan savings: %w", err)
+					return nil, fmt.Errorf("scan daily tok savings: %w", err)
 				}
 				daily = append(daily, s)
 			}
 			if err := rows.Err(); err != nil {
-				return nil, fmt.Errorf("iterate daily TokMan savings: %w", err)
+				return nil, fmt.Errorf("iterate daily tok savings: %w", err)
 			}
 			result["daily"] = daily
 		}
@@ -304,16 +304,16 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 		`)
 		if err == nil {
 			defer rows.Close()
-			var weekly []TokManSavings
+			var weekly []tokSavings
 			for rows.Next() {
-				var s TokManSavings
+				var s tokSavings
 				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
-					return nil, fmt.Errorf("scan weekly TokMan savings: %w", err)
+					return nil, fmt.Errorf("scan weekly tok savings: %w", err)
 				}
 				weekly = append(weekly, s)
 			}
 			if err := rows.Err(); err != nil {
-				return nil, fmt.Errorf("iterate weekly TokMan savings: %w", err)
+				return nil, fmt.Errorf("iterate weekly tok savings: %w", err)
 			}
 			result["weekly"] = weekly
 		}
@@ -335,16 +335,16 @@ func fetchTokManSavings(granularities []string) (map[string][]TokManSavings, err
 		`)
 		if err == nil {
 			defer rows.Close()
-			var monthly []TokManSavings
+			var monthly []tokSavings
 			for rows.Next() {
-				var s TokManSavings
+				var s tokSavings
 				if err := rows.Scan(&s.Date, &s.Commands, &s.SavedTokens, &s.OriginalSize, &s.FilteredSize); err != nil {
-					return nil, fmt.Errorf("scan monthly TokMan savings: %w", err)
+					return nil, fmt.Errorf("scan monthly tok savings: %w", err)
 				}
 				monthly = append(monthly, s)
 			}
 			if err := rows.Err(); err != nil {
-				return nil, fmt.Errorf("iterate monthly TokMan savings: %w", err)
+				return nil, fmt.Errorf("iterate monthly tok savings: %w", err)
 			}
 			result["monthly"] = monthly
 		}
@@ -362,36 +362,36 @@ func contains(slice []string, item string) bool {
 	return false
 }
 
-func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, tokmanSavings map[string][]TokManSavings) []EconomicsReport {
+func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, savingsData map[string][]tokSavings) []EconomicsReport {
 	var reports []EconomicsReport
 
 	// Combine data by period
 	for granularity, ccPeriods := range ccusageData {
-		tokmanPeriods := tokmanSavings[granularity]
+		tokPeriods := savingsData[granularity]
 
-		// Create lookup map for TokMan data
-		tokmanMap := make(map[string]TokManSavings)
-		for _, t := range tokmanPeriods {
-			tokmanMap[t.Date] = t
+		// Create lookup map for tok data
+		tokMap := make(map[string]tokSavings)
+		for _, t := range tokPeriods {
+			tokMap[t.Date] = t
 		}
 
 		for _, cc := range ccPeriods {
-			tokman := tokmanMap[cc.Date]
+			tok := tokMap[cc.Date]
 
-			// Calculate effective cost (what cost would be without TokMan)
-			tokmanCompressionRatio := 0.0
-			if tokman.OriginalSize > 0 {
-				tokmanCompressionRatio = float64(tokman.SavedTokens) / float64(tokman.OriginalSize)
+			// Calculate effective cost (what cost would be without tok)
+			tokCompressionRatio := 0.0
+			if tok.OriginalSize > 0 {
+				tokCompressionRatio = float64(tok.SavedTokens) / float64(tok.OriginalSize)
 			}
 
 			// Estimate cost savings based on compression
 			// Assume input tokens would scale similarly
-			estimatedInputWithoutTokMan := float64(cc.InputTokens) / (1 - tokmanCompressionRatio)
-			if tokmanCompressionRatio >= 1 || tokmanCompressionRatio <= 0 {
-				estimatedInputWithoutTokMan = float64(cc.InputTokens)
+			estimatedInputWithouttok := float64(cc.InputTokens) / (1 - tokCompressionRatio)
+			if tokCompressionRatio >= 1 || tokCompressionRatio <= 0 {
+				estimatedInputWithouttok = float64(cc.InputTokens)
 			}
 
-			tokensSaved := uint64(estimatedInputWithoutTokMan - float64(cc.InputTokens))
+			tokensSaved := uint64(estimatedInputWithouttok - float64(cc.InputTokens))
 			costSaved := float64(tokensSaved) / float64(cc.TotalTokens) * cc.TotalCost
 			if cc.TotalTokens == 0 {
 				costSaved = 0
@@ -400,22 +400,22 @@ func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, tokmanSavi
 			report := EconomicsReport{
 				Period:         cc.Date,
 				CcUsage:        cc,
-				TokManSavings:  tokman,
+				tokSavings:  tok,
 				EffectiveCost:  costSaved,
-				SavingsPercent: tokmanCompressionRatio * 100,
+				SavingsPercent: tokCompressionRatio * 100,
 			}
 			reports = append(reports, report)
 		}
 	}
 
-	// If no ccusage data, just show TokMan savings
+	// If no ccusage data, just show tok savings
 	if len(ccusageData) == 0 {
-		for granularity, periods := range tokmanSavings {
+		for granularity, periods := range savingsData {
 			_ = granularity
 			for _, t := range periods {
 				report := EconomicsReport{
 					Period:         t.Date,
-					TokManSavings:  t,
+					tokSavings:  t,
 					SavingsPercent: 0,
 				}
 				if t.OriginalSize > 0 {
@@ -432,7 +432,7 @@ func generateEconomicsReports(ccusageData map[string][]CcUsagePeriod, tokmanSavi
 func outputText(reports []EconomicsReport, granularities []string) error {
 	if len(reports) == 0 {
 		fmt.Println("No economics data available yet.")
-		fmt.Println("Run some commands through TokMan and use ccusage to track Claude Code spending.")
+		fmt.Println("Run some commands through tok and use ccusage to track Claude Code spending.")
 		return nil
 	}
 
@@ -452,7 +452,7 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 		fmt.Println(strings.Repeat("─", 70))
 
 		var totalCcCost float64
-		var totalTokManTokens uint64
+		var totaltokTokens uint64
 		var totalCcTokens uint64
 
 		for _, r := range reports {
@@ -465,16 +465,16 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 					totalCcCost += r.CcUsage.TotalCost
 					totalCcTokens += r.CcUsage.TotalTokens
 				}
-				totalTokManTokens += r.TokManSavings.SavedTokens
+				totaltokTokens += r.tokSavings.SavedTokens
 
 				fmt.Printf("\n%s:\n", yellow(r.Period))
 				if r.CcUsage.TotalCost > 0 {
 					fmt.Printf("  Claude: %s tokens, $%.2f\n",
 						formatTokens(r.CcUsage.TotalTokens), r.CcUsage.TotalCost)
 				}
-				if r.TokManSavings.SavedTokens > 0 {
-					fmt.Printf("  TokMan: %s saved (%.1f%% compression)\n",
-						formatTokens(r.TokManSavings.SavedTokens), r.SavingsPercent)
+				if r.tokSavings.SavedTokens > 0 {
+					fmt.Printf("  tok: %s saved (%.1f%% compression)\n",
+						formatTokens(r.tokSavings.SavedTokens), r.SavingsPercent)
 				}
 			}
 		}
@@ -484,16 +484,16 @@ func outputText(reports []EconomicsReport, granularities []string) error {
 		if totalCcCost > 0 {
 			fmt.Printf("  CC Spend: $%.2f (%s tokens)\n", totalCcCost, formatTokens(totalCcTokens))
 		}
-		fmt.Printf("  TokMan Savings: %s tokens\n", formatTokens(totalTokManTokens))
-		if totalCcCost > 0 && totalTokManTokens > 0 && totalCcTokens > 0 {
-			efficiency := float64(totalTokManTokens) / float64(totalCcTokens) * 100
+		fmt.Printf("  tok Savings: %s tokens\n", formatTokens(totaltokTokens))
+		if totalCcCost > 0 && totaltokTokens > 0 && totalCcTokens > 0 {
+			efficiency := float64(totaltokTokens) / float64(totalCcTokens) * 100
 			fmt.Printf("  Efficiency: %s tokens saved per token spent\n",
 				green(fmt.Sprintf("%.2fx", efficiency)))
 		}
 	}
 
 	fmt.Println()
-	fmt.Println(green("✓ TokMan reduces your Claude Code token consumption"))
+	fmt.Println(green("✓ tok reduces your Claude Code token consumption"))
 	fmt.Println()
 
 	return nil
@@ -506,7 +506,7 @@ func outputJson(reports []EconomicsReport) error {
 }
 
 func outputCsv(reports []EconomicsReport) error {
-	fmt.Println("period,cc_input_tokens,cc_output_tokens,cc_cache_tokens,cc_total_tokens,cc_cost,tokman_commands,tokman_saved_tokens,tokman_original_size,tokman_filtered_size,effective_cost,savings_percent")
+	fmt.Println("period,cc_input_tokens,cc_output_tokens,cc_cache_tokens,cc_total_tokens,cc_cost,tok_commands,tok_saved_tokens,tok_original_size,tok_filtered_size,effective_cost,savings_percent")
 
 	for _, r := range reports {
 		fmt.Printf("%s,%d,%d,%d,%d,%.2f,%d,%d,%d,%d,%.2f,%.2f\n",
@@ -516,10 +516,10 @@ func outputCsv(reports []EconomicsReport) error {
 			r.CcUsage.CacheCreationTokens+r.CcUsage.CacheReadTokens,
 			r.CcUsage.TotalTokens,
 			r.CcUsage.TotalCost,
-			r.TokManSavings.Commands,
-			r.TokManSavings.SavedTokens,
-			r.TokManSavings.OriginalSize,
-			r.TokManSavings.FilteredSize,
+			r.tokSavings.Commands,
+			r.tokSavings.SavedTokens,
+			r.tokSavings.OriginalSize,
+			r.tokSavings.FilteredSize,
 			r.EffectiveCost,
 			r.SavingsPercent,
 		)

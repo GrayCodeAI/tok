@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/core"
+	"github.com/lakshmanpatel/tok/internal/core"
 )
 
 // Paper: "TokenSkip: Controllable Chain-of-Thought Compression"
@@ -15,7 +15,7 @@ import (
 //   - ModeMinimal: truncate CoT to first 30% + summary marker
 //   - ModeAggressive: replace entire CoT block with a token-count stub
 //
-// Applicable when tokman wraps tools that emit LLM reasoning output
+// Applicable when tok wraps tools that emit LLM reasoning output
 // (e.g. claude --verbose, agent traces, reasoning model output).
 //
 // Patterns detected:

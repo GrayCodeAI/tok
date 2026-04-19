@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/session"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/session"
 )
 
 var (
@@ -76,11 +76,11 @@ Sessions provide:
 - Session snapshots and restoration
 
 Examples:
-  tokman session start                    # Start new session
-  tokman session start --agent=claude     # Start with specific agent
-  tokman session list                     # List sessions
-  tokman session active                   # Show active session
-  tokman session compact                  # Run PreCompact manually`,
+  tok session start                    # Start new session
+  tok session start --agent=claude     # Start with specific agent
+  tok session list                     # List sessions
+  tok session active                   # Show active session
+  tok session compact                  # Run PreCompact manually`,
 }
 
 func runSessionStart(cmd *cobra.Command, args []string) error {

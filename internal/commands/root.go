@@ -11,33 +11,33 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/integrity"
-	"github.com/GrayCodeAI/tokman/internal/telemetry"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/integrity"
+	"github.com/lakshmanpatel/tok/internal/telemetry"
+	"github.com/lakshmanpatel/tok/internal/utils"
 
 	// CLI commands
-	_ "github.com/GrayCodeAI/tokman/internal/commands/build"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/cloud"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/compression"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/configcmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/container"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/core"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/filtercmd"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/hooks"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/infra"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/lang"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/linter"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/output"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/pattern"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/pkgmgr"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/session"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/system"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/test"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/vcs"
-	_ "github.com/GrayCodeAI/tokman/internal/commands/web"
+	_ "github.com/lakshmanpatel/tok/internal/commands/build"
+	_ "github.com/lakshmanpatel/tok/internal/commands/cloud"
+	_ "github.com/lakshmanpatel/tok/internal/commands/compression"
+	_ "github.com/lakshmanpatel/tok/internal/commands/configcmd"
+	_ "github.com/lakshmanpatel/tok/internal/commands/container"
+	_ "github.com/lakshmanpatel/tok/internal/commands/core"
+	_ "github.com/lakshmanpatel/tok/internal/commands/filtercmd"
+	_ "github.com/lakshmanpatel/tok/internal/commands/hooks"
+	_ "github.com/lakshmanpatel/tok/internal/commands/infra"
+	_ "github.com/lakshmanpatel/tok/internal/commands/lang"
+	_ "github.com/lakshmanpatel/tok/internal/commands/linter"
+	_ "github.com/lakshmanpatel/tok/internal/commands/output"
+	_ "github.com/lakshmanpatel/tok/internal/commands/pattern"
+	_ "github.com/lakshmanpatel/tok/internal/commands/pkgmgr"
+	_ "github.com/lakshmanpatel/tok/internal/commands/session"
+	_ "github.com/lakshmanpatel/tok/internal/commands/system"
+	_ "github.com/lakshmanpatel/tok/internal/commands/test"
+	_ "github.com/lakshmanpatel/tok/internal/commands/vcs"
+	_ "github.com/lakshmanpatel/tok/internal/commands/web"
 )
 
 var (
@@ -114,10 +114,10 @@ var rootCmd = newRootCmd()
 
 func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "tokman",
+		Use:     "tok",
 		Version: shared.Version, // Set from shared.Version (injected via ldflags)
 		Short:   "Token-aware CLI proxy",
-		Long: `TokMan intercepts CLI commands and filters verbose output
+		Long: `tok intercepts CLI commands and filters verbose output
 to reduce token usage in LLM interactions.
 
 It acts as a transparent proxy that executes commands, captures their
@@ -206,7 +206,7 @@ output, applies intelligent filtering, and tracks token savings.`,
 			output, handled, err := fallback.Handle(args)
 
 			if !handled {
-				return fmt.Errorf("unknown command: %s\n\nTip: Run 'tokman --help' for 100+ available commands", args[0])
+				return fmt.Errorf("unknown command: %s\n\nTip: Run 'tok --help' for 100+ available commands", args[0])
 			}
 
 			fmt.Print(output)
@@ -287,7 +287,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Version is already set in newRootCmd() from shared.Version
-	rootCmd.SetVersionTemplate("TokMan {{.Version}}\n")
+	rootCmd.SetVersionTemplate("tok {{.Version}}\n")
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "",
 		fmt.Sprintf("config file (default is %s)", config.ConfigPath()))
@@ -332,11 +332,11 @@ func init() {
 
 	// Reversible compression flag (R1)
 	rootCmd.PersistentFlags().BoolVar(&reversibleEnabled, "reversible", false,
-		"store original output for later restoration (use 'tokman restore' to retrieve)")
+		"store original output for later restoration (use 'tok restore' to retrieve)")
 
 	// Remote mode flags (Phase 4 - Microservice)
 	rootCmd.PersistentFlags().BoolVar(&remoteMode, "remote", false,
-		"enable remote mode - connect to TokMan services via gRPC")
+		"enable remote mode - connect to tok services via gRPC")
 	rootCmd.PersistentFlags().StringVar(&compressionAddr, "compression-addr", "localhost:50051",
 		"compression service address (default: localhost:50051)")
 	rootCmd.PersistentFlags().StringVar(&analyticsAddr, "analytics-addr", "localhost:50053",
@@ -480,7 +480,7 @@ func initConfig() {
 // mark commands that should skip hook integrity verification. New commands
 // should set Annotations[integrityExemptAnnotation] = "true" rather than
 // relying on the name-based fallback.
-const integrityExemptAnnotation = "tokman:skip_integrity"
+const integrityExemptAnnotation = "tok:skip_integrity"
 
 // metaCommandNames is a backward-compatibility fallback for commands that
 // predate the annotation-based approach. New commands should use annotations.
@@ -493,7 +493,7 @@ var metaCommandNames = map[string]bool{
 
 // isOperationalCommand returns true for commands that process CLI output
 // and need runtime integrity verification. Meta commands are excluded
-// via cobra.Annotations["tokman:skip_integrity"] = "true" (preferred)
+// via cobra.Annotations["tok:skip_integrity"] = "true" (preferred)
 // or by name in the metaCommandNames fallback list.
 func isOperationalCommand(cmd *cobra.Command) bool {
 	// Check annotation-based exemption (preferred for new commands)
@@ -525,7 +525,7 @@ func isOperationalCommand(cmd *cobra.Command) bool {
 func trackCommandInvocation(cmd *cobra.Command) {
 	commandPath := strings.TrimSpace(cmd.CommandPath())
 	if commandPath == "" {
-		commandPath = "tokman"
+		commandPath = "tok"
 	}
 	category := "operational"
 	if !isOperationalCommand(cmd) {
@@ -541,7 +541,7 @@ func trackCommandInvocation(cmd *cobra.Command) {
 func showPowerfulWelcome(cmd *cobra.Command) error {
 	fmt.Println()
 	fmt.Println("╔════════════════════════════════════════════════════════════╗")
-	fmt.Println("║                    🚀 TokMan CLI v" + shared.Version + "                     ║")
+	fmt.Println("║                    🚀 tok CLI v" + shared.Version + "                     ║")
 	fmt.Println("╠════════════════════════════════════════════════════════════╣")
 	fmt.Println("║  Token-aware CLI proxy - 60-90% token reduction           ║")
 	fmt.Println("╚════════════════════════════════════════════════════════════╝")
@@ -549,32 +549,32 @@ func showPowerfulWelcome(cmd *cobra.Command) error {
 	fmt.Println("📚 QUICK START:")
 	fmt.Println()
 	fmt.Println("  Run any command with automatic compression:")
-	fmt.Println("    tokman git status")
-	fmt.Println("    tokman docker ps")
-	fmt.Println("    tokman kubectl logs pod-123")
+	fmt.Println("    tok git status")
+	fmt.Println("    tok docker ps")
+	fmt.Println("    tok kubectl logs pod-123")
 	fmt.Println()
-	fmt.Println("  Or pipe output through TokMan:")
-	fmt.Println("    git status | tokman")
-	fmt.Println("    cat large.log | tokman")
+	fmt.Println("  Or pipe output through tok:")
+	fmt.Println("    git status | tok")
+	fmt.Println("    cat large.log | tok")
 	fmt.Println()
 	fmt.Println("📊 CHECK YOUR SAVINGS:")
-	fmt.Println("    tokman gain          # Quick savings summary")
-	fmt.Println("    tokman audit         # Detailed optimization report")
-	fmt.Println("    tokman economics     # Cost analysis")
+	fmt.Println("    tok gain          # Quick savings summary")
+	fmt.Println("    tok audit         # Detailed optimization report")
+	fmt.Println("    tok economics     # Cost analysis")
 	fmt.Println()
 	fmt.Println("🔧 COMMON COMMANDS:")
-	fmt.Println("    tokman git <cmd>     # Git with compression")
-	fmt.Println("    tokman docker <cmd>  # Docker with compression")
-	fmt.Println("    tokman kubectl <cmd> # Kubernetes with compression")
-	fmt.Println("    tokman go test       # Go tests with compression")
+	fmt.Println("    tok git <cmd>     # Git with compression")
+	fmt.Println("    tok docker <cmd>  # Docker with compression")
+	fmt.Println("    tok kubectl <cmd> # Kubernetes with compression")
+	fmt.Println("    tok go test       # Go tests with compression")
 	fmt.Println()
 	fmt.Println("⚡ POWER USER FEATURES:")
-	fmt.Println("    tokman agent         # Interactive agent mode")
-	fmt.Println("    tokman shell         # Interactive shell")
-	fmt.Println("    tokman compress      # Direct text compression")
-	fmt.Println("    tokman benchmark     # Performance benchmarks")
+	fmt.Println("    tok agent         # Interactive agent mode")
+	fmt.Println("    tok shell         # Interactive shell")
+	fmt.Println("    tok compress      # Direct text compression")
+	fmt.Println("    tok benchmark     # Performance benchmarks")
 	fmt.Println()
-	fmt.Println("💡 TIP: Run 'tokman --help' to see all 100+ commands")
+	fmt.Println("💡 TIP: Run 'tok --help' to see all 100+ commands")
 	fmt.Println()
 	return nil
 }

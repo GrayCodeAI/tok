@@ -11,10 +11,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var lintCmd = &cobra.Command{
@@ -32,10 +32,10 @@ Supported linters:
   - biome (JS/TS, via npm/npx)
 
 Examples:
-  tokman lint .
-  tokman lint eslint src/
-  tokman lint ruff check .
-  tokman lint mypy src/`,
+  tok lint .
+  tok lint eslint src/
+  tok lint ruff check .
+  tok lint mypy src/`,
 	RunE: runLint,
 }
 
@@ -189,7 +189,7 @@ func runLint(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("%s %s", linter, strings.Join(args, " ")), fmt.Sprintf("tokman lint %s", linter), originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("%s %s", linter, strings.Join(args, " ")), fmt.Sprintf("tok lint %s", linter), originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

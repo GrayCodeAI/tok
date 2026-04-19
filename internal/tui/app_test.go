@@ -8,8 +8,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/GrayCodeAI/tokman/internal/session"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 type stubLoader struct {

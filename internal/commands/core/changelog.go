@@ -8,14 +8,14 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 var changelogCmd = &cobra.Command{
 	Use:   "changelog",
 	Short: "Show changelog for current version",
-	Long:  `Display the changelog entries for the current tokman version.`,
+	Long:  `Display the changelog entries for the current tok version.`,
 	RunE:  runChangelog,
 }
 
@@ -45,7 +45,7 @@ func runChangelog(cmd *cobra.Command, args []string) error {
 
 	if !found {
 		fmt.Println("No CHANGELOG.md found.")
-		fmt.Println("Visit https://github.com/GrayCodeAI/tokman/releases for release notes.")
+		fmt.Println("Visit https://github.com/lakshmanpatel/tok/releases for release notes.")
 		return nil
 	}
 

@@ -6,10 +6,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var findCmd = &cobra.Command{
@@ -21,8 +21,8 @@ Accepts native find flags like -name, -type.
 Filters and formats output for minimal token usage.
 
 Examples:
-  tokman find . -name "*.go"
-  tokman find . -type f -mtime -1`,
+  tok find . -name "*.go"
+  tok find . -type f -mtime -1`,
 	FParseErrWhitelist: cobra.FParseErrWhitelist{UnknownFlags: true},
 	RunE:               runFind,
 }
@@ -58,7 +58,7 @@ func runFind(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("find %s", strings.Join(args, " ")), "tokman find", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("find %s", strings.Join(args, " ")), "tok find", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

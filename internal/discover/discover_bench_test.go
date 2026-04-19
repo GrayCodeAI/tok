@@ -15,7 +15,7 @@ func BenchmarkRewriteCommand(b *testing.B) {
 		"ls -la",
 		"pytest -v",
 		"unknown-command",
-		"tokman git status",
+		"tok git status",
 	}
 
 	b.ResetTimer()
@@ -52,7 +52,7 @@ func BenchmarkDetectCommand(b *testing.B) {
 		"cargo test",
 		"npm test",
 		"unknown-command",
-		"tokman git status",
+		"tok git status",
 	}
 
 	b.ResetTimer()

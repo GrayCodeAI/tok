@@ -10,14 +10,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/config"
-	"github.com/GrayCodeAI/tokman/internal/core"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/ratelimit"
-	"github.com/GrayCodeAI/tokman/internal/toml"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
-	"github.com/GrayCodeAI/tokman/internal/utils"
-	"github.com/GrayCodeAI/tokman/internal/validation"
+	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/ratelimit"
+	"github.com/lakshmanpatel/tok/internal/toml"
+	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/validation"
 )
 
 // Fallback handler for TOML-based command filtering.

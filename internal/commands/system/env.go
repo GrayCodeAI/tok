@@ -8,10 +8,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var envShowAll bool
@@ -25,9 +25,9 @@ Categorizes variables into PATH, Language/Runtime, Cloud/Services, Tools, and Ot
 Masks sensitive values (keys, secrets, passwords, tokens) by default.
 
 Examples:
-  tokman env
-  tokman env AWS
-  tokman env --all`,
+  tok env
+  tok env AWS
+  tok env --all`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: runEnv,
 }
@@ -172,7 +172,7 @@ func runEnv(cmd *cobra.Command, args []string) error {
 	raw := strings.Join(vars, "\n")
 	originalTokens := filter.EstimateTokens(raw)
 	filteredTokens := filter.EstimateTokens(output)
-	timer.Track("env", "tokman env", originalTokens, filteredTokens)
+	timer.Track("env", "tok env", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

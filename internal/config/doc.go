@@ -1,4 +1,4 @@
-// Package config provides configuration management for TokMan.
+// Package config provides configuration management for tok.
 //
 // The config package handles loading, validating, and saving configuration
 // from TOML files, environment variables, and command-line flags.

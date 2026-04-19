@@ -256,7 +256,7 @@ mode = "aggressive"
 func TestLoadUsesXDGConfigHome(t *testing.T) {
 	tmpDir := t.TempDir()
 	xdgConfigHome := filepath.Join(tmpDir, "xdg-config")
-	configDir := filepath.Join(xdgConfigHome, "tokman")
+	configDir := filepath.Join(xdgConfigHome, "tok")
 	if err := os.MkdirAll(configDir, 0755); err != nil {
 		t.Fatalf("failed to create config dir: %v", err)
 	}

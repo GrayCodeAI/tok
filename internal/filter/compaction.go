@@ -11,8 +11,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/GrayCodeAI/tokman/internal/llm"
-	"github.com/GrayCodeAI/tokman/internal/utils"
+	"github.com/lakshmanpatel/tok/internal/llm"
+	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
 const maxCompactionCacheSize = 100

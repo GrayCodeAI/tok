@@ -32,16 +32,16 @@ func TestSharedPathHelpersUseXDGDirs(t *testing.T) {
 		CfgFile = oldCfgFile
 	})
 
-	if got := GetConfigPath(); got != filepath.Join(configHome, "tokman", "config.toml") {
+	if got := GetConfigPath(); got != filepath.Join(configHome, "tok", "config.toml") {
 		t.Fatalf("GetConfigPath() = %q", got)
 	}
-	if got := GetDataPath(); got != filepath.Join(dataHome, "tokman") {
+	if got := GetDataPath(); got != filepath.Join(dataHome, "tok") {
 		t.Fatalf("GetDataPath() = %q", got)
 	}
-	if got := GetHooksPath(); got != filepath.Join(dataHome, "tokman", "hooks") {
+	if got := GetHooksPath(); got != filepath.Join(dataHome, "tok", "hooks") {
 		t.Fatalf("GetHooksPath() = %q", got)
 	}
-	if got := GetFiltersDir(); got != filepath.Join(configHome, "tokman", "filters") {
+	if got := GetFiltersDir(); got != filepath.Join(configHome, "tok", "filters") {
 		t.Fatalf("GetFiltersDir() = %q", got)
 	}
 }

@@ -38,8 +38,8 @@ package shared
 //
 // # Dependency Graph
 //
-//   - flags.go:  NO external tokman dependencies (safe to import anywhere)
-//   - utils.go:  NO external tokman dependencies
+//   - flags.go:  NO external tok dependencies (safe to import anywhere)
+//   - utils.go:  NO external tok dependencies
 //   - config.go: depends on internal/config only
 //   - executor.go: depends on core, tracking, tee, config
 //   - fallback.go: depends on filter, config, toml (largest dependency footprint)

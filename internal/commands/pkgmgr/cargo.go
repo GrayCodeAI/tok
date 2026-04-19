@@ -10,10 +10,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/commands/shared"
-	"github.com/GrayCodeAI/tokman/internal/filter"
-	"github.com/GrayCodeAI/tokman/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
 var cargoJSON bool
@@ -39,11 +39,11 @@ Subcommands:
   clean   - Clean build artifacts
 
 Examples:
-  tokman cargo build
-  tokman cargo test --lib
-  tokman cargo clippy -- -W clippy::all
-  tokman cargo run
-  tokman cargo doc --open`,
+  tok cargo build
+  tok cargo test --lib
+  tok cargo clippy -- -W clippy::all
+  tok cargo run
+  tok cargo doc --open`,
 	RunE: runCargo,
 }
 
@@ -108,7 +108,7 @@ func runCargo(cmd *cobra.Command, args []string) error {
 		fmt.Println(formatAsJSONcargo(output))
 		originalTokens := filter.EstimateTokens(output)
 		filteredTokens := filter.EstimateTokens(filtered)
-		timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tokman cargo", originalTokens, filteredTokens)
+		timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tok cargo", originalTokens, filteredTokens)
 		return err
 	}
 
@@ -122,7 +122,7 @@ func runCargo(cmd *cobra.Command, args []string) error {
 
 	originalTokens := filter.EstimateTokens(output)
 	filteredTokens := filter.EstimateTokens(filtered)
-	timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tokman cargo", originalTokens, filteredTokens)
+	timer.Track(fmt.Sprintf("cargo %s", strings.Join(args, " ")), "tok cargo", originalTokens, filteredTokens)
 
 	shared.PrintTokenSavings(originalTokens, filteredTokens)
 

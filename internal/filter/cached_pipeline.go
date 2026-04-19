@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/GrayCodeAI/tokman/internal/cache"
+	"github.com/lakshmanpatel/tok/internal/cache"
 )
 
 // CachedPipeline wraps a PipelineCoordinator with caching

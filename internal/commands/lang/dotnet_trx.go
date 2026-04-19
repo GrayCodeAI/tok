@@ -9,7 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
 )
 
 var dotnetTrxCmd = &cobra.Command{
@@ -21,9 +21,9 @@ Shows test summary, failed tests with details, and timing information.
 Useful for CI/CD pipelines and local test runs.
 
 Examples:
-  tokman dotnet trx TestResults.trx
-  tokman dotnet trx --file TestResults.trx --format json
-  cat TestResults.trx | tokman dotnet trx`,
+  tok dotnet trx TestResults.trx
+  tok dotnet trx --file TestResults.trx --format json
+  cat TestResults.trx | tok dotnet trx`,
 	RunE: runDotnetTrx,
 }
 

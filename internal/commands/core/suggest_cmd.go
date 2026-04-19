@@ -8,8 +8,8 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/GrayCodeAI/tokman/internal/commands/registry"
-	"github.com/GrayCodeAI/tokman/internal/config"
+	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/lakshmanpatel/tok/internal/config"
 )
 
 var suggestCmd = &cobra.Command{
@@ -20,9 +20,9 @@ var suggestCmd = &cobra.Command{
 Shows suggestions based on your usage patterns and current settings.
 
 Examples:
-  tokman suggest               # Show random tip
-  tokman suggest --category    # Show by category
-  tokman suggest --action      # Apply suggestion`,
+  tok suggest               # Show random tip
+  tok suggest --category    # Show by category
+  tok suggest --action      # Apply suggestion`,
 	RunE: runSuggest,
 }
 
@@ -90,31 +90,31 @@ func getTips(cfg *config.Config) []tip {
 			title:       "Use presets for faster filtering",
 			description: "The --preset flag lets you quickly switch between compression levels: fast (50-60%), balanced (70-80%), or full (85-95%).",
 			category:    "pipeline",
-			action:      "tokman agent set fast",
+			action:      "tok agent set fast",
 		},
 		{
 			title:       "Enable budget enforcement",
 			description: "Set a token budget to automatically stop filtering once reached. Use --budget 2000 to limit output to 2000 tokens.",
 			category:    "pipeline",
-			action:      "tokman config set pipeline.default_budget 2000",
+			action:      "tok config set pipeline.default_budget 2000",
 		},
 		{
 			title:       "Use query intent for better filtering",
 			description: "Specify --query debug, --query review, or --query deploy to enable goal-driven filtering that preserves relevant context.",
 			category:    "pipeline",
-			action:      "tokman config set pipeline.enable_goal_driven true",
+			action:      "tok config set pipeline.enable_goal_driven true",
 		},
 		{
 			title:       "Enable attribution for commits",
-			description: "Track AI contributions with Co-Authored-By on git commits. Use tokman attribution enable.",
+			description: "Track AI contributions with Co-Authored-By on git commits. Use tok attribution enable.",
 			category:    "usage",
-			action:      "tokman attribution enable",
+			action:      "tok attribution enable",
 		},
 		{
 			title:       "Use MCP for IDE integration",
-			description: "Connect TokMan to Claude Code, Cursor, or other IDEs via MCP for seamless token optimization.",
+			description: "Connect tok to Claude Code, Cursor, or other IDEs via MCP for seamless token optimization.",
 			category:    "config",
-			action:      "tokman mcp",
+			action:      "tok mcp",
 		},
 	}
 
@@ -123,7 +123,7 @@ func getTips(cfg *config.Config) []tip {
 			title:       "Try ultra-compact mode",
 			description: "Use --ultra-compact for maximum compression with ASCII-only output, ideal for log files and large outputs.",
 			category:    "pipeline",
-			action:      "tokman config set pipeline.enable_compaction true",
+			action:      "tok config set pipeline.enable_compaction true",
 		})
 	}
 
@@ -132,7 +132,7 @@ func getTips(cfg *config.Config) []tip {
 			title:       "Enable semantic compaction",
 			description: "Compaction summarizes long conversations while preserving key information. It can reduce context by 30-50%.",
 			category:    "pipeline",
-			action:      "tokman config set pipeline.enable_compaction true",
+			action:      "tok config set pipeline.enable_compaction true",
 		})
 	}
 
