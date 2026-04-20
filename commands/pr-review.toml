@@ -1,0 +1,2 @@
+description = "Batch review the full diff of the current PR in tok style"
+prompt = "Run tok-review semantics across every file changed in the current PR. Group findings by file. Output one-line comments: <path>:<line> <severity> <problem>. <fix>. Finish with a total-findings summary."

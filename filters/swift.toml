@@ -1,0 +1,96 @@
+# Swift ecosystem — 6 subcommands matching rtk v0.36.0 coverage.
+schema_version = 1
+
+[swift_build]
+match_command = "^swift\\s+build\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Compiling\\s",
+    "^Fetching\\s",
+    "^Computing version",
+    "^Resolving dependencies",
+    "^Build complete!$",
+]
+keep_lines_matching = [
+    "error:",
+    "warning:",
+    "^\\w+\\.swift:\\d+:\\d+:",
+    "Build complete!",
+]
+max_lines = 150
+
+[swift_test]
+match_command = "^swift\\s+test\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Test Suite '.*' started",
+    "^Test Case '.*' started",
+]
+keep_lines_matching = [
+    "Test Suite '.*' (passed|failed)",
+    "Test Case '.*' (passed|failed)",
+    "error:",
+    "XCTAssert",
+    "Executed \\d+ tests",
+]
+max_lines = 150
+
+[swift_run]
+match_command = "^swift\\s+run\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Building for debugging",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "error:",
+    "^warning:",
+    "\\.swift:\\d+:\\d+:",
+]
+max_lines = 120
+
+[swift_package]
+match_command = "^swift\\s+package\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Fetching\\s",
+    "^Resolving dependencies",
+    "^Creating working copy",
+]
+keep_lines_matching = [
+    "error:",
+    "Updating\\s",
+    "Completed resolution",
+    "^\\s+[\\w-]+\\s+\\d+\\.\\d+",
+]
+max_lines = 80
+
+[swift_format]
+match_command = "^swift-format\\b|^swift\\s+format\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+keep_lines_matching = ["\\.swift:\\d+:\\d+:", "error:", "warning:"]
+max_lines = 100
+
+[xcodebuild_test]
+match_command = "^xcodebuild\\s+.*\\btest\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Test Suite '.*' started",
+    "^Test Case '.*' started",
+    "^Touch\\s",
+    "^ProcessInfoPlistFile",
+    "^CpResource",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "Test Case '.*' (passed|failed)",
+    "Test Suite '.*' (passed|failed)",
+    "error:",
+    "\\*\\* TEST (SUCCEEDED|FAILED) \\*\\*",
+    "Executed \\d+ tests",
+]
+max_lines = 150

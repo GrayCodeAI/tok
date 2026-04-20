@@ -1,0 +1,2 @@
+description = "Compress a markdown/memory file via tok md (preserves code, URLs, structure)"
+prompt = "Invoke the tok-compress skill. Call `tok md <filepath>` on the path the user supplies. Report the token savings and backup path."

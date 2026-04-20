@@ -1,0 +1,224 @@
+# AWS CLI — expanded filter matching rtk's 25-subcommand coverage.
+# Each section targets one verb (ec2 describe, s3 ls, etc).
+# Order matters: more specific rules first, generic aws fallback last.
+schema_version = 1
+
+# --- compute: EC2 ---
+[aws_ec2_describe]
+match_command = "^aws\\s+ec2\\s+describe"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+keep_lines_matching = [
+    "InstanceId", "State\\s*:", "PublicIpAddress", "PrivateIpAddress",
+    "InstanceType", "Tags", "VpcId", "SubnetId", "AvailabilityZone",
+]
+max_lines = 200
+
+[aws_ec2_run]
+match_command = "^aws\\s+ec2\\s+run-instances"
+strip_ansi = true
+keep_lines_matching = ["InstanceId", "State", "Tags"]
+max_lines = 60
+
+[aws_ec2_stop]
+match_command = "^aws\\s+ec2\\s+(stop|start|terminate|reboot)-instances"
+strip_ansi = true
+keep_lines_matching = ["CurrentState", "InstanceId", "PreviousState"]
+max_lines = 40
+
+# --- storage: S3 ---
+[aws_s3_ls]
+match_command = "^aws\\s+s3(\\s+ls)?\\b"
+strip_ansi = true
+strip_lines_matching = ["^PRE\\b", "^\\s*$"]
+max_lines = 100
+
+[aws_s3_cp]
+match_command = "^aws\\s+s3\\s+(cp|mv|sync|rm)\\b"
+strip_ansi = true
+strip_lines_matching = ["^Completed \\d"]
+keep_lines_matching = ["^(upload|download|copy|move|delete):", "error"]
+max_lines = 60
+
+[aws_s3api]
+match_command = "^aws\\s+s3api\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+max_lines = 100
+
+# --- lambda ---
+[aws_lambda_list]
+match_command = "^aws\\s+lambda\\s+list"
+strip_ansi = true
+keep_lines_matching = ["FunctionName", "Runtime", "LastModified", "State"]
+max_lines = 100
+
+[aws_lambda_get]
+match_command = "^aws\\s+lambda\\s+get"
+strip_ansi = true
+keep_lines_matching = ["FunctionName", "State", "Runtime", "Handler", "Timeout", "MemorySize"]
+max_lines = 40
+
+[aws_lambda_invoke]
+match_command = "^aws\\s+lambda\\s+invoke"
+strip_ansi = true
+keep_lines_matching = ["StatusCode", "FunctionError", "ExecutedVersion", "LogResult"]
+max_lines = 20
+
+# --- iam ---
+[aws_iam]
+match_command = "^aws\\s+iam\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+keep_lines_matching = [
+    "UserName", "GroupName", "RoleName", "PolicyName",
+    "Arn", "CreateDate", "AttachedPolicies",
+]
+max_lines = 100
+
+# --- databases: RDS / DynamoDB ---
+[aws_rds]
+match_command = "^aws\\s+rds\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "DBInstanceIdentifier", "DBInstanceStatus", "Engine",
+    "Endpoint", "Address", "Port", "AvailabilityZone",
+]
+max_lines = 80
+
+[aws_dynamodb]
+match_command = "^aws\\s+dynamodb\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "TableName", "TableStatus", "ItemCount", "TableSizeBytes",
+    "KeySchema", "AttributeDefinitions", "GlobalSecondaryIndexes",
+]
+max_lines = 80
+
+# --- containers: ECS / EKS / ECR ---
+[aws_ecs]
+match_command = "^aws\\s+ecs\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "clusterName", "serviceName", "taskArn", "status",
+    "runningCount", "desiredCount", "pendingCount",
+]
+max_lines = 80
+
+[aws_eks]
+match_command = "^aws\\s+eks\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "name\\s*:", "status", "version", "roleArn", "endpoint",
+    "nodegroupName", "clusterName",
+]
+max_lines = 60
+
+[aws_ecr]
+match_command = "^aws\\s+ecr\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "repositoryName", "repositoryUri", "imageTag", "imageDigest",
+    "registryId",
+]
+max_lines = 60
+
+# --- infra: CloudFormation / CloudWatch / Logs ---
+[aws_cloudformation]
+match_command = "^aws\\s+cloudformation\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "StackName", "StackStatus", "CREATE_COMPLETE", "CREATE_FAILED",
+    "UPDATE_COMPLETE", "UPDATE_FAILED", "DELETE_COMPLETE", "ROLLBACK",
+    "StackId", "LogicalResourceId",
+]
+max_lines = 100
+
+[aws_cloudwatch]
+match_command = "^aws\\s+cloudwatch\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "AlarmName", "StateValue", "MetricName", "Namespace",
+    "Threshold", "ComparisonOperator",
+]
+max_lines = 80
+
+[aws_logs]
+match_command = "^aws\\s+logs\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+max_lines = 200
+
+# --- networking: VPC / ELB / Route53 ---
+[aws_ec2_vpc]
+match_command = "^aws\\s+ec2\\s+(describe-vpcs|describe-subnets|describe-security-groups|describe-route-tables)"
+strip_ansi = true
+keep_lines_matching = [
+    "VpcId", "SubnetId", "CidrBlock", "GroupId", "GroupName",
+    "IsDefault", "State", "Tags",
+]
+max_lines = 120
+
+[aws_elbv2]
+match_command = "^aws\\s+elb(v2)?\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "LoadBalancerName", "LoadBalancerArn", "DNSName", "State", "Type",
+    "TargetGroupName", "TargetGroupArn",
+]
+max_lines = 60
+
+[aws_route53]
+match_command = "^aws\\s+route53\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "HostedZoneId", "Name", "ResourceRecordSets", "Type",
+    "TTL", "Value",
+]
+max_lines = 80
+
+# --- messaging: SNS / SQS ---
+[aws_sns]
+match_command = "^aws\\s+sns\\b"
+strip_ansi = true
+keep_lines_matching = ["TopicArn", "SubscriptionArn", "MessageId", "Protocol", "Endpoint"]
+max_lines = 60
+
+[aws_sqs]
+match_command = "^aws\\s+sqs\\b"
+strip_ansi = true
+keep_lines_matching = ["QueueUrl", "QueueArn", "ApproximateNumberOfMessages", "MessageId"]
+max_lines = 60
+
+# --- secrets & config: SSM / Secrets Manager / KMS ---
+[aws_ssm]
+match_command = "^aws\\s+ssm\\b"
+strip_ansi = true
+keep_lines_matching = ["Name", "Value", "Type", "ParameterType", "LastModifiedDate"]
+max_lines = 80
+
+[aws_secretsmanager]
+match_command = "^aws\\s+secretsmanager\\b"
+strip_ansi = true
+keep_lines_matching = ["Name", "ARN", "VersionId", "VersionStages", "LastChangedDate"]
+max_lines = 40
+
+[aws_kms]
+match_command = "^aws\\s+kms\\b"
+strip_ansi = true
+keep_lines_matching = ["KeyId", "Arn", "KeyState", "Description", "Enabled"]
+max_lines = 40
+
+# --- identity ---
+[aws_sts]
+match_command = "^aws\\s+sts\\b"
+strip_ansi = true
+keep_lines_matching = ["Account", "Arn", "UserId", "AccessKeyId"]
+max_lines = 20
+
+# --- generic fallback (lowest priority — last match wins) ---
+[aws_generic]
+match_command = "^aws\\s+"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+max_lines = 150

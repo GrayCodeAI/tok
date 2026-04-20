@@ -1,0 +1,2 @@
+description = "Show tok quick-reference card (modes, skills, activation)"
+prompt = "Invoke the tok-help skill. Display the reference card. One-shot — do not change mode or write state."
