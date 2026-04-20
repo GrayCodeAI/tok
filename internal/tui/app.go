@@ -41,8 +41,10 @@ type model struct {
 	toasts     *toastStack
 	palette    *Palette
 	search     *SearchOverlay
+	confirm    *ConfirmOverlay
 	logs       *ringHandler
 	prevLogger *slog.Logger
+	env        Environment
 	navIndex   int
 	width      int
 	height     int
@@ -81,18 +83,21 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 	ring := NewRingHandler(512, slog.LevelDebug, prev.Handler())
 	slog.SetDefault(slog.New(ring))
 
+	normalized := opts.normalized()
 	m := model{
-		opts:       opts.normalized(),
+		opts:       normalized,
 		loader:     loader,
 		ctx:        ctx,
 		cancel:     cancel,
 		keys:       DefaultKeyMap(),
-		theme:      newTheme(),
+		theme:      newThemeByName(normalized.Theme),
 		sections:   sections,
 		toasts:     &toastStack{},
 		search:     NewSearchOverlay(),
+		confirm:    NewConfirmOverlay(),
 		logs:       ring,
 		prevLogger: prev,
+		env:        DetectEnvironment(),
 		loading:    true,
 		spinner:    s,
 	}
@@ -109,6 +114,20 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 			return func() tea.Msg { return drillDownMsg{Section: idx} }
 		},
 		RequestToast: requestToastCmd,
+		RequestTheme: func(name ThemeName) tea.Cmd {
+			return func() tea.Msg { return themeChangedMsg{Name: name} }
+		},
+		RequestThemeCycle: func() tea.Cmd {
+			return func() tea.Msg { return themeCycleMsg{} }
+		},
+		ClearLogRing: func() tea.Cmd {
+			return func() tea.Msg {
+				if ring != nil {
+					ring.Clear()
+				}
+				return nil
+			}
+		},
 	})
 
 	// Build the palette last so it can reference both the registry and
@@ -169,8 +188,16 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.quitting {
 			return m, nil
 		}
-		// Overlays capture input while open. Palette and search are
-		// mutually exclusive — only one can be focused at a time.
+		// Overlays capture input while open. Palette, search, and
+		// confirm are mutually exclusive — only one can be focused at
+		// a time. Confirm wins over the others because it's armed by
+		// an action that was itself routed through palette/keybind.
+		if m.confirm != nil && m.confirm.IsOpen() {
+			if cmd := m.confirm.Update(msg); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
 		if m.palette != nil && m.palette.IsOpen() {
 			if cmd := m.palette.Update(msg); cmd != nil {
 				cmds = append(cmds, cmd)
@@ -200,6 +227,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case actionRequestMsg:
 		if m.actions != nil {
+			// Intercept Confirm=true actions: open the modal and wait
+			// for the user's decision. The confirm overlay re-emits
+			// actionRequestMsg on accept, which then falls through to
+			// runActionCmd via this same case (but with Confirm already
+			// resolved — short-circuit on that by consulting a sentinel
+			// flag on the modal? simpler: overlay clears itself before
+			// emitting, so when the accept message arrives IsOpen is
+			// false and we drop straight into Run).
+			if a, ok := m.actions.Get(msg.ActionID); ok && a.Confirm && m.confirm != nil && !m.confirm.IsOpen() {
+				m.confirm.Open(a, msg.Args)
+				return m, tea.Batch(cmds...)
+			}
 			cmds = append(cmds, runActionCmd(m.ctx, m.actions, msg.ActionID, msg.Args))
 		}
 	case actionResultMsg:
@@ -216,6 +255,20 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// No-op; palette already closed itself before emitting the msg.
 	case searchCloseMsg:
 		// No-op; search overlay already cleared state.
+	case themeChangedMsg:
+		m.theme = newThemeByName(msg.Name)
+		m.opts.Theme = msg.Name
+	case themeCycleMsg:
+		next := AvailableThemes[0]
+		for i, t := range AvailableThemes {
+			if t == m.opts.Theme {
+				next = AvailableThemes[(i+1)%len(AvailableThemes)]
+				break
+			}
+		}
+		m.theme = newThemeByName(next)
+		m.opts.Theme = next
+		cmds = append(cmds, requestToastCmd(ToastInfo, "theme: "+string(next)))
 	case drillDownMsg:
 		// Section index from a drill-down acts as a jump for Phase 1
 		// where no section yet drills into a detail pane.
@@ -267,6 +320,7 @@ func (m model) sectionContext() SectionContext {
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,
+		Env:     m.env,
 	}
 }
 
@@ -302,14 +356,16 @@ func (m model) View() string {
 	view := lipgloss.JoinVertical(lipgloss.Left, parts...)
 	rendered := setWidth(m.theme.App, m.width).Render(view)
 
-	// Palette is a centered modal drawn on top of the rest of the frame.
-	// Because Bubble Tea re-renders top-to-bottom every frame, we prefix
-	// the modal block so terminals without alt-screen still clear the
-	// previous frame between paints.
+	// Modals: confirm wins over palette wins over base frame. Both use
+	// the same centered lipgloss.Place composition so the dimensions
+	// and transition feel consistent.
+	if m.confirm != nil && m.confirm.IsOpen() {
+		modal := m.confirm.View(m.theme, m.width)
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+	}
 	if m.palette != nil && m.palette.IsOpen() {
 		modal := m.palette.View(m.theme, m.width)
-		centered := lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
-		return centered
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
 	}
 	return rendered
 }
@@ -343,6 +399,12 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 		m.loading = m.data == nil
 		m.refreshing = m.data != nil
 		return m, loadSnapshotCmd(m.ctx, m.loader, m.opts)
+	case key.Matches(msg, m.keys.Export):
+		if m.navIndex < len(m.sections) {
+			if exp, ok := m.sections[m.navIndex].(ExportableTable); ok {
+				return m, ExportTableCmd(exp, ExportJSON)
+			}
+		}
 	case key.Matches(msg, m.keys.JumpSection):
 		if idx, ok := sectionShortcutIndex(msg.String(), len(m.sections)); ok {
 			m.navIndex = idx
@@ -515,6 +577,7 @@ func (m model) renderMain(width, height int) string {
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,
+		Env:     m.env,
 	}
 	return setWidth(m.theme.Main, width).Render(m.sections[m.navIndex].View(ctx))
 }

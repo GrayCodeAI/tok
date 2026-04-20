@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -18,6 +19,7 @@ var (
 	tuiProvider string
 	tuiModel    string
 	tuiSession  string
+	tuiTheme    string
 )
 
 var tuiCmd = &cobra.Command{
@@ -45,12 +47,22 @@ func init() {
 	tuiCmd.Flags().StringVar(&tuiProvider, "provider", "", "Filter to a provider")
 	tuiCmd.Flags().StringVar(&tuiModel, "model", "", "Filter to a model")
 	tuiCmd.Flags().StringVar(&tuiSession, "session", "", "Filter to a session ID")
+	tuiCmd.Flags().StringVar(&tuiTheme, "theme", "dark", "Theme: dark, light, high-contrast, colorblind")
 }
 
 func runTUI(cmd *cobra.Command, args []string) error {
 	refreshInterval, err := time.ParseDuration(tuiRefresh)
 	if err != nil {
 		return err
+	}
+
+	// Refuse to run when stdout or stdin aren't a terminal. Without this
+	// guard the tea.Program writes alt-screen escape sequences straight
+	// to a pipe or file, which corrupts the downstream consumer and
+	// leaves the user's terminal in a weird state.
+	env := appui.DetectEnvironment()
+	if !env.IsStdoutTTY || !env.IsStdinTTY {
+		return fmt.Errorf("tok tui requires an interactive terminal; stdin/stdout must both be TTYs")
 	}
 
 	model := appui.NewModel(appui.Options{
@@ -61,9 +73,10 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		Provider:        tuiProvider,
 		ModelName:       tuiModel,
 		SessionID:       tuiSession,
+		Theme:           appui.ThemeName(tuiTheme),
 	})
 
-	program := tea.NewProgram(model, tea.WithAltScreen())
+	program := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())
 	_, err = program.Run()
 	return err
 }

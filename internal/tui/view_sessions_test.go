@@ -57,6 +57,7 @@ func fixtureSessionCtx(width int) SectionContext {
 		Height:  30,
 		Compact: false,
 		Focused: true,
+		Env:     Environment{UTF8: true},
 	}
 }
 

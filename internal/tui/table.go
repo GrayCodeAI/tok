@@ -67,6 +67,22 @@ func NewTable(columns []Column) *Table {
 	}
 }
 
+// VisibleRows returns the filtered + sorted rows in display order. The
+// exporter uses this so "exported view" matches "what's on screen" —
+// if a user filters down to 5 rows then hits `e`, only those 5 land
+// in the file.
+func (t *Table) VisibleRows() []Row {
+	out := make([]Row, 0, len(t.visible))
+	for _, i := range t.visible {
+		out = append(out, t.rows[i])
+	}
+	return out
+}
+
+// Columns returns the column definitions (copy-safe: the slice is
+// shared but columns are value types, not mutated by the caller).
+func (t *Table) Columns() []Column { return t.columns }
+
 // SetRows replaces the row set and resets cursor position. Preserves the
 // current filter and sort so that a live refresh doesn't jump the user's
 // selection off screen.

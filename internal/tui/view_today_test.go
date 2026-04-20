@@ -50,6 +50,7 @@ func fixtureDashCtxWithTrends() SectionContext {
 		Opts:   Options{Days: 30},
 		Width:  120,
 		Height: 40,
+		Env:    Environment{UTF8: true}, // tests default to UTF-8 so glyphs match expectations
 	}
 }
 

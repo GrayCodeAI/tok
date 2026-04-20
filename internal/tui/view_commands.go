@@ -42,8 +42,12 @@ func newCommandsSection() *commandsSection {
 	}
 }
 
-func (s *commandsSection) Name() string                { return "Commands" }
-func (s *commandsSection) Short() string               { return "Command Mix" }
+func (s *commandsSection) Name() string  { return "Commands" }
+func (s *commandsSection) Short() string { return "Command Mix" }
+
+func (s *commandsSection) ExportColumns() []Column { return s.table.Columns() }
+func (s *commandsSection) ExportRows() []Row       { return s.table.VisibleRows() }
+func (s *commandsSection) ExportName() string      { return "commands" }
 func (s *commandsSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *commandsSection) KeyBindings() []key.Binding {
@@ -86,11 +90,16 @@ func (s *commandsSection) Update(ctx SectionContext, msg tea.Msg) (SectionRender
 			return s, nil
 		}
 		handleTableNav(s.table, m)
-		if m.String() == "enter" {
+		switch m.String() {
+		case "enter":
 			if row, ok := s.table.Selected(); ok {
 				if key, castOk := row.Payload.(string); castOk {
 					s.drill = key
 				}
+			}
+		case "y":
+			if row, ok := s.table.Selected(); ok {
+				return s, YankCmd(RowToTSV(row))
 			}
 		}
 	}

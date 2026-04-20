@@ -37,6 +37,10 @@ func newProvidersSection() *providersSection {
 func (s *providersSection) Name() string  { return "Providers" }
 func (s *providersSection) Short() string { return "Economics" }
 
+func (s *providersSection) ExportColumns() []Column { return s.table.Columns() }
+func (s *providersSection) ExportRows() []Row       { return s.table.VisibleRows() }
+func (s *providersSection) ExportName() string      { return "providers" }
+
 func (s *providersSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *providersSection) KeyBindings() []key.Binding {
@@ -87,6 +91,10 @@ func (s *providersSection) Update(ctx SectionContext, msg tea.Msg) (SectionRende
 				if key, castOk := row.Payload.(string); castOk {
 					s.drill = key
 				}
+			}
+		case "y":
+			if row, ok := s.table.Selected(); ok {
+				return s, YankCmd(RowToTSV(row))
 			}
 		}
 	}

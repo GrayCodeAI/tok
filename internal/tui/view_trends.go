@@ -81,9 +81,9 @@ func (s *trendsSection) View(ctx SectionContext) string {
 		chartHeight = 3
 	}
 
-	savedChart := BrailleLineChart(saved, chartWidth, chartHeight)
-	commandsChart := BrailleLineChart(commands, chartWidth, chartHeight)
-	reductionChart := BrailleLineChart(reduction, chartWidth, chartHeight)
+	savedChart := LineChart(saved, chartWidth, chartHeight, ctx.Env.UTF8)
+	commandsChart := LineChart(commands, chartWidth, chartHeight, ctx.Env.UTF8)
+	reductionChart := LineChart(reduction, chartWidth, chartHeight, ctx.Env.UTF8)
 
 	head := lipgloss.JoinVertical(
 		lipgloss.Left,
