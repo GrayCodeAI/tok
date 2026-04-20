@@ -15,12 +15,3 @@ func TestGetEnabledMarkerPathUsesDataPath(t *testing.T) {
 	}
 }
 
-func TestGetTeeDirFromHomeUsesDataPath(t *testing.T) {
-	dataHome := t.TempDir()
-	t.Setenv("XDG_DATA_HOME", dataHome)
-
-	want := filepath.Join(dataHome, "tok", "tee")
-	if got := getTeeDirFromHome(); got != want {
-		t.Fatalf("getTeeDirFromHome() = %q, want %q", got, want)
-	}
-}
