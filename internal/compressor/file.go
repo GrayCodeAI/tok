@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/lakshmanpatel/tok/internal/output"
 )
 
 type FileCompressionResult struct {
@@ -47,9 +49,10 @@ func CompressFileWithOptions(filename string, mode string, force bool) error {
 		return fmt.Errorf("failed to write compressed file: %w", err)
 	}
 
-	fmt.Printf("Compressed: %s\n", filename)
-	fmt.Printf("Backup: %s\n", result.BackupPath)
-	fmt.Printf("Tokens: %d → %d (%.1f%% saved)\n", result.OriginalTokens, result.CompressedTokens, result.SavingsPercent)
+	p := output.Global()
+	p.Printf("Compressed: %s\n", filename)
+	p.Printf("Backup: %s\n", result.BackupPath)
+	p.Printf("Tokens: %d → %d (%.1f%% saved)\n", result.OriginalTokens, result.CompressedTokens, result.SavingsPercent)
 	return nil
 }
 
@@ -129,7 +132,7 @@ func RestoreFile(filename string) error {
 		return fmt.Errorf("failed to remove backup: %w", err)
 	}
 
-	fmt.Printf("Restored: %s\n", filename)
+	output.Global().Printf("Restored: %s\n", filename)
 	return nil
 }
 
@@ -278,14 +281,15 @@ func BatchCompress(pattern string, mode string) error {
 		return fmt.Errorf("no files match pattern: %s", pattern)
 	}
 
+	p := output.Global()
 	for _, file := range matches {
 		if err := ValidateFile(file); err != nil {
-			fmt.Fprintf(os.Stderr, "Skipping %s: %v\n", file, err)
+			p.Errorf("Skipping %s: %v\n", file, err)
 			continue
 		}
 
 		if err := CompressFile(file, mode); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed %s: %v\n", file, err)
+			p.Errorf("Failed %s: %v\n", file, err)
 			continue
 		}
 	}
