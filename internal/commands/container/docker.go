@@ -876,7 +876,7 @@ func runComposeConfig(args []string) error {
 
 	result.WriteString("Compose config valid\n")
 	if services > 0 || networks > 0 || volumes > 0 {
-		result.WriteString(fmt.Sprintf("  Services defined\n"))
+		result.WriteString("  Services defined\n")
 	}
 
 	filtered := result.String()
@@ -1552,7 +1552,7 @@ func filterComposeUp(output string) string {
 	}
 
 	if len(errors) > 0 {
-		result.WriteString(fmt.Sprintf("Errors:\n"))
+		result.WriteString("Errors:\n")
 		for _, e := range errors {
 			result.WriteString(fmt.Sprintf("  %s\n", e))
 		}
