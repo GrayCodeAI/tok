@@ -32,6 +32,16 @@ func init() {
 	lipgloss.SetColorProfile(termenv.Ascii)
 }
 
+// goldenFixtureNow is the pinned wall-clock for golden tests. Real
+// rendering code calls nowFunc() (overridden to this in init below).
+// Without pinning, `time.Since(...)` drifts between runs and goldens
+// flake on "13h ago" vs "14h ago" etc.
+var goldenFixtureNow = time.Date(2026, 4, 20, 9, 30, 0, 0, time.UTC)
+
+func init() {
+	nowFunc = func() time.Time { return goldenFixtureNow }
+}
+
 // goldenFixture is the canonical "busy workspace" dataset used by
 // every golden test so output sizes are meaningful (placeholder values
 // tend to hide layout bugs because they don't wrap).

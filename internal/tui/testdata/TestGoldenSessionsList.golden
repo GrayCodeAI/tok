@@ -1,23 +1,19 @@
- tok  Sessions · 7d window · updated 09:30:00                                                                                               
-                  Sessions                                                                                                                  
- Sections         3 total · 1 active · top agent: claude                                                                                    
+ tok  Sessions · 7d window · updated 09:30:00 · ○ connecting                                                                                
+                    Sessions                                                                                                                
+ Sections           3 total · 1 active · top agent: claude                                                                                  
      1 Home                                                                                                                                 
-     2 Today      Agent              Project                Started           Last                     Tokens         Turns                 
-     3 Trends     Snaps                                                                                                                     
-     4            ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
-  Providers       ──                                                                                                                        
-     5 Models      claude             project-alpha          1d ago            6h ago                    12000 ███████            22        
-     6 Agents     2                                                                                                                         
-  >  7            copilot            project-beta           2d ago            22h ago                    3000 ██░░░░░             7         
-  Sessions        0                                                                                                                         
-     8                                                                                                                                      
-  Commands        1/2                                                                                                                       
-     9                                                                                                                                      
-  Pipeline        enter: inspect · j/k: move · /: filter                                                                                    
+     2 Today        Agent             Project               Started           Last                     Tokens         Turns                 
+     3 Trends       Snaps                                                                                                                   
+     4 Providers    ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
+     5 Models       ──                                                                                                                      
+     6 Agents        claude            project-alpha         23h ago           just now                  12000 ███████            22        
+  >  7 Sessions     2                                                                                                                       
+     8 Commands     copilot           project-beta          2d ago            15h ago                    3000 ██░░░░░             7         
+     9 Pipeline     0                                                                                                                       
     10 Rewards                                                                                                                              
-    11 Logs                                                                                                                                 
+    11 Logs         1/2                                                                                                                     
     12 Config                                                                                                                               
-                                                                                                                                            
+                    enter: inspect · j/k: move · /: filter                                                                                  
  Dashboard                                                                                                                                  
                                                                                                                                             
  1-9,0 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                  

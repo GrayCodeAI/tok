@@ -23,6 +23,7 @@ func (s *rewardsSection) Name() string                      { return "Rewards" }
 func (s *rewardsSection) Short() string                     { return "Streaks" }
 func (s *rewardsSection) Init(SectionContext) tea.Cmd       { return nil }
 func (s *rewardsSection) KeyBindings() []key.Binding        { return nil }
+func (s *rewardsSection) IsScrollable() bool                { return true }
 func (s *rewardsSection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
 	return s, nil
 }

@@ -257,6 +257,36 @@ func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
 		},
 	})
 
+	// hooks.diagnose inspects the hook flag file + runtime env to
+	// explain why attribution might be failing. Read-only action:
+	// it just reports, doesn't mutate. Output goes to a toast chain
+	// so users can review it in context without leaving the Home view.
+	r.Register(Action{
+		ID:          "hooks.diagnose",
+		Title:       "Diagnose hook",
+		Description: "Check why commands might be missing attribution",
+		Category:    "System",
+		Run: func(_ context.Context, _ string) (any, error) {
+			report := diagnoseHooks()
+			kind := ToastSuccess
+			if !report.OK {
+				kind = ToastWarning
+			}
+			if deps.RequestToast != nil {
+				// Split multi-line reports across several toasts so
+				// each line stays readable in the stack.
+				for _, line := range strings.Split(report.Summary, "\n") {
+					line = strings.TrimSpace(line)
+					if line == "" {
+						continue
+					}
+					_ = deps.RequestToast(kind, line)
+				}
+			}
+			return report, nil
+		},
+	})
+
 	// First mutating action: toggle the tok hook activation flag. The
 	// flag file is the same one `tok hook mode` and the shell
 	// statusline read, so flipping it here changes whether new shell

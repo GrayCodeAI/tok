@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
@@ -22,6 +23,11 @@ func (h *homeSection) Name() string                { return "Home" }
 func (h *homeSection) Short() string               { return "Overview" }
 func (h *homeSection) Init(SectionContext) tea.Cmd { return nil }
 func (h *homeSection) KeyBindings() []key.Binding  { return nil }
+
+// IsScrollable marks Home as a scrollable block — the root model
+// handles up/down/pgup/pgdn/g/G by shifting a viewport offset.
+func (h *homeSection) IsScrollable() bool { return true }
+
 func (h *homeSection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
 	return h, nil
 }
@@ -48,6 +54,15 @@ func renderHomeView(ctx SectionContext) string {
 	overview := snapshot.Overview
 	store := ctx.Data.Sessions.StoreSummary
 	quality := ctx.Data.DataQuality
+
+	// Attribution banner — shown at the top of Home when a significant
+	// share of commands are missing agent/provider/model/session tags.
+	// This is a product-level warning: the hook is capturing commands
+	// but not the context around them, so provider-level cost numbers
+	// and per-model breakdowns are all pooled into "Unattributed".
+	// Surfacing it here is the difference between "tok works" and
+	// "tok's numbers look wrong, I don't know why."
+	attributionBanner := renderAttributionBanner(th, quality, width)
 
 	metricColumns := 3
 	if width < 96 {
@@ -80,7 +95,7 @@ func renderHomeView(ctx SectionContext) string {
 	if width >= 100 {
 		leftWidth := splitWidth(width, 2, 1)
 		rightWidth := width - leftWidth - 1
-		leaderboards = joinHorizontalGap(
+		leaderboards = joinPanelsEqualHeight(
 			" ",
 			renderBreakdownPanel(th, "Top Providers", "Provider", snapshot.TopProviders, leftWidth, 9),
 			renderBreakdownPanel(th, "Weak Commands", "Command", snapshot.LowSavingsCommands, rightWidth, 10),
@@ -123,7 +138,7 @@ func renderHomeView(ctx SectionContext) string {
 	if width >= 100 {
 		leftWidth := splitWidth(width, 2, 1)
 		rightWidth := width - leftWidth - 1
-		healthBlock = joinHorizontalGap(
+		healthBlock = joinPanelsEqualHeight(
 			" ",
 			setWidth(panelStyle(th, 11), leftWidth).Render(strings.Join(healthLines, "\n")),
 			setWidth(panelStyle(th, 12), rightWidth).Render(strings.Join(insightLines, "\n")),
@@ -137,19 +152,131 @@ func renderHomeView(ctx SectionContext) string {
 		)
 	}
 
-	return lipgloss.JoinVertical(
-		lipgloss.Left,
+	blocks := []string{
 		th.Title.Render("Home"),
 		th.Subtitle.Render("Token intelligence cockpit with live savings, costs, attribution, and quality telemetry."),
+	}
+	if attributionBanner != "" {
+		blocks = append(blocks, "", attributionBanner)
+	}
+	blocks = append(blocks,
 		"",
 		cardGrid,
 		"",
 		trendsBlock,
+	)
+	// Live Feed: only render when we have events. Before any `tok <cmd>`
+	// has run, the panel would be empty and distract from onboarding.
+	if feed := renderLiveFeedPanel(th, ctx.LiveFeed, width); feed != "" {
+		blocks = append(blocks, "", feed)
+	}
+	blocks = append(blocks,
 		"",
 		leaderboards,
 		"",
 		healthBlock,
 	)
+	return lipgloss.JoinVertical(lipgloss.Left, blocks...)
+}
+
+// renderLiveFeedPanel shows the most recent command events captured
+// from the in-process subscribe stream. Newest first, one line per
+// entry. Returns empty string when the feed is empty so the panel
+// doesn't show before the first event.
+func renderLiveFeedPanel(th theme, feed []LiveFeedEntry, width int) string {
+	if len(feed) == 0 {
+		return ""
+	}
+	rows := min(len(feed), 6)
+	lines := []string{
+		th.PanelTitle.Render("Live Feed") + "  " +
+			th.CardMeta.Render(fmt.Sprintf("last %d command(s) in this session", rows)),
+	}
+	now := nowFunc()
+	for i := 0; i < rows; i++ {
+		e := feed[i]
+		age := formatAge(now.Sub(e.At))
+		saved := fmt.Sprintf("+%s", formatInt(int64(e.SavedTokens)))
+		cmd := e.Command
+		// Leave room for marker (2) + saved (10) + age (8) + separators (6).
+		cmdWidth := max(12, width-28)
+		if len(cmd) > cmdWidth {
+			cmd = cmd[:cmdWidth-1] + "…"
+		}
+		// "Just arrived" flash: entries younger than 2s get a leading
+		// marker + focus color to draw the eye. After 2s the flash
+		// decays to a plain dot so the feed reads as a timeline rather
+		// than a constant highlight.
+		marker := " ·"
+		cmdStyle := th.CardMeta
+		if now.Sub(e.At) < 2*time.Second {
+			marker = th.Focus.Render("▸·")
+			cmdStyle = th.Focus
+		}
+		line := fmt.Sprintf("%s %-10s  %-*s  %s",
+			marker,
+			th.ValuePositive.Render(saved),
+			cmdWidth, cmdStyle.Render(cmd),
+			th.CardMeta.Render(age))
+		lines = append(lines, line)
+	}
+	return setWidth(panelStyle(th, 3), width).Render(strings.Join(lines, "\n"))
+}
+
+// formatAge is the human-readable relative time used in the Live Feed.
+// Mirrors formatRelative in view_sessions but trimmed down for the
+// Home panel where space is tight.
+func formatAge(d time.Duration) string {
+	switch {
+	case d < time.Second:
+		return "just now"
+	case d < time.Minute:
+		return fmt.Sprintf("%ds ago", int(d.Seconds()))
+	case d < time.Hour:
+		return fmt.Sprintf("%dm ago", int(d.Minutes()))
+	case d < 24*time.Hour:
+		return fmt.Sprintf("%dh ago", int(d.Hours()))
+	default:
+		return fmt.Sprintf("%dd ago", int(d.Hours()/24))
+	}
+}
+
+// renderAttributionBanner returns a warning banner — rendered above
+// the headline cards — when more than half of the window's tracked
+// commands are missing agent / provider / model / session metadata.
+// Returns empty string when coverage is healthy so the banner only
+// appears when it has something to say.
+func renderAttributionBanner(th theme, q tracking.DashboardDataQuality, width int) string {
+	if q.TotalCommands == 0 {
+		return ""
+	}
+	worst := q.CommandsMissingAgent
+	for _, n := range []int64{
+		q.CommandsMissingProvider,
+		q.CommandsMissingModel,
+		q.CommandsMissingSession,
+	} {
+		if n > worst {
+			worst = n
+		}
+	}
+	// Threshold: warn when ≥50% of commands are missing at least one
+	// attribution dimension. Below that, treat it as normal drift.
+	if worst*2 < q.TotalCommands {
+		return ""
+	}
+	pct := float64(worst) / float64(q.TotalCommands) * 100
+	lines := []string{
+		th.Warning.Render("⚠  Attribution coverage is low"),
+		fmt.Sprintf("%d of %d commands (%.0f%%) are missing context metadata.",
+			worst, q.TotalCommands, pct),
+		"Provider/model/cost numbers are pooled into 'Unattributed'.",
+		"",
+		th.CardMeta.Render("Fix: run  :hooks.diagnose  from the palette to see what's missing,"),
+		th.CardMeta.Render("     or reinstall the hook with  tok init -g --force  from a shell."),
+	}
+	border := panelStyle(th, 0).BorderForeground(th.Warning.GetForeground())
+	return setWidth(border, width).Render(strings.Join(lines, "\n"))
 }
 
 // renderOnboarding is the empty-state shown on first launch, before
@@ -181,6 +308,47 @@ func renderOnboarding(th theme, width int) string {
 	return setWidth(panelStyle(th, 1), width).Render(strings.Join(lines, "\n"))
 }
 
+// joinPanelsEqualHeight renders two side-by-side panels padded to the
+// taller of the two, so a short panel doesn't leave a visible gap
+// next to a long one. If content panels differ in height we add blank
+// lines to the shorter — matching each panel's background style so the
+// filler doesn't look like an escape-code gap.
+//
+// Callers pass pre-rendered panel strings; this function does not
+// attempt to re-style them. It's a layout helper, not a style helper.
+func joinPanelsEqualHeight(gap string, panels ...string) string {
+	if len(panels) == 0 {
+		return ""
+	}
+	maxH := 0
+	widths := make([]int, len(panels))
+	for i, p := range panels {
+		h := lipgloss.Height(p)
+		if h > maxH {
+			maxH = h
+		}
+		widths[i] = lipgloss.Width(p)
+	}
+	padded := make([]string, len(panels))
+	for i, p := range panels {
+		h := lipgloss.Height(p)
+		if h >= maxH {
+			padded[i] = p
+			continue
+		}
+		// Append `maxH - h` blank lines, each padded to the panel's
+		// existing visible width so JoinHorizontal doesn't treat the
+		// shorter panel as ragged.
+		blank := strings.Repeat(" ", widths[i])
+		extra := make([]string, maxH-h)
+		for j := range extra {
+			extra[j] = blank
+		}
+		padded[i] = p + "\n" + strings.Join(extra, "\n")
+	}
+	return joinHorizontalGap(gap, padded...)
+}
+
 // --- shared rendering primitives (used by Home now, other sections later) ---
 
 func renderMetricCard(th theme, title, value, detail string, width, accentIndex int, valueStyle lipgloss.Style) string {
@@ -206,10 +374,44 @@ func renderCardGrid(cards []string, columns int) string {
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }
 
+// Column layout for the two-line breakdown entry:
+//
+//   <keyWidth>  <savedCol>  <rateCol>
+//   <barWidth>  <shareCol>
+//
+// savedCol/rateCol/shareCol widths are fixed so numerics right-align
+// predictably. keyWidth and barWidth are derived from the panel width.
+// The header is built from the SAME constants as the data rows so
+// "Saved" sits over the saved numbers and "Rate" sits over the
+// percentages.
+const (
+	breakdownSavedCol = 9 // "999.9k" width
+	breakdownRateCol  = 7 // "100.0%" width
+	breakdownShareCol = 6 // "100.0%" width for the bar line
+)
+
+func breakdownKeyWidth(panelWidth int) int {
+	// Panel width minus fixed numeric columns and their 2 single-space
+	// separators, bounded so the key never becomes unreadable.
+	inner := panelWidth - breakdownSavedCol - breakdownRateCol - 2
+	if inner < 12 {
+		inner = 12
+	}
+	if inner > 36 {
+		inner = 36
+	}
+	return inner
+}
+
 func renderBreakdownPanel(th theme, title, keyLabel string, items []tracking.DashboardBreakdown, width, accentIndex int) string {
+	keyWidth := breakdownKeyWidth(width)
+	header := fmt.Sprintf("%-*s %*s %*s",
+		keyWidth, keyLabel,
+		breakdownSavedCol, "Saved",
+		breakdownRateCol, "Rate")
 	lines := []string{
 		th.PanelTitle.Render(title),
-		th.CardMeta.Render(fmt.Sprintf("%-18s %9s %7s  %s", keyLabel, "Saved", "Rate", "Share")),
+		th.CardMeta.Render(header),
 	}
 	if len(items) == 0 {
 		lines = append(lines, th.Muted.Render("No data"))
@@ -233,10 +435,15 @@ func renderBreakdownPanel(th theme, title, keyLabel string, items []tracking.Das
 }
 
 func renderBreakdownEntry(th theme, item tracking.DashboardBreakdown, width, index int, maxSaved int64) string {
-	keyWidth := max(12, width/2-6)
-	barWidth := max(8, width-keyWidth-22)
+	keyWidth := breakdownKeyWidth(width)
+	// Bar line sits under the key + gets the share %. Its width is
+	// whatever's left after the share column + its leading space.
+	barWidth := max(8, width-breakdownShareCol-3)
 	keyStr := truncate(displayKey(item.Key), keyWidth)
-	head := fmt.Sprintf("%-*s %9s %6.1f%%", keyWidth, keyStr, formatInt(item.SavedTokens), item.ReductionPct)
+	head := fmt.Sprintf("%-*s %*s %*s",
+		keyWidth, keyStr,
+		breakdownSavedCol, formatInt(item.SavedTokens),
+		breakdownRateCol, fmt.Sprintf("%.1f%%", item.ReductionPct))
 	bar := renderBar(th, item.SavedTokens, maxSaved, barWidth, index)
 	style := th.TableRow
 	if index == 0 {
@@ -246,7 +453,7 @@ func renderBreakdownEntry(th theme, item tracking.DashboardBreakdown, width, ind
 	if maxSaved > 0 {
 		share = (float64(item.SavedTokens) / float64(maxSaved)) * 100
 	}
-	barLine := bar + " " + th.CardMeta.Render(fmt.Sprintf("%5.1f%%", share))
+	barLine := bar + " " + th.CardMeta.Render(fmt.Sprintf("%*s", breakdownShareCol, fmt.Sprintf("%.1f%%", share)))
 	return style.Render(head) + "\n" + barLine
 }
 
