@@ -365,6 +365,11 @@ func (t *Tracker) RecordContext(ctx context.Context, record *CommandRecord) erro
 		}
 	}
 
+	// Fan out to live subscribers (TUI live mode). Non-blocking — the
+	// SQL row is canonical; a dropped event just means the UI takes
+	// the fallback-tick path instead of updating instantly.
+	notifySubscribers(record)
+
 	// Run cleanup after recording (throttled - at most once per minute)
 	if !t.closed.Load() {
 		select {

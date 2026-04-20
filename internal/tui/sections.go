@@ -36,6 +36,11 @@ type SectionContext struct {
 	// Env.UTF8 is false. Zero-value (all false) is safe but produces
 	// the most conservative glyphs.
 	Env Environment
+	// LiveFeed is a newest-first ring of recent command events captured
+	// from the in-process subscribe stream. Nil/empty when no events
+	// have arrived since TUI start. Home renders this as a "Live Feed"
+	// panel; other sections can ignore it.
+	LiveFeed []LiveFeedEntry
 }
 
 // SectionRenderer is implemented by each screen in the TUI. The root
@@ -102,6 +107,7 @@ func (s *placeholderSection) Name() string                         { return s.ti
 func (s *placeholderSection) Short() string                        { return s.short }
 func (s *placeholderSection) Init(SectionContext) tea.Cmd          { return nil }
 func (s *placeholderSection) KeyBindings() []key.Binding           { return nil }
+func (s *placeholderSection) IsScrollable() bool                   { return true }
 func (s *placeholderSection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
 	return s, nil
 }

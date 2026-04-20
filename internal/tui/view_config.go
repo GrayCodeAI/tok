@@ -25,6 +25,7 @@ func newConfigSection() *configSection { return &configSection{} }
 func (s *configSection) Name() string                { return "Config" }
 func (s *configSection) Short() string               { return "Health" }
 func (s *configSection) Init(SectionContext) tea.Cmd { return nil }
+func (s *configSection) IsScrollable() bool          { return true }
 
 func (s *configSection) KeyBindings() []key.Binding {
 	return []key.Binding{

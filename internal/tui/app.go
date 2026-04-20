@@ -25,6 +25,12 @@ type snapshotLoadedMsg struct {
 
 type refreshTickMsg time.Time
 
+// liveEventMsg is dispatched by the liveSource goroutine whenever the
+// underlying tracking data has changed. The TUI reacts by triggering a
+// snapshot reload and (when Record is set) popping a toast so the user
+// sees instant feedback on their own tok runs.
+type liveEventMsg LiveEvent
+
 // quitMsg is dispatched after the loader has been closed so the program can
 // exit cleanly without leaking DB handles.
 type quitMsg struct{}
@@ -45,9 +51,10 @@ type model struct {
 	logs       *ringHandler
 	prevLogger *slog.Logger
 	env        Environment
-	navIndex   int
-	width      int
-	height     int
+	navIndex      int
+	scrollOffsets []int // per-section vertical scroll offset for clipping in renderMain
+	width         int
+	height        int
 	ready      bool
 	compact    bool
 	helpOpen   bool
@@ -56,18 +63,46 @@ type model struct {
 	quitting   bool
 	err        error
 	lastLoad   time.Time
+	lastLive   time.Time // last time any live event arrived (subscribe/fsnotify/tick)
+	liveCount  int       // number of Record events since TUI start (for live badge)
+	liveFeed   []LiveFeedEntry
 	data       *tracking.WorkspaceDashboardSnapshot
 	spinner    spinner.Model
+	live       liveSource
 }
 
+// LiveFeedEntry is one entry in the recent-activity ring buffer rendered
+// on Home. Captures just enough to show "+123 saved · git status · 2s ago"
+// without holding the full CommandRecord.
+type LiveFeedEntry struct {
+	At          time.Time
+	Command     string
+	SavedTokens int
+}
+
+// maxLiveFeed bounds the ring buffer. 20 is enough for the Live Feed
+// panel (shows 6–8) plus a little history for scrolling later.
+const maxLiveFeed = 20
+
 func NewModel(opts Options) tea.Model {
-	return NewModelWithLoader(opts, newWorkspaceLoader())
+	return newModelWith(opts, newWorkspaceLoader(), newTrackingLiveSource())
 }
 
 // NewModelWithLoader is the testable constructor: tests inject a stubLoader
 // while production paths go through NewModel which owns the real DB-backed
-// workspaceLoader.
+// workspaceLoader. Tests get a nullLiveSource so no goroutines leak.
 func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
+	return newModelWith(opts, loader, nullLiveSource{})
+}
+
+// NewModelWithLive is a testable constructor that accepts both a stub
+// loader and a custom live source — used by the live-update integration
+// test to drive synthetic events without opening a real DB.
+func NewModelWithLive(opts Options, loader snapshotLoader, live liveSource) tea.Model {
+	return newModelWith(opts, loader, live)
+}
+
+func newModelWith(opts Options, loader snapshotLoader, live liveSource) tea.Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#4FC3F7"))
@@ -92,21 +127,23 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 
 	normalized := opts.normalized()
 	m := model{
-		opts:       normalized,
-		loader:     loader,
-		ctx:        ctx,
-		cancel:     cancel,
-		keys:       DefaultKeyMap(),
-		theme:      newThemeByName(normalized.Theme),
-		sections:   sections,
-		toasts:     &toastStack{},
-		search:     NewSearchOverlay(),
-		confirm:    NewConfirmOverlay(),
-		logs:       ring,
-		prevLogger: prev,
-		env:        DetectEnvironment(),
-		loading:    true,
-		spinner:    s,
+		opts:          normalized,
+		loader:        loader,
+		live:          live,
+		ctx:           ctx,
+		cancel:        cancel,
+		keys:          DefaultKeyMap(),
+		theme:         newThemeByName(normalized.Theme),
+		sections:      sections,
+		scrollOffsets: make([]int, len(sections)),
+		toasts:        &toastStack{},
+		search:        NewSearchOverlay(),
+		confirm:       NewConfirmOverlay(),
+		logs:          ring,
+		prevLogger:    prev,
+		env:           DetectEnvironment(),
+		loading:       true,
+		spinner:       s,
 	}
 
 	// Build the action registry with callbacks that close over the model
@@ -148,8 +185,41 @@ func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.spinner.Tick,
 		loadSnapshotCmd(m.ctx, m.loader, m.opts),
-		refreshTickCmd(m.opts.RefreshInterval),
+		liveEventCmd(m.ctx, m.live),
 	)
+}
+
+// liveEventCmd pumps the next event from the live source into the tea
+// loop. It re-schedules itself from the Update switch so the main loop
+// sees a stream of liveEventMsg without us owning a raw goroutine.
+func liveEventCmd(ctx context.Context, live liveSource) tea.Cmd {
+	if live == nil {
+		return nil
+	}
+	ch := live.Start(ctx)
+	return waitForLiveEvent(ch)
+}
+
+func waitForLiveEvent(ch <-chan LiveEvent) tea.Cmd {
+	if ch == nil {
+		return nil
+	}
+	return func() tea.Msg {
+		ev, ok := <-ch
+		if !ok {
+			return nil
+		}
+		// Carry the channel forward via a follow-up cmd so the next
+		// call to Update re-pumps without us starting a new source.
+		return liveEventWithChan{ev: liveEventMsg(ev), ch: ch}
+	}
+}
+
+// liveEventWithChan pairs the event with the channel it came from so we
+// can re-subscribe on the next tick without re-Start()ing the source.
+type liveEventWithChan struct {
+	ev liveEventMsg
+	ch <-chan LiveEvent
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -176,6 +246,34 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, loadSnapshotCmd(m.ctx, m.loader, m.opts))
 		}
 		cmds = append(cmds, refreshTickCmd(m.opts.RefreshInterval))
+	case liveEventWithChan:
+		if m.quitting {
+			return m, nil
+		}
+		m.lastLive = msg.ev.At
+		if msg.ev.Source == "subscribe" && msg.ev.Record != nil {
+			m.liveCount++
+			m.liveFeed = appendLiveFeed(m.liveFeed, LiveFeedEntry{
+				At:          msg.ev.At,
+				Command:     msg.ev.Record.Command,
+				SavedTokens: msg.ev.Record.SavedTokens,
+			})
+			// Only pop a toast for truly new commands — fsnotify and
+			// tick events fire from any write including unrelated ones
+			// and would quickly become noise.
+			cmds = append(cmds, requestToastCmd(
+				ToastSuccess,
+				formatLiveRecordToast(msg.ev.Record),
+			))
+		}
+		// Kick off a snapshot reload so the next frame reflects the
+		// new data. Coalesce: skip if one's already in-flight.
+		if !m.loading && !m.refreshing {
+			m.refreshing = true
+			cmds = append(cmds, loadSnapshotCmd(m.ctx, m.loader, m.opts))
+		}
+		// Re-pump the channel for the next event.
+		cmds = append(cmds, waitForLiveEvent(msg.ch))
 	case snapshotLoadedMsg:
 		m.loading = false
 		m.refreshing = false
@@ -340,7 +438,8 @@ func (m model) sectionContext() SectionContext {
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,
-		Env:     m.env,
+		Env:      m.env,
+		LiveFeed: m.liveFeed,
 	}
 }
 
@@ -429,8 +528,127 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 		if idx, ok := sectionShortcutIndex(msg.String(), len(m.sections)); ok {
 			m.navIndex = idx
 		}
+	case key.Matches(msg, m.keys.PageUp):
+		m.scrollBy(-m.pageStep())
+	case key.Matches(msg, m.keys.PageDn):
+		m.scrollBy(m.pageStep())
+	case key.Matches(msg, m.keys.Up):
+		if m.sectionWantsScroll() {
+			m.scrollBy(-1)
+		}
+	case key.Matches(msg, m.keys.Down):
+		if m.sectionWantsScroll() {
+			m.scrollBy(1)
+		}
+	case key.Matches(msg, m.keys.Top):
+		if m.sectionWantsScroll() {
+			m.scrollOffsets[m.navIndex] = 0
+		}
+	case key.Matches(msg, m.keys.Bottom):
+		if m.sectionWantsScroll() {
+			m.scrollOffsets[m.navIndex] = m.maxOffsetForCurrent()
+		}
 	}
 	return m, nil
+}
+
+// scrollableSection marks a section whose View output is a static block
+// the root should scroll via clipToHeight (no internal cursor). Sections
+// with tables embed their own viewport instead and do NOT implement this
+// marker so their arrow/pgup/pgdn keys move the table cursor, not the
+// frame.
+type scrollableSection interface {
+	IsScrollable() bool
+}
+
+func (m model) sectionWantsScroll() bool {
+	if m.navIndex < 0 || m.navIndex >= len(m.sections) {
+		return false
+	}
+	s, ok := m.sections[m.navIndex].(scrollableSection)
+	return ok && s.IsScrollable()
+}
+
+func (m *model) scrollBy(delta int) {
+	if m.navIndex < 0 || m.navIndex >= len(m.scrollOffsets) {
+		return
+	}
+	offset := m.scrollOffsets[m.navIndex] + delta
+	if offset < 0 {
+		offset = 0
+	}
+	if maxOff := m.maxOffsetForCurrent(); offset > maxOff {
+		offset = maxOff
+	}
+	m.scrollOffsets[m.navIndex] = offset
+}
+
+// pageStep is the step size for PageUp/PageDn — roughly one screen
+// minus two lines of overlap so the reader can keep a landmark in view.
+func (m model) pageStep() int {
+	_, h := m.mainInnerDims()
+	step := h - 2
+	if step < 1 {
+		step = 1
+	}
+	return step
+}
+
+// mainInnerDims returns the inner (content) width and height of the Main
+// pane, matching renderBody's layout math so scroll bookkeeping uses the
+// same coordinates the render path uses.
+func (m model) mainInnerDims() (int, int) {
+	width := max(20, m.width)
+	sidebarWidth := 20
+	gap := 1
+	rightWidth := 0
+	if !m.compact {
+		showRight := width >= 170 && m.navIndex != 0
+		if showRight {
+			rightWidth = 26
+		}
+		width = max(24, width-sidebarWidth-rightWidth-gap)
+	}
+	innerWidth := max(1, width-m.theme.Main.GetHorizontalFrameSize())
+
+	bodyHeight := max(8, m.height-2-1) // header(1) + footer(1) rough; recomputed below
+	// Re-derive body height the way View() does: header + footer + toasts.
+	header := m.renderHeader(max(20, m.width))
+	footer := m.renderFooter(max(20, m.width))
+	toastHeight := 0
+	if m.toasts != nil && len(m.toasts.items) > 0 {
+		toastHeight = 1
+	}
+	bodyHeight = max(8, m.height-lipgloss.Height(header)-lipgloss.Height(footer)-toastHeight)
+	if m.compact {
+		// Compact mode reserves one line for the tabs strip above Main.
+		bodyHeight = max(4, bodyHeight-1)
+	}
+	innerHeight := max(1, bodyHeight-m.theme.Main.GetVerticalFrameSize())
+	return innerWidth, innerHeight
+}
+
+func (m model) maxOffsetForCurrent() int {
+	if m.navIndex < 0 || m.navIndex >= len(m.sections) {
+		return 0
+	}
+	innerW, innerH := m.mainInnerDims()
+	ctx := SectionContext{
+		Theme:   m.theme,
+		Keys:    m.keys,
+		Data:    m.data,
+		Opts:    m.opts,
+		Width:   innerW,
+		Height:  innerH,
+		Compact: m.compact,
+		Focused: true,
+		Logs:    m.logs,
+		Env:      m.env,
+		LiveFeed: m.liveFeed,
+	}
+	rendered := m.sections[m.navIndex].View(ctx)
+	lines := strings.Count(rendered, "\n") + 1
+	return maxScrollOffset(lines, innerH)
 }
 
 func loadSnapshotCmd(ctx context.Context, loader snapshotLoader, opts Options) tea.Cmd {
@@ -530,6 +748,11 @@ func (m model) renderHeader(width int) string {
 		statusParts = append(statusParts, m.theme.HeaderMuted.Render("updated "+m.lastLoad.Format("15:04:05")))
 	}
 
+	// Live badge: "● live" when we've received any event in the last
+	// 30 seconds; "○ idle" otherwise. Colored via Positive/HeaderMuted.
+	// This is the primary "am I seeing real-time data?" affordance.
+	statusParts = append(statusParts, m.renderLiveBadge())
+
 	left := title + "  " + strings.Join(statusParts, m.theme.HeaderMuted.Render(" · "))
 	return setWidth(m.theme.Header, width).Render(left)
 }
@@ -541,7 +764,7 @@ func (m model) renderBody(width, height int) string {
 		return lipgloss.JoinVertical(lipgloss.Left, tabs, main)
 	}
 
-	sidebarWidth := 18
+	sidebarWidth := 20
 	showRightPane := width >= 170 && m.navIndex != 0
 	rightWidth := 0
 	if showRightPane {
@@ -579,7 +802,17 @@ func (m model) renderSidebar(width, height int) string {
 			style = m.theme.SidebarActive
 		}
 		text := marker + m.theme.SidebarKey.Render(label) + " " + s.Name()
-		lines = append(lines, setWidth(style, width-2).Render(text))
+		// The inner width available for each row is the sidebar width
+		// minus the Sidebar container's frame (Padding + BorderRight).
+		// Using a fixed `-2` underestimated it by the right-border, which
+		// caused longer section names (Providers/Sessions/Commands/
+		// Pipeline) to wrap onto a second line without their shortcut
+		// number.
+		inner := width - m.theme.Sidebar.GetHorizontalFrameSize()
+		if inner < 1 {
+			inner = 1
+		}
+		lines = append(lines, setWidth(style, inner).Render(text))
 	}
 	lines = append(lines, "")
 	lines = append(lines, m.theme.Muted.Render("Dashboard"))
@@ -588,21 +821,41 @@ func (m model) renderSidebar(width, height int) string {
 }
 
 func (m model) renderCompactTabs(width int) string {
-	// Brackets make the active tab scannable even when color is
-	// stripped (ASCII mode, grayscale terminals, screenshots). In
-	// color terminals the active tab is ALSO cyan+bold via
-	// SidebarActive style, so the marker is additive, not the only
-	// affordance.
-	parts := make([]string, 0, len(m.sections))
+	// Try to render all labels on one line, bracketing the active one.
+	// On narrow terminals (≤100 cols) the full strip wraps, eating main
+	// pane height, so fall back to a breadcrumb of "[N/M] Name  ‹ prev ·
+	// next ›" which is always one line and makes nav affordances explicit.
+	fullParts := make([]string, 0, len(m.sections))
 	for i, s := range m.sections {
 		label := s.Name()
 		if i == m.navIndex {
-			parts = append(parts, m.theme.SidebarActive.Render("["+label+"]"))
+			fullParts = append(fullParts, m.theme.SidebarActive.Render("["+label+"]"))
 		} else {
-			parts = append(parts, m.theme.SidebarItem.Render(" "+label+" "))
+			fullParts = append(fullParts, m.theme.SidebarItem.Render(" "+label+" "))
 		}
 	}
-	return setWidth(lipgloss.NewStyle().Padding(0, 1), width).Render(strings.Join(parts, " "))
+	full := strings.Join(fullParts, " ")
+	if lipgloss.Width(full) <= width-2 {
+		return setWidth(lipgloss.NewStyle().Padding(0, 1), width).Render(full)
+	}
+
+	// Breadcrumb fallback: keep the whole line under `width` even on 60-col
+	// terminals. Format: "‹ shift-tab · [3/12] Trends · tab ›".
+	current := m.sections[m.navIndex].Name()
+	breadcrumb := fmt.Sprintf("‹ shift-tab · %s[%d/%d] %s%s · tab ›",
+		"",
+		m.navIndex+1, len(m.sections),
+		current,
+		"",
+	)
+	styled := m.theme.SidebarActive.Render(breadcrumb)
+	if lipgloss.Width(styled) > width {
+		// Even narrower: drop the arrows.
+		styled = m.theme.SidebarActive.Render(
+			fmt.Sprintf("[%d/%d] %s", m.navIndex+1, len(m.sections), current),
+		)
+	}
+	return setWidth(lipgloss.NewStyle().Padding(0, 1), width).Render(styled)
 }
 
 func (m model) renderMain(width, height int) string {
@@ -618,17 +871,16 @@ func (m model) renderMain(width, height int) string {
 	if m.helpOpen {
 		return setWidth(m.theme.Main, width).Render(m.renderHelp(innerWidth))
 	}
-	if m.loading && m.data == nil {
-		body := "\n" + m.spinner.View() + " Loading workspace snapshot…\n\n" +
-			m.theme.Muted.Render("First launch may take a moment while the tracking DB initializes.")
-		return setWidth(m.theme.Main, width).Render(body)
-	}
 	if m.err != nil && m.data == nil {
 		body := m.theme.Danger.Render("Failed to load snapshot") + "\n\n" +
 			m.err.Error() + "\n\n" +
 			m.theme.Muted.Render("Press 'r' to retry, or 'q' to quit.")
 		return setWidth(m.theme.Main, width).Render(body)
 	}
+	// Sections are responsible for their own empty state. Home renders an
+	// onboarding panel when Data is nil; other sections render "No data".
+	// The header spinner already signals "loading", so a dedicated loading
+	// body would just hide the first-run welcome screen behind a spinner.
 	ctx := SectionContext{
 		Theme:   m.theme,
 		Keys:    m.keys,
@@ -639,9 +891,74 @@ func (m model) renderMain(width, height int) string {
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,
-		Env:     m.env,
+		Env:      m.env,
+		LiveFeed: m.liveFeed,
 	}
-	return setWidth(m.theme.Main, width).Render(m.sections[m.navIndex].View(ctx))
+	rendered := m.sections[m.navIndex].View(ctx)
+	offset := m.scrollOffsets[m.navIndex]
+	totalLines := strings.Count(rendered, "\n") + 1
+
+	// Scroll hint: reserve one line at the bottom of the main pane so the
+	// indicator never covers a content row. Only reserve when the section
+	// is scrollable and the content actually exceeds the viewport.
+	wantsHint := m.sectionWantsScroll() && totalLines > innerHeight
+	contentHeight := innerHeight
+	if wantsHint {
+		contentHeight = max(1, innerHeight-1)
+	}
+
+	body := clipToHeight(rendered, contentHeight, offset)
+	if wantsHint {
+		visibleEnd := offset + contentHeight
+		if visibleEnd > totalLines {
+			visibleEnd = totalLines
+		}
+		var hint string
+		switch {
+		case offset > 0 && visibleEnd < totalLines:
+			hint = fmt.Sprintf("▲ %d above · %d/%d · ▼ %d below · pgup/pgdn",
+				offset, visibleEnd, totalLines, totalLines-visibleEnd)
+		case offset > 0:
+			hint = fmt.Sprintf("▲ %d above · %d/%d (end) · pgup to scroll back",
+				offset, totalLines, totalLines)
+		default:
+			hint = fmt.Sprintf("%d/%d · ▼ %d below · pgdn or j to scroll",
+				contentHeight, totalLines, totalLines-visibleEnd)
+		}
+		body = body + "\n" + m.theme.Muted.Render(hint)
+	}
+	return setWidth(m.theme.Main, width).Render(body)
+}
+
+// clipToHeight limits the rendered section output to `height` lines,
+// shifted by `offset` so content below the viewport can be scrolled
+// into view. Splits on "\n" which is safe here because lipgloss emits
+// ANSI SGR pairs on a single line (each line self-closes).
+func clipToHeight(s string, height, offset int) string {
+	if height <= 0 {
+		return ""
+	}
+	lines := strings.Split(s, "\n")
+	if offset < 0 {
+		offset = 0
+	}
+	if offset >= len(lines) {
+		offset = max(0, len(lines)-1)
+	}
+	lines = lines[offset:]
+	if len(lines) > height {
+		lines = lines[:height]
+	}
+	return strings.Join(lines, "\n")
+}
+
+// maxScrollOffset returns the largest allowed scroll offset for a
+// rendered block of lineCount lines inside a viewport of viewportHeight.
+func maxScrollOffset(lineCount, viewportHeight int) int {
+	if lineCount <= viewportHeight {
+		return 0
+	}
+	return lineCount - viewportHeight
 }
 
 func (m model) renderInsights(width, height int) string {
@@ -736,6 +1053,50 @@ func (m model) renderHelp(width int) string {
 	}
 	help := lipgloss.JoinHorizontal(lipgloss.Top, rendered...)
 	return strings.Join(lines, "\n") + "\n" + help
+}
+
+// appendLiveFeed prepends entry to feed and caps at maxLiveFeed. Newest
+// first so Home's panel shows most-recent on top without re-sorting.
+func appendLiveFeed(feed []LiveFeedEntry, entry LiveFeedEntry) []LiveFeedEntry {
+	out := make([]LiveFeedEntry, 0, len(feed)+1)
+	out = append(out, entry)
+	out = append(out, feed...)
+	if len(out) > maxLiveFeed {
+		out = out[:maxLiveFeed]
+	}
+	return out
+}
+
+// renderLiveBadge returns a short colored tag indicating live-data
+// freshness. The TUI is "live" when an event has arrived in the last
+// 30s; otherwise it's "idle" (but we're still polling via fallback).
+func (m model) renderLiveBadge() string {
+	if m.lastLive.IsZero() {
+		return m.theme.HeaderMuted.Render("○ connecting")
+	}
+	age := time.Since(m.lastLive)
+	if age < 30*time.Second {
+		label := "● live"
+		if m.liveCount > 0 {
+			label = fmt.Sprintf("● live · %d cmds", m.liveCount)
+		}
+		return m.theme.Positive.Render(label)
+	}
+	return m.theme.HeaderMuted.Render(fmt.Sprintf("○ idle %ds", int(age.Seconds())))
+}
+
+// formatLiveRecordToast is the one-line summary surfaced when a new
+// command gets recorded. Shows tokens saved + the command head so the
+// user can see their own action reflected in real time.
+func formatLiveRecordToast(rec *tracking.CommandRecord) string {
+	if rec == nil {
+		return "new command recorded"
+	}
+	cmd := rec.Command
+	if len(cmd) > 40 {
+		cmd = cmd[:39] + "…"
+	}
+	return fmt.Sprintf("+%s saved · %s", formatInt(int64(rec.SavedTokens)), cmd)
 }
 
 func firstBreakdown(items []tracking.DashboardBreakdown) *tracking.DashboardBreakdown {

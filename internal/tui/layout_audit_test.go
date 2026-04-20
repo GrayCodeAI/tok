@@ -64,7 +64,7 @@ func TestLayoutNoLineExceedsWidth(t *testing.T) {
 			t.Run(fmt.Sprintf("w%d_s%d", w, section), func(t *testing.T) {
 				loader := &stubLoader{snapshot: goldenFixture()}
 				m := NewModelWithLoader(Options{Theme: ThemeDark, Days: 7}, loader).(model)
-				next, _ := m.Update(tea.WindowSizeMsg{Width: w, Height: 45})
+				next, _ := m.Update(tea.WindowSizeMsg{Width: w, Height: 120})
 				m = next.(model)
 				next, _ = m.Update(snapshotLoadedMsg{snapshot: loader.snapshot, loadedAt: time.Now()})
 				m = next.(model)
@@ -127,7 +127,7 @@ func TestLayoutBalancedPanelBorders(t *testing.T) {
 			t.Run(fmt.Sprintf("w%d_s%d", w, section), func(t *testing.T) {
 				loader := &stubLoader{snapshot: goldenFixture()}
 				m := NewModelWithLoader(Options{Theme: ThemeDark, Days: 7}, loader).(model)
-				next, _ := m.Update(tea.WindowSizeMsg{Width: w, Height: 45})
+				next, _ := m.Update(tea.WindowSizeMsg{Width: w, Height: 120})
 				m = next.(model)
 				next, _ = m.Update(snapshotLoadedMsg{snapshot: loader.snapshot, loadedAt: time.Now()})
 				m = next.(model)

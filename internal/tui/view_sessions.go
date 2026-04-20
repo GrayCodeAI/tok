@@ -270,13 +270,18 @@ func fullPath(p string) string {
 	return p
 }
 
+// nowFunc is the package-level clock used by relative-time renderers.
+// Tests override it to pin the golden output. Production callers see
+// time.Now.
+var nowFunc = time.Now
+
 // formatRelative renders a timestamp as "3m ago", "2h ago", "just now".
 // Absolute fallback on very old timestamps keeps the table scannable.
 func formatRelative(t time.Time) string {
 	if t.IsZero() {
 		return "—"
 	}
-	d := time.Since(t)
+	d := nowFunc().Sub(t)
 	switch {
 	case d < time.Minute:
 		return "just now"
