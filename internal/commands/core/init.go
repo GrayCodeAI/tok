@@ -102,19 +102,19 @@ type AgentInfo struct {
 
 // agentNameMap maps CLI agent names to AgentInfo names
 var agentNameMap = map[string]string{
-	"claude-code":  "Claude Code",
-	"claude":       "Claude Code",
-	"copilot":      "GitHub Copilot",
-	"cursor":       "Cursor",
-	"windsurf":     "Windsurf",
-	"cline":        "Cline",
-	"roo-code":     "Cline",
-	"codex":        "Codex",
-	"gemini":       "Gemini CLI",
-	"kilocode":     "Kilo Code",
-	"antigravity":  "Google Antigravity",
-	"opencode":     "OpenCode",
-	"openclaw":     "OpenClaw",
+	"claude-code": "Claude Code",
+	"claude":      "Claude Code",
+	"copilot":     "GitHub Copilot",
+	"cursor":      "Cursor",
+	"windsurf":    "Windsurf",
+	"cline":       "Cline",
+	"roo-code":    "Cline",
+	"codex":       "Codex",
+	"gemini":      "Gemini CLI",
+	"kilocode":    "Kilo Code",
+	"antigravity": "Google Antigravity",
+	"opencode":    "OpenCode",
+	"openclaw":    "OpenClaw",
 }
 
 // SupportedAgents lists all supported agent names

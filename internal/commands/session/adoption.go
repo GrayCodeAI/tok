@@ -17,8 +17,8 @@ import (
 )
 
 var (
-	sessionAdoptionDays  int
-	sessionAdoptionJSON  bool
+	sessionAdoptionDays int
+	sessionAdoptionJSON bool
 )
 
 func init() {
@@ -46,12 +46,12 @@ Examples:
 }
 
 type SessionAdoptionRow struct {
-	SessionID    string    `json:"session_id"`
-	StartTime    time.Time `json:"start_time"`
-	TotalCmds    int       `json:"total_commands"`
-	TokCmds      int       `json:"tok_commands"`
-	TokensSaved  int       `json:"tokens_saved"`
-	AdoptionPct  float64   `json:"adoption_pct"`
+	SessionID   string    `json:"session_id"`
+	StartTime   time.Time `json:"start_time"`
+	TotalCmds   int       `json:"total_commands"`
+	TokCmds     int       `json:"tok_commands"`
+	TokensSaved int       `json:"tokens_saved"`
+	AdoptionPct float64   `json:"adoption_pct"`
 }
 
 type SessionAdoptionResult struct {

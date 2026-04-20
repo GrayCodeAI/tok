@@ -50,18 +50,18 @@ func Activate(mode string) error {
 	if mode == "" {
 		mode = "full"
 	}
-	
+
 	flagPath := GetFlagPath()
 	flagDir := filepath.Dir(flagPath)
-	
+
 	if err := os.MkdirAll(flagDir, 0755); err != nil {
 		return fmt.Errorf("failed to create config dir: %w", err)
 	}
-	
+
 	if err := os.WriteFile(flagPath, []byte(mode), 0644); err != nil {
 		return fmt.Errorf("failed to write flag file: %w", err)
 	}
-	
+
 	return nil
 }
 
@@ -79,7 +79,7 @@ func GetStatusLine() string {
 	if !IsActive() {
 		return ""
 	}
-	
+
 	mode := GetMode()
 	if mode == "full" || mode == "" {
 		return "[TOK]"
@@ -97,7 +97,7 @@ func AutoActivateOnStartup() error {
 		}
 		return Activate(mode)
 	}
-	
+
 	// Check config file
 	configPath := filepath.Join(filepath.Dir(GetFlagPath()), "config.json")
 	// Simple config check - could be expanded
@@ -105,7 +105,7 @@ func AutoActivateOnStartup() error {
 		// Config exists, could parse for auto_activate setting
 		// For now, just check env var
 	}
-	
+
 	return nil
 }
 

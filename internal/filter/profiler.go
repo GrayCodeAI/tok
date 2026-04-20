@@ -26,16 +26,16 @@ func (p *Profiler) Track(name string, fn func()) {
 	start := time.Now()
 	fn()
 	elapsed := time.Since(start)
-	
+
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	m, ok := p.layers[name]
 	if !ok {
 		m = &LayerMetrics{}
 		p.layers[name] = m
 	}
-	
+
 	m.Calls++
 	m.TotalTime += elapsed
 	m.AvgTime = m.TotalTime / time.Duration(m.Calls)
@@ -47,7 +47,7 @@ func (p *Profiler) Track(name string, fn func()) {
 func (p *Profiler) GetMetrics() map[string]*LayerMetrics {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	
+
 	result := make(map[string]*LayerMetrics, len(p.layers))
 	for k, v := range p.layers {
 		result[k] = v

@@ -12,11 +12,11 @@ func NewQualityPredictor() *QualityPredictor {
 func (qp *QualityPredictor) Predict(input string) float64 {
 	features := qp.extractFeatures(input)
 	key := features.String()
-	
+
 	if score, ok := qp.history[key]; ok {
 		return score
 	}
-	
+
 	return 0.7 // Default prediction
 }
 

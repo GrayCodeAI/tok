@@ -13,8 +13,8 @@ const version = "0.1.0"
 
 // App represents the tok application.
 type App struct {
-	inputHandler  *input.Handler
-	outputHandler *output.Handler
+	inputHandler   *input.Handler
+	outputHandler  *output.Handler
 	unifiedHandler *unified.Handler
 }
 

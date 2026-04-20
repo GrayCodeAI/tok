@@ -10,9 +10,9 @@ import (
 
 // MultiLevelCache implements L1 (memory) + L2 (disk) + L3 (optional Redis) caching
 type MultiLevelCache struct {
-	l1   map[string]string // In-memory LRU
-	l2Dir string           // Disk cache directory
-	mu   sync.RWMutex
+	l1    map[string]string // In-memory LRU
+	l2Dir string            // Disk cache directory
+	mu    sync.RWMutex
 	maxL1 int
 }
 
@@ -35,7 +35,7 @@ func (mc *MultiLevelCache) Get(key string) (string, bool) {
 		return val, true
 	}
 	mc.mu.RUnlock()
-	
+
 	// L2: Disk
 	hash := hashKey(key)
 	path := filepath.Join(mc.l2Dir, hash)
@@ -45,7 +45,7 @@ func (mc *MultiLevelCache) Get(key string) (string, bool) {
 		mc.promoteToL1(key, val)
 		return val, true
 	}
-	
+
 	return "", false
 }
 
@@ -61,7 +61,7 @@ func (mc *MultiLevelCache) Set(key, value string) {
 	}
 	mc.l1[key] = value
 	mc.mu.Unlock()
-	
+
 	// L2: Disk
 	hash := hashKey(key)
 	path := filepath.Join(mc.l2Dir, hash)

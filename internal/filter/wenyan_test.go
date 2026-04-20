@@ -33,11 +33,11 @@ func TestWenyanCompress_Abbreviations(t *testing.T) {
 	in := "configuration documentation environment function database"
 	out := WenyanCompress(in, WenyanFull)
 	for long, short := range map[string]string{
-		"configuration":  "config",
-		"documentation":  "docs",
-		"environment":    "env",
-		"function":       "fn",
-		"database":       "db",
+		"configuration": "config",
+		"documentation": "docs",
+		"environment":   "env",
+		"function":      "fn",
+		"database":      "db",
 	} {
 		if strings.Contains(strings.ToLower(out), long) {
 			t.Errorf("WenyanFull kept %q (should become %q): got %q", long, short, out)

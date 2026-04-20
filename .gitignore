@@ -60,3 +60,8 @@ coverage.out
 config/local.toml
 .env
 .env.local
+
+# Go build/mod caches
+.gomodcache/
+.gocache/
+.gosrccache/

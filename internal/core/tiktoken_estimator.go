@@ -21,19 +21,19 @@ func (te *TiktokenEstimator) Estimate(text string) int {
 		return cached
 	}
 	te.mu.RUnlock()
-	
+
 	// Improved heuristic: ~3.5 chars per token for English
 	tokens := len(text) / 4
 	if tokens < 1 {
 		tokens = 1
 	}
-	
+
 	te.mu.Lock()
 	if len(te.cache) < 1000 {
 		te.cache[text] = tokens
 	}
 	te.mu.Unlock()
-	
+
 	return tokens
 }
 

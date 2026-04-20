@@ -14,12 +14,12 @@ import (
 
 // Printer is the centralized output abstraction for tok CLI.
 type Printer struct {
-	mu        sync.Mutex
-	stdout    io.Writer
-	stderr    io.Writer
-	quiet     bool
-	jsonMode  bool
-	isTTY     bool
+	mu       sync.Mutex
+	stdout   io.Writer
+	stderr   io.Writer
+	quiet    bool
+	jsonMode bool
+	isTTY    bool
 }
 
 // New creates a new Printer writing to os.Stdout and os.Stderr.

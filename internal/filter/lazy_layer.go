@@ -14,15 +14,15 @@ func NewLazyLayer(f Filter) *LazyLayer {
 
 func (l *LazyLayer) Apply(input string, mode Mode) (string, int) {
 	key := input + string(mode)
-	
+
 	if cached, ok := l.cache.Load(key); ok {
 		result := cached.(lazyResult)
 		return result.output, result.tokens
 	}
-	
+
 	output, tokens := l.filter.Apply(input, mode)
 	l.cache.Store(key, lazyResult{output, tokens})
-	
+
 	return output, tokens
 }
 

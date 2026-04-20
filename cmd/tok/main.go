@@ -4,12 +4,14 @@
 // (for terminal/tool output) into a single CLI tool.
 //
 // Usage:
-//   tok <command> [args]
+//
+//	tok <command> [args]
 //
 // Examples:
-//   tok compress -mode ultra -input "text to compress"
-//   tok git status
-//   tok doctor
+//
+//	tok compress -mode ultra -input "text to compress"
+//	tok git status
+//	tok doctor
 package main
 
 import (

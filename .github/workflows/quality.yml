@@ -117,9 +117,11 @@ jobs:
     
     - name: Check formatting
       run: |
-        if [ -n "$(gofmt -l .)" ]; then
+        # Exclude vendored / cache dirs — these aren't ours to reformat.
+        files=$(gofmt -l . 2>/dev/null | grep -v -E '^(\.gomodcache|\.gocache|\.gosrccache|vendor)/' || true)
+        if [ -n "$files" ]; then
           echo "❌ The following files need formatting:"
-          gofmt -l .
+          echo "$files"
           exit 1
         fi
         echo "✅ All files are properly formatted"
@@ -139,9 +141,10 @@ jobs:
     - name: Check imports
       run: |
         go install golang.org/x/tools/cmd/goimports@latest
-        if [ -n "$(goimports -l .)" ]; then
+        files=$(goimports -l . 2>/dev/null | grep -v -E '^(\.gomodcache|\.gocache|\.gosrccache|vendor)/' || true)
+        if [ -n "$files" ]; then
           echo "❌ The following files have import issues:"
-          goimports -l .
+          echo "$files"
           exit 1
         fi
         echo "✅ All imports are properly organized"

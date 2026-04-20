@@ -19,33 +19,33 @@ func (f *SIMDEntropyFilter) Apply(input string, mode Mode) (string, int) {
 	if len(input) < 50 {
 		return input, 0
 	}
-	
+
 	lines := splitLinesSimd(input)
 	kept := make([]string, 0, len(lines))
-	
+
 	for _, line := range lines {
 		if len(line) == 0 {
 			continue
 		}
-		
+
 		freq := make([]float64, 256)
 		for i := 0; i < len(line); i++ {
 			freq[line[i]]++
 		}
-		
+
 		total := float64(len(line))
 		for i := range freq {
 			if freq[i] > 0 {
 				freq[i] /= total
 			}
 		}
-		
+
 		entropy := f.dispatcher.EntropyFilter(freq)
 		if entropy >= f.threshold {
 			kept = append(kept, line)
 		}
 	}
-	
+
 	result := joinLinesSimd(kept)
 	saved := len(input) - len(result)
 	return result, saved / 4

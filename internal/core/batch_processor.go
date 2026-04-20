@@ -28,7 +28,7 @@ func (bp *BatchProcessor) ProcessBatch(inputs []string) []BatchResult {
 	results := make([]BatchResult, len(inputs))
 	jobs := make(chan int, len(inputs))
 	var wg sync.WaitGroup
-	
+
 	for w := 0; w < bp.workers; w++ {
 		wg.Add(1)
 		go func() {
@@ -43,12 +43,12 @@ func (bp *BatchProcessor) ProcessBatch(inputs []string) []BatchResult {
 			}
 		}()
 	}
-	
+
 	for i := range inputs {
 		jobs <- i
 	}
 	close(jobs)
 	wg.Wait()
-	
+
 	return results
 }

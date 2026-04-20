@@ -20,10 +20,10 @@ func NewAdaptivePipeline(layers []Filter) *AdaptivePipeline {
 func (ap *AdaptivePipeline) Process(input string) (string, int) {
 	contentType := detectContentType(input)
 	layerIndices := ap.selector.SelectLayers(contentType, len(input))
-	
+
 	output := input
 	totalSaved := 0
-	
+
 	for _, idx := range layerIndices {
 		if idx >= len(ap.allLayers) {
 			continue
@@ -32,7 +32,7 @@ func (ap *AdaptivePipeline) Process(input string) (string, int) {
 		output = result
 		totalSaved += saved
 	}
-	
+
 	return output, totalSaved
 }
 
@@ -40,7 +40,7 @@ func (ls *LayerSelector) SelectLayers(contentType string, inputSize int) []int {
 	if cached, ok := ls.history[contentType]; ok {
 		return cached
 	}
-	
+
 	// Default: use first 10 layers for unknown content
 	indices := []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	ls.history[contentType] = indices

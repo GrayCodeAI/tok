@@ -157,4 +157,4 @@ jobs:
       run: |
         ./tok --version
         ./tok --help
-        echo "test content" | ./tok filter
+        echo "test content" | ./tok compress

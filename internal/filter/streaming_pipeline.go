@@ -23,17 +23,17 @@ func NewStreamingPipeline(cfg PipelineConfig) *StreamingPipeline {
 func (sp *StreamingPipeline) ProcessStream(r io.Reader, w io.Writer) (*PipelineStats, error) {
 	scanner := bufio.NewScanner(r)
 	scanner.Buffer(make([]byte, sp.bufferSize), sp.bufferSize)
-	
+
 	var totalStats *PipelineStats
-	
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		compressed, stats := sp.coordinator.Process(line)
-		
+
 		if _, err := w.Write([]byte(compressed + "\n")); err != nil {
 			return totalStats, err
 		}
-		
+
 		if totalStats == nil {
 			totalStats = stats
 		} else {
@@ -42,6 +42,6 @@ func (sp *StreamingPipeline) ProcessStream(r io.Reader, w io.Writer) (*PipelineS
 			totalStats.TotalSaved += stats.TotalSaved
 		}
 	}
-	
+
 	return totalStats, scanner.Err()
 }

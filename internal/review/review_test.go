@@ -44,9 +44,9 @@ func TestFormatReview(t *testing.T) {
 
 func TestCheckIssues(t *testing.T) {
 	tests := []struct {
-		name     string
-		line     string
-		want     *ReviewResult
+		name string
+		line string
+		want *ReviewResult
 	}{
 		{
 			name: "TODO found",

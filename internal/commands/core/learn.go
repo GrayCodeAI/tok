@@ -3,8 +3,8 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	out "github.com/lakshmanpatel/tok/internal/output"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"

@@ -26,7 +26,7 @@ var (
 	discoverAll       bool
 	discoverSince     int
 	discoverFormat    string
-	discoverShellHist   bool
+	discoverShellHist bool
 )
 
 var discoverCmd = &cobra.Command{

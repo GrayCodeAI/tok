@@ -20,10 +20,10 @@ func CompileRegex(pattern string) *regexp.Regexp {
 		return re
 	}
 	globalRegexCache.mu.RUnlock()
-	
+
 	globalRegexCache.mu.Lock()
 	defer globalRegexCache.mu.Unlock()
-	
+
 	re := regexp.MustCompile(pattern)
 	globalRegexCache.cache[pattern] = re
 	return re

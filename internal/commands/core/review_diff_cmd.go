@@ -16,7 +16,7 @@ import (
 var reviewDiffCmd = &cobra.Command{
 	Use:   "review-diff",
 	Short: "Emit caveman-style one-line review comments for a diff",
-	Long: `Scan a unified diff (or `+"`git diff`"+` output) and emit one-line
+	Long: `Scan a unified diff (or ` + "`git diff`" + ` output) and emit one-line
 review comments with the form:
 
   <file>:<line> <severity> <problem>. <fix>.

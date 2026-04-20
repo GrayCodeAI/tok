@@ -28,10 +28,10 @@ func (pe *ParallelExecutor) ExecuteParallel(input string, layers []Filter) (stri
 	if len(layers) == 0 {
 		return input, 0
 	}
-	
+
 	results := make([]*layerResult, len(layers))
 	var wg sync.WaitGroup
-	
+
 	for i, layer := range layers {
 		wg.Add(1)
 		go func(idx int, l Filter) {
@@ -41,9 +41,9 @@ func (pe *ParallelExecutor) ExecuteParallel(input string, layers []Filter) (stri
 			results[idx] = r
 		}(i, layer)
 	}
-	
+
 	wg.Wait()
-	
+
 	// Use best result (highest compression)
 	best := results[0]
 	for _, r := range results[1:] {
@@ -51,11 +51,11 @@ func (pe *ParallelExecutor) ExecuteParallel(input string, layers []Filter) (stri
 			best = r
 		}
 	}
-	
+
 	// Return to pool
 	for _, r := range results {
 		pe.pool.Put(r)
 	}
-	
+
 	return best.output, best.tokens
 }

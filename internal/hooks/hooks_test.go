@@ -11,7 +11,7 @@ func TestGetFlagPath(t *testing.T) {
 	testDir := t.TempDir()
 	os.Setenv("TOK_CONFIG_DIR", testDir)
 	defer os.Unsetenv("TOK_CONFIG_DIR")
-	
+
 	path := GetFlagPath()
 	expected := filepath.Join(testDir, ".tok-active")
 	if path != expected {
@@ -23,27 +23,27 @@ func TestActivateDeactivate(t *testing.T) {
 	testDir := t.TempDir()
 	os.Setenv("TOK_CONFIG_DIR", testDir)
 	defer os.Unsetenv("TOK_CONFIG_DIR")
-	
+
 	// Test activation
 	if err := Activate("full"); err != nil {
 		t.Errorf("Activate() error = %v", err)
 	}
-	
+
 	if !IsActive() {
 		t.Error("IsActive() = false after Activate()")
 	}
-	
+
 	// Test get mode
 	mode := GetMode()
 	if mode != "full" {
 		t.Errorf("GetMode() = %q, want full", mode)
 	}
-	
+
 	// Test deactivation
 	if err := Deactivate(); err != nil {
 		t.Errorf("Deactivate() error = %v", err)
 	}
-	
+
 	if IsActive() {
 		t.Error("IsActive() = true after Deactivate()")
 	}
@@ -53,18 +53,18 @@ func TestGetStatusLine(t *testing.T) {
 	testDir := t.TempDir()
 	os.Setenv("TOK_CONFIG_DIR", testDir)
 	defer os.Unsetenv("TOK_CONFIG_DIR")
-	
+
 	// Not active
 	if status := GetStatusLine(); status != "" {
 		t.Errorf("GetStatusLine() inactive = %q, want empty", status)
 	}
-	
+
 	// Active with full mode
 	Activate("full")
 	if status := GetStatusLine(); status != "[TOK]" {
 		t.Errorf("GetStatusLine() full = %q, want [TOK]", status)
 	}
-	
+
 	// Active with ultra mode
 	Activate("ultra")
 	if status := GetStatusLine(); status != "[TOK:ULTRA]" {
@@ -76,7 +76,7 @@ func TestAutoActivateOnStartup(t *testing.T) {
 	testDir := t.TempDir()
 	os.Setenv("TOK_CONFIG_DIR", testDir)
 	defer os.Unsetenv("TOK_CONFIG_DIR")
-	
+
 	// Without env var
 	Deactivate()
 	if err := AutoActivateOnStartup(); err != nil {
@@ -85,13 +85,13 @@ func TestAutoActivateOnStartup(t *testing.T) {
 	if IsActive() {
 		t.Error("AutoActivateOnStartup() activated without env var")
 	}
-	
+
 	// With env var
 	os.Setenv("TOK_AUTO_ACTIVATE", "1")
 	os.Setenv("TOK_DEFAULT_MODE", "lite")
 	defer os.Unsetenv("TOK_AUTO_ACTIVATE")
 	defer os.Unsetenv("TOK_DEFAULT_MODE")
-	
+
 	if err := AutoActivateOnStartup(); err != nil {
 		t.Errorf("AutoActivateOnStartup() error = %v", err)
 	}
