@@ -14,11 +14,29 @@ Input → [Research Compression Layers] → [Budget + Recovery Layers] → [Expe
 
 ## Compression Performance
 
-| Input Size | Original | Final | Reduction |
-|------------|----------|-------|-----------|
-| Small (100 lines) | 982 tokens | 44 tokens | **95.5%** |
-| Medium (1000 lines) | 9,737 tokens | 52 tokens | **99.5%** |
-| Large (5000 lines) | 49,437 tokens | 63 tokens | **99.9%** |
+Measured on a realistic code-review prose fixture (not repetitive Lorem
+Ipsum) via `evals/pipeline-bench.sh --mode aggressive`. Run the script
+yourself to reproduce — numbers update as the pipeline changes:
+
+| Input Size | Reduction | Latency | Quality score |
+|------------|-----------|---------|---------------|
+| 18 lines   | 64.3%     | ~3 ms   | 0.73 |
+| 180 lines  | 83.0%     | ~2.7 ms | 0.60 |
+| 900 lines  | 87.5%     | ~1.5 ms | 0.51 |
+| 5400 lines | 88.2%     | ~1.6 ms | 0.50 |
+
+The numbers approach an asymptote around 88% as input grows, not the
+99%+ range earlier versions of this doc claimed. Reductions above 95%
+are reachable on highly repetitive inputs (log spew, large generated
+code, duplicated boilerplate) where the dedup + near-duplicate-collapse
+layers dominate; those inputs are not representative of what most tok
+users compress daily.
+
+Quality score 0-1 is the pipeline's own self-assessment of how much
+semantic signal survives compression; it trends down as compression
+gets more aggressive. Pair with `evals/semantic.py` (judge-model
+scored) if you want to validate that downstream answer correctness
+stays intact on a specific workload.
 
 ## Layer Details
 
