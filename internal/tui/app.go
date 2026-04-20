@@ -297,7 +297,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-// sectionContext builds the read-only context handed to each section.
+// sectionContext builds the read-only context handed to each section
+// during the Update path (no View is being rendered yet — this ctx is
+// only used for size-aware key handling and data access). Width must
+// match what renderMain eventually passes at render time so cursor
+// clamping doesn't drift between Update and View.
 func (m model) sectionContext() SectionContext {
 	// Reserve space for sidebar + right pane the same way renderBody does.
 	width := max(24, m.width)
@@ -310,13 +314,22 @@ func (m model) sectionContext() SectionContext {
 			width = 24
 		}
 	}
+	// Shrink by Main's frame so sections see the same inner width in
+	// Update that they'll receive in View. Without this, cursor / row
+	// clamps computed on the wider Update-time width don't match the
+	// narrower render-time width, and selection can fall off screen.
+	innerWidth := max(1, width-m.theme.Main.GetHorizontalFrameSize())
+	innerHeight := max(1, m.height-6-m.theme.Main.GetVerticalFrameSize())
+	if innerHeight < 8 {
+		innerHeight = 8
+	}
 	return SectionContext{
 		Theme:   m.theme,
 		Keys:    m.keys,
 		Data:    m.data,
 		Opts:    m.opts,
-		Width:   width,
-		Height:  max(8, m.height-6), // header + footer
+		Width:   innerWidth,
+		Height:  innerHeight,
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,
@@ -555,8 +568,17 @@ func (m model) renderCompactTabs(width int) string {
 }
 
 func (m model) renderMain(width, height int) string {
+	// The Main style has Padding(0,1) so its *inner* content area is
+	// narrower than `width`. Section renderers lay out panels using the
+	// width we hand them — if we pass the outer width, their panels are
+	// wider than Main's inner area and lipgloss soft-wraps the borders,
+	// producing the dangling `─┘` + "points" on its own line that users
+	// report as a "broken" frame. Always pass the inner width.
+	innerWidth := max(1, width-m.theme.Main.GetHorizontalFrameSize())
+	innerHeight := max(1, height-m.theme.Main.GetVerticalFrameSize())
+
 	if m.helpOpen {
-		return setWidth(m.theme.Main, width).Render(m.renderHelp(width))
+		return setWidth(m.theme.Main, width).Render(m.renderHelp(innerWidth))
 	}
 	if m.loading && m.data == nil {
 		return setWidth(m.theme.Main, width).Render("\n" + m.spinner.View() + " Loading workspace snapshot…")
@@ -564,16 +586,13 @@ func (m model) renderMain(width, height int) string {
 	if m.err != nil && m.data == nil {
 		return setWidth(m.theme.Main, width).Render(m.theme.Danger.Render("Failed to load snapshot") + "\n\n" + m.err.Error())
 	}
-	// Dispatch to the focused section via the SectionRenderer interface.
-	// We rebuild a SectionContext here with the computed main-pane width
-	// so sections don't have to re-derive layout from the raw model.
 	ctx := SectionContext{
 		Theme:   m.theme,
 		Keys:    m.keys,
 		Data:    m.data,
 		Opts:    m.opts,
-		Width:   width,
-		Height:  height,
+		Width:   innerWidth,
+		Height:  innerHeight,
 		Compact: m.compact,
 		Focused: true,
 		Logs:    m.logs,

@@ -5,8 +5,8 @@
   2 Today         Agent            Project          Started          Active                     Tokens            Turns                     
   3 Trends        Snaps                                                                                                                     
   4 Providers     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
-  5 Models        ────                                                                                                                      
-  6 Agents         claude           project-alpha    1d ago           5h ago                      12000 ███████               22            
+  5 Models        ──                                                                                                                        
+  6 Agents         claude           project-alpha    1d ago           6h ago                      12000 ███████               22            
   7 Sessions      2                                                                                                                         
   8 Commands      copilot          project-beta     2d ago           21h ago                      3000 ██░░░░░                7             
   9 Pipeline      0                                                                                                                         

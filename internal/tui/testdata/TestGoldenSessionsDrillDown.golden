@@ -1,46 +1,25 @@
  tok  Sessions · 7d window · updated 09:30:00                                                                                               
                   Session detail  (esc/backspace to return)                                                                                 
  Sections                                                                                                                                   
-  1 Home          ┌────────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
-  2 Today         ─┐                                                                                                                        
-  3 Trends        │                                                                                                                         
-  4 Providers     │                                                                                                                         
-  5 Models        │ Identity                                                                                                                
-  6 Agents        │                                                                                                                         
-  7 Sessions      │ • Session ID: sess-01                                                                                                   
-  8 Commands      │                                                                                                                         
-  9 Pipeline      │ • Agent: claude                                                                                                         
-  10 Rewards      │                                                                                                                         
-  11 Logs         │ • Project: /home/user/project-alpha                                                                                     
-  12 Config       │                                                                                                                         
-                  │ • Status: ● active                                                                                                      
- Dashboard        │                                                                                                                         
-                  │                                                                                                                         
-                  │                                                                                                                         
-                  │ Activity                                                                                                                
-                  │                                                                                                                         
-                  │ • Started: 1d ago                                                                                                       
-                  │                                                                                                                         
-                  │ • Last activity: 5h ago                                                                                                 
-                  │                                                                                                                         
-                  │ • Turns: 22                                                                                                             
-                  │                                                                                                                         
-                  │ • Tokens: 12.0k                                                                                                         
-                  │                                                                                                                         
-                  │ • Compression ratio: 0.00x                                                                                              
-                  │                                                                                                                         
-                  │ • Context blocks: 0                                                                                                     
-                  │                                                                                                                         
-                  │                                                                                                                         
-                  │                                                                                                                         
-                  │ Snapshots                                                                                                               
-                  │                                                                                                                         
-                  │ • Count: 2                                                                                                              
-                  │                                                                                                                         
-                  │ • Last snapshot: never                                                                                                  
-                  │                                                                                                                         
-                  │                                                                                                                         
-                  │                                                                                                                         
-                  └────────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
-                  ─┘                                                                                                                        
+  1 Home          ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐     
+  2 Today         │                                                                                                                   │     
+  3 Trends        │ Identity                                                                                                          │     
+  4 Providers     │ • Session ID: sess-01                                                                                             │     
+  5 Models        │ • Agent: claude                                                                                                   │     
+  6 Agents        │ • Project: /home/user/project-alpha                                                                               │     
+  7 Sessions      │ • Status: ● active                                                                                                │     
+  8 Commands      │                                                                                                                   │     
+  9 Pipeline      │ Activity                                                                                                          │     
+  10 Rewards      │ • Started: 1d ago                                                                                                 │     
+  11 Logs         │ • Last activity: 6h ago                                                                                           │     
+  12 Config       │ • Turns: 22                                                                                                       │     
+                  │ • Tokens: 12.0k                                                                                                   │     
+ Dashboard        │ • Compression ratio: 0.00x                                                                                        │     
+                  │ • Context blocks: 0                                                                                               │     
+                  │                                                                                                                   │     
+                  │ Snapshots                                                                                                         │     
+                  │ • Count: 2                                                                                                        │     
+                  │ • Last snapshot: never                                                                                            │     
+                  │                                                                                                                   │     
+                  └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘     
  1-9 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                    
