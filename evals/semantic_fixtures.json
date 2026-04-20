@@ -1,0 +1,27 @@
+[
+  {
+    "id": "auth-middleware-review",
+    "question": "Which specific file and line number has the JWT expiry bug, and what is the fix?",
+    "source": "Code review for auth middleware.\n\nThe service validates JWT tokens on every request via internal/middleware/auth.go. The current implementation compares time.Now() against the token's nbf (not-before) claim at auth.go:47 — this is wrong because nbf is when the token becomes valid, not when it expires.\n\nFix: compare against the exp claim instead. Replace `if claims.Nbf < time.Now().Unix()` with `if claims.Exp < time.Now().Unix()` and return 401 when the condition is true.\n\nThis has been causing users to be signed out 5 minutes after login instead of the configured 15 minutes, because nbf + 5min is when the upstream identity provider signs the next token.\n"
+  },
+  {
+    "id": "k8s-pod-failure",
+    "question": "Which pods are failing and why?",
+    "source": "NAME                              READY   STATUS             RESTARTS   AGE\napi-7d9f8c5b4d-abc12               1/1     Running            0          4h\napi-7d9f8c5b4d-xyz34               1/1     Running            0          4h\nworker-5f6b8d7c9e-def56            1/1     Running            2          3d\nworker-5f6b8d7c9e-ghi78            0/1     CrashLoopBackOff   5          12m\ncache-redis-0                     1/1     Running            0          7d\ncache-redis-1                     1/1     Running            0          7d\ncache-redis-2                     1/1     Running            0          7d\nmigration-job-pending-xyz         0/1     Error              0          22m\n\nEvent log for worker-5f6b8d7c9e-ghi78: readiness probe failed, unable to connect to redis:6379 (connection refused) — the pod was scheduled on a node with NetworkPolicy blocking egress to the cache-redis service.\n\nEvent log for migration-job-pending-xyz: exited with status 1, last log line was 'ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT false: pq: column \"email_verified\" of relation \"users\" already exists'.\n"
+  },
+  {
+    "id": "rate-limit-behavior",
+    "question": "What is the exact rate limit per tenant, and what happens when it's exceeded?",
+    "source": "API rate limiting design notes (v2.3)\n\nEach tenant is allowed 1000 requests per minute, tracked per API key. The sliding window is 60 seconds, evaluated on each request via Redis INCR with an automatic TTL of 60s on first increment.\n\nWhen a tenant exceeds the limit the API returns HTTP 429 with headers:\n  X-RateLimit-Limit: 1000\n  X-RateLimit-Remaining: 0\n  X-RateLimit-Reset: <unix timestamp>\n  Retry-After: <seconds>\n\nThe body is a JSON object with shape {\"error\": \"rate_limited\", \"retry_after\": <seconds>}.\n\nThe limit is intentionally generous for v2 because we want zero false-positive rate-limiting on legitimate traffic. The v3 design doc (2026-Q3) will introduce per-endpoint buckets.\n"
+  },
+  {
+    "id": "db-migration-rollback",
+    "question": "What migration number should we roll back to, and what data loss will occur?",
+    "source": "Database migration rollback postmortem.\n\nMigration 0042 (added NOT NULL email_verified column, default false) shipped on 2026-04-18 and backfilled existing rows atomically. Migration 0043 (two days later) added a UNIQUE constraint on (email, tenant_id) which is now failing because a handful of old records share duplicate pairs from a 2025 import bug.\n\nRecommendation: roll back to migration 0042. No data loss — the 0043 migration was additive-only (just added the constraint; no column changes). The duplicate records need to be deduped manually or via a separate migration 0044 that resolves conflicts first.\n\nDO NOT roll back to 0041 or earlier — that would drop the email_verified column and all the backfill state would be lost.\n"
+  },
+  {
+    "id": "deployment-sequence",
+    "question": "What is the correct order to deploy the three services?",
+    "source": "Release notes for v7.2 — platform upgrade.\n\nThree services must be upgraded together: auth-api, billing-api, and frontend.\n\nDeploy order matters because of protocol changes:\n  1. auth-api v7.2 must ship FIRST. It accepts both the old v6 session format and the new v7 format. If you ship billing-api or frontend first, they will send v7 requests that the old auth-api rejects.\n  2. billing-api v7.2 ships SECOND. It only speaks v7 to auth-api (which is fine — auth is already on v7.2) but speaks either version back to the frontend.\n  3. frontend v7.2 ships LAST. It starts sending v7 requests to billing-api, which is already v7.2.\n\nRollback: reverse order. Frontend first (back to v7.1 which speaks v6 to billing), then billing (back to v7.1), then auth last. If you rollback auth first, active v7 sessions from billing and frontend start getting 401s mid-request.\n"
+  }
+]
