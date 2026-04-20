@@ -64,7 +64,7 @@ func defaultSections() []SectionRenderer {
 		newPlaceholderSection("Providers", "Economics"),
 		newPlaceholderSection("Models", "Model Cost"),
 		newPlaceholderSection("Agents", "Agent Ops"),
-		newPlaceholderSection("Sessions", "Session Ops"),
+		newSessionsSection(),
 		newPlaceholderSection("Commands", "Command Mix"),
 		newPlaceholderSection("Pipeline", "Layer View"),
 		newPlaceholderSection("Rewards", "Streaks"),
