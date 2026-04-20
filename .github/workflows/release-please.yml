@@ -14,5 +14,13 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v4
         with:
+          # The default GITHUB_TOKEN can't open PRs when the org policy
+          # disables "Allow GitHub Actions to create and approve pull
+          # requests". Supply a PAT via the RELEASE_PLEASE_TOKEN secret
+          # (scopes: repo + workflow) to bypass that. If the secret is
+          # unset we fall back to GITHUB_TOKEN and the job will still
+          # try — it'll fail cleanly with the known 403 until either
+          # the secret is added or the org toggle is flipped.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
