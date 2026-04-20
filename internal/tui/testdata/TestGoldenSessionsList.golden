@@ -1,0 +1,19 @@
+ tok  Sessions · 7d window · updated 09:30:00                                                                                               
+                  Sessions                                                                                                                  
+ Sections         3 total · 1 active · top agent: claude                                                                                    
+  1 Home                                                                                                                                    
+  2 Today         Agent            Project          Started          Active                     Tokens            Turns                     
+  3 Trends        Snaps                                                                                                                     
+  4 Providers     ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────     
+  5 Models        ────                                                                                                                      
+  6 Agents         claude           project-alpha    1d ago           5h ago                      12000 ███████               22            
+  7 Sessions      2                                                                                                                         
+  8 Commands      copilot          project-beta     2d ago           21h ago                      3000 ██░░░░░                7             
+  9 Pipeline      0                                                                                                                         
+  10 Rewards                                                                                                                                
+  11 Logs         1/2                                                                                                                       
+  12 Config                                                                                                                                 
+                  enter: inspect · j/k: move · /: filter                                                                                    
+ Dashboard                                                                                                                                  
+                                                                                                                                            
+ 1-9 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                    

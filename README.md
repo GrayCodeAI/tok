@@ -176,6 +176,16 @@ npm test    → tok npm test      (25,000 → 2,500 tokens)
 cargo test  → tok cargo test    (200+ lines → 20 lines)
 ```
 
+### Interactive TUI
+
+```
+tok tui                      # 12-section dashboard: Home, Sessions, Trends, Logs, ...
+tok tui --theme colorblind   # Okabe-Ito palette for accessible color vision
+```
+
+Live refresh · command palette (`:`) · search (`/`) · drill-down · clipboard yank (`y`) · export (`e`).
+Full keybinding reference and architecture in [docs/TUI.md](docs/TUI.md).
+
 ### Token Analytics
 
 ```

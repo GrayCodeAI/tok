@@ -154,6 +154,10 @@ benchmark-suite:
 	@mkdir -p artifacts
 	go test -run TestBenchmarkSuiteScenarios -v ./internal/filter | tee artifacts/benchmark-suite.txt
 
+## benchmark-tui: Run TUI performance benchmarks (chart, table, full frame)
+benchmark-tui:
+	./scripts/tui-bench.sh
+
 ## ablation: Run ablation baseline and save report
 ablation:
 	@mkdir -p artifacts
