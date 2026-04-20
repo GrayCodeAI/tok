@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 
@@ -358,9 +359,19 @@ func (f *TOMLFilter) RunTests() ([]TestResult, error) {
 	return results, nil
 }
 
-// MatchesCommand checks if any filter matches the given command
+// MatchesCommand checks if any filter matches the given command.
+// Iteration is alphabetical so that when multiple rules in a single file
+// match the same command (e.g. git.toml defines git_status and git_log
+// both with overlapping patterns), selection is deterministic.
 func (f *TOMLFilter) MatchesCommand(command string) (string, *TOMLFilterRule, error) {
-	for name, cfg := range f.Filters {
+	names := make([]string, 0, len(f.Filters))
+	for name := range f.Filters {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+
+	for _, name := range names {
+		cfg := f.Filters[name]
 		matched, err := regexp.MatchString(cfg.MatchCommand, command)
 		if err != nil {
 			return "", nil, fmt.Errorf("filter %q: regex error: %w", name, err)
@@ -546,7 +557,18 @@ func (r *FilterRegistry) FindMatchingFilter(command string) (string, string, *TO
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	for filename, filter := range r.filters {
+	// Go randomizes map iteration, which made filter selection non-deterministic
+	// across runs — two `tok git status` invocations could hit different rules
+	// and produce different filtered output. Sort filenames so selection is
+	// stable and reproducible.
+	filenames := make([]string, 0, len(r.filters))
+	for name := range r.filters {
+		filenames = append(filenames, name)
+	}
+	sort.Strings(filenames)
+
+	for _, filename := range filenames {
+		filter := r.filters[filename]
 		if name, cfg, err := filter.MatchesCommand(command); err == nil && cfg != nil {
 			return filename, name, cfg
 		}
