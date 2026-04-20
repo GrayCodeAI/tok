@@ -56,8 +56,14 @@ func DefaultKeyMap() KeyMap {
 			key.WithHelp("shift+tab/←/h", "prev section"),
 		),
 		JumpSection: key.NewBinding(
-			key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9"),
-			key.WithHelp("1-9", "jump to section"),
+			// 1–9 jump to the matching section. 0 maps to section 10.
+			// Sections 11–12 are still reachable via tab/shift+tab or
+			// the palette (`:section.jump 11`) — we don't bind a
+			// second digit because bubbletea's key system has no
+			// built-in prefix support and a bespoke state machine for
+			// two rare shortcuts would be more code than value.
+			key.WithKeys("1", "2", "3", "4", "5", "6", "7", "8", "9", "0"),
+			key.WithHelp("1-9,0", "jump to section"),
 		),
 		Up: key.NewBinding(
 			key.WithKeys("up", "k"),

@@ -1,24 +1,24 @@
  tok  Home · 7d window · updated 09:30:00                                                                                                   
                   Home                                                                                                                      
  Sections         Token intelligence cockpit with live savings, costs, attribution, and quality telemetry.                                  
-  1 Home                                                                                                                                    
-  2 Today         ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐         
-  3 Trends        │ SAVED TOKENS                      │ │ COST SAVED                        │ │ REDUCTION                         │         
-  4 Providers     │ 82.3k                             │ │ $2.1734                           │ │ 68.5%                             │         
-  5 Models        │ 7 day window                      │ │ estimated reduction value         │ │ overall compression rate          │         
-  6 Agents        └───────────────────────────────────┘ └───────────────────────────────────┘ └───────────────────────────────────┘         
-  7 Sessions      ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐         
-  8 Commands      │ COMMANDS                          │ │ ACTIVE DAYS                       │ │ CURRENT STREAK                    │         
-  9 Pipeline      │ 142                               │ │ 7 / 7                             │ │ 5 days                            │         
-  10 Rewards      │ tracked commands                  │ │ days with tracked activity        │ │ 1240 pts · level 3                │         
-  11 Logs         └───────────────────────────────────┘ └───────────────────────────────────┘ └───────────────────────────────────┘         
-  12 Config                                                                                                                                 
-                  ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐     
- Dashboard        │                                                                                                                   │     
-                  │ Activity & Trends                                                                                                 │     
-                  │                                                                                                                   │     
+  >  1 Home                                                                                                                                 
+     2 Today      ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐         
+     3 Trends     │ SAVED TOKENS                      │ │ COST SAVED                        │ │ REDUCTION                         │         
+     4            │ 82.3k                             │ │ $2.1734                           │ │ 68.5%                             │         
+  Providers       │ 7 day window                      │ │ estimated reduction value         │ │ overall compression rate          │         
+     5 Models     └───────────────────────────────────┘ └───────────────────────────────────┘ └───────────────────────────────────┘         
+     6 Agents     ┌───────────────────────────────────┐ ┌───────────────────────────────────┐ ┌───────────────────────────────────┐         
+     7            │ COMMANDS                          │ │ ACTIVE DAYS                       │ │ CURRENT STREAK                    │         
+  Sessions        │ 142                               │ │ 7 / 7                             │ │ 5 days                            │         
+     8            │ tracked commands                  │ │ days with tracked activity        │ │ 1240 pts · level 3                │         
+  Commands        └───────────────────────────────────┘ └───────────────────────────────────┘ └───────────────────────────────────┘         
+     9                                                                                                                                      
+  Pipeline        ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐     
+    10 Rewards    │                                                                                                                   │     
+    11 Logs       │ Activity & Trends                                                                                                 │     
+    12 Config     │                                                                                                                   │     
                   │ Daily sparkline  ▂▃▃▅▅▆█  7 points                                                                                │     
-                  │ Weekly sparkline ▄█  2 points                                                                                     │     
+ Dashboard        │ Weekly sparkline ▄█  2 points                                                                                     │     
                   │ Budget  15.0k / 100.0k  daily filtered tokens                                                                     │     
                   │                                                                                                                   │     
                   └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘     
@@ -46,4 +46,4 @@
                   │ • Top session agent: claude                           │ └───────────────────────────────────────────────────────┘       
                   │                                                       │                                                                 
                   └───────────────────────────────────────────────────────┘                                                                 
- 1-9 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                    
+ 1-9,0 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                  

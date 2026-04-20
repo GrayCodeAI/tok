@@ -474,6 +474,16 @@ func sectionShortcutIndex(key string, sectionCount int) (int, bool) {
 	if key == "" {
 		return 0, false
 	}
+	// "0" is a shortcut for section 10, mirroring vim's treatment of 0
+	// as a standalone column rather than a digit. Keeps single-stroke
+	// navigation viable past section 9 without introducing a prefix
+	// state machine.
+	if key == "0" {
+		if sectionCount >= 10 {
+			return 9, true
+		}
+		return 0, false
+	}
 	if n, err := strconv.Atoi(key); err == nil {
 		if n <= 0 || n > sectionCount {
 			return 0, false
@@ -484,7 +494,14 @@ func sectionShortcutIndex(key string, sectionCount int) (int, bool) {
 }
 
 func sectionShortcutLabel(index int) string {
-	return strconv.Itoa(index + 1)
+	// Right-pad to 2 chars so 1-digit shortcuts ("1"–"9") line up with
+	// 2-digit shortcuts ("10"–"12") in the sidebar. Without this the
+	// section name column shifts by one when you scroll past section 9.
+	n := index + 1
+	if n < 10 {
+		return " " + strconv.Itoa(n)
+	}
+	return strconv.Itoa(n)
 }
 
 func (m model) renderHeader(width int) string {
@@ -541,12 +558,21 @@ func (m model) renderSidebar(width, height int) string {
 	lines = append(lines, m.theme.SectionTitle.Render("Sections"))
 	for i, s := range m.sections {
 		label := sectionShortcutLabel(i)
-		text := lipgloss.JoinHorizontal(lipgloss.Left, m.theme.SidebarKey.Render(label), " ", s.Name())
+		// Both rows use a plain ASCII 2-char marker so columns line up
+		// regardless of (a) 1-digit vs 2-digit shortcut label or (b)
+		// active vs inactive state. Active row gets color + bold via
+		// the SidebarActive style; the glyph itself is "> " either way
+		// so width never shifts. Unicode glyphs have flaky
+		// column-width measurement in some terminals, so we avoid them
+		// in the sidebar prefix specifically.
+		marker := "  "
+		style := m.theme.SidebarItem
 		if i == m.navIndex {
-			lines = append(lines, setWidth(m.theme.SidebarActive, width-2).Render(text))
-		} else {
-			lines = append(lines, setWidth(m.theme.SidebarItem, width-2).Render(text))
+			marker = "> "
+			style = m.theme.SidebarActive
 		}
+		text := marker + m.theme.SidebarKey.Render(label) + " " + s.Name()
+		lines = append(lines, setWidth(style, width-2).Render(text))
 	}
 	lines = append(lines, "")
 	lines = append(lines, m.theme.Muted.Render("Dashboard"))
@@ -555,16 +581,21 @@ func (m model) renderSidebar(width, height int) string {
 }
 
 func (m model) renderCompactTabs(width int) string {
+	// Brackets make the active tab scannable even when color is
+	// stripped (ASCII mode, grayscale terminals, screenshots). In
+	// color terminals the active tab is ALSO cyan+bold via
+	// SidebarActive style, so the marker is additive, not the only
+	// affordance.
 	parts := make([]string, 0, len(m.sections))
 	for i, s := range m.sections {
 		label := s.Name()
 		if i == m.navIndex {
-			parts = append(parts, m.theme.SidebarActive.Render(label))
+			parts = append(parts, m.theme.SidebarActive.Render("["+label+"]"))
 		} else {
-			parts = append(parts, m.theme.SidebarItem.Render(label))
+			parts = append(parts, m.theme.SidebarItem.Render(" "+label+" "))
 		}
 	}
-	return setWidth(lipgloss.NewStyle().Padding(0, 1), width).Render(strings.Join(parts, "  "))
+	return setWidth(lipgloss.NewStyle().Padding(0, 1), width).Render(strings.Join(parts, " "))
 }
 
 func (m model) renderMain(width, height int) string {
@@ -581,10 +612,15 @@ func (m model) renderMain(width, height int) string {
 		return setWidth(m.theme.Main, width).Render(m.renderHelp(innerWidth))
 	}
 	if m.loading && m.data == nil {
-		return setWidth(m.theme.Main, width).Render("\n" + m.spinner.View() + " Loading workspace snapshot…")
+		body := "\n" + m.spinner.View() + " Loading workspace snapshot…\n\n" +
+			m.theme.Muted.Render("First launch may take a moment while the tracking DB initializes.")
+		return setWidth(m.theme.Main, width).Render(body)
 	}
 	if m.err != nil && m.data == nil {
-		return setWidth(m.theme.Main, width).Render(m.theme.Danger.Render("Failed to load snapshot") + "\n\n" + m.err.Error())
+		body := m.theme.Danger.Render("Failed to load snapshot") + "\n\n" +
+			m.err.Error() + "\n\n" +
+			m.theme.Muted.Render("Press 'r' to retry, or 'q' to quit.")
+		return setWidth(m.theme.Main, width).Render(body)
 	}
 	ctx := SectionContext{
 		Theme:   m.theme,
@@ -640,25 +676,34 @@ func (m model) renderInsights(width, height int) string {
 		}
 	}
 
-	lines = append(lines, "")
-	lines = append(lines, m.theme.SectionTitle.Render("Controls"))
-	lines = append(lines, m.theme.Insight.Render(fmt.Sprintf("1-%d jump sections", len(m.sections))))
-	lines = append(lines, m.theme.Insight.Render("tab switch focus"))
-	lines = append(lines, m.theme.Insight.Render("r refresh"))
-	lines = append(lines, m.theme.Insight.Render("? help"))
+	// The footer already advertises every short-help binding; listing
+	// them again here wastes the right-pane's screen real estate.
+	// Keep the insights panel for data-quality signals only.
 
 	return setWidth(m.theme.RightPane, width).Render(strings.Join(lines, "\n"))
 }
 
 func (m model) renderFooter(width int) string {
-	parts := make([]string, 0, len(m.keys.ShortHelp())*3)
-	for i, b := range m.keys.ShortHelp() {
-		if i > 0 {
-			parts = append(parts, "  ")
+	// Render the short-help list, shedding entries from the right if
+	// the whole strip would exceed the terminal width. Keeps the most
+	// useful bindings (nav, quit) visible on narrow terminals instead
+	// of letting the strip wrap to a second line.
+	bindings := m.keys.ShortHelp()
+	for n := len(bindings); n >= 1; n-- {
+		parts := make([]string, 0, n*3)
+		for i := 0; i < n; i++ {
+			if i > 0 {
+				parts = append(parts, "  ")
+			}
+			parts = append(parts, m.theme.FooterKey.Render(bindings[i].Help().Key), " "+bindings[i].Help().Desc)
 		}
-		parts = append(parts, m.theme.FooterKey.Render(b.Help().Key), " "+b.Help().Desc)
+		line := lipgloss.JoinHorizontal(lipgloss.Left, parts...)
+		if lipgloss.Width(line) <= width-2 { // 2 = footer padding
+			return setWidth(m.theme.Footer, width).Render(line)
+		}
 	}
-	return setWidth(m.theme.Footer, width).Render(lipgloss.JoinHorizontal(lipgloss.Left, parts...))
+	// Even one binding doesn't fit — render quit alone as a last resort.
+	return setWidth(m.theme.Footer, width).Render(m.theme.FooterKey.Render("q") + " quit")
 }
 
 func (m model) renderHelp(width int) string {

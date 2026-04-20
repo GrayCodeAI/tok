@@ -37,7 +37,11 @@ func renderHomeView(ctx SectionContext) string {
 	th := ctx.Theme
 	width := ctx.Width
 	if ctx.Data == nil || ctx.Data.Dashboard == nil {
-		return th.Muted.Render("No dashboard data yet.")
+		// First-run empty state: the user installed tok but no
+		// commands have been wrapped yet. Guide them to the two
+		// fastest paths to produce data (install the hook, or run
+		// a wrapped command) and point at the docs for more.
+		return renderOnboarding(th, width)
 	}
 
 	snapshot := ctx.Data.Dashboard
@@ -146,6 +150,35 @@ func renderHomeView(ctx SectionContext) string {
 		"",
 		healthBlock,
 	)
+}
+
+// renderOnboarding is the empty-state shown on first launch, before
+// any commands have been tracked. Everything else in Home assumes a
+// snapshot exists — this screen tells the user how to make one.
+func renderOnboarding(th theme, width int) string {
+	lines := []string{
+		th.Title.Render("Welcome to tok"),
+		th.Subtitle.Render("No commands tracked yet — here's how to start:"),
+		"",
+		th.PanelTitle.Render("Option 1: install the global hook"),
+		"  $ tok init -g",
+		th.CardMeta.Render("  Every bash command your AI agent runs gets wrapped automatically."),
+		"",
+		th.PanelTitle.Render("Option 2: run a wrapped command yourself"),
+		"  $ tok git status",
+		"  $ tok npm test",
+		th.CardMeta.Render("  Filtered output, token counts tracked. Refresh this screen with 'r'."),
+		"",
+		th.PanelTitle.Render("Quick tour"),
+		th.CardMeta.Render("  1-9,0   jump between sections"),
+		th.CardMeta.Render("  :       command palette"),
+		th.CardMeta.Render("  /       search within the current view"),
+		th.CardMeta.Render("  ?       full keybinding help"),
+		th.CardMeta.Render("  q       quit"),
+		"",
+		th.Muted.Render("Full docs: docs/TUI.md"),
+	}
+	return setWidth(panelStyle(th, 1), width).Render(strings.Join(lines, "\n"))
 }
 
 // --- shared rendering primitives (used by Home now, other sections later) ---

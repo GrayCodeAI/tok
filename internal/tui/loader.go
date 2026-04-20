@@ -3,6 +3,7 @@ package tui
 import (
 	"context"
 	"errors"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -142,6 +143,20 @@ func (l *workspaceLoader) Load(ctx context.Context, opts Options) (*tracking.Wor
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	case r := <-ch:
+		// Log the outcome through the default slog logger so the Logs
+		// section shows visible heartbeat activity. Info on success,
+		// Warn on failure so users can filter for just the problems.
+		if r.err != nil {
+			slog.Warn("tui snapshot load failed",
+				"days", opts.Days,
+				"project", opts.ProjectPath,
+				"err", r.err)
+		} else if r.snap != nil && r.snap.Dashboard != nil {
+			slog.Info("tui snapshot loaded",
+				"days", opts.Days,
+				"commands", r.snap.Dashboard.Overview.TotalCommands,
+				"saved", r.snap.Dashboard.Overview.TotalSavedTokens)
+		}
 		return r.snap, r.err
 	}
 }

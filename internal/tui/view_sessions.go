@@ -28,7 +28,10 @@ func newSessionsSection() *sessionsSection {
 			{Title: "Agent", MinWidth: 10, Sortable: true},
 			{Title: "Project", MinWidth: 14, Sortable: true},
 			{Title: "Started", MinWidth: 10, Sortable: true, Numeric: true},
-			{Title: "Active", MinWidth: 8, Sortable: true, Numeric: true},
+			// "Last" is shorter and less ambiguous than "Active" —
+			// users reported confusion over whether "Active" meant
+			// "currently active" or "last active".
+			{Title: "Last", MinWidth: 8, Sortable: true, Numeric: true},
 			{Title: "Tokens", MinWidth: 8, Numeric: true, Sortable: true, Align: AlignRight, Accent: true},
 			{Title: "Turns", MinWidth: 6, Numeric: true, Sortable: true, Align: AlignRight},
 			{Title: "Snaps", MinWidth: 6, Numeric: true, Sortable: true, Align: AlignRight},
