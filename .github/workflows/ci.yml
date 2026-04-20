@@ -48,7 +48,10 @@ jobs:
         file: ./coverage.out
         flags: unittests
         name: codecov-umbrella
-        fail_ci_if_error: true
+        # Tokenless Codecov uploads fail for private/forked runs; don't
+        # block CI on upload infrastructure. Re-enable once CODECOV_TOKEN
+        # is in repo secrets.
+        fail_ci_if_error: false
 
   lint:
     name: Lint

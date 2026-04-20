@@ -226,9 +226,9 @@ func mergeFiles(files []string, contents map[string]string) string {
 			if i > 0 {
 				merged.WriteString("\n\n")
 			}
-			merged.WriteString(fmt.Sprintf("═══════════════════════════════════════\n"))
+			merged.WriteString("═══════════════════════════════════════\n")
 			merged.WriteString(fmt.Sprintf("File: %s\n", file))
-			merged.WriteString(fmt.Sprintf("═══════════════════════════════════════\n\n"))
+			merged.WriteString("═══════════════════════════════════════\n\n")
 		}
 
 		merged.WriteString(contents[file])
