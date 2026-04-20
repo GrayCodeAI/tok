@@ -22,18 +22,27 @@ import (
 	"github.com/lakshmanpatel/tok/internal/utils"
 )
 
-var doctorFix bool
+var (
+	doctorFix      bool
+	doctorSecurity bool
+)
 
 var doctorCmd = &cobra.Command{
 	Use:   "doctor",
 	Short: "Diagnose tok setup issues",
 	Long: `Check system configuration, shell hooks, database connectivity,
-tokenizer availability, and common setup problems.`,
+tokenizer availability, and common setup problems.
+
+Use --security to skip all other checks and print a per-hook integrity
+report: for every tok-installed agent hook, show whether its SHA-256
+baseline matches the script on disk. Exits non-zero if any hook is
+tampered or missing its baseline.`,
 	RunE: runDoctor,
 }
 
 func init() {
 	doctorCmd.Flags().BoolVar(&doctorFix, "fix", false, "attempt to fix detected issues")
+	doctorCmd.Flags().BoolVar(&doctorSecurity, "security", false, "per-hook integrity audit only; exits non-zero on tamper")
 	registry.Add(func() { registry.Register(doctorCmd) })
 }
 
@@ -44,6 +53,10 @@ type checkResult struct {
 }
 
 func runDoctor(cmd *cobra.Command, args []string) error {
+	if doctorSecurity {
+		return runDoctorSecurity()
+	}
+
 	out.Global().Println("tok doctor — diagnosing setup")
 	out.Global().Println("================================")
 
@@ -480,5 +493,125 @@ func shouldRepairAgentIntegration(status, detail string) bool {
 		return strings.Contains(detail, "outdated hook") || strings.Contains(detail, "no integrity baseline")
 	default:
 		return false
+	}
+}
+
+// runDoctorSecurity prints a per-hook integrity audit across every agent
+// tok has installed against. Each agent's hook is shown with its path,
+// current integrity status, and on tamper the expected + actual SHA
+// prefix so the user can correlate with a diff.
+//
+// Exits non-zero when any hook is tampered or has no baseline — the
+// latter because a hook without a recorded baseline is also a hook we
+// cannot prove is legitimate. Verified and NotInstalled are OK.
+//
+// Scope: this command audits, it does not block runtime. Blocking
+// runtime would require every installed hook script to call `tok`'s
+// RuntimeCheck before executing, which today only the Claude Code hook
+// does. Wiring RuntimeCheck into the other 19 agents' hook templates
+// is follow-up work.
+func runDoctorSecurity() error {
+	agents, err := currentAgentInfos(false)
+	if err != nil {
+		return err
+	}
+
+	out.Global().Println("tok doctor --security — hook integrity audit")
+	out.Global().Println("=============================================")
+
+	type row struct {
+		agent    string
+		hookPath string
+		status   string
+		detail   string
+	}
+	var rows []row
+	tampered := 0
+	noBaseline := 0
+	verified := 0
+
+	for _, agent := range agents {
+		if agent.HookDir == "" {
+			continue
+		}
+		hookPath := filepath.Join(agent.HookDir, "tok-rewrite.sh")
+		if _, err := os.Stat(hookPath); err != nil {
+			continue
+		}
+		result, err := integrity.VerifyHookAt(hookPath)
+		if err != nil {
+			rows = append(rows, row{agent.Name, hookPath, "ERROR", err.Error()})
+			continue
+		}
+		switch result.Status {
+		case integrity.StatusVerified:
+			verified++
+			rows = append(rows, row{agent.Name, hookPath, "VERIFIED", "hash matches baseline"})
+		case integrity.StatusTampered:
+			tampered++
+			detail := fmt.Sprintf("expected %s…  actual %s…",
+				truncateForSecurity(result.Expected, 12), truncateForSecurity(result.Actual, 12))
+			rows = append(rows, row{agent.Name, hookPath, "TAMPERED", detail})
+		case integrity.StatusNoBaseline:
+			noBaseline++
+			rows = append(rows, row{agent.Name, hookPath, "NO_BASELINE", "run `tok init --" + agentShortFlag(agent.Name) + "` to record"})
+		case integrity.StatusOutdated:
+			rows = append(rows, row{agent.Name, hookPath, "OUTDATED", "hook version older than current; rerun tok init"})
+		case integrity.StatusOrphanedHash:
+			rows = append(rows, row{agent.Name, hookPath, "ORPHANED", "baseline present but hook missing"})
+		}
+	}
+
+	if len(rows) == 0 {
+		out.Global().Println("  no tok-installed hooks found.")
+		return nil
+	}
+	for _, r := range rows {
+		icon := "✓"
+		switch r.status {
+		case "TAMPERED", "ERROR":
+			icon = "✗"
+		case "NO_BASELINE", "OUTDATED", "ORPHANED":
+			icon = "⚠"
+		}
+		out.Global().Printf("  %s %-20s %s  [%s]\n", icon, r.agent, r.status, r.detail)
+		out.Global().Printf("       %s\n", r.hookPath)
+	}
+
+	out.Global().Println()
+	out.Global().Printf("summary: %d verified, %d no-baseline, %d tampered\n",
+		verified, noBaseline, tampered)
+
+	if tampered > 0 || noBaseline > 0 {
+		return fmt.Errorf("integrity audit failed: %d tampered, %d without baseline", tampered, noBaseline)
+	}
+	return nil
+}
+
+func truncateForSecurity(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n]
+}
+
+func agentShortFlag(name string) string {
+	switch name {
+	case "Claude Code":
+		return "claude"
+	case "Gemini CLI":
+		return "gemini"
+	case "GitHub Copilot":
+		return "copilot"
+	case "Qwen Code":
+		return "qwen"
+	case "Google Antigravity":
+		return "antigravity"
+	case "Kilo Code":
+		return "kilocode"
+	case "Roo Code":
+		return "roocode"
+	default:
+		return strings.ToLower(name)
 	}
 }
