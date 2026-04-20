@@ -17,7 +17,8 @@ import (
 //
 // width is the target character width; height is the number of character
 // rows. Width must be ≥ 4; height ≥ 2. Smaller sizes degrade gracefully
-// to a single-row sparkline.
+// to a single-row sparkline. Non-UTF-8 terminals should use
+// BrailleLineChartASCII instead — Braille can't be faked in ASCII.
 func BrailleLineChart(values []float64, width, height int) string {
 	if len(values) == 0 || width < 4 {
 		return ""
@@ -201,6 +202,77 @@ func resample(values []float64, n int) []float64 {
 		out[i] = values[idx]
 	}
 	return out
+}
+
+// LineChart returns BrailleLineChart on UTF-8 terminals and an
+// ASCII-only substitute otherwise. Sections that care about unicode
+// availability should call this helper rather than BrailleLineChart
+// directly.
+func LineChart(values []float64, width, height int, utf8 bool) string {
+	if utf8 {
+		return BrailleLineChart(values, width, height)
+	}
+	return asciiLineChart(values, width, height)
+}
+
+// asciiLineChart draws a multi-row line plot with only ASCII chars.
+// It quantizes each sample to one of `height*2` vertical buckets and
+// places '*' / '+' at the correct (row, col). Less dense than Braille
+// but readable everywhere — and correct in a non-UTF-8 locale where
+// Braille would render as ? boxes.
+func asciiLineChart(values []float64, width, height int) string {
+	if len(values) == 0 || width < 4 || height < 1 {
+		return ""
+	}
+	samples := resample(values, width)
+	minV, maxV := samples[0], samples[0]
+	for _, v := range samples {
+		if v < minV {
+			minV = v
+		}
+		if v > maxV {
+			maxV = v
+		}
+	}
+	span := maxV - minV
+	if span <= 0 {
+		span = 1
+	}
+	rows := height
+	yMax := rows - 1
+
+	grid := make([][]rune, rows)
+	for i := range grid {
+		grid[i] = make([]rune, width)
+		for j := range grid[i] {
+			grid[i][j] = ' '
+		}
+	}
+	for col, v := range samples {
+		norm := (v - minV) / span
+		if norm < 0 {
+			norm = 0
+		}
+		if norm > 1 {
+			norm = 1
+		}
+		y := int(norm * float64(yMax))
+		if y < 0 {
+			y = 0
+		}
+		if y > yMax {
+			y = yMax
+		}
+		row := rows - 1 - y
+		if row >= 0 && row < rows && col < width {
+			grid[row][col] = '*'
+		}
+	}
+	lines := make([]string, rows)
+	for i, row := range grid {
+		lines[i] = string(row)
+	}
+	return strings.Join(lines, "\n")
 }
 
 // FormatChartRange renders a "min ··· max" label sized for the given

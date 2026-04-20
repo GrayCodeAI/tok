@@ -67,9 +67,9 @@ func (s *todaySection) View(ctx SectionContext) string {
 	sparkBlock := setWidth(panelStyle(th, 4), width).Render(strings.Join([]string{
 		th.PanelTitle.Render("Trailing 7 days"),
 		"",
-		th.CardLabel.Render("Saved") + "     " + th.ValuePositive.Render(sparklineSaved(trailing)) +
+		th.CardLabel.Render("Saved") + "     " + th.ValuePositive.Render(sparklineSavedFor(trailing, ctx.Env.UTF8)) +
 			"   " + th.CardMeta.Render(labelRange(trailing)),
-		th.CardLabel.Render("Commands") + "  " + th.ValueFocus.Render(commandSparkline(trailing)) +
+		th.CardLabel.Render("Commands") + "  " + th.ValueFocus.Render(commandSparklineFor(trailing, ctx.Env.UTF8)) +
 			"   " + th.CardMeta.Render(fmt.Sprintf("%d tracked total", sumCommands(trailing))),
 	}, "\n"))
 
@@ -161,11 +161,15 @@ func deltaLabelFloat(today, prior float64) string {
 }
 
 func commandSparkline(points []tracking.DashboardTrendPoint) string {
+	return commandSparklineFor(points, true)
+}
+
+func commandSparklineFor(points []tracking.DashboardTrendPoint, utf8 bool) string {
 	values := make([]int64, 0, len(points))
 	for _, p := range points {
 		values = append(values, p.Commands)
 	}
-	return sparkline(values)
+	return sparklineGlyphs(values, utf8)
 }
 
 func sumCommands(points []tracking.DashboardTrendPoint) int64 {

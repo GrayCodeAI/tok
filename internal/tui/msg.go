@@ -132,3 +132,17 @@ type exportMsg struct {
 	Format  ExportFormat
 	Section int // -1 means "current section"
 }
+
+// --- Theme ----------------------------------------------------------------
+
+// themeChangedMsg swaps the active theme on the root model. Emitted by
+// the theme.set action and consumed by Update to rebuild the model's
+// theme field without tearing down the tea.Program.
+type themeChangedMsg struct {
+	Name ThemeName
+}
+
+// themeCycleMsg is emitted by the theme.cycle action. The root model
+// resolves "next" against its *current* theme (not a snapshot captured
+// when the registry was built), so repeated cycles actually advance.
+type themeCycleMsg struct{}

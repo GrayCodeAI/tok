@@ -62,8 +62,8 @@ func renderHomeView(ctx SectionContext) string {
 	}
 	cardGrid := renderCardGrid(cards, metricColumns)
 
-	dailySpark := sparklineSaved(snapshot.DailyTrends)
-	weeklySpark := sparklineSaved(snapshot.WeeklyTrends)
+	dailySpark := sparklineSavedFor(snapshot.DailyTrends, ctx.Env.UTF8)
+	weeklySpark := sparklineSavedFor(snapshot.WeeklyTrends, ctx.Env.UTF8)
 	trendsBlock := setWidth(panelStyle(th, 8), width).Render(strings.Join([]string{
 		th.PanelTitle.Render("Activity & Trends"),
 		"",
@@ -218,6 +218,14 @@ func renderBreakdownEntry(th theme, item tracking.DashboardBreakdown, width, ind
 }
 
 func renderBar(th theme, value, maxValue int64, width, index int) string {
+	return renderBarGlyphs(th, value, maxValue, width, index, true)
+}
+
+// renderBarGlyphs is the utf8-aware form. Unicode block glyphs degrade
+// to '#' / '-' when the terminal can't render them. Both glyphs still
+// compose visually (solid mass on the left, shaded region on the right)
+// so the bar reads correctly.
+func renderBarGlyphs(th theme, value, maxValue int64, width, index int, utf8 bool) string {
 	if width <= 0 {
 		return ""
 	}
@@ -231,9 +239,16 @@ func renderBar(th theme, value, maxValue int64, width, index int) string {
 	if filled > width {
 		filled = width
 	}
+	solidGlyph := "█"
+	emptyGlyph := "░"
+	if !utf8 {
+		solidGlyph = "#"
+		emptyGlyph = "-"
+	}
 	color := th.AccentColors[index%len(th.AccentColors)]
 	filledStyle := lipgloss.NewStyle().Foreground(color)
-	return filledStyle.Render(strings.Repeat("█", filled)) + th.BarEmpty.Render(strings.Repeat("░", width-filled))
+	return filledStyle.Render(strings.Repeat(solidGlyph, filled)) +
+		th.BarEmpty.Render(strings.Repeat(emptyGlyph, width-filled))
 }
 
 func accentCardStyle(th theme, index int) lipgloss.Style {
@@ -257,6 +272,10 @@ func panelStyle(th theme, index int) lipgloss.Style {
 // --- theme-agnostic helpers ------------------------------------------------
 
 func sparklineSaved(points []tracking.DashboardTrendPoint) string {
+	return sparklineSavedFor(points, true)
+}
+
+func sparklineSavedFor(points []tracking.DashboardTrendPoint, utf8 bool) string {
 	if len(points) == 0 {
 		return "no trend data"
 	}
@@ -264,14 +283,26 @@ func sparklineSaved(points []tracking.DashboardTrendPoint) string {
 	for _, point := range points {
 		values = append(values, point.SavedTokens)
 	}
-	return sparkline(values)
+	return sparklineGlyphs(values, utf8)
 }
 
 func sparkline(values []int64) string {
+	return sparklineGlyphs(values, true)
+}
+
+// sparklineGlyphs renders a block-sparkline when utf8=true, falling back
+// to an ASCII bucketed substitute (".-=#") when the terminal can't
+// display the Unicode block glyphs. The ASCII bucket is coarser but
+// still conveys trend shape — good enough when the alternative is
+// garbage.
+func sparklineGlyphs(values []int64, utf8 bool) string {
 	if len(values) == 0 {
 		return ""
 	}
-	blocks := []rune("▁▂▃▄▅▆▇█")
+	glyphs := []rune("▁▂▃▄▅▆▇█")
+	if !utf8 {
+		glyphs = []rune(".-=#")
+	}
 	var maxValue int64
 	for _, v := range values {
 		if v > maxValue {
@@ -279,19 +310,18 @@ func sparkline(values []int64) string {
 		}
 	}
 	if maxValue <= 0 {
-		return strings.Repeat(string(blocks[0]), len(values))
+		return strings.Repeat(string(glyphs[0]), len(values))
 	}
-
 	var b strings.Builder
 	for _, v := range values {
-		idx := int((float64(v) / float64(maxValue)) * float64(len(blocks)-1))
+		idx := int((float64(v) / float64(maxValue)) * float64(len(glyphs)-1))
 		if idx < 0 {
 			idx = 0
 		}
-		if idx >= len(blocks) {
-			idx = len(blocks) - 1
+		if idx >= len(glyphs) {
+			idx = len(glyphs) - 1
 		}
-		b.WriteRune(blocks[idx])
+		b.WriteRune(glyphs[idx])
 	}
 	return b.String()
 }

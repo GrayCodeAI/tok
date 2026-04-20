@@ -33,8 +33,12 @@ func newPipelineSection() *pipelineSection {
 	}
 }
 
-func (s *pipelineSection) Name() string                { return "Pipeline" }
-func (s *pipelineSection) Short() string               { return "Layer View" }
+func (s *pipelineSection) Name() string  { return "Pipeline" }
+func (s *pipelineSection) Short() string { return "Layer View" }
+
+func (s *pipelineSection) ExportColumns() []Column { return s.table.Columns() }
+func (s *pipelineSection) ExportRows() []Row       { return s.table.VisibleRows() }
+func (s *pipelineSection) ExportName() string      { return "pipeline" }
 func (s *pipelineSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *pipelineSection) KeyBindings() []key.Binding {
@@ -52,6 +56,11 @@ func (s *pipelineSection) Update(ctx SectionContext, msg tea.Msg) (SectionRender
 		s.table.SetFilter(m.Query)
 	case tea.KeyMsg:
 		handleTableNav(s.table, m)
+		if m.String() == "y" {
+			if row, ok := s.table.Selected(); ok {
+				return s, YankCmd(RowToTSV(row))
+			}
+		}
 	}
 	return s, nil
 }

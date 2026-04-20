@@ -126,10 +126,16 @@ func runActionCmd(ctx context.Context, reg *ActionRegistry, id, args string) tea
 // dependencies via the provided ActionDeps. Phase 2 extends this with
 // management actions (hooks toggle, DB vacuum, run compress).
 type ActionDeps struct {
-	RequestRefresh func() tea.Cmd
-	RequestJump    func(sectionIndex int) tea.Cmd
-	RequestToast   func(kind ToastKind, text string) tea.Cmd
-	SectionCount   int
+	RequestRefresh    func() tea.Cmd
+	RequestJump       func(sectionIndex int) tea.Cmd
+	RequestToast      func(kind ToastKind, text string) tea.Cmd
+	RequestTheme      func(name ThemeName) tea.Cmd
+	RequestThemeCycle func() tea.Cmd
+	// ClearLogRing wipes the in-memory slog ring. Exposed as an action
+	// dependency (not a direct ctx.Logs.Clear call) so the action can
+	// be dispatched from the palette without needing SectionContext.
+	ClearLogRing func() tea.Cmd
+	SectionCount int
 }
 
 func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
@@ -181,6 +187,71 @@ func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
 			}
 			if deps.RequestToast != nil {
 				_ = deps.RequestToast(ToastInfo, msg)
+			}
+			return nil, nil
+		},
+	})
+
+	r.Register(Action{
+		ID:          "theme.set",
+		Title:       "Set theme",
+		Description: "Usage: :theme.set dark|light|high-contrast|colorblind",
+		Category:    "View",
+		Run: func(_ context.Context, args string) (any, error) {
+			name := ThemeName(strings.TrimSpace(args))
+			if name == "" {
+				return nil, fmt.Errorf("theme name required")
+			}
+			valid := false
+			for _, t := range AvailableThemes {
+				if t == name {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				return nil, fmt.Errorf("unknown theme: %s", name)
+			}
+			if deps.RequestTheme != nil {
+				_ = deps.RequestTheme(name)
+			}
+			return name, nil
+		},
+	})
+
+	r.Register(Action{
+		ID:          "theme.cycle",
+		Title:       "Cycle theme",
+		Description: "Advance to the next bundled theme",
+		Category:    "View",
+		Run: func(_ context.Context, _ string) (any, error) {
+			// The model resolves "current" at message delivery time, so
+			// repeated cycles actually advance (see themeCycleMsg
+			// handler in app.go Update).
+			if deps.RequestThemeCycle == nil {
+				return nil, fmt.Errorf("theme cycling unavailable")
+			}
+			_ = deps.RequestThemeCycle()
+			return nil, nil
+		},
+	})
+
+	// logs.clear is destructive enough to warrant a confirm modal —
+	// the ring holds diagnostic context that users might still need
+	// for an ongoing debugging session. Confirm=true routes it
+	// through ConfirmOverlay before Run fires.
+	r.Register(Action{
+		ID:          "logs.clear",
+		Title:       "Clear log ring",
+		Description: "Discard every in-memory log event. This cannot be undone.",
+		Category:    "System",
+		Confirm:     true,
+		Run: func(_ context.Context, _ string) (any, error) {
+			if deps.ClearLogRing != nil {
+				_ = deps.ClearLogRing()
+			}
+			if deps.RequestToast != nil {
+				_ = deps.RequestToast(ToastSuccess, "log ring cleared")
 			}
 			return nil, nil
 		},

@@ -19,6 +19,7 @@ type Options struct {
 	Provider        string
 	ModelName       string
 	SessionID       string
+	Theme           ThemeName
 }
 
 func (o Options) normalized() Options {
@@ -27,6 +28,9 @@ func (o Options) normalized() Options {
 	}
 	if o.Days <= 0 {
 		o.Days = 30
+	}
+	if o.Theme == "" {
+		o.Theme = ThemeDark
 	}
 	return o
 }

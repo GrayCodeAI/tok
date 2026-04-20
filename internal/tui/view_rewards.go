@@ -73,7 +73,7 @@ func (s *rewardsSection) View(ctx SectionContext) string {
 	}
 	cardGrid := renderCardGrid(cards, columns)
 
-	calendar := renderStreakCalendar(th, snapshot.DailyTrends, width)
+	calendar := renderStreakCalendar(th, snapshot.DailyTrends, width, ctx.Env.UTF8)
 
 	bestLineStyle := th.Muted
 	if streaks.SavingsDays >= streaks.GoalDays {
@@ -103,46 +103,55 @@ func (s *rewardsSection) View(ctx SectionContext) string {
 // renderStreakCalendar draws a row of colored cells, one per DailyTrends
 // point, where the fill color tracks reduction-pct thresholds. This is
 // the TUI equivalent of a GitHub contribution heatmap.
-func renderStreakCalendar(th theme, points []tracking.DashboardTrendPoint, width int) string {
+func renderStreakCalendar(th theme, points []tracking.DashboardTrendPoint, width int, utf8 bool) string {
 	if len(points) == 0 {
 		return th.Muted.Render("No activity yet.")
 	}
 
 	cells := make([]string, 0, len(points))
 	for _, p := range points {
-		cells = append(cells, streakCell(th, p))
+		cells = append(cells, streakCell(th, p, utf8))
 	}
 	// Row wraps when the rendered width would exceed the pane width.
 	// Each cell is 2 runes wide to keep a square-ish aspect in terminal.
 	rows := wrapCells(cells, max(10, (width-4)/2))
 
+	legend := "legend: ░ none  ▒ low  ▓ mid  █ goal+"
+	if !utf8 {
+		legend = "legend: . none  : low  + mid  # goal+"
+	}
 	lines := []string{th.PanelTitle.Render("Last " + fmt.Sprintf("%d", len(points)) + " days")}
 	lines = append(lines, rows...)
-	lines = append(lines,
-		th.CardMeta.Render("legend: ░ none  ▒ low  ▓ mid  █ goal+"),
-	)
+	lines = append(lines, th.CardMeta.Render(legend))
 	return setWidth(panelStyle(th, 5), width).Render(strings.Join(lines, "\n"))
 }
 
-func streakCell(th theme, p tracking.DashboardTrendPoint) string {
+func streakCell(th theme, p tracking.DashboardTrendPoint, utf8 bool) string {
 	var glyph string
 	var color lipgloss.Color
 	switch {
 	case p.SavedTokens == 0:
-		glyph = "░ "
+		glyph = pickGlyph(utf8, "░ ", ". ")
 		color = lipgloss.Color("#2B3442")
 	case p.ReductionPct < 20:
-		glyph = "▒ "
+		glyph = pickGlyph(utf8, "▒ ", ": ")
 		color = lipgloss.Color("#7AB8FF")
 	case p.ReductionPct < 40:
-		glyph = "▓ "
+		glyph = pickGlyph(utf8, "▓ ", "+ ")
 		color = lipgloss.Color("#53D18D")
 	default:
-		glyph = "█ "
+		glyph = pickGlyph(utf8, "█ ", "# ")
 		color = lipgloss.Color("#F2CC70")
 	}
 	_ = th
 	return lipgloss.NewStyle().Foreground(color).Render(glyph)
+}
+
+func pickGlyph(utf8 bool, unicode, ascii string) string {
+	if utf8 {
+		return unicode
+	}
+	return ascii
 }
 
 func wrapCells(cells []string, perRow int) []string {

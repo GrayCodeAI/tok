@@ -39,6 +39,13 @@ func newSessionsSection() *sessionsSection {
 func (s *sessionsSection) Name() string  { return "Sessions" }
 func (s *sessionsSection) Short() string { return "Session Ops" }
 
+// Export* implementations satisfy ExportableTable so Phase 3 e-export
+// can serialize this view without the section reaching into the
+// internal table from the outside.
+func (s *sessionsSection) ExportColumns() []Column { return s.table.Columns() }
+func (s *sessionsSection) ExportRows() []Row       { return s.table.VisibleRows() }
+func (s *sessionsSection) ExportName() string      { return "sessions" }
+
 func (s *sessionsSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *sessionsSection) KeyBindings() []key.Binding {
@@ -98,6 +105,10 @@ func (s *sessionsSection) Update(ctx SectionContext, msg tea.Msg) (SectionRender
 				if id, castOk := row.Payload.(string); castOk {
 					s.drillID = id
 				}
+			}
+		case "y":
+			if row, ok := s.table.Selected(); ok {
+				return s, YankCmd(RowToTSV(row))
 			}
 		}
 	}

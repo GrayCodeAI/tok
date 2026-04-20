@@ -31,6 +31,11 @@ type SectionContext struct {
 	// Logs section). Pass through to sections that need it; other
 	// sections ignore it.
 	Logs *ringHandler
+	// Env reports terminal capabilities detected at startup. Sections
+	// that render Braille/block glyphs should degrade to ASCII when
+	// Env.UTF8 is false. Zero-value (all false) is safe but produces
+	// the most conservative glyphs.
+	Env Environment
 }
 
 // SectionRenderer is implemented by each screen in the TUI. The root
