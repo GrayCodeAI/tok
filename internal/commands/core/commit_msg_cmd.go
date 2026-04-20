@@ -230,7 +230,7 @@ func buildSubject(kind, scope string, files []changedFile) string {
 	} else {
 		target = fmt.Sprintf("%d files", len(files))
 	}
-	subj := fmt.Sprintf("%s", kind)
+	subj := kind
 	if scope != "" && len(files) > 1 {
 		subj = fmt.Sprintf("%s(%s)", kind, scope)
 	}

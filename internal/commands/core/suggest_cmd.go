@@ -61,8 +61,8 @@ func runSuggest(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	rand.Seed(time.Now().UnixNano())
-	t := tips[rand.Intn(len(tips))]
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	t := tips[r.Intn(len(tips))]
 
 	out.Global().Println(color.CyanString("💡 Tip:"))
 	out.Global().Println()

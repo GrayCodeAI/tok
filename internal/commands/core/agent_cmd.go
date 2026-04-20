@@ -94,7 +94,7 @@ func runAgent(cmd *cobra.Command, args []string) error {
 		return nil
 
 	default:
-		return fmt.Errorf("unknown subcommand '%s'. Use 'set' or 'reset'.", args[0])
+		return fmt.Errorf("unknown subcommand %q — use 'set' or 'reset'", args[0])
 	}
 }
 

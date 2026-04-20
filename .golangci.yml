@@ -18,6 +18,11 @@ linters-settings:
     locale: US
   goimports:
     local-prefixes: github.com/lakshmanpatel/tok
+  staticcheck:
+    # U1000: "unused" has too many false positives on types/funcs kept
+    # for extension/registration patterns. Re-enable once there's a
+    # pass to actually audit each one.
+    checks: ["all", "-U1000"]
 
 issues:
   exclude-dirs:
