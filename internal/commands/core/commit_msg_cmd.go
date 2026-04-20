@@ -89,12 +89,10 @@ type changedFile struct {
 }
 
 var (
-	reDiffGit  = regexp.MustCompile(`^diff --git a/(\S+) b/(\S+)`)
-	reNewFile  = regexp.MustCompile(`^new file mode`)
-	reRename   = regexp.MustCompile(`^rename (from|to) `)
-	reAddLine  = regexp.MustCompile(`^\+[^+]`)
-	reDelLine  = regexp.MustCompile(`^-[^-]`)
-	reFileHdr  = regexp.MustCompile(`^(\+\+\+|---) `)
+	reDiffGit = regexp.MustCompile(`^diff --git a/(\S+) b/(\S+)`)
+	reNewFile = regexp.MustCompile(`^new file mode`)
+	reRename  = regexp.MustCompile(`^rename (from|to) `)
+	reFileHdr = regexp.MustCompile(`^(\+\+\+|---) `)
 )
 
 func parseChangedFiles(diff string) []changedFile {
@@ -121,9 +119,9 @@ func parseChangedFiles(diff string) []changedFile {
 		if reFileHdr.MatchString(line) {
 			continue
 		}
-		if reAddLine.MatchString(line) {
+		if strings.HasPrefix(line, "+") {
 			cur.added++
-		} else if reDelLine.MatchString(line) {
+		} else if strings.HasPrefix(line, "-") {
 			cur.deleted++
 		}
 	}
