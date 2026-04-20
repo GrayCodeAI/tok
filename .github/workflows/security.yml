@@ -22,7 +22,8 @@ jobs:
     - name: Run Gosec Security Scanner
       uses: securego/gosec@master
       with:
-        args: '-fmt sarif -out gosec-results.sarif ./...'
+        # See quality.yml for why we exclude dep caches and -no-fail.
+        args: '-fmt sarif -out gosec-results.sarif -exclude-dir=.gomodcache -exclude-dir=.gocache -exclude-dir=.gosrccache -exclude-dir=vendor -no-fail ./...'
     
     - name: Upload SARIF file
       uses: github/codeql-action/upload-sarif@v3

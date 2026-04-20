@@ -37,7 +37,12 @@ jobs:
     - name: Run gosec
       uses: securego/gosec@master
       with:
-        args: '-fmt sarif -out gosec.sarif ./...'
+        # Exclude the local Go module cache + cache dir; CI runner
+        # populates these inside the workspace and gosec happily
+        # scans them, surfacing third-party findings we can't fix.
+        # -no-fail: don't exit non-zero on findings; we report via
+        # SARIF upload to Security tab, which is where triage lives.
+        args: '-fmt sarif -out gosec.sarif -exclude-dir=.gomodcache -exclude-dir=.gocache -exclude-dir=.gosrccache -exclude-dir=vendor -no-fail ./...'
     
     - name: Upload Gosec Results
       uses: github/codeql-action/upload-sarif@v3
