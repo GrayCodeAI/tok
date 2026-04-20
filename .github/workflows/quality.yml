@@ -25,7 +25,10 @@ jobs:
     - name: Run staticcheck
       uses: dominikh/staticcheck-action@v1
       with:
-        version: "2024.1.1"
+        # 2024.1.1 was built with older x/tools whose constant-overflow
+        # evaluation conflicts with Go 1.26 ("invalid array length
+        # -delta*delta"). A newer staticcheck release avoids that.
+        version: "2025.1"
         install-go: false
     
     - name: Run gosec
