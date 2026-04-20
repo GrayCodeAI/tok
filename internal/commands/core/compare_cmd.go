@@ -122,7 +122,7 @@ func runVanilla(cmd string) (output string, tokens int, cost float64) {
 		output = string(out)
 	}
 
-	tokens = core.EstimateTokens(output)
+	tokens = core.EstimateTokensPrecise(output)
 	cost = tokenToCost(tokens)
 	return
 }
@@ -136,7 +136,7 @@ func runWithTok(cmd string) (output string, tokens int, cost float64) {
 		output = string(out)
 	}
 
-	tokens = core.EstimateTokens(output)
+	tokens = core.EstimateTokensPrecise(output)
 	cost = tokenToCost(tokens)
 	return
 }

@@ -68,10 +68,10 @@ func runCompressMemory(cmd *cobra.Command, args []string) error {
 	}
 
 	originalText := string(original)
-	originalTokens := core.EstimateTokens(originalText)
+	originalTokens := core.EstimateTokensPrecise(originalText)
 
 	compressedText := compressProse(originalText, cmMode)
-	compressedTokens := core.EstimateTokens(compressedText)
+	compressedTokens := core.EstimateTokensPrecise(compressedText)
 
 	saved := originalTokens - compressedTokens
 	savingsPct := float64(0)
