@@ -224,6 +224,21 @@ func EstimateTokensFast(text string) int {
 	return fastEstimateTokens(text)
 }
 
+// EstimateTokensPrecise always uses BPE, skipping the short-string heuristic.
+// Use this for user-visible counts (savings dashboards, compression reports)
+// where a 200-char heuristic bypass would produce misleading numbers.
+// Falls back to fastEstimateTokens only if BPE initialization fails.
+func EstimateTokensPrecise(text string) int {
+	if text == "" {
+		return 0
+	}
+	tok, err := getBPETokenizer()
+	if err != nil || tok == nil {
+		return fastEstimateTokens(text)
+	}
+	return tok.Count(text)
+}
+
 // CalculateTokensSaved computes token savings between original and filtered.
 func CalculateTokensSaved(original, filtered string) int {
 	origTokens := EstimateTokens(original)

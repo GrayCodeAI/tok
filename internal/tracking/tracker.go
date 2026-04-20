@@ -286,10 +286,12 @@ func (t *Tracker) QueryRow(query string, args ...any) *sql.Row {
 	return t.db.QueryRow(query, args...)
 }
 
-// EstimateTokens provides a heuristic token count.
-// Delegates to core.EstimateTokens for single source of truth (T22).
+// EstimateTokens provides a BPE-accurate token count for persisted savings
+// records. User-visible dashboards (tok gain, tok session) read from this
+// table, so we always use the precise path rather than the short-string
+// heuristic fast path.
 func EstimateTokens(text string) int {
-	return core.EstimateTokens(text)
+	return core.EstimateTokensPrecise(text)
 }
 
 // Record saves a command execution to the database.
