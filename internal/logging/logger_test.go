@@ -27,8 +27,9 @@ func TestLogger_WithContext(t *testing.T) {
 		t.Error("expected non-nil logger")
 	}
 
-	// Test with trace ID
-	ctx = context.WithValue(context.Background(), "trace_id", "abc-123")
+	// Test with trace ID (typed key per SA1029)
+	type ctxKey string
+	ctx = context.WithValue(context.Background(), ctxKey("trace_id"), "abc-123")
 	newLogger = logger.WithContext(ctx)
 	if newLogger == nil {
 		t.Error("expected non-nil logger with trace_id")

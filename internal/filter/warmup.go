@@ -3,9 +3,9 @@ package filter
 import "sync/atomic"
 
 // Warmup pre-initializes pipeline components
-func (pc *PipelineCoordinator) Warmup() {
+func (p *PipelineCoordinator) Warmup() {
 	dummy := "warmup test data"
-	pc.Process(dummy)
+	p.Process(dummy)
 }
 
 // LockFreeCounter atomic counter

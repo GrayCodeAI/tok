@@ -204,7 +204,7 @@ func FastContains(s, substr string) bool {
 
 	// For small patterns, use bytes.Index
 	if len(substr) <= 16 {
-		return bytes.Index([]byte(s), []byte(substr)) >= 0
+		return bytes.Contains([]byte(s), []byte(substr))
 	}
 	return strings.Contains(s, substr)
 }
