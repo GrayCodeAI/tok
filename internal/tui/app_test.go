@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"context"
 	"strings"
 	"testing"
 	"time"
@@ -15,10 +16,16 @@ import (
 type stubLoader struct {
 	snapshot *tracking.WorkspaceDashboardSnapshot
 	err      error
+	closed   bool
 }
 
-func (s stubLoader) Load(Options) (*tracking.WorkspaceDashboardSnapshot, error) {
+func (s *stubLoader) Load(context.Context, Options) (*tracking.WorkspaceDashboardSnapshot, error) {
 	return s.snapshot, s.err
+}
+
+func (s *stubLoader) Close() error {
+	s.closed = true
+	return nil
 }
 
 func TestOptionsNormalized(t *testing.T) {
@@ -49,8 +56,7 @@ func TestSectionShortcutIndex(t *testing.T) {
 }
 
 func TestModelRefreshAndNavigation(t *testing.T) {
-	m := NewModel(Options{}).(model)
-	m.loader = stubLoader{
+	loader := &stubLoader{
 		snapshot: &tracking.WorkspaceDashboardSnapshot{
 			Dashboard: &tracking.DashboardSnapshot{
 				Overview: tracking.DashboardOverview{
@@ -71,6 +77,7 @@ func TestModelRefreshAndNavigation(t *testing.T) {
 			},
 		},
 	}
+	m := NewModelWithLoader(Options{}, loader).(model)
 
 	next, _ := m.Update(tea.WindowSizeMsg{Width: 140, Height: 40})
 	m = next.(model)
@@ -78,7 +85,7 @@ func TestModelRefreshAndNavigation(t *testing.T) {
 		t.Fatalf("expected ready non-compact model, got ready=%v compact=%v", m.ready, m.compact)
 	}
 
-	next, _ = m.Update(snapshotLoadedMsg{snapshot: m.loader.(stubLoader).snapshot, loadedAt: time.Now()})
+	next, _ = m.Update(snapshotLoadedMsg{snapshot: loader.snapshot, loadedAt: time.Now()})
 	m = next.(model)
 	if m.data == nil {
 		t.Fatal("expected snapshot data")
@@ -98,8 +105,7 @@ func TestModelRefreshAndNavigation(t *testing.T) {
 }
 
 func TestHomeViewDoesNotOverflowWidth(t *testing.T) {
-	m := NewModel(Options{}).(model)
-	m.loader = stubLoader{
+	loader := &stubLoader{
 		snapshot: &tracking.WorkspaceDashboardSnapshot{
 			Dashboard: &tracking.DashboardSnapshot{
 				Overview: tracking.DashboardOverview{
@@ -132,10 +138,11 @@ func TestHomeViewDoesNotOverflowWidth(t *testing.T) {
 			},
 		},
 	}
+	m := NewModelWithLoader(Options{}, loader).(model)
 
 	next, _ := m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
 	m = next.(model)
-	next, _ = m.Update(snapshotLoadedMsg{snapshot: m.loader.(stubLoader).snapshot, loadedAt: time.Now()})
+	next, _ = m.Update(snapshotLoadedMsg{snapshot: loader.snapshot, loadedAt: time.Now()})
 	m = next.(model)
 
 	view := m.View()
@@ -143,5 +150,37 @@ func TestHomeViewDoesNotOverflowWidth(t *testing.T) {
 		if lipgloss.Width(line) > 120 {
 			t.Fatalf("line width %d exceeds 120: %q", lipgloss.Width(line), line)
 		}
+	}
+}
+
+func TestQuitKeyClosesLoader(t *testing.T) {
+	loader := &stubLoader{}
+	m := NewModelWithLoader(Options{}, loader).(model)
+
+	next, cmd := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("q")})
+	m = next.(model)
+	if !m.quitting {
+		t.Fatal("expected quitting=true after q")
+	}
+	if cmd == nil {
+		t.Fatal("expected shutdown command")
+	}
+	msg := cmd()
+	if _, ok := msg.(quitMsg); !ok {
+		t.Fatalf("expected quitMsg, got %T", msg)
+	}
+	if !loader.closed {
+		t.Fatal("loader was not closed on shutdown")
+	}
+}
+
+func TestCancelledLoadIsSuppressed(t *testing.T) {
+	loader := &stubLoader{}
+	m := NewModelWithLoader(Options{}, loader).(model)
+
+	next, _ := m.Update(snapshotLoadedMsg{err: context.Canceled, loadedAt: time.Now()})
+	m = next.(model)
+	if m.err != nil {
+		t.Fatalf("expected cancellation to be suppressed, got err=%v", m.err)
 	}
 }

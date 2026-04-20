@@ -1,11 +1,14 @@
 package tui
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/spinner"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -27,9 +30,16 @@ type snapshotLoadedMsg struct {
 
 type refreshTickMsg time.Time
 
+// quitMsg is dispatched after the loader has been closed so the program can
+// exit cleanly without leaking DB handles.
+type quitMsg struct{}
+
 type model struct {
 	opts       Options
 	loader     snapshotLoader
+	ctx        context.Context
+	cancel     context.CancelFunc
+	keys       KeyMap
 	theme      theme
 	sections   []section
 	navIndex   int
@@ -40,6 +50,7 @@ type model struct {
 	helpOpen   bool
 	loading    bool
 	refreshing bool
+	quitting   bool
 	err        error
 	lastLoad   time.Time
 	data       *tracking.WorkspaceDashboardSnapshot
@@ -47,13 +58,25 @@ type model struct {
 }
 
 func NewModel(opts Options) tea.Model {
+	return NewModelWithLoader(opts, newWorkspaceLoader())
+}
+
+// NewModelWithLoader is the testable constructor: tests inject a stubLoader
+// while production paths go through NewModel which owns the real DB-backed
+// workspaceLoader.
+func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 	s := spinner.New()
 	s.Spinner = spinner.Dot
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#4FC3F7"))
 
+	ctx, cancel := context.WithCancel(context.Background())
+
 	return model{
 		opts:   opts.normalized(),
-		loader: workspaceLoader{},
+		loader: loader,
+		ctx:    ctx,
+		cancel: cancel,
+		keys:   DefaultKeyMap(),
 		theme:  newTheme(),
 		sections: []section{
 			{Title: "Home", Short: "Overview", Implemented: true},
@@ -77,7 +100,7 @@ func NewModel(opts Options) tea.Model {
 func (m model) Init() tea.Cmd {
 	return tea.Batch(
 		m.spinner.Tick,
-		loadSnapshotCmd(m.loader, m.opts),
+		loadSnapshotCmd(m.ctx, m.loader, m.opts),
 		refreshTickCmd(m.opts.RefreshInterval),
 	)
 }
@@ -98,39 +121,37 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, cmd)
 		}
 	case refreshTickMsg:
+		if m.quitting {
+			return m, nil
+		}
 		if !m.loading {
 			m.refreshing = true
-			cmds = append(cmds, loadSnapshotCmd(m.loader, m.opts))
+			cmds = append(cmds, loadSnapshotCmd(m.ctx, m.loader, m.opts))
 		}
 		cmds = append(cmds, refreshTickCmd(m.opts.RefreshInterval))
 	case snapshotLoadedMsg:
 		m.loading = false
 		m.refreshing = false
+		// Suppress cancellation errors triggered by our own Quit path so the
+		// user never sees a red banner flash on exit.
+		if msg.err != nil && isCancellationErr(msg.err) {
+			break
+		}
 		m.err = msg.err
 		if msg.err == nil {
 			m.data = msg.snapshot
 			m.lastLoad = msg.loadedAt
 		}
+	case quitMsg:
+		return m, tea.Quit
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "?":
-			m.helpOpen = !m.helpOpen
-		case "esc":
-			m.helpOpen = false
-		case "tab", "right", "l":
-			m.navIndex = (m.navIndex + 1) % len(m.sections)
-		case "shift+tab", "left", "h":
-			m.navIndex = (m.navIndex - 1 + len(m.sections)) % len(m.sections)
-		case "r":
-			m.loading = m.data == nil
-			m.refreshing = m.data != nil
-			cmds = append(cmds, loadSnapshotCmd(m.loader, m.opts))
-		default:
-			if idx, ok := sectionShortcutIndex(msg.String(), len(m.sections)); ok {
-				m.navIndex = idx
-			}
+		if m.quitting {
+			return m, nil
+		}
+		var cmd tea.Cmd
+		m, cmd = m.handleKey(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
 		}
 	}
 
@@ -153,15 +174,66 @@ func (m model) View() string {
 	return setWidth(m.theme.App, m.width).Render(view)
 }
 
-func loadSnapshotCmd(loader snapshotLoader, opts Options) tea.Cmd {
+// handleKey dispatches a key press against the keymap registry, mutates the
+// model as needed, and returns any resulting tea.Cmd. Kept off Update so the
+// message switch stays readable and so section-local handlers can layer on
+// in Phase 1 by calling back into this from their own Update methods.
+func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
+	switch {
+	case key.Matches(msg, m.keys.Quit):
+		m.quitting = true
+		return m, shutdownCmd(m.cancel, m.loader)
+	case key.Matches(msg, m.keys.Help):
+		m.helpOpen = !m.helpOpen
+	case key.Matches(msg, m.keys.Esc):
+		m.helpOpen = false
+	case key.Matches(msg, m.keys.NextSection):
+		m.navIndex = (m.navIndex + 1) % len(m.sections)
+	case key.Matches(msg, m.keys.PrevSection):
+		m.navIndex = (m.navIndex - 1 + len(m.sections)) % len(m.sections)
+	case key.Matches(msg, m.keys.Refresh):
+		m.loading = m.data == nil
+		m.refreshing = m.data != nil
+		return m, loadSnapshotCmd(m.ctx, m.loader, m.opts)
+	case key.Matches(msg, m.keys.JumpSection):
+		if idx, ok := sectionShortcutIndex(msg.String(), len(m.sections)); ok {
+			m.navIndex = idx
+		}
+	}
+	return m, nil
+}
+
+func loadSnapshotCmd(ctx context.Context, loader snapshotLoader, opts Options) tea.Cmd {
 	return func() tea.Msg {
-		snapshot, err := loader.Load(opts)
+		snapshot, err := loader.Load(ctx, opts)
 		return snapshotLoadedMsg{
 			snapshot: snapshot,
 			err:      err,
 			loadedAt: time.Now(),
 		}
 	}
+}
+
+// shutdownCmd cancels in-flight loads and closes loader-held DB handles,
+// then dispatches quitMsg so tea.Quit runs only after teardown is complete.
+func shutdownCmd(cancel context.CancelFunc, loader snapshotLoader) tea.Cmd {
+	return func() tea.Msg {
+		if cancel != nil {
+			cancel()
+		}
+		if loader != nil {
+			_ = loader.Close()
+		}
+		return quitMsg{}
+	}
+}
+
+// isCancellationErr reports whether err is (or wraps) a context cancellation.
+func isCancellationErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
 func refreshTickCmd(interval time.Duration) tea.Cmd {
@@ -334,17 +406,12 @@ func (m model) renderInsights(width, height int) string {
 }
 
 func (m model) renderFooter(width int) string {
-	sectionRange := fmt.Sprintf("1-%d", len(m.sections))
-	parts := []string{
-		m.theme.FooterKey.Render(sectionRange), " section",
-		"  ",
-		m.theme.FooterKey.Render("tab"), " next",
-		"  ",
-		m.theme.FooterKey.Render("r"), " refresh",
-		"  ",
-		m.theme.FooterKey.Render("?"), " help",
-		"  ",
-		m.theme.FooterKey.Render("q"), " quit",
+	parts := make([]string, 0, len(m.keys.ShortHelp())*3)
+	for i, b := range m.keys.ShortHelp() {
+		if i > 0 {
+			parts = append(parts, "  ")
+		}
+		parts = append(parts, m.theme.FooterKey.Render(b.Help().Key), " "+b.Help().Desc)
 	}
 	return setWidth(m.theme.Footer, width).Render(lipgloss.JoinHorizontal(lipgloss.Left, parts...))
 }
@@ -352,21 +419,26 @@ func (m model) renderFooter(width int) string {
 func (m model) renderHelp(width int) string {
 	lines := []string{
 		m.theme.SectionTitle.Render("tok TUI Help"),
+		m.theme.Muted.Render("Keybindings are generated from the registry; see internal/tui/keys.go."),
 		"",
-		"Phase 1 is live:",
-		"- shared shell",
-		"- real workspace snapshot loader",
-		"- Home screen",
-		"- section navigation",
-		"",
-		"Keys:",
-		fmt.Sprintf("- 1-%d jump to section", len(m.sections)),
-		"- tab / shift+tab or h/l move between sections",
-		"- r refresh",
-		"- esc close help",
-		"- q quit",
 	}
-	return strings.Join(lines, "\n")
+	columns := m.keys.FullHelp()
+	// Render each column vertically, then stack columns horizontally so the
+	// overlay scales to terminal width without truncation logic here.
+	rendered := make([]string, 0, len(columns))
+	for _, col := range columns {
+		var b strings.Builder
+		for _, binding := range col {
+			h := binding.Help()
+			b.WriteString(m.theme.FooterKey.Render(h.Key))
+			b.WriteString("  ")
+			b.WriteString(m.theme.Insight.Render(h.Desc))
+			b.WriteString("\n")
+		}
+		rendered = append(rendered, b.String())
+	}
+	help := lipgloss.JoinHorizontal(lipgloss.Top, rendered...)
+	return strings.Join(lines, "\n") + "\n" + help
 }
 
 func firstBreakdown(items []tracking.DashboardBreakdown) *tracking.DashboardBreakdown {
@@ -376,28 +448,8 @@ func firstBreakdown(items []tracking.DashboardBreakdown) *tracking.DashboardBrea
 	return &items[0]
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 func setWidth(style lipgloss.Style, total int) lipgloss.Style {
 	return style.Width(max(0, total-style.GetHorizontalFrameSize()))
-}
-
-func setSize(style lipgloss.Style, width, height int) lipgloss.Style {
-	return style.
-		Width(max(0, width-style.GetHorizontalFrameSize())).
-		Height(max(0, height-style.GetVerticalFrameSize()))
 }
 
 func joinHorizontalGap(gap string, items ...string) string {
