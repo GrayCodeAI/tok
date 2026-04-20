@@ -1,25 +1,25 @@
  tok  Sessions · 7d window · updated 09:30:00                                                                                               
                   Session detail  (esc/backspace to return)                                                                                 
  Sections                                                                                                                                   
-  1 Home          ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐     
-  2 Today         │                                                                                                                   │     
-  3 Trends        │ Identity                                                                                                          │     
-  4 Providers     │ • Session ID: sess-01                                                                                             │     
-  5 Models        │ • Agent: claude                                                                                                   │     
-  6 Agents        │ • Project: /home/user/project-alpha                                                                               │     
-  7 Sessions      │ • Status: ● active                                                                                                │     
-  8 Commands      │                                                                                                                   │     
-  9 Pipeline      │ Activity                                                                                                          │     
-  10 Rewards      │ • Started: 1d ago                                                                                                 │     
-  11 Logs         │ • Last activity: 6h ago                                                                                           │     
-  12 Config       │ • Turns: 22                                                                                                       │     
-                  │ • Tokens: 12.0k                                                                                                   │     
- Dashboard        │ • Compression ratio: 0.00x                                                                                        │     
-                  │ • Context blocks: 0                                                                                               │     
-                  │                                                                                                                   │     
+     1 Home       ┌───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐     
+     2 Today      │                                                                                                                   │     
+     3 Trends     │ Identity                                                                                                          │     
+     4            │ • Session ID: sess-01                                                                                             │     
+  Providers       │ • Agent: claude                                                                                                   │     
+     5 Models     │ • Project: /home/user/project-alpha                                                                               │     
+     6 Agents     │ • Status: ● active                                                                                                │     
+  >  7            │                                                                                                                   │     
+  Sessions        │ Activity                                                                                                          │     
+     8            │ • Started: 1d ago                                                                                                 │     
+  Commands        │ • Last activity: 6h ago                                                                                           │     
+     9            │ • Turns: 22                                                                                                       │     
+  Pipeline        │ • Tokens: 12.0k                                                                                                   │     
+    10 Rewards    │ • Compression ratio: 0.00x                                                                                        │     
+    11 Logs       │ • Context blocks: 0                                                                                               │     
+    12 Config     │                                                                                                                   │     
                   │ Snapshots                                                                                                         │     
-                  │ • Count: 2                                                                                                        │     
+ Dashboard        │ • Count: 2                                                                                                        │     
                   │ • Last snapshot: never                                                                                            │     
                   │                                                                                                                   │     
                   └───────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘     
- 1-9 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                    
+ 1-9,0 jump to section  tab/→/l next section  r refresh  : command palette  ? help  q quit                                                  

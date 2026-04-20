@@ -126,7 +126,9 @@ func (s *logsSection) View(ctx SectionContext) string {
 
 	body := ""
 	if end == 0 {
-		body = th.Muted.Render("no events captured yet — run a command in another terminal")
+		body = th.Muted.Render("No events captured yet. The ring starts empty on TUI launch " +
+			"and fills as tok logs events from refresh ticks, action runs, or internal " +
+			"warnings. Try pressing 'r' to refresh — the loader emits a log entry per run.")
 	} else {
 		lines := make([]string, 0, end-start)
 		for i := start; i < end; i++ {

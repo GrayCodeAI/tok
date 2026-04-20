@@ -42,8 +42,14 @@ func YankCmd(text string) tea.Cmd {
 // terminal even if stdout is captured by tea's renderer buffer.
 // Falling back to stdout is safe: tea won't have switched to alt-screen
 // during a key handler, so the bytes land on the same stream anyway.
+//
+// Honors TOK_DISABLE_OSC52=1 for tests — otherwise yanking in a test
+// run smears the OSC-52 sequence into the test output.
 func writeOSC52(payload string) tea.Cmd {
 	return func() tea.Msg {
+		if os.Getenv("TOK_DISABLE_OSC52") == "1" {
+			return nil
+		}
 		encoded := base64.StdEncoding.EncodeToString([]byte(payload))
 		seq := fmt.Sprintf("\x1b]52;c;%s\x07", encoded)
 

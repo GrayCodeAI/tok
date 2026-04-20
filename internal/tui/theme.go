@@ -260,13 +260,15 @@ func newThemeByName(name ThemeName) theme {
 			BorderRight(true).
 			BorderForeground(line).
 			Padding(1, 1),
+		// Sidebar items and the active marker share the same frame so
+		// selecting a section doesn't shift the name column by one.
+		// The active state is conveyed by a prefix glyph (▸) and a
+		// brighter foreground, applied in renderSidebar.
 		SidebarItem: lipgloss.NewStyle().
 			Foreground(slate).
 			Padding(0, 1),
 		SidebarActive: lipgloss.NewStyle().
-			Foreground(fg).
-			BorderLeft(true).
-			BorderForeground(cyan).
+			Foreground(cyan).
 			Bold(true).
 			Padding(0, 1),
 		SidebarKey: lipgloss.NewStyle().

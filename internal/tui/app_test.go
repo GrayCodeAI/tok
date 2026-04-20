@@ -47,8 +47,14 @@ func TestSectionShortcutIndex(t *testing.T) {
 	if !ok || idx != 10 {
 		t.Fatalf("sectionShortcutIndex(\"11\") = (%d, %v), want (10, true)", idx, ok)
 	}
-	if _, ok := sectionShortcutIndex("0", 12); ok {
-		t.Fatal("expected 0 to be invalid")
+	// "0" jumps to section 10 as a single-keystroke shortcut past
+	// section 9. Only valid when there are at least 10 sections.
+	idx, ok = sectionShortcutIndex("0", 12)
+	if !ok || idx != 9 {
+		t.Fatalf("sectionShortcutIndex(\"0\") = (%d, %v), want (9, true)", idx, ok)
+	}
+	if _, ok := sectionShortcutIndex("0", 8); ok {
+		t.Fatal("expected 0 to be invalid when section count < 10")
 	}
 	if _, ok := sectionShortcutIndex("b", 12); ok {
 		t.Fatal("expected alpha shortcuts to be invalid")

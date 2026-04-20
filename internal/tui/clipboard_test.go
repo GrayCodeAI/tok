@@ -16,6 +16,7 @@ func TestRowToTSV(t *testing.T) {
 }
 
 func TestYankCmdEmitsOSC52AndToast(t *testing.T) {
+	t.Setenv("TOK_DISABLE_OSC52", "1") // suppress /dev/tty writes during tests
 	cmd := YankCmd("hello world")
 	if cmd == nil {
 		t.Fatal("YankCmd returned nil for non-empty payload")

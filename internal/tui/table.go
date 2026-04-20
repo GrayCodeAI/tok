@@ -252,30 +252,81 @@ func (t *Table) computeWidths(total int) []int {
 	if n == 0 {
 		return nil
 	}
-	// Start with MaxWidth or an equal share when MaxWidth is 0.
+	// Allocate in three passes so columns never oversubscribe the row:
+	//
+	//  1. Seed every column with its MinWidth (or 0). MaxWidth columns
+	//     are fixed.
+	//  2. Any surplus beyond the seed is distributed evenly across
+	//     non-MaxWidth columns.
+	//  3. If the seed already exceeds the total, proportionally shrink
+	//     non-MaxWidth columns down to fit. Shrinking below MinWidth
+	//     is allowed as a last resort — losing a few chars off a cell
+	//     is preferable to a wrapping header that breaks the whole
+	//     table layout.
 	widths := make([]int, n)
-	fixed := 0
-	flexible := 0
+	gutters := n - 1
+	if gutters < 0 {
+		gutters = 0
+	}
+
+	seed := 0
+	flexibleIdx := make([]int, 0, n)
 	for i, c := range t.columns {
 		if c.MaxWidth > 0 {
 			widths[i] = c.MaxWidth
-			fixed += c.MaxWidth
-		} else {
-			flexible++
+			seed += c.MaxWidth
+			continue
 		}
+		widths[i] = c.MinWidth
+		seed += c.MinWidth
+		flexibleIdx = append(flexibleIdx, i)
 	}
-	remaining := total - fixed - (n - 1) // 1-col gutter between columns
-	if remaining < 0 {
-		remaining = 0
-	}
-	if flexible > 0 {
-		share := remaining / flexible
-		for i, c := range t.columns {
-			if c.MaxWidth == 0 {
-				widths[i] = share
+
+	budget := total - gutters
+	surplus := budget - seed
+
+	switch {
+	case surplus > 0 && len(flexibleIdx) > 0:
+		// Distribute extra room round-robin so the remainder doesn't
+		// fall entirely on one column.
+		for surplus > 0 {
+			progress := false
+			for _, i := range flexibleIdx {
+				if surplus == 0 {
+					break
+				}
+				widths[i]++
+				surplus--
+				progress = true
 			}
-			if widths[i] < c.MinWidth {
-				widths[i] = c.MinWidth
+			if !progress {
+				break
+			}
+		}
+	case surplus < 0:
+		// Seed exceeds budget — steal from flexible columns first,
+		// largest ones first so narrow columns stay readable.
+		deficit := -surplus
+		for deficit > 0 {
+			progress := false
+			// Find the widest flexible column that's still >1.
+			widest := -1
+			for _, i := range flexibleIdx {
+				if widths[i] <= 1 {
+					continue
+				}
+				if widest == -1 || widths[i] > widths[widest] {
+					widest = i
+				}
+			}
+			if widest == -1 {
+				break
+			}
+			widths[widest]--
+			deficit--
+			progress = true
+			if !progress {
+				break
 			}
 		}
 	}
