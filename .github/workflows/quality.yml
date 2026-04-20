@@ -45,7 +45,7 @@ jobs:
         args: '-fmt sarif -out gosec.sarif -exclude-dir=.gomodcache -exclude-dir=.gocache -exclude-dir=.gosrccache -exclude-dir=vendor -no-fail ./...'
     
     - name: Upload Gosec Results
-      uses: github/codeql-action/upload-sarif@v3
+      uses: github/codeql-action/upload-sarif@v4
       with:
         sarif_file: gosec.sarif
       if: always()
