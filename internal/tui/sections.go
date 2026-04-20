@@ -59,9 +59,9 @@ type SectionRenderer interface {
 func defaultSections() []SectionRenderer {
 	return []SectionRenderer{
 		newHomeSection(),
-		newPlaceholderSection("Today", "Easy Day"),
-		newPlaceholderSection("Trends", "Analytics"),
-		newPlaceholderSection("Providers", "Economics"),
+		newTodaySection(),
+		newTrendsSection(),
+		newProvidersSection(),
 		newPlaceholderSection("Models", "Model Cost"),
 		newPlaceholderSection("Agents", "Agent Ops"),
 		newSessionsSection(),
