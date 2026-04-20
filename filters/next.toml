@@ -1,0 +1,28 @@
+# Next.js CLI
+schema_version = 1
+
+[next_build]
+match_command = "^(npx\\s+)?next\\s+build\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^\\s*\\(static\\)",
+    "^\\s*ƒ Middleware",
+    "^Collecting page data",
+    "^Creating an optimized production build",
+    "^Linting and checking validity of types",
+    "^ *\\- ready",
+    "^ *\\- info",
+]
+keep_lines_matching = [
+    "^Error:",
+    "^error",
+    "Failed to compile",
+    "Compiled successfully",
+    "Route \\(.*?\\)",
+    "First Load JS",
+    "○ \\(Static\\)",
+    "● \\(SSG\\)",
+    "λ \\(Server\\)",
+]
+max_lines = 80

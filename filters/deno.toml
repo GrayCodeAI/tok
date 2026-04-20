@@ -1,0 +1,21 @@
+# Deno runtime
+schema_version = 1
+
+[deno]
+match_command = "^deno\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Download https://",
+    "^Check file://",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "^error:",
+    "^Error:",
+    "^TS\\d+",
+    "test .*ok",
+    "test .*FAILED",
+    "running \\d+ tests",
+    "ok \\| \\d+ passed",
+]
+max_lines = 100

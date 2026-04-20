@@ -1,0 +1,29 @@
+# PostgreSQL psql client
+schema_version = 1
+
+[psql]
+match_command = "^psql\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Pager usage is off",
+    "^SET$",
+    "^Null display is",
+    "^Tuples only is on",
+    "^Border style is",
+    "^Expanded display is",
+]
+keep_lines_matching = [
+    "^ERROR:",
+    "^FATAL:",
+    "^NOTICE:",
+    "^WARNING:",
+    "CREATE",
+    "DROP",
+    "ALTER",
+    "INSERT",
+    "UPDATE",
+    "DELETE",
+    "SELECT",
+    "\\| ",
+]
+max_lines = 200

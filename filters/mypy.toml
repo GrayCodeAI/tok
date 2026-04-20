@@ -1,0 +1,17 @@
+# mypy Python type checker
+schema_version = 1
+
+[mypy]
+match_command = "^mypy\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Success: no issues found",
+]
+keep_lines_matching = [
+    "error:",
+    "warning:",
+    "note:",
+    "Found \\d+ error",
+]
+max_lines = 150

@@ -1,0 +1,24 @@
+# OpenSSL
+schema_version = 1
+
+[openssl]
+match_command = "^openssl\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Using configuration from",
+]
+keep_lines_matching = [
+    "^error:",
+    "^Error",
+    "Verify return code",
+    "subject=",
+    "issuer=",
+    "Not Before",
+    "Not After",
+    "^SHA\\d+",
+    "^MD5",
+    "BEGIN CERTIFICATE",
+    "END CERTIFICATE",
+]
+max_lines = 80

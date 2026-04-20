@@ -12,6 +12,7 @@ import (
 
 	"github.com/lakshmanpatel/tok/internal/commands/registry"
 	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/lakshmanpatel/tok/internal/filter"
 )
 
 var (
@@ -32,9 +33,12 @@ How it works:
   → Human reads/edits the .original.md file
 
 Modes:
-  lite  - Keep grammar, drop filler words
-  full  - Drop articles, fragments OK (default)
-  ultra - Maximum compression, abbreviations
+  lite         - Keep grammar, drop filler words
+  full         - Drop articles, fragments OK (default)
+  ultra        - Maximum compression, abbreviations
+  wenyan-lite  - Classical register, filler stripped, grammar kept
+  wenyan-full  - Fragments + arrow causality + abbreviations
+  wenyan-ultra - Extreme abbreviation, no connectives, symbolic
 
 Restore:
   tok compress-memory CLAUDE.md --restore
@@ -216,6 +220,12 @@ func compressLine(line, mode string) string {
 		compressed = compressFull(compressed)
 	case "ultra":
 		compressed = compressUltra(compressed)
+	case "wenyan-lite":
+		compressed = filter.WenyanCompress(compressed, filter.WenyanLite)
+	case "wenyan-full":
+		compressed = filter.WenyanCompress(compressed, filter.WenyanFull)
+	case "wenyan-ultra":
+		compressed = filter.WenyanCompress(compressed, filter.WenyanUltra)
 	default:
 		compressed = compressFull(compressed)
 	}
@@ -362,6 +372,8 @@ func leadingWhitespace(line string) string {
 func init() {
 	registry.Add(func() { registry.Register(compressMemoryCmd) })
 
-	compressMemoryCmd.Flags().StringVar(&cmMode, "mode", "full", "Compression mode: lite|full|ultra")
+	compressMemoryCmd.Flags().StringVar(&cmMode, "mode", "full", "Compression mode: lite|full|ultra|wenyan-lite|wenyan-full|wenyan-ultra")
 	compressMemoryCmd.Flags().BoolVar(&cmRestore, "restore", false, "Restore original from backup")
+
+	compressMemoryCmd.Aliases = []string{"md", "compress-md"}
 }

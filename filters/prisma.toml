@@ -1,0 +1,25 @@
+# Prisma ORM
+schema_version = 1
+
+[prisma]
+match_command = "^(npx\\s+)?prisma\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Environment variables loaded from",
+    "^Prisma schema loaded from",
+    "^✔ Generated Prisma Client",
+    "^Running generate\\.\\.\\.",
+]
+keep_lines_matching = [
+    "^Error:",
+    "^error",
+    "✔",
+    "✗",
+    "Applied migration",
+    "following migration",
+    "database is now in sync",
+    "reset",
+    "Drift detected",
+]
+max_lines = 80

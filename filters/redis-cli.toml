@@ -1,0 +1,19 @@
+# redis-cli
+schema_version = 1
+
+[redis_cli]
+match_command = "^redis-cli\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "^\\(error\\)",
+    "^OK$",
+    "^PONG$",
+    "^[0-9]+\\)",
+    "^\\$-?\\d+",
+    "\\(integer\\)",
+    "\\(nil\\)",
+]
+max_lines = 100

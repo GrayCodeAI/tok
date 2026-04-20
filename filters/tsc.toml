@@ -1,0 +1,16 @@
+# TypeScript compiler
+schema_version = 1
+
+[tsc]
+match_command = "^(npx\\s+)?tsc\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "error TS\\d+",
+    "\\.ts\\(\\d+,\\d+\\):",
+    "\\.tsx\\(\\d+,\\d+\\):",
+    "Found \\d+ error",
+]
+max_lines = 150

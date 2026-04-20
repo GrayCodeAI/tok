@@ -1,0 +1,26 @@
+# Bazel build system
+schema_version = 1
+
+[bazel]
+match_command = "^bazel(isk)?\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^INFO: Analyzed",
+    "^INFO: Found",
+    "^INFO: From",
+    "^INFO: Build completed successfully",
+    "^Loading:",
+    "^Analyzing:",
+    "^\\s*\\[\\d+ / \\d+\\]",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "^ERROR:",
+    "^FAIL:",
+    "^FAILED",
+    "^Target \\S+ up-to-date",
+    "^Build completed",
+    "PASSED",
+    "bazel-bin/",
+]
+max_lines = 80
