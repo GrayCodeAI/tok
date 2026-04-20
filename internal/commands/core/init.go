@@ -30,6 +30,15 @@ var (
 	initOpenclaw    bool
 	initKilocode    bool
 	initAntigravity bool
+	initAider       bool
+	initAmp         bool
+	initCrush       bool
+	initGoose       bool
+	initQwen        bool
+	initRoocode     bool
+	initZed         bool
+	initWarp        bool
+	initTrae        bool
 	initAll         bool
 	initShow        bool
 	initUninstall   bool
@@ -45,18 +54,27 @@ var initCmd = &cobra.Command{
 Installs hooks and configuration for various AI agents to enable
 token compression and optimization.
 
-Supported agents:
-  --claude         Claude Code (default)
-  --cursor         Cursor IDE
-  --windsurf       Windsurf IDE
-  --cline          Cline / Roo Code
-  --gemini         Google Gemini CLI
+Supported agents (CLI-first top 5 first):
+  --claude         Claude Code
   --codex          OpenAI Codex CLI
-  --copilot        GitHub Copilot
+  --gemini         Google Gemini CLI
+  --qwen           Alibaba Qwen Code CLI
   --opencode       OpenCode
-  --openclaw       OpenClaw
   --kilocode       Kilo Code
+  --aider          Aider
+  --cursor         Cursor IDE
+  --copilot        GitHub Copilot
+  --windsurf       Windsurf IDE
+  --cline          Cline
+  --roocode        Roo Code
+  --amp            Sourcegraph Amp
+  --crush          Charm Crush
+  --goose          Block Goose
+  --zed            Zed (built-in agent panel)
+  --warp           Warp (Warp Agent)
+  --trae           ByteDance Trae
   --antigravity    Google Antigravity
+  --openclaw       OpenClaw
   --all            All detected agents
 
 Examples:
@@ -84,8 +102,17 @@ func init() {
 	initCmd.Flags().BoolVar(&initOpenclaw, "openclaw", false, "Setup for OpenClaw")
 	initCmd.Flags().BoolVar(&initKilocode, "kilocode", false, "Setup for Kilo Code")
 	initCmd.Flags().BoolVar(&initAntigravity, "antigravity", false, "Setup for Google Antigravity")
+	initCmd.Flags().BoolVar(&initAider, "aider", false, "Setup for Aider")
+	initCmd.Flags().BoolVar(&initAmp, "amp", false, "Setup for Sourcegraph Amp")
+	initCmd.Flags().BoolVar(&initCrush, "crush", false, "Setup for Charm Crush")
+	initCmd.Flags().BoolVar(&initGoose, "goose", false, "Setup for Block Goose")
+	initCmd.Flags().BoolVar(&initQwen, "qwen", false, "Setup for Alibaba Qwen Code CLI")
+	initCmd.Flags().BoolVar(&initRoocode, "roocode", false, "Setup for Roo Code")
+	initCmd.Flags().BoolVar(&initZed, "zed", false, "Setup for Zed agent panel")
+	initCmd.Flags().BoolVar(&initWarp, "warp", false, "Setup for Warp terminal agent")
+	initCmd.Flags().BoolVar(&initTrae, "trae", false, "Setup for ByteDance Trae")
 	initCmd.Flags().BoolVarP(&initAll, "all", "a", false, "Setup for all detected agents")
-	initCmd.Flags().StringVar(&initAgent, "agent", "", "Setup for specific agent by name (claude-code, copilot, cursor, windsurf, cline, roo-code, codex, gemini, kilocode, antigravity, opencode, openclaw)")
+	initCmd.Flags().StringVar(&initAgent, "agent", "", "Setup for specific agent by name (claude-code, codex, gemini, qwen, opencode, kilocode, aider, cursor, copilot, windsurf, cline, roocode, amp, crush, goose, zed, warp, trae, antigravity, openclaw)")
 	initCmd.Flags().BoolVar(&initShow, "show", false, "Show current configuration")
 	initCmd.Flags().BoolVar(&initUninstall, "uninstall", false, "Remove tok integration for selected agents")
 }
@@ -109,20 +136,33 @@ var agentNameMap = map[string]string{
 	"cursor":      "Cursor",
 	"windsurf":    "Windsurf",
 	"cline":       "Cline",
-	"roo-code":    "Cline",
+	"roo-code":    "Roo Code",
+	"roocode":     "Roo Code",
+	"roo":         "Roo Code",
 	"codex":       "Codex",
 	"gemini":      "Gemini CLI",
 	"kilocode":    "Kilo Code",
 	"antigravity": "Google Antigravity",
 	"opencode":    "OpenCode",
 	"openclaw":    "OpenClaw",
+	"aider":       "Aider",
+	"amp":         "Amp",
+	"crush":       "Crush",
+	"goose":       "Goose",
+	"qwen":        "Qwen Code",
+	"qwen-code":   "Qwen Code",
+	"zed":         "Zed",
+	"warp":        "Warp",
+	"trae":        "Trae",
 }
 
 // SupportedAgents lists all supported agent names
+// SupportedAgents lists all supported agent names, CLI-first top 5 first.
 var SupportedAgents = []string{
-	"claude-code", "copilot", "cursor", "windsurf", "cline",
-	"roo-code", "codex", "gemini", "kilocode", "antigravity",
-	"opencode", "openclaw",
+	"claude-code", "codex", "gemini", "qwen", "opencode",
+	"kilocode", "aider", "cursor", "copilot", "windsurf",
+	"cline", "roocode", "amp", "crush", "goose",
+	"zed", "warp", "trae", "antigravity", "openclaw",
 }
 
 func currentAgentInfos(global bool) ([]AgentInfo, error) {
@@ -140,6 +180,8 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 		codexDir = resolveCodexConfigDir(home)
 	}
 
+	// CLI-first top 5 first: the five native-CLI agents most users are adopting
+	// for token-heavy workflows. Remaining agents follow in relevance order.
 	agents := []AgentInfo{
 		{
 			Name:         "Claude Code",
@@ -150,12 +192,65 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			Instructions: "Patched ~/.claude/settings.json and ensured ~/.claude/CLAUDE.md references @TOK.md",
 		},
 		{
+			Name:         "Codex",
+			Flag:         &initCodex,
+			DetectDir:    resolveCodexConfigDir(home),
+			ConfigDir:    codexDir,
+			Instructions: "Patched AGENTS.md with a tok instructions reference",
+		},
+		{
+			Name:         "Gemini CLI",
+			Flag:         &initGemini,
+			DetectDir:    filepath.Join(home, ".gemini"),
+			ConfigDir:    filepath.Join(home, ".gemini"),
+			HookDir:      filepath.Join(home, ".gemini", "hooks"),
+			Instructions: "Patched ~/.gemini/settings.json with a BeforeTool hook",
+		},
+		{
+			Name:         "Qwen Code",
+			Flag:         &initQwen,
+			DetectDir:    filepath.Join(home, ".qwen"),
+			ConfigDir:    filepath.Join(home, ".qwen"),
+			HookDir:      filepath.Join(home, ".qwen", "hooks"),
+			Instructions: "Installed ~/.qwen/hooks/tok-rewrite.sh and ~/.qwen/TOK.md",
+		},
+		{
+			Name:         "OpenCode",
+			Flag:         &initOpencode,
+			DetectDir:    filepath.Join(home, ".config", "opencode"),
+			ConfigDir:    filepath.Join(home, ".config", "opencode"),
+			HookDir:      filepath.Join(home, ".config", "opencode", "plugins"),
+			Instructions: "Installed ~/.config/opencode/plugins/tok.ts",
+		},
+		{
+			Name:         "Kilo Code",
+			Flag:         &initKilocode,
+			DetectDir:    filepath.Join(home, ".kilocode"),
+			ConfigDir:    cwd,
+			Instructions: "Installed .kilocode/rules/tok-rules.md",
+		},
+		{
+			Name:         "Aider",
+			Flag:         &initAider,
+			DetectDir:    filepath.Join(home, ".aider"),
+			ConfigDir:    filepath.Join(home, ".aider"),
+			HookDir:      filepath.Join(home, ".aider", "hooks"),
+			Instructions: "Installed ~/.aider/hooks/tok-rewrite.sh and ~/.aider/TOK.md — reference it from your CONVENTIONS.md",
+		},
+		{
 			Name:         "Cursor",
 			Flag:         &initCursor,
 			DetectDir:    filepath.Join(home, ".cursor"),
 			ConfigDir:    filepath.Join(home, ".cursor"),
 			HookDir:      filepath.Join(home, ".cursor", "hooks"),
 			Instructions: "Patched ~/.cursor/hooks.json with a preToolUse hook",
+		},
+		{
+			Name:         "GitHub Copilot",
+			Flag:         &initCopilot,
+			DetectDir:    filepath.Join(cwd, ".github"),
+			ConfigDir:    cwd,
+			Instructions: "Installed .github/hooks/tok-rewrite.json and .github/copilot-instructions.md",
 		},
 		{
 			Name:         "Windsurf",
@@ -172,34 +267,66 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			Instructions: "Patched project .clinerules with tok instructions",
 		},
 		{
-			Name:         "Gemini CLI",
-			Flag:         &initGemini,
-			DetectDir:    filepath.Join(home, ".gemini"),
-			ConfigDir:    filepath.Join(home, ".gemini"),
-			HookDir:      filepath.Join(home, ".gemini", "hooks"),
-			Instructions: "Patched ~/.gemini/settings.json with a BeforeTool hook",
-		},
-		{
-			Name:         "Codex",
-			Flag:         &initCodex,
-			DetectDir:    resolveCodexConfigDir(home),
-			ConfigDir:    codexDir,
-			Instructions: "Patched AGENTS.md with a tok instructions reference",
-		},
-		{
-			Name:         "GitHub Copilot",
-			Flag:         &initCopilot,
-			DetectDir:    filepath.Join(cwd, ".github"),
+			Name:         "Roo Code",
+			Flag:         &initRoocode,
+			DetectDir:    filepath.Join(home, ".roo"),
 			ConfigDir:    cwd,
-			Instructions: "Installed .github/hooks/tok-rewrite.json and .github/copilot-instructions.md",
+			Instructions: "Installed .roo/rules/tok-rules.md",
 		},
 		{
-			Name:         "OpenCode",
-			Flag:         &initOpencode,
-			DetectDir:    filepath.Join(home, ".config", "opencode"),
-			ConfigDir:    filepath.Join(home, ".config", "opencode"),
-			HookDir:      filepath.Join(home, ".config", "opencode", "plugins"),
-			Instructions: "Installed ~/.config/opencode/plugins/tok.ts",
+			Name:         "Amp",
+			Flag:         &initAmp,
+			DetectDir:    filepath.Join(home, ".config", "amp"),
+			ConfigDir:    filepath.Join(home, ".config", "amp"),
+			HookDir:      filepath.Join(home, ".config", "amp", "hooks"),
+			Instructions: "Installed ~/.config/amp/hooks/tok-rewrite.sh and ~/.config/amp/TOK.md",
+		},
+		{
+			Name:         "Crush",
+			Flag:         &initCrush,
+			DetectDir:    filepath.Join(home, ".config", "crush"),
+			ConfigDir:    filepath.Join(home, ".config", "crush"),
+			HookDir:      filepath.Join(home, ".config", "crush", "hooks"),
+			Instructions: "Installed ~/.config/crush/hooks/tok-rewrite.sh and ~/.config/crush/TOK.md",
+		},
+		{
+			Name:         "Goose",
+			Flag:         &initGoose,
+			DetectDir:    filepath.Join(home, ".config", "goose"),
+			ConfigDir:    filepath.Join(home, ".config", "goose"),
+			HookDir:      filepath.Join(home, ".config", "goose", "hooks"),
+			Instructions: "Installed ~/.config/goose/hooks/tok-rewrite.sh and ~/.config/goose/TOK.md",
+		},
+		{
+			Name:         "Zed",
+			Flag:         &initZed,
+			DetectDir:    filepath.Join(home, ".config", "zed"),
+			ConfigDir:    filepath.Join(home, ".config", "zed"),
+			HookDir:      filepath.Join(home, ".config", "zed", "hooks"),
+			Instructions: "Installed ~/.config/zed/hooks/tok-rewrite.sh and ~/.config/zed/TOK.md",
+		},
+		{
+			Name:         "Warp",
+			Flag:         &initWarp,
+			DetectDir:    filepath.Join(home, ".warp"),
+			ConfigDir:    filepath.Join(home, ".warp"),
+			HookDir:      filepath.Join(home, ".warp", "hooks"),
+			Instructions: "Installed ~/.warp/hooks/tok-rewrite.sh and ~/.warp/TOK.md",
+		},
+		{
+			Name:         "Trae",
+			Flag:         &initTrae,
+			DetectDir:    filepath.Join(home, ".trae"),
+			ConfigDir:    filepath.Join(home, ".trae"),
+			HookDir:      filepath.Join(home, ".trae", "hooks"),
+			Instructions: "Installed ~/.trae/hooks/tok-rewrite.sh and ~/.trae/TOK.md",
+		},
+		{
+			Name:         "Google Antigravity",
+			Flag:         &initAntigravity,
+			DetectDir:    filepath.Join(home, ".antigravity"),
+			ConfigDir:    cwd,
+			Instructions: "Installed .agents/rules/antigravity-tok-rules.md",
 		},
 		{
 			Name:         "OpenClaw",
@@ -208,20 +335,6 @@ func currentAgentInfos(global bool) ([]AgentInfo, error) {
 			ConfigDir:    filepath.Join(home, ".openclaw"),
 			HookDir:      filepath.Join(home, ".openclaw", "hooks"),
 			Instructions: "Add to ~/.openclaw/config.json",
-		},
-		{
-			Name:         "Kilo Code",
-			Flag:         &initKilocode,
-			DetectDir:    filepath.Join(home, ".kilocode"),
-			ConfigDir:    cwd,
-			Instructions: "Installed .kilocode/rules/tok-rules.md",
-		},
-		{
-			Name:         "Google Antigravity",
-			Flag:         &initAntigravity,
-			DetectDir:    filepath.Join(home, ".antigravity"),
-			ConfigDir:    cwd,
-			Instructions: "Installed .agents/rules/antigravity-tok-rules.md",
 		},
 	}
 
@@ -335,6 +448,77 @@ func createAgentInfoByName(name string) *AgentInfo {
 			HookDir:      filepath.Join(home, ".antigravity", "hooks"),
 			Instructions: "Installed transparent rewrite hook for bash tool calls",
 		}
+	case "Aider":
+		return &AgentInfo{
+			Name:         "Aider",
+			DetectDir:    filepath.Join(home, ".aider"),
+			ConfigDir:    filepath.Join(home, ".aider"),
+			HookDir:      filepath.Join(home, ".aider", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Amp":
+		return &AgentInfo{
+			Name:         "Amp",
+			DetectDir:    filepath.Join(home, ".config", "amp"),
+			ConfigDir:    filepath.Join(home, ".config", "amp"),
+			HookDir:      filepath.Join(home, ".config", "amp", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Crush":
+		return &AgentInfo{
+			Name:         "Crush",
+			DetectDir:    filepath.Join(home, ".config", "crush"),
+			ConfigDir:    filepath.Join(home, ".config", "crush"),
+			HookDir:      filepath.Join(home, ".config", "crush", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Goose":
+		return &AgentInfo{
+			Name:         "Goose",
+			DetectDir:    filepath.Join(home, ".config", "goose"),
+			ConfigDir:    filepath.Join(home, ".config", "goose"),
+			HookDir:      filepath.Join(home, ".config", "goose", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Qwen Code":
+		return &AgentInfo{
+			Name:         "Qwen Code",
+			DetectDir:    filepath.Join(home, ".qwen"),
+			ConfigDir:    filepath.Join(home, ".qwen"),
+			HookDir:      filepath.Join(home, ".qwen", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Roo Code":
+		return &AgentInfo{
+			Name:         "Roo Code",
+			DetectDir:    filepath.Join(home, ".roo"),
+			ConfigDir:    cwd,
+			Instructions: "Installed .roo/rules/tok-rules.md",
+		}
+	case "Zed":
+		return &AgentInfo{
+			Name:         "Zed",
+			DetectDir:    filepath.Join(home, ".config", "zed"),
+			ConfigDir:    filepath.Join(home, ".config", "zed"),
+			HookDir:      filepath.Join(home, ".config", "zed", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Warp":
+		return &AgentInfo{
+			Name:         "Warp",
+			DetectDir:    filepath.Join(home, ".warp"),
+			ConfigDir:    filepath.Join(home, ".warp"),
+			HookDir:      filepath.Join(home, ".warp", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
+	case "Trae":
+		return &AgentInfo{
+			Name:         "Trae",
+			DetectDir:    filepath.Join(home, ".trae"),
+			ConfigDir:    filepath.Join(home, ".trae"),
+			HookDir:      filepath.Join(home, ".trae", "hooks"),
+			Instructions: "Installed transparent rewrite hook for bash tool calls",
+		}
 	default:
 		return nil
 	}
@@ -394,7 +578,9 @@ func runInit(cmd *cobra.Command, args []string) error {
 		// Check if any specific agent flags were set
 		anyFlag := initClaude || initCursor || initWindsurf || initCline ||
 			initGemini || initCodex || initCopilot || initOpencode ||
-			initOpenclaw || initKilocode || initAntigravity
+			initOpenclaw || initKilocode || initAntigravity ||
+			initAider || initAmp || initCrush || initGoose || initQwen ||
+			initRoocode || initZed || initWarp || initTrae
 
 		if !anyFlag {
 			// Interactive mode - detect and ask
@@ -554,6 +740,8 @@ func setupAgent(agent AgentInfo, global bool) error {
 		return upsertManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tok:cline", generateWorkspaceRules(agent.Name))
 	case "Kilo Code":
 		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tok-rules.md"), generateWorkspaceRules(agent.Name), 0644)
+	case "Roo Code":
+		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".roo", "rules", "tok-rules.md"), generateWorkspaceRules(agent.Name), 0644)
 	case "Google Antigravity":
 		return writeOwnedFile(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tok-rules.md"), generateWorkspaceRules(agent.Name), 0644)
 	}
@@ -661,6 +849,8 @@ func uninstallAgent(agent AgentInfo) ([]string, error) {
 		return uninstallManagedBlockFile(filepath.Join(agent.ConfigDir, ".clinerules"), "tok:cline")
 	case "Kilo Code":
 		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".kilocode", "rules", "tok-rules.md"))
+	case "Roo Code":
+		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".roo", "rules", "tok-rules.md"))
 	case "Google Antigravity":
 		return uninstallOwnedFiles(filepath.Join(agent.ConfigDir, ".agents", "rules", "antigravity-tok-rules.md"))
 	}
@@ -1707,6 +1897,16 @@ func describeAgentStatus(agent AgentInfo) (string, string) {
 		switch {
 		case fileExists(rulesPath):
 			return "configured", ".kilocode/rules/tok-rules.md installed"
+		case detected:
+			return "detected", "not configured"
+		default:
+			return "not detected", ""
+		}
+	case "Roo Code":
+		rulesPath := filepath.Join(agent.ConfigDir, ".roo", "rules", "tok-rules.md")
+		switch {
+		case fileExists(rulesPath):
+			return "configured", ".roo/rules/tok-rules.md installed"
 		case detected:
 			return "detected", "not configured"
 		default:
