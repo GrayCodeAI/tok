@@ -12,7 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ['1.24', '1.25', '1.26']
+        # 1.24 dropped — module's go directive is 1.25.0 and 1.24 cannot
+        # build some of the features used by our deps. Add it back once we
+        # audit for 1.24 compatibility, or once we move the directive down.
+        go-version: ['1.25', '1.26']
     
     steps:
     - uses: actions/checkout@v4
