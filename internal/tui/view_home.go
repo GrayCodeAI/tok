@@ -5,20 +5,45 @@ import (
 	"math"
 	"strings"
 
+	"github.com/charmbracelet/bubbles/key"
+	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
-func (m model) renderHome(width int) string {
-	if m.data == nil || m.data.Dashboard == nil {
-		return m.theme.Muted.Render("No dashboard data yet.")
+// homeSection is the overview cockpit. Stateless for now — all layout
+// decisions live in View() and are driven purely by the SectionContext.
+type homeSection struct{}
+
+func newHomeSection() *homeSection { return &homeSection{} }
+
+func (h *homeSection) Name() string                { return "Home" }
+func (h *homeSection) Short() string               { return "Overview" }
+func (h *homeSection) Init(SectionContext) tea.Cmd { return nil }
+func (h *homeSection) KeyBindings() []key.Binding  { return nil }
+func (h *homeSection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
+	return h, nil
+}
+
+func (h *homeSection) View(ctx SectionContext) string {
+	return renderHomeView(ctx)
+}
+
+// renderHomeView is the raw rendering logic, factored out so tests can
+// call it with a fabricated SectionContext without going through the
+// whole tea.Program.
+func renderHomeView(ctx SectionContext) string {
+	th := ctx.Theme
+	width := ctx.Width
+	if ctx.Data == nil || ctx.Data.Dashboard == nil {
+		return th.Muted.Render("No dashboard data yet.")
 	}
 
-	snapshot := m.data.Dashboard
+	snapshot := ctx.Data.Dashboard
 	overview := snapshot.Overview
-	store := m.data.Sessions.StoreSummary
-	quality := m.data.DataQuality
+	store := ctx.Data.Sessions.StoreSummary
+	quality := ctx.Data.DataQuality
 
 	metricColumns := 3
 	if width < 96 {
@@ -28,23 +53,23 @@ func (m model) renderHome(width int) string {
 		metricColumns = 1
 	}
 	cards := []string{
-		m.renderMetricCard("Saved Tokens", formatInt(overview.TotalSavedTokens), fmt.Sprintf("%d day window", m.opts.Days), splitWidth(width, metricColumns, 1), 0, m.theme.ValuePositive),
-		m.renderMetricCard("Cost Saved", fmt.Sprintf("$%.4f", overview.EstimatedSavingsUSD), "estimated reduction value", splitWidth(width, metricColumns, 1), 1, m.theme.ValueFocus),
-		m.renderMetricCard("Reduction", fmt.Sprintf("%.1f%%", overview.ReductionPct), "overall compression rate", splitWidth(width, metricColumns, 1), 2, m.theme.ValueGold),
-		m.renderMetricCard("Commands", formatInt(overview.TotalCommands), "tracked commands", splitWidth(width, metricColumns, 1), 3, m.theme.Title),
-		m.renderMetricCard("Active Days", fmt.Sprintf("%d / %d", snapshot.Lifecycle.ActiveDays30d, m.opts.Days), "days with tracked activity", splitWidth(width, metricColumns, 1), 4, m.theme.ValuePositive),
-		m.renderMetricCard("Current Streak", fmt.Sprintf("%d days", snapshot.Streaks.SavingsDays), fmt.Sprintf("%d pts · level %d", snapshot.Gamification.Points, snapshot.Gamification.Level), splitWidth(width, metricColumns, 1), 5, m.theme.ValueWarning),
+		renderMetricCard(th, "Saved Tokens", formatInt(overview.TotalSavedTokens), fmt.Sprintf("%d day window", ctx.Opts.Days), splitWidth(width, metricColumns, 1), 0, th.ValuePositive),
+		renderMetricCard(th, "Cost Saved", fmt.Sprintf("$%.4f", overview.EstimatedSavingsUSD), "estimated reduction value", splitWidth(width, metricColumns, 1), 1, th.ValueFocus),
+		renderMetricCard(th, "Reduction", fmt.Sprintf("%.1f%%", overview.ReductionPct), "overall compression rate", splitWidth(width, metricColumns, 1), 2, th.ValueGold),
+		renderMetricCard(th, "Commands", formatInt(overview.TotalCommands), "tracked commands", splitWidth(width, metricColumns, 1), 3, th.Title),
+		renderMetricCard(th, "Active Days", fmt.Sprintf("%d / %d", snapshot.Lifecycle.ActiveDays30d, ctx.Opts.Days), "days with tracked activity", splitWidth(width, metricColumns, 1), 4, th.ValuePositive),
+		renderMetricCard(th, "Current Streak", fmt.Sprintf("%d days", snapshot.Streaks.SavingsDays), fmt.Sprintf("%d pts · level %d", snapshot.Gamification.Points, snapshot.Gamification.Level), splitWidth(width, metricColumns, 1), 5, th.ValueWarning),
 	}
-	cardGrid := m.renderCardGrid(cards, metricColumns)
+	cardGrid := renderCardGrid(cards, metricColumns)
 
 	dailySpark := sparklineSaved(snapshot.DailyTrends)
 	weeklySpark := sparklineSaved(snapshot.WeeklyTrends)
-	trendsBlock := setWidth(m.panelStyle(8), width).Render(strings.Join([]string{
-		m.theme.PanelTitle.Render("Activity & Trends"),
+	trendsBlock := setWidth(panelStyle(th, 8), width).Render(strings.Join([]string{
+		th.PanelTitle.Render("Activity & Trends"),
 		"",
-		m.theme.CardLabel.Render("Daily sparkline") + "  " + m.theme.ValuePositive.Render(dailySpark) + "  " + m.theme.CardMeta.Render(fmt.Sprintf("%d points", len(snapshot.DailyTrends))),
-		m.theme.CardLabel.Render("Weekly sparkline") + " " + m.theme.ValueFocus.Render(weeklySpark) + "  " + m.theme.CardMeta.Render(fmt.Sprintf("%d points", len(snapshot.WeeklyTrends))),
-		m.theme.CardLabel.Render("Budget") + "  " + m.theme.ValueWarning.Render(formatInt(snapshot.Budgets.Daily.FilteredTokens)+" / "+formatInt(snapshot.Budgets.Daily.TokenBudget)) + "  " + m.theme.CardMeta.Render("daily filtered tokens"),
+		th.CardLabel.Render("Daily sparkline") + "  " + th.ValuePositive.Render(dailySpark) + "  " + th.CardMeta.Render(fmt.Sprintf("%d points", len(snapshot.DailyTrends))),
+		th.CardLabel.Render("Weekly sparkline") + " " + th.ValueFocus.Render(weeklySpark) + "  " + th.CardMeta.Render(fmt.Sprintf("%d points", len(snapshot.WeeklyTrends))),
+		th.CardLabel.Render("Budget") + "  " + th.ValueWarning.Render(formatInt(snapshot.Budgets.Daily.FilteredTokens)+" / "+formatInt(snapshot.Budgets.Daily.TokenBudget)) + "  " + th.CardMeta.Render("daily filtered tokens"),
 	}, "\n"))
 
 	leaderboards := ""
@@ -53,41 +78,41 @@ func (m model) renderHome(width int) string {
 		rightWidth := width - leftWidth - 1
 		leaderboards = joinHorizontalGap(
 			" ",
-			m.renderBreakdownPanel("Top Providers", "Provider", snapshot.TopProviders, leftWidth, 9),
-			m.renderBreakdownPanel("Weak Commands", "Command", snapshot.LowSavingsCommands, rightWidth, 10),
+			renderBreakdownPanel(th, "Top Providers", "Provider", snapshot.TopProviders, leftWidth, 9),
+			renderBreakdownPanel(th, "Weak Commands", "Command", snapshot.LowSavingsCommands, rightWidth, 10),
 		)
 	} else {
 		leaderboards = lipgloss.JoinVertical(
 			lipgloss.Left,
-			m.renderBreakdownPanel("Top Providers", "Provider", snapshot.TopProviders, width, 9),
+			renderBreakdownPanel(th, "Top Providers", "Provider", snapshot.TopProviders, width, 9),
 			"",
-			m.renderBreakdownPanel("Weak Commands", "Command", snapshot.LowSavingsCommands, width, 10),
+			renderBreakdownPanel(th, "Weak Commands", "Command", snapshot.LowSavingsCommands, width, 10),
 		)
 	}
 
 	healthLines := []string{
-		m.theme.PanelTitle.Render("Health"),
+		th.PanelTitle.Render("Health"),
 		renderHealthLine("Attribution gaps", fmt.Sprintf("%d agent, %d provider, %d model, %d session",
 			quality.CommandsMissingAgent,
 			quality.CommandsMissingProvider,
 			quality.CommandsMissingModel,
 			quality.CommandsMissingSession,
-		), quality.CommandsMissingAgent > 0 || quality.CommandsMissingProvider > 0 || quality.CommandsMissingModel > 0 || quality.CommandsMissingSession > 0),
-		renderHealthLine("Pricing coverage", fmt.Sprintf("%.1f%%", quality.PricingCoverage.CoveragePct()), quality.PricingCoverage.FallbackPricingCommands > 0),
-		renderHealthLine("Parse failures", fmt.Sprintf("%d", quality.ParseFailures), quality.ParseFailures > 0),
+		)),
+		renderHealthLine("Pricing coverage", fmt.Sprintf("%.1f%%", quality.PricingCoverage.CoveragePct())),
+		renderHealthLine("Parse failures", fmt.Sprintf("%d", quality.ParseFailures)),
 	}
 	if store.TopAgent != "" {
-		healthLines = append(healthLines, renderHealthLine("Top session agent", displayKey(store.TopAgent), false))
+		healthLines = append(healthLines, renderHealthLine("Top session agent", displayKey(store.TopAgent)))
 	}
 	insightLines := []string{
-		m.theme.PanelTitle.Render("Snapshot"),
-		renderHealthLine("Pricing coverage", fmt.Sprintf("%.1f%% explicit pricing", quality.PricingCoverage.CoveragePct()), quality.PricingCoverage.FallbackPricingCommands > 0),
+		th.PanelTitle.Render("Snapshot"),
+		renderHealthLine("Pricing coverage", fmt.Sprintf("%.1f%% explicit pricing", quality.PricingCoverage.CoveragePct())),
 	}
 	if weak := firstBreakdown(snapshot.LowSavingsCommands); weak != nil {
-		insightLines = append(insightLines, renderHealthLine("Weakest command", fmt.Sprintf("%s at %.1f%%", displayKey(weak.Key), weak.ReductionPct), weak.ReductionPct < 10))
+		insightLines = append(insightLines, renderHealthLine("Weakest command", fmt.Sprintf("%s at %.1f%%", displayKey(weak.Key), weak.ReductionPct)))
 	}
 	if provider := firstBreakdown(snapshot.TopProviders); provider != nil {
-		insightLines = append(insightLines, renderHealthLine("Top provider", fmt.Sprintf("%s saved %s", displayKey(provider.Key), formatInt(provider.SavedTokens)), false))
+		insightLines = append(insightLines, renderHealthLine("Top provider", fmt.Sprintf("%s saved %s", displayKey(provider.Key), formatInt(provider.SavedTokens))))
 	}
 
 	healthBlock := ""
@@ -96,22 +121,22 @@ func (m model) renderHome(width int) string {
 		rightWidth := width - leftWidth - 1
 		healthBlock = joinHorizontalGap(
 			" ",
-			setWidth(m.panelStyle(11), leftWidth).Render(strings.Join(healthLines, "\n")),
-			setWidth(m.panelStyle(12), rightWidth).Render(strings.Join(insightLines, "\n")),
+			setWidth(panelStyle(th, 11), leftWidth).Render(strings.Join(healthLines, "\n")),
+			setWidth(panelStyle(th, 12), rightWidth).Render(strings.Join(insightLines, "\n")),
 		)
 	} else {
 		healthBlock = lipgloss.JoinVertical(
 			lipgloss.Left,
-			setWidth(m.panelStyle(11), width).Render(strings.Join(healthLines, "\n")),
+			setWidth(panelStyle(th, 11), width).Render(strings.Join(healthLines, "\n")),
 			"",
-			setWidth(m.panelStyle(12), width).Render(strings.Join(insightLines, "\n")),
+			setWidth(panelStyle(th, 12), width).Render(strings.Join(insightLines, "\n")),
 		)
 	}
 
 	return lipgloss.JoinVertical(
 		lipgloss.Left,
-		m.theme.Title.Render("Home"),
-		m.theme.Subtitle.Render("Token intelligence cockpit with live savings, costs, attribution, and quality telemetry."),
+		th.Title.Render("Home"),
+		th.Subtitle.Render("Token intelligence cockpit with live savings, costs, attribution, and quality telemetry."),
 		"",
 		cardGrid,
 		"",
@@ -123,15 +148,17 @@ func (m model) renderHome(width int) string {
 	)
 }
 
-func (m model) renderMetricCard(title, value, detail string, width int, accentIndex int, valueStyle lipgloss.Style) string {
-	return setWidth(m.accentCardStyle(accentIndex), width).Render(strings.Join([]string{
-		m.theme.CardLabel.Render(strings.ToUpper(title)),
+// --- shared rendering primitives (used by Home now, other sections later) ---
+
+func renderMetricCard(th theme, title, value, detail string, width, accentIndex int, valueStyle lipgloss.Style) string {
+	return setWidth(accentCardStyle(th, accentIndex), width).Render(strings.Join([]string{
+		th.CardLabel.Render(strings.ToUpper(title)),
 		valueStyle.Render(value),
-		m.theme.CardMeta.Render(detail),
+		th.CardMeta.Render(detail),
 	}, "\n"))
 }
 
-func (m model) renderCardGrid(cards []string, columns int) string {
+func renderCardGrid(cards []string, columns int) string {
 	if len(cards) == 0 {
 		return ""
 	}
@@ -146,14 +173,14 @@ func (m model) renderCardGrid(cards []string, columns int) string {
 	return lipgloss.JoinVertical(lipgloss.Left, rows...)
 }
 
-func (m model) renderBreakdownPanel(title, keyLabel string, items []tracking.DashboardBreakdown, width int, accentIndex int) string {
+func renderBreakdownPanel(th theme, title, keyLabel string, items []tracking.DashboardBreakdown, width, accentIndex int) string {
 	lines := []string{
-		m.theme.PanelTitle.Render(title),
-		m.theme.CardMeta.Render(fmt.Sprintf("%-18s %9s %7s  %s", keyLabel, "Saved", "Rate", "Share")),
+		th.PanelTitle.Render(title),
+		th.CardMeta.Render(fmt.Sprintf("%-18s %9s %7s  %s", keyLabel, "Saved", "Rate", "Share")),
 	}
 	if len(items) == 0 {
-		lines = append(lines, m.theme.Muted.Render("No data"))
-		return setWidth(m.panelStyle(accentIndex), width).Render(strings.Join(lines, "\n"))
+		lines = append(lines, th.Muted.Render("No data"))
+		return setWidth(panelStyle(th, accentIndex), width).Render(strings.Join(lines, "\n"))
 	}
 
 	maxSaved := int64(0)
@@ -166,25 +193,68 @@ func (m model) renderBreakdownPanel(title, keyLabel string, items []tracking.Das
 	maxItems := min(len(items), 5)
 	for i := 0; i < maxItems; i++ {
 		item := items[i]
-		lines = append(lines, m.renderBreakdownEntry(item, width, i, maxSaved))
+		lines = append(lines, renderBreakdownEntry(th, item, width, i, maxSaved))
 	}
 
-	return setWidth(m.panelStyle(accentIndex), width).Render(strings.Join(lines, "\n"))
+	return setWidth(panelStyle(th, accentIndex), width).Render(strings.Join(lines, "\n"))
 }
 
-func (m model) renderPlaceholder(width int) string {
-	current := m.sections[m.navIndex]
-	lines := []string{
-		m.theme.Title.Render(current.Title),
-		m.theme.Muted.Render(current.Short),
-		"",
-		m.theme.Warning.Render("Planned next in the phased build."),
-		"",
-		"This screen is intentionally held behind the shell/data foundation.",
-		"The new TUI is being built one slice at a time to avoid the old layout and architecture failures.",
+func renderBreakdownEntry(th theme, item tracking.DashboardBreakdown, width, index int, maxSaved int64) string {
+	keyWidth := max(12, width/2-6)
+	barWidth := max(8, width-keyWidth-22)
+	keyStr := truncate(displayKey(item.Key), keyWidth)
+	head := fmt.Sprintf("%-*s %9s %6.1f%%", keyWidth, keyStr, formatInt(item.SavedTokens), item.ReductionPct)
+	bar := renderBar(th, item.SavedTokens, maxSaved, barWidth, index)
+	style := th.TableRow
+	if index == 0 {
+		style = th.TableRowAccent
 	}
-	return setWidth(m.accentCardStyle(13), width).Render(strings.Join(lines, "\n"))
+	share := 0.0
+	if maxSaved > 0 {
+		share = (float64(item.SavedTokens) / float64(maxSaved)) * 100
+	}
+	barLine := bar + " " + th.CardMeta.Render(fmt.Sprintf("%5.1f%%", share))
+	return style.Render(head) + "\n" + barLine
 }
+
+func renderBar(th theme, value, maxValue int64, width, index int) string {
+	if width <= 0 {
+		return ""
+	}
+	filled := 0
+	if maxValue > 0 {
+		filled = int(math.Round((float64(value) / float64(maxValue)) * float64(width)))
+	}
+	if filled < 0 {
+		filled = 0
+	}
+	if filled > width {
+		filled = width
+	}
+	color := th.AccentColors[index%len(th.AccentColors)]
+	filledStyle := lipgloss.NewStyle().Foreground(color)
+	return filledStyle.Render(strings.Repeat("█", filled)) + th.BarEmpty.Render(strings.Repeat("░", width-filled))
+}
+
+func accentCardStyle(th theme, index int) lipgloss.Style {
+	base := th.Card
+	if len(th.AccentColors) == 0 {
+		return base
+	}
+	color := th.AccentColors[index%len(th.AccentColors)]
+	return base.BorderForeground(color)
+}
+
+func panelStyle(th theme, index int) lipgloss.Style {
+	base := th.Panel
+	if len(th.AccentColors) == 0 {
+		return base
+	}
+	color := th.AccentColors[index%len(th.AccentColors)]
+	return base.BorderForeground(color)
+}
+
+// --- theme-agnostic helpers ------------------------------------------------
 
 func sparklineSaved(points []tracking.DashboardTrendPoint) string {
 	if len(points) == 0 {
@@ -254,9 +324,8 @@ func splitWidth(total, parts, gap int) int {
 	return max(8, (total-((parts-1)*gap))/parts)
 }
 
-func renderHealthLine(label, value string, warn bool) string {
-	prefix := "• "
-	return prefix + label + ": " + value
+func renderHealthLine(label, value string) string {
+	return "• " + label + ": " + value
 }
 
 func displayKey(s string) string {
@@ -265,59 +334,4 @@ func displayKey(s string) string {
 		return "Unattributed"
 	}
 	return s
-}
-
-func (m model) accentCardStyle(index int) lipgloss.Style {
-	base := m.theme.Card
-	if len(m.theme.AccentColors) == 0 {
-		return base
-	}
-	color := m.theme.AccentColors[index%len(m.theme.AccentColors)]
-	return base.BorderForeground(color)
-}
-
-func (m model) panelStyle(index int) lipgloss.Style {
-	base := m.theme.Panel
-	if len(m.theme.AccentColors) == 0 {
-		return base
-	}
-	color := m.theme.AccentColors[index%len(m.theme.AccentColors)]
-	return base.BorderForeground(color)
-}
-
-func (m model) renderBreakdownEntry(item tracking.DashboardBreakdown, width, index int, maxSaved int64) string {
-	keyWidth := max(12, width/2-6)
-	barWidth := max(8, width-keyWidth-22)
-	key := truncate(displayKey(item.Key), keyWidth)
-	head := fmt.Sprintf("%-*s %9s %6.1f%%", keyWidth, key, formatInt(item.SavedTokens), item.ReductionPct)
-	bar := m.renderBar(item.SavedTokens, maxSaved, barWidth, index)
-	style := m.theme.TableRow
-	if index == 0 {
-		style = m.theme.TableRowAccent
-	}
-	share := 0.0
-	if maxSaved > 0 {
-		share = (float64(item.SavedTokens) / float64(maxSaved)) * 100
-	}
-	barLine := bar + " " + m.theme.CardMeta.Render(fmt.Sprintf("%5.1f%%", share))
-	return style.Render(head) + "\n" + barLine
-}
-
-func (m model) renderBar(value, maxValue int64, width, index int) string {
-	if width <= 0 {
-		return ""
-	}
-	filled := 0
-	if maxValue > 0 {
-		filled = int(math.Round((float64(value) / float64(maxValue)) * float64(width)))
-	}
-	if filled < 0 {
-		filled = 0
-	}
-	if filled > width {
-		filled = width
-	}
-	color := m.theme.AccentColors[index%len(m.theme.AccentColors)]
-	filledStyle := lipgloss.NewStyle().Foreground(color)
-	return filledStyle.Render(strings.Repeat("█", filled)) + m.theme.BarEmpty.Render(strings.Repeat("░", width-filled))
 }

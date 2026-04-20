@@ -1,0 +1,188 @@
+package tui
+
+import (
+	"context"
+	"fmt"
+	"sort"
+	"strings"
+	"sync"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+// Action is a single registered operation the TUI can perform, whether
+// triggered by the palette, a keybinding, or another message handler.
+//
+// An Action can be read-only (refresh, export, jump) or mutating (toggle
+// hook, vacuum DB, run compress). Mutating actions MUST set Confirm=true
+// so the root model shows a confirm-modal before invoking Run. Phase 1
+// only registers read-only actions; Phase 2 adds the management set.
+type Action struct {
+	// ID is the stable identifier used by paletteExecMsg.ActionID. Use a
+	// dotted namespace: "section.jump", "view.refresh", "hooks.toggle".
+	ID string
+
+	// Title is what the palette shows (concise, human-readable).
+	Title string
+
+	// Description is a one-line hint rendered under the title in the
+	// palette. Keep under 60 chars so even narrow terminals fit it.
+	Description string
+
+	// Category groups actions in the palette ("Navigation", "View",
+	// "Data"). Categories render as section headers.
+	Category string
+
+	// Confirm requests a yes/no modal before Run. Leave false for
+	// read-only actions.
+	Confirm bool
+
+	// Run executes the action. It returns an arbitrary Result (usually
+	// nil) and an error. The registry will wrap the return in an
+	// actionResultMsg so sections can react.
+	//
+	// Args is the free-text tail the user typed after the action ID in
+	// the palette (":section.jump 5" → "5"). Parse it as needed.
+	Run func(ctx context.Context, args string) (any, error)
+}
+
+// ActionRegistry is the central store of registered actions. Safe for
+// concurrent reads during TUI rendering.
+type ActionRegistry struct {
+	mu      sync.RWMutex
+	byID    map[string]Action
+	ordered []string
+}
+
+// NewActionRegistry returns an empty registry. Use DefaultActionRegistry
+// for the TUI's canonical set.
+func NewActionRegistry() *ActionRegistry {
+	return &ActionRegistry{byID: map[string]Action{}}
+}
+
+// Register adds an action. Re-registering the same ID replaces the prior
+// entry — callers are responsible for ensuring IDs are unique.
+func (r *ActionRegistry) Register(a Action) {
+	if a.ID == "" || a.Run == nil {
+		return
+	}
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	if _, exists := r.byID[a.ID]; !exists {
+		r.ordered = append(r.ordered, a.ID)
+	}
+	r.byID[a.ID] = a
+}
+
+// Get returns the action by ID; ok is false if not registered.
+func (r *ActionRegistry) Get(id string) (Action, bool) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	a, ok := r.byID[id]
+	return a, ok
+}
+
+// All returns every registered action sorted by category then title.
+// Used by the palette to render its list.
+func (r *ActionRegistry) All() []Action {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	out := make([]Action, 0, len(r.byID))
+	for _, id := range r.ordered {
+		out = append(out, r.byID[id])
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Category != out[j].Category {
+			return out[i].Category < out[j].Category
+		}
+		return out[i].Title < out[j].Title
+	})
+	return out
+}
+
+// runActionCmd produces a tea.Cmd that executes the action in a goroutine
+// and dispatches an actionResultMsg. The ctx is the model-owned context
+// so a Quit cancels in-flight actions cleanly.
+func runActionCmd(ctx context.Context, reg *ActionRegistry, id, args string) tea.Cmd {
+	return func() tea.Msg {
+		a, ok := reg.Get(id)
+		if !ok {
+			return actionResultMsg{ActionID: id, Err: fmt.Errorf("unknown action: %s", id)}
+		}
+		// Respect context cancellation before we kick off work so a rapid
+		// Quit doesn't start an action we're about to tear down.
+		if err := ctx.Err(); err != nil {
+			return actionResultMsg{ActionID: id, Err: err}
+		}
+		result, err := a.Run(ctx, args)
+		return actionResultMsg{ActionID: id, Result: result, Err: err}
+	}
+}
+
+// DefaultActionRegistry returns the registry pre-populated with Phase 1's
+// read-only actions. The closures capture the model's context and key
+// dependencies via the provided ActionDeps. Phase 2 extends this with
+// management actions (hooks toggle, DB vacuum, run compress).
+type ActionDeps struct {
+	RequestRefresh func() tea.Cmd
+	RequestJump    func(sectionIndex int) tea.Cmd
+	RequestToast   func(kind ToastKind, text string) tea.Cmd
+	SectionCount   int
+}
+
+func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
+	r := NewActionRegistry()
+
+	r.Register(Action{
+		ID:          "view.refresh",
+		Title:       "Refresh",
+		Description: "Reload the workspace snapshot now",
+		Category:    "View",
+		Run: func(context.Context, string) (any, error) {
+			if deps.RequestRefresh != nil {
+				_ = deps.RequestRefresh()
+			}
+			return nil, nil
+		},
+	})
+
+	r.Register(Action{
+		ID:          "section.jump",
+		Title:       "Jump to section",
+		Description: "Usage: :section.jump <n>  (1–" + fmt.Sprint(deps.SectionCount) + ")",
+		Category:    "Navigation",
+		Run: func(_ context.Context, args string) (any, error) {
+			args = strings.TrimSpace(args)
+			if args == "" {
+				return nil, fmt.Errorf("missing section number")
+			}
+			var n int
+			if _, err := fmt.Sscanf(args, "%d", &n); err != nil || n < 1 || n > deps.SectionCount {
+				return nil, fmt.Errorf("invalid section: %s", args)
+			}
+			if deps.RequestJump != nil {
+				_ = deps.RequestJump(n - 1)
+			}
+			return nil, nil
+		},
+	})
+
+	r.Register(Action{
+		ID:          "toast.info",
+		Title:       "Show info toast",
+		Description: "Diagnostic: verify the toast layer renders",
+		Category:    "Debug",
+		Run: func(_ context.Context, args string) (any, error) {
+			msg := strings.TrimSpace(args)
+			if msg == "" {
+				msg = "hello from the action registry"
+			}
+			if deps.RequestToast != nil {
+				_ = deps.RequestToast(ToastInfo, msg)
+			}
+			return nil, nil
+		},
+	})
+
+	return r
+}
