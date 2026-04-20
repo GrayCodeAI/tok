@@ -1,0 +1,7 @@
+# mix-format filter
+schema_version = 1
+
+[mix_format]
+match_command = "^mix\\s+format(\\s|$)"
+on_empty = "mix format: ok"
+max_lines = 20

@@ -1,0 +1,30 @@
+# Google Cloud SDK filter
+schema_version = 1
+
+[gcloud_generic]
+match_command = "^gcloud\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^Updates are available for some Google Cloud CLI",
+    "^To update, run:",
+]
+max_lines = 60
+
+[gcloud_list]
+match_command = "^gcloud\\s+\\S+\\s+list\\b"
+strip_ansi = true
+max_lines = 40
+
+[gcloud_deploy]
+match_command = "^gcloud\\s+(app|run|functions)\\s+deploy\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "^Deployed service",
+    "^Service URL:",
+    "^Done\\.",
+    "Error:",
+    "Warning:",
+    "FAILED",
+]
+max_lines = 30

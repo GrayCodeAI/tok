@@ -1,0 +1,14 @@
+# ping filter
+schema_version = 1
+
+[ping]
+match_command = "^ping\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^PING ",
+  "^Pinging ",
+  "^\\d+ bytes from ",
+  "^Reply from .+: bytes=",
+  "^\\s*$",
+]
+tail_lines = 4

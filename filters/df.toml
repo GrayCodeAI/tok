@@ -1,0 +1,8 @@
+# df filter
+schema_version = 1
+
+[df]
+match_command = "^df(\\s|$)"
+strip_ansi = true
+truncate_lines_at = 80
+max_lines = 20

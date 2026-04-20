@@ -1,0 +1,13 @@
+# ty filter
+schema_version = 1
+
+[ty]
+match_command = "^ty\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Checking \\d+ file",
+  "^ty \\d+\\.\\d+",
+]
+max_lines = 50
+on_empty = "ty: ok"

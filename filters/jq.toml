@@ -1,0 +1,11 @@
+# jq filter
+schema_version = 1
+
+[jq]
+match_command = "^jq\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+]
+max_lines = 40
+truncate_lines_at = 120

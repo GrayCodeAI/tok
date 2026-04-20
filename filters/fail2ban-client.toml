@@ -1,0 +1,7 @@
+# fail2ban-client filter
+schema_version = 1
+
+[fail2ban_client]
+match_command = "^fail2ban-client\\b"
+strip_lines_matching = ["^\\s*$"]
+max_lines = 30

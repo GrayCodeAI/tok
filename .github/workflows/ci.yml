@@ -63,9 +63,10 @@ jobs:
     
     - name: Check formatting
       run: |
-        if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
-          echo "Please run 'gofmt -w .' to format the following files:"
-          gofmt -s -l .
+        bad=$(gofmt -s -l . 2>/dev/null | grep -v -E '^(\.gomodcache|\.gocache|\.gosrccache|vendor)/' || true)
+        if [ -n "$bad" ]; then
+          echo "Please run 'gofmt -s -w .' to format the following files:"
+          echo "$bad"
           exit 1
         fi
     

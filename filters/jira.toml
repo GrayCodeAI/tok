@@ -1,0 +1,12 @@
+# jira filter
+schema_version = 1
+
+[jira]
+match_command = "^jira\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*--",
+]
+truncate_lines_at = 120
+max_lines = 40

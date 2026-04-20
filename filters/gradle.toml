@@ -1,0 +1,24 @@
+# Gradle build filter
+schema_version = 1
+
+[gradle_build]
+match_command = "^(\\./)?gradle(w)?\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^> Task .* UP-TO-DATE",
+    "^> Task .* SKIPPED",
+    "^> Task .* NO-SOURCE",
+    "^\\s*$",
+    "^\\s*\\d+\\s+actionable task",
+]
+keep_lines_matching = [
+    "^> Task .* FAILED",
+    "^BUILD (FAILED|SUCCESSFUL)",
+    "^FAILURE:",
+    "error:",
+    "Error:",
+    "\\* What went wrong:",
+    "\\* Where:",
+]
+max_lines = 80
+on_empty = "Build succeeded"

@@ -1,0 +1,34 @@
+# Ansible playbook filter
+schema_version = 1
+
+[ansible_playbook]
+match_command = "^ansible-playbook\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*$",
+    "^ok: \\[",
+    "^skipping: \\[",
+    "^\\s*Gathering Facts",
+]
+keep_lines_matching = [
+    "^PLAY \\[",
+    "^TASK \\[",
+    "^changed: \\[",
+    "^failed: \\[",
+    "^fatal: \\[",
+    "^unreachable: \\[",
+    "^PLAY RECAP",
+    "^\\S+\\s+:\\s+ok=\\d+",
+    "Error:.*",
+]
+max_lines = 80
+on_empty = "Playbook completed, no changes"
+
+[ansible_inventory]
+match_command = "^ansible-inventory\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "^\\[.*\\]",
+    "^\\S+$",
+]
+max_lines = 40

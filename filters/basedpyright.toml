@@ -1,0 +1,15 @@
+# basedpyright filter
+schema_version = 1
+
+[basedpyright]
+match_command = "^basedpyright\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Searching for source files",
+  "^Found \\d+ source file",
+  "^Pyright \\d+\\.\\d+",
+  "^basedpyright \\d+\\.\\d+",
+]
+max_lines = 50
+on_empty = "basedpyright: ok"

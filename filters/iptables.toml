@@ -1,0 +1,12 @@
+# iptables filter
+schema_version = 1
+
+[iptables]
+match_command = "^iptables\\b"
+strip_lines_matching = [
+  "^\\s*$",
+  "^Chain DOCKER",
+  "^Chain BR-",
+]
+max_lines = 50
+truncate_lines_at = 120

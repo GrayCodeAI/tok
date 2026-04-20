@@ -1,0 +1,10 @@
+# ollama filter
+schema_version = 1
+
+[ollama]
+match_command = "^ollama\\s+run\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏\\s]*$",
+  "^\\s*$",
+]

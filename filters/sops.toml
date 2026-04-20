@@ -1,0 +1,8 @@
+# sops filter
+schema_version = 1
+
+[sops]
+match_command = "^sops\\b"
+strip_ansi = true
+strip_lines_matching = ["^\\s*$"]
+max_lines = 40

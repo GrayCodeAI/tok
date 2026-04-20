@@ -1,0 +1,14 @@
+# task filter
+schema_version = 1
+
+[task]
+match_command = "^task\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^task: \\[.*\\] ",
+  "^task: Task .* is up to date",
+]
+truncate_lines_at = 150
+max_lines = 50
+on_empty = "task: ok"

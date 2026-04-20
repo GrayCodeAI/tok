@@ -1,0 +1,15 @@
+# swift-build filter
+schema_version = 1
+
+[swift_build]
+match_command = "^swift\\s+build\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Compiling ",
+  "^Linking ",
+]
+match_output = [
+  { pattern = "Build complete!", message = "ok (build complete)", unless = "warning:|error:" },
+]
+max_lines = 40

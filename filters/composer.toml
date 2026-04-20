@@ -1,0 +1,24 @@
+# Composer (PHP) filter
+schema_version = 1
+
+[composer_install]
+match_command = "^composer\\s+(install|update)\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*- Installing ",
+    "^\\s*- Updating ",
+    "^\\s*- Downloading ",
+    "^\\s*$",
+    "^Loading composer repositories",
+    "^Updating dependencies",
+    "^Writing lock file",
+]
+keep_lines_matching = [
+    "^Generating autoload files",
+    "^Package operations:",
+    "^Nothing to (install|update)",
+    "Error:",
+    "Problem \\d+",
+]
+max_lines = 40
+on_empty = "Composer done"

@@ -95,7 +95,11 @@ jobs:
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v6
       with:
-        version: latest
+        # Pin to a version built with Go ≥ our module's go-directive (1.25).
+        # "latest" currently resolves to a v1.x built with Go 1.24 which
+        # errors with "Go language version used to build golangci-lint is
+        # lower than the targeted Go version".
+        version: v1.64.8
         args: --timeout=5m
     
     - name: Check go mod tidy

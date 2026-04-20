@@ -1,0 +1,20 @@
+# spring-boot filter
+schema_version = 1
+
+[spring_boot]
+match_command = "^(mvn\\s+spring-boot:run|java\\s+-jar.*\\.jar|gradle\\s+.*bootRun)"
+strip_ansi = true
+keep_lines_matching = [
+  "Started\\s.*\\sin\\s",
+  "Tomcat started on port",
+  "ERROR",
+  "WARN",
+  "Exception",
+  "Caused by:",
+  "Application run failed",
+  "BUILD\\s",
+  "Tests run:",
+  "FAILURE",
+  "listening on port",
+]
+max_lines = 30

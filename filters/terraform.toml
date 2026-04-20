@@ -1,0 +1,48 @@
+# Terraform filter (distinct from opentofu.toml)
+schema_version = 1
+
+[terraform_init]
+match_command = "^terraform\\s+init\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Initializing the backend\\.\\.\\.",
+    "^Initializing provider plugins\\.\\.\\.",
+    "^- Finding .*",
+    "^- Installing .*",
+    "^Terraform has been successfully initialized",
+    "^$",
+]
+on_empty = "Terraform initialized"
+
+[terraform_plan]
+match_command = "^terraform\\s+plan\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Refreshing state",
+    "^\\s*# .* will be (created|updated|destroyed)",
+    "^\\s*~ .*",
+    "^\\s*\\+ .*",
+    "^\\s*- .*",
+]
+keep_lines_matching = [
+    "^Plan:.*",
+    "^No changes\\..*",
+    "^Error:.*",
+    "^Warning:.*",
+    "^\\s+#.*will be (created|destroyed)",
+]
+max_lines = 60
+on_empty = "No changes"
+
+[terraform_apply]
+match_command = "^terraform\\s+apply\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "^Apply complete\\!.*",
+    "^Resources:.*",
+    "^Error:.*",
+    "^Warning:.*",
+    "^Outputs:",
+    "^\\w+ = ",
+]
+max_lines = 40

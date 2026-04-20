@@ -1,0 +1,13 @@
+# just filter
+schema_version = 1
+
+[just]
+match_command = "^just\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*Available recipes:",
+  "^\\s*just --list",
+]
+truncate_lines_at = 150
+max_lines = 50

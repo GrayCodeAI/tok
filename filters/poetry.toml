@@ -1,0 +1,33 @@
+# Poetry (Python) filter
+schema_version = 1
+
+[poetry_install]
+match_command = "^poetry\\s+install\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^\\s*• Installing ",
+    "^\\s*• Updating ",
+    "^\\s*$",
+    "^Package operations:",
+]
+keep_lines_matching = [
+    "^Installing dependencies",
+    "^Writing lock file",
+    "^No dependencies to install",
+    "Error:",
+    "Warning:",
+    "SolverProblemError",
+]
+max_lines = 40
+on_empty = "Dependencies installed"
+
+[poetry_add]
+match_command = "^poetry\\s+add\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "^Using version",
+    "^Installing",
+    "^Updating",
+    "Error:",
+]
+max_lines = 30

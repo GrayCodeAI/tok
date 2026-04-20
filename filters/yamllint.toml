@@ -1,0 +1,11 @@
+# yamllint filter
+schema_version = 1
+
+[yamllint]
+match_command = "^yamllint\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+]
+max_lines = 50
+truncate_lines_at = 120

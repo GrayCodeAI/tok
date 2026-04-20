@@ -1,0 +1,13 @@
+# stat filter
+schema_version = 1
+
+[stat]
+match_command = "^stat\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*Device:",
+  "^\\s*Birth:",
+]
+truncate_lines_at = 120
+max_lines = 20

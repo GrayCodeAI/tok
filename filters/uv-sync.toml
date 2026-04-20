@@ -1,0 +1,16 @@
+# uv-sync filter
+schema_version = 1
+
+[uv_sync]
+match_command = "^uv\\s+(sync|pip\\s+install)\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s+Downloading ",
+  "^\\s+Using cached ",
+  "^\\s+Preparing ",
+]
+match_output = [
+  { pattern = "Audited \\d+ package", message = "ok (up to date)" },
+]
+max_lines = 20

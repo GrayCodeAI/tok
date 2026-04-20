@@ -1,0 +1,16 @@
+# gcc filter
+schema_version = 1
+
+[gcc]
+match_command = "^g(cc|\\+\\+)\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s+\\|\\s*$",
+  "^In file included from",
+  "^\\s+from\\s",
+  "^\\d+ warnings? generated",
+  "^\\d+ errors? generated",
+]
+max_lines = 50
+on_empty = "gcc: ok"

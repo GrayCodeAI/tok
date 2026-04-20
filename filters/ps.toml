@@ -1,0 +1,8 @@
+# ps filter
+schema_version = 1
+
+[ps]
+match_command = "^ps(\\s|$)"
+strip_ansi = true
+truncate_lines_at = 120
+max_lines = 30

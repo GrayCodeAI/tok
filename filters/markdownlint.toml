@@ -1,0 +1,11 @@
+# markdownlint filter
+schema_version = 1
+
+[markdownlint]
+match_command = "^markdownlint\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+]
+max_lines = 50
+truncate_lines_at = 120

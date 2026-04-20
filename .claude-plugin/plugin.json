@@ -1,0 +1,34 @@
+{
+  "name": "tok",
+  "description": "Unified token-reduction CLI: transparent command output filtering, six compression modes (lite/full/ultra/wenyan-*), SQLite-backed savings analytics, and 69+ built-in filters.",
+  "author": {
+    "name": "Lakshman Patel",
+    "url": "https://github.com/lakshmanpatel/tok"
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tok-mode-activate.js\"",
+            "timeout": 5,
+            "statusMessage": "Loading tok mode..."
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/tok-mode-tracker.js\"",
+            "timeout": 5,
+            "statusMessage": "Tracking tok mode..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,35 @@
+# Helm chart filter
+schema_version = 1
+
+[helm_install]
+match_command = "^helm\\s+(install|upgrade)\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^NOTES:$",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "^NAME:",
+    "^LAST DEPLOYED:",
+    "^NAMESPACE:",
+    "^STATUS:",
+    "^REVISION:",
+    "Error:",
+    "Warning:",
+]
+max_lines = 40
+on_empty = "Chart deployed"
+
+[helm_list]
+match_command = "^helm\\s+(list|ls)\\b"
+strip_ansi = true
+max_lines = 30
+
+[helm_template]
+match_command = "^helm\\s+template\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^---",
+    "^# Source:",
+]
+max_lines = 100

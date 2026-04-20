@@ -1,0 +1,16 @@
+# dotnet-build filter
+schema_version = 1
+
+[dotnet_build]
+match_command = "^dotnet\\s+build\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Microsoft \\(R\\)",
+  "^Copyright \\(C\\)",
+  "^  Determining projects",
+]
+match_output = [
+  { pattern = "0 Warning\\(s\\)\\n\\s+0 Error\\(s\\)", message = "ok (build succeeded)" },
+]
+max_lines = 40

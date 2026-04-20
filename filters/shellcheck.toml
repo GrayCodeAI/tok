@@ -1,0 +1,10 @@
+# shellcheck filter
+schema_version = 1
+
+[shellcheck]
+match_command = "^shellcheck\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+]
+max_lines = 50

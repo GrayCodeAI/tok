@@ -1,0 +1,18 @@
+# brew-install filter
+schema_version = 1
+
+[brew_install]
+match_command = "^brew\\s+(install|upgrade)\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^==> Downloading",
+  "^==> Pouring",
+  "^Already downloaded:",
+  "^###",
+  "^==> Fetching",
+]
+match_output = [
+  { pattern = "already installed", message = "ok (already installed)" },
+]
+max_lines = 20

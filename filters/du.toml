@@ -1,0 +1,8 @@
+# du filter
+schema_version = 1
+
+[du]
+match_command = "^du\\b"
+strip_lines_matching = ["^\\s*$"]
+truncate_lines_at = 120
+max_lines = 40

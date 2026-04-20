@@ -1,0 +1,13 @@
+# oxlint filter
+schema_version = 1
+
+[oxlint]
+match_command = "^oxlint\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Finished in \\d+",
+  "^Found \\d+ warning",
+]
+max_lines = 50
+on_empty = "oxlint: ok"

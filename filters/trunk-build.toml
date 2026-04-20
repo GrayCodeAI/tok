@@ -1,0 +1,17 @@
+# trunk-build filter
+schema_version = 1
+
+[trunk_build]
+match_command = "^trunk\\s+build"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*Compiling\\s",
+  "^\\s*Downloading\\s",
+  "^\\s*Fetching\\s",
+  "^\\s*Fresh\\s",
+  "^\\s*Checking\\s",
+]
+tail_lines = 10
+max_lines = 30
+on_empty = "trunk build: ok"

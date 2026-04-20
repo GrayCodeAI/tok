@@ -1,0 +1,20 @@
+# pre-commit hook filter
+schema_version = 1
+
+[pre_commit]
+match_command = "^pre-commit\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "\\.\\.+Passed$",
+    "\\.\\.+Skipped$",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "Failed$",
+    "^- hook id:",
+    "^- exit code:",
+    "^- files were modified",
+    "Error:",
+]
+max_lines = 60
+on_empty = "All hooks passed"

@@ -136,11 +136,23 @@ func (pde *PatternDiscoveryEngine) Start() {
 		return
 	}
 
-	pde.stopChan = make(chan struct{})
+	stop := make(chan struct{})
+	pde.stopChan = stop
 	pde.running = true
-	go pde.samplingWorker()
+	// Pass stopChan by value so the worker keeps its own reference; a
+	// subsequent Start() that reassigns pde.stopChan can't race with a
+	// worker still alive on the previous channel.
+	go pde.samplingWorker(stop)
 
 	slog.Info("Pattern discovery engine started")
+}
+
+// IsRunning reports whether the engine is currently running. Safe for
+// concurrent use.
+func (pde *PatternDiscoveryEngine) IsRunning() bool {
+	pde.mu.Lock()
+	defer pde.mu.Unlock()
+	return pde.running
 }
 
 // Stop stops the background sampling
@@ -158,8 +170,10 @@ func (pde *PatternDiscoveryEngine) Stop() {
 	slog.Info("Pattern discovery engine stopped")
 }
 
-// samplingWorker processes samples in the background
-func (pde *PatternDiscoveryEngine) samplingWorker() {
+// samplingWorker processes samples in the background. stop is the channel
+// captured at spawn time so a restart's new stopChan does not race with
+// this goroutine's read of pde.stopChan.
+func (pde *PatternDiscoveryEngine) samplingWorker(stop <-chan struct{}) {
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -169,7 +183,7 @@ func (pde *PatternDiscoveryEngine) samplingWorker() {
 			pde.analyzeSample(sample)
 		case <-ticker.C:
 			pde.consolidatePatterns()
-		case <-pde.stopChan:
+		case <-stop:
 			return
 		}
 	}

@@ -1,0 +1,47 @@
+# kubectl filter
+schema_version = 1
+
+[kubectl_get]
+match_command = "^kubectl\\s+get\\b"
+strip_ansi = true
+max_lines = 50
+on_empty = "No resources found"
+
+[kubectl_describe]
+match_command = "^kubectl\\s+describe\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^Events:\\s+<none>",
+    "^\\s{2,}Normal\\s+",
+]
+keep_lines_matching = [
+    "^Name:",
+    "^Namespace:",
+    "^Status:",
+    "^Conditions:",
+    "^\\s+Reason:",
+    "^\\s+Message:",
+    "^\\s{2,}(Warning|Error)\\s+",
+    "Error:",
+    "FailedScheduling",
+    "ImagePullBackOff",
+    "CrashLoopBackOff",
+]
+max_lines = 80
+
+[kubectl_logs]
+match_command = "^kubectl\\s+logs\\b"
+strip_ansi = true
+max_lines = 200
+
+[kubectl_apply]
+match_command = "^kubectl\\s+apply\\b"
+strip_ansi = true
+keep_lines_matching = [
+    "created$",
+    "configured$",
+    "unchanged$",
+    "deleted$",
+    "Error:",
+]
+max_lines = 30

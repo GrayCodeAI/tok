@@ -65,14 +65,14 @@ func TestPatternDiscoveryEngine_StartStop(t *testing.T) {
 	// Start should not panic
 	engine.Start()
 
-	if !engine.running {
+	if !engine.IsRunning() {
 		t.Error("expected engine to be running after Start()")
 	}
 
 	// Stop should not panic
 	engine.Stop()
 
-	if engine.running {
+	if engine.IsRunning() {
 		t.Error("expected engine to not be running after Stop()")
 	}
 
@@ -89,7 +89,7 @@ func TestPatternDiscoveryEngine_RestartAfterStop(t *testing.T) {
 	engine.Start()
 	defer engine.Stop()
 
-	if !engine.running {
+	if !engine.IsRunning() {
 		t.Fatal("expected engine to be running after restart")
 	}
 

@@ -1,0 +1,23 @@
+# liquibase filter
+schema_version = 1
+
+[liquibase]
+match_command = "(?:^|/)liquibase(?:\\s|$)"
+strip_ansi = true
+filter_stderr = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Starting Liquibase at",
+  "^Liquibase (?:Community|Open Source)",
+  "^Liquibase Home:",
+  "^Java Home",
+  "^Libraries:",
+  "^\\s*-\\s+\\S+\\.jar",
+  "^INFO \\[liquibase\\.integration\\]",
+  "^INFO \\[liquibase\\.core\\] Reading resource",
+  "^INFO \\[liquibase\\.core\\] Parsing",
+  "^(?:\\[?INFO\\]?\\s*)?#+$",
+  "^\\s*##"
+]
+on_empty = "liquibase: ok"
+max_lines = 200

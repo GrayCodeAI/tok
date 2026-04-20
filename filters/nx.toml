@@ -1,0 +1,17 @@
+# nx filter
+schema_version = 1
+
+[nx]
+match_command = "^(pnpm\\s+)?nx\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*>\\s*NX\\s+Running target",
+  "^\\s*>\\s*NX\\s+Nx read the output",
+  "^\\s*>\\s*NX\\s+View logs",
+  "^———————",
+  "^—————————",
+  "^\\s+Nx \\(powered by",
+]
+truncate_lines_at = 150
+max_lines = 60

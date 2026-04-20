@@ -1,0 +1,17 @@
+# turbo filter
+schema_version = 1
+
+[turbo]
+match_command = "^turbo\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*cache (hit|miss|bypass)",
+  "^\\s*\\d+ packages in scope",
+  "^\\s*Tasks:\\s+\\d+",
+  "^\\s*Duration:\\s+",
+  "^\\s*Remote caching (enabled|disabled)",
+]
+truncate_lines_at = 150
+max_lines = 50
+on_empty = "turbo: ok"

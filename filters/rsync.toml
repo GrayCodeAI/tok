@@ -1,0 +1,15 @@
+# rsync filter
+schema_version = 1
+
+[rsync]
+match_command = "^rsync\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^sending incremental file list",
+  "^sent \\d",
+]
+match_output = [
+  { pattern = "total size is", message = "ok (synced)", unless = "error|failed|No such file" },
+]
+max_lines = 20

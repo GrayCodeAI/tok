@@ -1,0 +1,13 @@
+# mix-compile filter
+schema_version = 1
+
+[mix_compile]
+match_command = "^mix\\s+compile(\\s|$)"
+strip_ansi = true
+strip_lines_matching = [
+  "^Compiling \\d+ file",
+  "^\\s*$",
+  "^Generated\\s",
+]
+max_lines = 40
+on_empty = "mix compile: ok"

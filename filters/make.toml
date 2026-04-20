@@ -1,0 +1,23 @@
+# GNU Make filter
+schema_version = 1
+
+[make_run]
+match_command = "^make\\b"
+strip_ansi = true
+strip_lines_matching = [
+    "^make\\[\\d+\\]: Entering directory",
+    "^make\\[\\d+\\]: Leaving directory",
+    "^make\\[\\d+\\]: Nothing to be done",
+    "^\\s*$",
+]
+keep_lines_matching = [
+    "Error:",
+    "error:",
+    "warning:",
+    "undefined reference",
+    "recipe for target",
+    "make: \\*\\*\\*",
+    "failed",
+]
+max_lines = 80
+on_empty = "Build succeeded"

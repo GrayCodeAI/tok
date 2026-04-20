@@ -1,0 +1,10 @@
+# systemctl-status filter
+schema_version = 1
+
+[systemctl_status]
+match_command = "^systemctl\\s+status\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+]
+max_lines = 20

@@ -1,0 +1,14 @@
+# shopify-theme filter
+schema_version = 1
+
+[shopify_theme]
+match_command = "^shopify\\s+theme\\s+(push|pull)"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*Uploading",
+  "^\\s*Downloading",
+]
+tail_lines = 5
+max_lines = 15
+on_empty = "shopify theme: ok"

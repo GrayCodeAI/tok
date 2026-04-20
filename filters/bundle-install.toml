@@ -1,0 +1,17 @@
+# bundle-install filter
+schema_version = 1
+
+[bundle_install]
+match_command = "^bundle\\s+(install|update)\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^Using ",
+  "^\\s*$",
+  "^Fetching gem metadata",
+  "^Resolving dependencies",
+]
+match_output = [
+  { pattern = "Bundle complete!", message = "ok bundle: complete" },
+  { pattern = "Bundle updated!", message = "ok bundle: updated" },
+]
+max_lines = 30

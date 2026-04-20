@@ -1,0 +1,13 @@
+# yadm filter
+schema_version = 1
+
+[yadm]
+match_command = "^yadm\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^\\s*\\(use \"git ",
+  "^\\s*\\(use \"yadm ",
+]
+truncate_lines_at = 120
+max_lines = 40

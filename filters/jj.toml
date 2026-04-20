@@ -1,0 +1,13 @@
+# jj filter
+schema_version = 1
+
+[jj]
+match_command = "^jj\\b"
+strip_ansi = true
+strip_lines_matching = [
+  "^\\s*$",
+  "^Hint:",
+  "^Working copy now at:",
+]
+max_lines = 30
+truncate_lines_at = 120
