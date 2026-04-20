@@ -76,11 +76,18 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 	sections := defaultSections()
 
 	// Route slog through an in-memory ring so the Logs section has
-	// something to display. We keep the original default logger aside
-	// and restore it on Close so CLI commands after TUI exit (e.g.
-	// in test harnesses) don't lose stderr output.
+	// something to display. The previous default logger is stashed
+	// and restored on shutdown (see shutdownCmd).
+	//
+	// IMPORTANT: do NOT tee the ring to the prior default handler
+	// while the TUI is active. The default handler writes JSON to
+	// os.Stderr, and every write over stderr smears the alt-screen
+	// frame with log bytes (users report "garbled overlapping headers"
+	// — that's stderr leaking through). Logs are preserved in the
+	// ring and visible in the Logs section; restore the old delegate
+	// on TUI exit so post-TUI CLI code still logs to stderr.
 	prev := slog.Default()
-	ring := NewRingHandler(512, slog.LevelDebug, prev.Handler())
+	ring := NewRingHandler(512, slog.LevelDebug, nil)
 	slog.SetDefault(slog.New(ring))
 
 	normalized := opts.normalized()
