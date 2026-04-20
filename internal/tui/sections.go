@@ -26,6 +26,11 @@ type SectionContext struct {
 	Height  int
 	Compact bool
 	Focused bool // true when this section is currently visible
+	// Logs is the in-memory slog ring populated by the TUI root model.
+	// Nil outside the TUI (e.g. in unit tests that don't need the
+	// Logs section). Pass through to sections that need it; other
+	// sections ignore it.
+	Logs *ringHandler
 }
 
 // SectionRenderer is implemented by each screen in the TUI. The root
@@ -66,10 +71,10 @@ func defaultSections() []SectionRenderer {
 		newAgentsSection(),
 		newSessionsSection(),
 		newCommandsSection(),
-		newPlaceholderSection("Pipeline", "Layer View"),
-		newPlaceholderSection("Rewards", "Streaks"),
-		newPlaceholderSection("Logs", "Runtime"),
-		newPlaceholderSection("Config", "Health"),
+		newPipelineSection(),
+		newRewardsSection(),
+		newLogsSection(),
+		newConfigSection(),
 	}
 }
 
