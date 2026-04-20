@@ -110,7 +110,10 @@ func PruneMetadata(input string) string {
 
 	pruneObject(obj, metadataKeys)
 
-	result, _ := json.Marshal(obj)
+	result, err := json.Marshal(obj)
+	if err != nil {
+		return input
+	}
 	return string(result)
 }
 

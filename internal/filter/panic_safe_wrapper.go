@@ -1,5 +1,11 @@
 package filter
 
+import (
+	"fmt"
+	"os"
+	"runtime/debug"
+)
+
 // SafeFilter wraps a filter with nil checks and panic recovery.
 // Prevents nil pointer dereferences from crashing the pipeline.
 type SafeFilter struct {
@@ -22,11 +28,9 @@ func (sf *SafeFilter) Apply(input string, mode Mode) (output string, saved int) 
 		return input, 0
 	}
 
-	// Panic recovery
 	defer func() {
 		if r := recover(); r != nil {
-			// Log the panic but don't crash
-			// In production, use proper logging
+			fmt.Fprintf(os.Stderr, "tok: filter %q panicked: %v\n%s\n", sf.name, r, debug.Stack())
 			output = input
 			saved = 0
 		}

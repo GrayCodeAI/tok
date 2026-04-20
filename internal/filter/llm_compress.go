@@ -1,11 +1,16 @@
 package filter
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // LLMCompressor uses an external LLM for semantic compression.
@@ -13,7 +18,7 @@ import (
 type LLMCompressor struct {
 	mu      sync.Mutex
 	binPath string
-	timeout int
+	timeout time.Duration
 	enabled bool
 }
 
@@ -32,11 +37,12 @@ type LLMCompressResponse struct {
 }
 
 // NewLLMCompressor creates a new LLM-based compressor.
+// binPath must be an absolute path to an executable file.
 func NewLLMCompressor(binPath string) *LLMCompressor {
 	return &LLMCompressor{
 		binPath: binPath,
-		timeout: 30,
-		enabled: binPath != "" && fileExists(binPath),
+		timeout: llmTimeoutFromEnv(),
+		enabled: isExecutable(binPath),
 	}
 }
 
@@ -49,16 +55,21 @@ func (lc *LLMCompressor) Compress(content string, maxTokens int) (string, int, i
 	lc.mu.Lock()
 	defer lc.mu.Unlock()
 
-	req := LLMCompressRequest{
+	reqBytes, err := json.Marshal(LLMCompressRequest{
 		Content:   content,
 		MaxTokens: maxTokens,
 		Mode:      "compress",
+	})
+	if err != nil {
+		return content, 0, 0
 	}
-	reqBytes, _ := json.Marshal(req)
 
-	cmd := exec.Command(lc.binPath)
+	ctx, cancel := context.WithTimeout(context.Background(), lc.timeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, lc.binPath)
 	cmd.Stdin = strings.NewReader(string(reqBytes))
-	cmd.Env = append(os.Environ(), "TOK_LLM_TIMEOUT=30")
+	cmd.Env = append(os.Environ(), fmt.Sprintf("TOK_LLM_TIMEOUT=%d", int(lc.timeout.Seconds())))
 
 	out, err := cmd.Output()
 	if err != nil {
@@ -86,7 +97,24 @@ func (lc *LLMCompressor) SetEnabled(enabled bool) {
 	lc.enabled = enabled
 }
 
-func fileExists(path string) bool {
-	_, err := os.Stat(path)
-	return err == nil
+// isExecutable reports whether path is an absolute path to a regular executable file.
+func isExecutable(path string) bool {
+	if path == "" || !filepath.IsAbs(path) {
+		return false
+	}
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		return false
+	}
+	return info.Mode()&0111 != 0
+}
+
+// llmTimeoutFromEnv reads TOK_LLM_TIMEOUT (seconds); defaults to 30s.
+func llmTimeoutFromEnv() time.Duration {
+	if v := os.Getenv("TOK_LLM_TIMEOUT"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return time.Duration(n) * time.Second
+		}
+	}
+	return 30 * time.Second
 }

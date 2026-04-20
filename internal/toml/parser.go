@@ -100,6 +100,10 @@ func (p *Parser) ParseContent(content []byte, source string) (*TOMLFilter, error
 	} else {
 		filter.SchemaVersion = SchemaVersion
 	}
+	if filter.SchemaVersion < 1 || filter.SchemaVersion > SchemaVersion {
+		return nil, fmt.Errorf("unsupported schema_version %d in %s (supported: 1..%d)",
+			filter.SchemaVersion, source, SchemaVersion)
+	}
 
 	// Parse individual filter configurations
 	for name, val := range raw {

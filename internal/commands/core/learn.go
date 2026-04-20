@@ -3,6 +3,7 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
@@ -17,11 +18,15 @@ import (
 )
 
 var (
-	learnShowRules bool
-	learnReset     bool
-	learnExport    string
-	learnImport    string
-	learnStats     bool
+	learnShowRules     bool
+	learnReset         bool
+	learnExport        string
+	learnImport        string
+	learnStats         bool
+	learnWriteRules    bool
+	learnRulesPath     string
+	learnMinConfidence float64
+	learnMinOccurs     int
 )
 
 var learnCmd = &cobra.Command{
@@ -42,7 +47,9 @@ Examples:
   tok learn --rules       # Show learned rules
   tok learn --stats       # Show learning statistics
   tok learn --reset       # Reset all learned data
-  tok learn --export rules.json  # Export learned rules`,
+  tok learn --export rules.json  # Export learned rules
+  tok learn --write-rules        # Write rules to ~/.claude/rules/cli-corrections.md
+  tok learn --write-rules --min-confidence 0.7 --min-occurrences 3`,
 	Annotations: map[string]string{
 		"tok:skip_integrity": "true",
 	},
@@ -56,12 +63,20 @@ func init() {
 	learnCmd.Flags().StringVar(&learnExport, "export", "", "Export learned rules to file")
 	learnCmd.Flags().StringVar(&learnImport, "import", "", "Import learned rules from file")
 	learnCmd.Flags().BoolVar(&learnStats, "stats", false, "Show learning statistics")
+	learnCmd.Flags().BoolVar(&learnWriteRules, "write-rules", false, "Write rules as markdown to ~/.claude/rules/cli-corrections.md (or --rules-path)")
+	learnCmd.Flags().StringVar(&learnRulesPath, "rules-path", "", "Override output path for --write-rules")
+	learnCmd.Flags().Float64Var(&learnMinConfidence, "min-confidence", 0.6, "Minimum confidence threshold for --write-rules")
+	learnCmd.Flags().IntVar(&learnMinOccurs, "min-occurrences", 2, "Minimum usage count for --write-rules")
 }
 
 func runLearn(cmd *cobra.Command, args []string) error {
 	// Default to showing stats if no flags provided
-	if !learnShowRules && !learnReset && learnExport == "" && learnImport == "" && !learnStats {
+	if !learnShowRules && !learnReset && learnExport == "" && learnImport == "" && !learnStats && !learnWriteRules {
 		learnStats = true
+	}
+
+	if learnWriteRules {
+		return writeRulesMarkdown(learnRulesPath)
 	}
 
 	if learnReset {
@@ -294,28 +309,134 @@ func importLearnedRules(inputPath string) error {
 		return fmt.Errorf("failed to load existing rules: %w", err)
 	}
 
-	// Simple merge - could be smarter about duplicates
-	merged := append(existingRules, importData.Rules...)
+	// Merge by Pattern: sum UsageCount, keep highest confidence, latest LastUsed.
+	byPattern := make(map[string]learnedRule, len(existingRules)+len(importData.Rules))
+	order := make([]string, 0, len(existingRules)+len(importData.Rules))
+	upsert := func(r learnedRule) {
+		existing, ok := byPattern[r.Pattern]
+		if !ok {
+			byPattern[r.Pattern] = r
+			order = append(order, r.Pattern)
+			return
+		}
+		existing.UsageCount += r.UsageCount
+		if r.Confidence > existing.Confidence {
+			existing.Confidence = r.Confidence
+			existing.Correction = r.Correction
+		}
+		if r.LastUsed.After(existing.LastUsed) {
+			existing.LastUsed = r.LastUsed
+		}
+		if !r.CreatedAt.IsZero() && (existing.CreatedAt.IsZero() || r.CreatedAt.Before(existing.CreatedAt)) {
+			existing.CreatedAt = r.CreatedAt
+		}
+		byPattern[r.Pattern] = existing
+	}
+	for _, r := range existingRules {
+		upsert(r)
+	}
+	imported := 0
+	for _, r := range importData.Rules {
+		if _, dup := byPattern[r.Pattern]; !dup {
+			imported++
+		}
+		upsert(r)
+	}
+	merged := make([]learnedRule, 0, len(order))
+	for _, p := range order {
+		merged = append(merged, byPattern[p])
+	}
 
 	if err := saveLearnedRules(merged); err != nil {
 		return fmt.Errorf("failed to save rules: %w", err)
 	}
 
 	green := color.New(color.FgGreen).SprintFunc()
-	out.Global().Printf("%s Imported %d rule(s)\n", green("✓"), len(importData.Rules))
+	out.Global().Printf("%s Imported %d new rule(s), merged %d duplicate(s)\n",
+		green("✓"), imported, len(importData.Rules)-imported)
 
 	return nil
 }
 
 func getDataSize(path string) int64 {
 	var size int64
-	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
-		if err == nil && !info.IsDir() {
-			size += info.Size()
+	_ = filepath.WalkDir(path, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			if os.IsNotExist(err) {
+				return nil
+			}
+			return err
 		}
+		if d.IsDir() {
+			return nil
+		}
+		info, err := d.Info()
+		if err != nil {
+			return err
+		}
+		size += info.Size()
 		return nil
 	})
 	return size
+}
+
+// writeRulesMarkdown exports learned rules as markdown to the given path.
+// If path is "default" or "" it writes to ~/.claude/rules/cli-corrections.md.
+// Filters by --min-confidence and --min-occurrences thresholds.
+func writeRulesMarkdown(target string) error {
+	if target == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return fmt.Errorf("cannot resolve home: %w", err)
+		}
+		target = filepath.Join(home, ".claude", "rules", "cli-corrections.md")
+	}
+
+	rules, err := loadLearnedRules()
+	if err != nil {
+		return fmt.Errorf("load rules: %w", err)
+	}
+
+	kept := rules[:0]
+	for _, r := range rules {
+		if r.Confidence >= learnMinConfidence && r.UsageCount >= learnMinOccurs {
+			kept = append(kept, r)
+		}
+	}
+
+	if err := os.MkdirAll(filepath.Dir(target), 0755); err != nil {
+		return fmt.Errorf("mkdir: %w", err)
+	}
+
+	var b strings.Builder
+	fmt.Fprintf(&b, "# CLI Corrections (tok learn)\n\n")
+	fmt.Fprintf(&b, "_Generated: %s_\n", time.Now().UTC().Format(time.RFC3339))
+	fmt.Fprintf(&b, "_Filters: confidence ≥ %.2f, occurrences ≥ %d_\n\n",
+		learnMinConfidence, learnMinOccurs)
+
+	if len(kept) == 0 {
+		b.WriteString("No rules meet the threshold yet.\n")
+	} else {
+		b.WriteString("| Pattern | Correction | Confidence | Uses |\n")
+		b.WriteString("|---------|-----------|-----------|------|\n")
+		for _, r := range kept {
+			fmt.Fprintf(&b, "| `%s` | `%s` | %.0f%% | %d |\n",
+				escapeMD(r.Pattern), escapeMD(r.Correction),
+				r.Confidence*100, r.UsageCount)
+		}
+	}
+
+	if err := os.WriteFile(target, []byte(b.String()), 0644); err != nil {
+		return fmt.Errorf("write: %w", err)
+	}
+
+	green := color.New(color.FgGreen).SprintFunc()
+	out.Global().Printf("%s Wrote %d rule(s) to %s\n", green("✓"), len(kept), target)
+	return nil
+}
+
+func escapeMD(s string) string {
+	return strings.NewReplacer("|", "\\|", "`", "'").Replace(s)
 }
 
 // FindCorrection looks for a learned correction for the given input

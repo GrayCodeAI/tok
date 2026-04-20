@@ -212,15 +212,21 @@ func (c *QueryCache) Set(key string, command string, args []string, workingDir s
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	argsJSON, _ := json.Marshal(args)
-	hashesJSON, _ := json.Marshal(fileHashes)
+	argsJSON, err := json.Marshal(args)
+	if err != nil {
+		return fmt.Errorf("marshal args: %w", err)
+	}
+	hashesJSON, err := json.Marshal(fileHashes)
+	if err != nil {
+		return fmt.Errorf("marshal file hashes: %w", err)
+	}
 
 	compressionRatio := 0.0
 	if originalTokens > 0 {
 		compressionRatio = float64(originalTokens-filteredTokens) / float64(originalTokens)
 	}
 
-	_, err := c.db.Exec(`
+	_, err = c.db.Exec(`
 		INSERT INTO query_cache (
 			key, command, args, working_dir, file_hashes,
 			filtered_output, original_tokens, filtered_tokens,

@@ -19,6 +19,12 @@ type ContextCrunchFilter struct {
 	diffCrunch *DiffCrunchFilter
 }
 
+var (
+	ccDiffPattern      = regexp.MustCompile(`^(diff --git|@@|\+\+\+|---) `)
+	ccLogPattern       = regexp.MustCompile(`(?i)\b(info|debug|warn|error|fatal)\b.*\d{4}-\d{2}-\d{2}`)
+	ccTimestampPattern = regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}`)
+)
+
 // NewContextCrunchFilter creates a new context crunch filter.
 // This replaces both NewLogCrunchFilter() and NewDiffCrunchFilter().
 func NewContextCrunchFilter() *ContextCrunchFilter {
@@ -76,15 +82,11 @@ func (c *ContextCrunchFilter) detectContentType(lines []string) ContextContentTy
 	diffIndicators := 0
 	logIndicators := 0
 
-	diffPattern := regexp.MustCompile(`^(diff --git|@@|\+\+\+|---) `)
-	logPattern := regexp.MustCompile(`(?i)\b(info|debug|warn|error|fatal)\b.*\d{4}-\d{2}-\d{2}`)
-	timestampPattern := regexp.MustCompile(`\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}`)
-
 	for _, line := range lines {
-		if diffPattern.MatchString(line) {
+		if ccDiffPattern.MatchString(line) {
 			diffIndicators++
 		}
-		if logPattern.MatchString(line) || timestampPattern.MatchString(line) {
+		if ccLogPattern.MatchString(line) || ccTimestampPattern.MatchString(line) {
 			logIndicators++
 		}
 	}
