@@ -8,6 +8,8 @@ import (
 	"sync"
 
 	tea "github.com/charmbracelet/bubbletea"
+
+	"github.com/lakshmanpatel/tok/internal/hooks"
 )
 
 // Action is a single registered operation the TUI can perform, whether
@@ -181,6 +183,39 @@ func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
 				_ = deps.RequestToast(ToastInfo, msg)
 			}
 			return nil, nil
+		},
+	})
+
+	// First mutating action: toggle the tok hook activation flag. The
+	// flag file is the same one `tok hook mode` and the shell
+	// statusline read, so flipping it here changes whether new shell
+	// sessions pick tok up. No confirm modal yet (see Phase 3 plan);
+	// the toast reports the post-toggle state so the user can undo
+	// immediately if the effect surprises them.
+	r.Register(Action{
+		ID:          "hooks.toggle",
+		Title:       "Toggle tok hook",
+		Description: "Activate or deactivate the global tok shell hook",
+		Category:    "System",
+		Run: func(_ context.Context, args string) (any, error) {
+			_ = args
+			var newState string
+			if hooks.IsActive() {
+				if err := hooks.Deactivate(); err != nil {
+					return nil, err
+				}
+				newState = "deactivated"
+			} else {
+				mode := hooks.ResolveDefaultMode()
+				if err := hooks.Activate(mode); err != nil {
+					return nil, err
+				}
+				newState = "activated (" + mode + ")"
+			}
+			if deps.RequestToast != nil {
+				_ = deps.RequestToast(ToastSuccess, "tok hook "+newState)
+			}
+			return newState, nil
 		},
 	})
 

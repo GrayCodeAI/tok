@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,8 @@ type model struct {
 	toasts     *toastStack
 	palette    *Palette
 	search     *SearchOverlay
+	logs       *ringHandler
+	prevLogger *slog.Logger
 	navIndex   int
 	width      int
 	height     int
@@ -70,18 +73,28 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 	ctx, cancel := context.WithCancel(context.Background())
 	sections := defaultSections()
 
+	// Route slog through an in-memory ring so the Logs section has
+	// something to display. We keep the original default logger aside
+	// and restore it on Close so CLI commands after TUI exit (e.g.
+	// in test harnesses) don't lose stderr output.
+	prev := slog.Default()
+	ring := NewRingHandler(512, slog.LevelDebug, prev.Handler())
+	slog.SetDefault(slog.New(ring))
+
 	m := model{
-		opts:     opts.normalized(),
-		loader:   loader,
-		ctx:      ctx,
-		cancel:   cancel,
-		keys:     DefaultKeyMap(),
-		theme:    newTheme(),
-		sections: sections,
-		toasts:   &toastStack{},
-		search:   NewSearchOverlay(),
-		loading:  true,
-		spinner:  s,
+		opts:       opts.normalized(),
+		loader:     loader,
+		ctx:        ctx,
+		cancel:     cancel,
+		keys:       DefaultKeyMap(),
+		theme:      newTheme(),
+		sections:   sections,
+		toasts:     &toastStack{},
+		search:     NewSearchOverlay(),
+		logs:       ring,
+		prevLogger: prev,
+		loading:    true,
+		spinner:    s,
 	}
 
 	// Build the action registry with callbacks that close over the model
@@ -253,6 +266,7 @@ func (m model) sectionContext() SectionContext {
 		Height:  max(8, m.height-6), // header + footer
 		Compact: m.compact,
 		Focused: true,
+		Logs:    m.logs,
 	}
 }
 
@@ -308,7 +322,7 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 	switch {
 	case key.Matches(msg, m.keys.Quit):
 		m.quitting = true
-		return m, shutdownCmd(m.cancel, m.loader)
+		return m, shutdownCmd(m.cancel, m.loader, m.prevLogger)
 	case key.Matches(msg, m.keys.Help):
 		m.helpOpen = !m.helpOpen
 	case key.Matches(msg, m.keys.Esc):
@@ -348,15 +362,19 @@ func loadSnapshotCmd(ctx context.Context, loader snapshotLoader, opts Options) t
 	}
 }
 
-// shutdownCmd cancels in-flight loads and closes loader-held DB handles,
-// then dispatches quitMsg so tea.Quit runs only after teardown is complete.
-func shutdownCmd(cancel context.CancelFunc, loader snapshotLoader) tea.Cmd {
+// shutdownCmd cancels in-flight loads, closes loader-held DB handles,
+// and restores the previous default slog logger, then dispatches
+// quitMsg so tea.Quit runs only after teardown is complete.
+func shutdownCmd(cancel context.CancelFunc, loader snapshotLoader, prevLogger *slog.Logger) tea.Cmd {
 	return func() tea.Msg {
 		if cancel != nil {
 			cancel()
 		}
 		if loader != nil {
 			_ = loader.Close()
+		}
+		if prevLogger != nil {
+			slog.SetDefault(prevLogger)
 		}
 		return quitMsg{}
 	}
@@ -496,6 +514,7 @@ func (m model) renderMain(width, height int) string {
 		Height:  height,
 		Compact: m.compact,
 		Focused: true,
+		Logs:    m.logs,
 	}
 	return setWidth(m.theme.Main, width).Render(m.sections[m.navIndex].View(ctx))
 }
