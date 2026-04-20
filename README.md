@@ -32,7 +32,7 @@ $ tok npm test
 # 200 lines → 3 lines: pass/fail + failures
 ```
 
-### 3. Transparent Command Rewriting (rtk-style)
+### 3. Transparent Command Rewriting
 
 Install the hook once. Every bash command from your AI agent is automatically rewritten:
 
@@ -44,7 +44,7 @@ Claude sees:   420 tokens → 84 tokens (80% saved)
 
 Claude never knows. You don't type `tok` prefix. It just works.
 
-### 4. Make Agents Talk Tersely (caveman-style)
+### 4. Make Agents Talk Tersely
 
 Install agent rules that make AI respond with ~75% fewer output tokens:
 
@@ -114,6 +114,36 @@ tok gain --format json          # JSON export
 tok discover                    # Find missed savings
 tok session                     # Adoption across sessions
 ```
+
+---
+
+## Benchmarks
+
+Measured on this repo via `evals/bench.sh` (raw vs `tok compress --mode aggressive`):
+
+| fixture   | raw bytes | raw tokens | tok bytes | tok tokens | saved |
+|-----------|----------:|-----------:|----------:|-----------:|------:|
+| git log   |     2,873 |        718 |       298 |         74 |  89 % |
+| git diff  |   385,051 |     96,262 |     1,117 |        279 |  99 % |
+| ls -la    |    66,341 |     16,585 |       148 |         37 |  99 % |
+| find .go  |    19,145 |      4,786 |       147 |         36 |  99 % |
+
+Reproduce: `go build -o tok ./cmd/tok && TOK=./tok evals/bench.sh --no-rtk`
+
+## Recent additions
+
+Session 2026-04-20 closed the last gaps vs rtk 0.37.1 and caveman:
+
+- **`tok commit-msg`** — read staged diff, emit Conventional Commits subject. Rule-based, no LLM.
+- **`tok review-diff`** — scan diff, emit one-line review comments (`🔴 bug / 🟡 risk / 🔵 nit`). Rule-based, no LLM.
+- **`tok pr-review [--base|--pr]`** — batch `review-diff` across a whole PR, grouped by file.
+- **`tok md <file>`** — compress markdown/memory file in place with `.original.md` backup. New wenyan modes.
+- **`tok cheatsheet`** — one-shot reference card for shell users (`modes` and `quickref` are aliases).
+- **`tok hook mode {activate|track|status|set}`** — Go-native SessionStart + UserPromptSubmit hook bodies. Drop-in replacement for the Node.js scripts, same flag-file format.
+- **Wenyan filter layer** (`internal/filter/wenyan.go`) — classical-Chinese-inspired rule-based compression, callable from the main pipeline.
+- **Release automation** — `release-please` workflow + `Formula/tok.rb` in-repo.
+- **Skill bundler** — `scripts/build-skill.sh` produces `tok.skill` zip for single-file distribution.
+- **End-to-end harness** — `tests/e2e/` Docker-based scenario runner.
 
 ---
 

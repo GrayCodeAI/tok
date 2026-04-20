@@ -40,7 +40,7 @@ powershell -ExecutionPolicy Bypass -File hooks\uninstall.ps1
 
 ## Transparent Command Rewriting
 
-The tok transparent rewriting hook works similarly to rtk's approach. It intercepts
+The tok transparent rewriting hook intercepts CLI commands. It intercepts
 bash commands from AI agent tool calls and rewrites known commands to their tok
 equivalents (e.g., `git status` → `tok git status`). The AI agent never sees the
 rewrite - it just gets compressed output.

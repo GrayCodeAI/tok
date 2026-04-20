@@ -4,76 +4,55 @@ import (
 	"github.com/lakshmanpatel/tok/internal/core"
 )
 
-// Process runs the full compression pipeline with early-exit support.
+// Process runs the six-layer compression pipeline.
 //
-// This is the main entry point for the 20+ layer compression pipeline. It processes
-// input through multiple filter layers to achieve maximum token reduction while
-// preserving semantic meaning.
-//
-// Real-time Status Updates:
-// If status line is enabled, this method emits progress events after each layer
-// showing current layer name, tokens processed, compression ratio, and ETA.
-// Events are written to stderr and do not interfere with command output.
+// Layers run in order; each exits early if the token budget is already met.
+// The quality guardrail runs after all six layers and may trigger a fallback
+// to ModeMinimal if the output fails semantic validation.
 func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
-	// Defensive: handle nil coordinator
 	if p == nil {
 		return input, &PipelineStats{
 			OriginalTokens: core.EstimateTokens(input),
 			FinalTokens:    core.EstimateTokens(input),
-			LayerStats:     make(map[string]LayerStat, 50),
+			LayerStats:     make(map[string]LayerStat, 6),
 		}
 	}
 
 	stats := &PipelineStats{
 		OriginalTokens: core.EstimateTokens(input),
-		LayerStats:     make(map[string]LayerStat, 50),
+		LayerStats:     make(map[string]LayerStat, 6),
 	}
 
 	output := input
 
-	// Pre-filters: TOML
-	output = p.processPreFilters(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
+	type layerRun struct {
+		name string
+		fn   func(string, *PipelineStats) string
 	}
 
-	// Layer 50: AdaptiveLearning (merged EngramLearner + TieredSummary)
-	if p.adaptiveLearning != nil && p.config.EnableAdaptiveLearning && len(output) > 1000 {
-		output = p.processLayer(filterLayer{p.adaptiveLearning, "50_adaptive_learning"}, output, stats)
+	for _, l := range [6]layerRun{
+		{"preprocess", p.runLayer1Preprocess},
+		{"structural", p.runLayer2Structural},
+		{"semantic", p.runLayer3Semantic},
+		{"llm_specific", p.runLayer4LLMSpecific},
+		{"content_type", p.runLayer5ContentType},
+		{"budget_quality", p.runLayer6BudgetQuality},
+	} {
+		output = l.fn(output, stats)
 		if p.shouldEarlyExit(stats) {
 			return output, p.finalizeStats(stats, output)
 		}
 	}
 
-	// Core layers (1-9) + Neural
-	output = p.processCoreLayers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Semantic layers (11-20)
-	output = p.processSemanticLayers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Research layers (21-25)
-	output = p.processResearchLayers(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output, p.finalizeStats(stats, output)
-	}
-
-	// Budget enforcement
-	output = p.processBudgetLayer(output, stats)
-
-	// Post-compensation
+	// KV-size post-compensation (applied after budget so it doesn't inflate token count)
 	if p.smallKVCompensator != nil {
 		output = p.smallKVCompensator.Compensate(input, output, p.config.Mode)
 	}
 
-	// Quality feedback
+	// Quality feedback loop — informs adaptive learning for future runs
 	p.recordFeedback(input, output, stats)
 
+	// Quality guardrail — falls back to ModeMinimal if output fails semantic validation
 	if p.qualityGuardrail != nil {
 		gr := p.qualityGuardrail.Validate(input, output)
 		if !gr.Passed {
@@ -94,194 +73,6 @@ func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *Pipel
 	fallbackCfg.EnableQualityGuardrail = false
 	fallback := NewPipelineCoordinator(fallbackCfg)
 	return fallback.Process(input)
-}
-
-func (p *PipelineCoordinator) processPreFilters(output string, stats *PipelineStats) string {
-	// Adaptive router + extractive prefilter.
-	output = p.applyAdaptiveRouting(output, stats)
-	if p.shouldEarlyExit(stats) {
-		return output
-	}
-
-	// TOML Filter
-	if p.tomlFilterWrapper != nil && p.config.EnableTOMLFilter {
-		filtered, saved := p.tomlFilterWrapper.Apply(output, ModeMinimal)
-		if saved > 0 {
-			stats.LayerStats["0_toml_filter"] = LayerStat{TokensSaved: saved}
-			output = filtered
-			stats.TotalSaved += saved
-			if p.shouldEarlyExit(stats) {
-				return output
-			}
-		}
-	}
-
-	return output
-}
-
-func (p *PipelineCoordinator) processCoreLayers(output string, stats *PipelineStats) string {
-	if p.entropyFilter != nil && p.config.EnableEntropy && !p.shouldSkipEntropy(output) {
-		output = p.processLayer(p.layers[0], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.perplexityFilter != nil && p.config.EnablePerplexity && !p.shouldSkipPerplexity(output) {
-		output = p.processLayer(p.layers[1], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.goalDrivenFilter != nil && p.config.EnableGoalDriven && !p.shouldSkipQueryDependent() {
-		output = p.processLayer(p.layers[2], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.astPreserveFilter != nil && p.config.EnableAST {
-		output = p.processLayer(p.layers[3], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.contrastiveFilter != nil && p.config.EnableContrastive && !p.shouldSkipQueryDependent() {
-		output = p.processLayer(p.layers[4], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.ngramAbbreviator != nil && !p.shouldSkipNgram(output) {
-		output = p.processLayer(p.layers[5], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.evaluatorHeadsFilter != nil && p.config.EnableEvaluator {
-		output = p.processLayer(p.layers[6], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.gistFilter != nil && p.config.EnableGist {
-		output = p.processLayer(p.layers[7], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.hierarchicalSummaryFilter != nil && p.config.EnableHierarchical {
-		output = p.processLayer(p.layers[8], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	return output
-}
-
-func (p *PipelineCoordinator) processSemanticLayers(output string, stats *PipelineStats) string {
-	if p.compactionLayer != nil && !p.shouldSkipCompaction(output) {
-		output = p.processLayer(p.layers[9], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.attributionFilter != nil {
-		output = p.processLayer(p.layers[10], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.h2oFilter != nil && !p.shouldSkipH2O(output) {
-		output = p.processLayer(p.layers[11], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.attentionSinkFilter != nil && !p.shouldSkipAttentionSink(output) {
-		output = p.processLayer(p.layers[12], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.metaTokenFilter != nil && !p.shouldSkipMetaToken(output) {
-		output = p.processLayer(p.layers[13], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.semanticChunkFilter != nil && !p.shouldSkipSemanticChunk(output) {
-		output = p.processLayer(p.layers[14], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.sketchStoreFilter != nil && !p.shouldSkipBudgetDependent() {
-		output = p.processLayer(p.layers[15], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.lazyPrunerFilter != nil && !p.shouldSkipBudgetDependent() {
-		output = p.processLayer(p.layers[16], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.semanticAnchorFilter != nil {
-		output = p.processLayer(p.layers[17], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	if p.agentMemoryFilter != nil {
-		output = p.processLayer(p.layers[18], output, stats)
-	}
-	return output
-}
-
-func (p *PipelineCoordinator) processResearchLayers(output string, stats *PipelineStats) string {
-	// Unified L14: Edge cases (merges L21-L25)
-	if p.edgeCaseFilter != nil {
-		output = p.processLayer(p.layers[19], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	// Unified L15: Reasoning (merges L26-L30)
-	if p.reasoningFilter != nil {
-		output = p.processLayer(p.layers[20], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	// Unified L16: Advanced (merges L31-L45)
-	if p.advancedFilter != nil {
-		output = p.processLayer(p.layers[21], output, stats)
-		if p.shouldEarlyExit(stats) {
-			return output
-		}
-	}
-
-	return output
 }
 
 func (p *PipelineCoordinator) recordFeedback(input, output string, stats *PipelineStats) {

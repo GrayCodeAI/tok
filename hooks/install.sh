@@ -90,9 +90,62 @@ with open('$CLAUDE_SETTINGS', 'w') as f:
   echo "Configured: Claude Code statusline ($CLAUDE_SETTINGS)"
 }
 
+install_js_mode_hooks() {
+  if ! command -v node >/dev/null 2>&1; then
+    echo "node not found — skipping JS mode-tracking hooks (install Node.js to enable natural-language activation)"
+    return
+  fi
+  if [[ ! -d "$CLAUDE_CONFIG_DIR" ]]; then
+    return
+  fi
+
+  local dest="$CLAUDE_CONFIG_DIR/hooks"
+  mkdir -p "$dest"
+  cp "$SCRIPT_DIR/tok-mode-config.js" "$dest/tok-mode-config.js"
+  cp "$SCRIPT_DIR/tok-mode-activate.js" "$dest/tok-mode-activate.js"
+  cp "$SCRIPT_DIR/tok-mode-tracker.js" "$dest/tok-mode-tracker.js"
+  chmod 0644 "$dest"/tok-mode-*.js
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - "$CLAUDE_SETTINGS" "$dest" <<'PY' 2>/dev/null || echo "Warning: could not merge JS hook settings"
+import json, os, sys
+settings, dest = sys.argv[1], sys.argv[2]
+if os.path.exists(settings):
+    with open(settings) as f:
+        cfg = json.load(f)
+else:
+    cfg = {}
+hooks = cfg.setdefault('hooks', {})
+def has(group, marker):
+    for entry in hooks.get(group, []):
+        for h in entry.get('hooks', []):
+            if marker in h.get('command', ''):
+                return True
+    return False
+if not has('SessionStart', 'tok-mode-activate.js'):
+    hooks.setdefault('SessionStart', []).append({
+        'matcher': 'Always',
+        'hooks': [{'type': 'command',
+                    'command': f'node "{dest}/tok-mode-activate.js"',
+                    'timeout': 5}],
+    })
+if not has('UserPromptSubmit', 'tok-mode-tracker.js'):
+    hooks.setdefault('UserPromptSubmit', []).append({
+        'hooks': [{'type': 'command',
+                    'command': f'node "{dest}/tok-mode-tracker.js"',
+                    'timeout': 5}],
+    })
+with open(settings, 'w') as f:
+    json.dump(cfg, f, indent=2)
+PY
+    echo "Configured: JS mode-tracking hooks ($dest)"
+  fi
+}
+
 install_in_file "$HOME/.zshrc"
 install_in_file "$HOME/.bashrc"
 install_claude_code_statusline
+install_js_mode_hooks
 
 echo "Done. Restart shell or source your rc file."
 echo ""

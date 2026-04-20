@@ -3,7 +3,7 @@
 # tok-init-version: 1.0
 #
 # Sets up the tok rewrite hook for various AI coding assistants.
-# Similar to rtk's `rtk init -g` command.
+
 #
 # Usage:
 #   tok init -g                    # Global install for all agents

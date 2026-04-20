@@ -73,9 +73,9 @@ for f in "${fixtures[@]}"; do
   raw_tok=$(est_tokens "$raw")
   printf "%-12s %-10s %10d %10d %8s %8d\n" "$label" "raw" "$raw_bytes" "$raw_tok" "-" "$((t1 - t0))"
 
-  # tok
+  # tok (Unix pipe filter — tok compress)
   t0=$(time_ms)
-  "$TOK" --mode=full < "$raw" > "$tok_out" 2>/dev/null || cp "$raw" "$tok_out"
+  "$TOK" compress --mode aggressive < "$raw" > "$tok_out" 2>/dev/null || cp "$raw" "$tok_out"
   t1=$(time_ms)
   tok_bytes=$(wc -c < "$tok_out")
   tok_tok=$(est_tokens "$tok_out")
