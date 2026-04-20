@@ -1,0 +1,13 @@
+npm WARN deprecated fsevents@1.2.13: The v1 package contains DANGEROUS
+npm WARN deprecated core-js@2.6.12: core-js@<3.23.3 is no longer maintained
+npm WARN deprecated request@2.88.2: request has been deprecated
+added 1847 packages, and audited 1848 packages in 42s
+
+183 packages are looking for funding
+  run `npm fund` for details
+
+7 high severity vulnerabilities
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.

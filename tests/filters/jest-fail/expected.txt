@@ -1,0 +1,6 @@
+FAIL  src/components/Header.test.jsx
+    expect(element).toHaveTextContent(/alice/i)
+Test Suites: 1 failed, 4 passed, 5 total
+Tests:       2 failed, 18 passed, 20 total
+Snapshots:   0 total
+Time:        3.847 s

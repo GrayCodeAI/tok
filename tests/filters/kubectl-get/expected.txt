@@ -1,0 +1,12 @@
+NAME                              READY   STATUS             RESTARTS   AGE
+api-7d9f8c5b4d-abc12               1/1     Running            0          4h
+api-7d9f8c5b4d-xyz34               1/1     Running            0          4h
+worker-5f6b8d7c9e-def56            1/1     Running            2          3d
+worker-5f6b8d7c9e-ghi78            0/1     CrashLoopBackOff   5          12m
+cache-redis-0                     1/1     Running            0          7d
+cache-redis-1                     1/1     Running            0          7d
+cache-redis-2                     1/1     Running            0          7d
+db-postgres-primary-0             1/1     Running            0          14d
+db-postgres-replica-0             1/1     Running            0          14d
+db-postgres-replica-1             1/1     Running            0          14d
+migration-job-pending-xyz         0/1     Error              0          22m
