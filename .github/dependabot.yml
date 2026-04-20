@@ -45,6 +45,21 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
+    # Group all action bumps into two PRs max (minor-patch, major)
+    # instead of one PR per action — that single missing block
+    # produced 5 concurrent PRs on first run.
+    groups:
+      actions-minor-patch:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      actions-major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # Docker
   - package-ecosystem: "docker"
