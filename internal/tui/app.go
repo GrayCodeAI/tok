@@ -16,12 +16,6 @@ import (
 	"github.com/lakshmanpatel/tok/internal/tracking"
 )
 
-type section struct {
-	Title       string
-	Short       string
-	Implemented bool
-}
-
 type snapshotLoadedMsg struct {
 	snapshot *tracking.WorkspaceDashboardSnapshot
 	err      error
@@ -41,7 +35,11 @@ type model struct {
 	cancel     context.CancelFunc
 	keys       KeyMap
 	theme      theme
-	sections   []section
+	sections   []SectionRenderer
+	actions    *ActionRegistry
+	toasts     *toastStack
+	palette    *Palette
+	search     *SearchOverlay
 	navIndex   int
 	width      int
 	height     int
@@ -70,31 +68,41 @@ func NewModelWithLoader(opts Options, loader snapshotLoader) tea.Model {
 	s.Style = lipgloss.NewStyle().Foreground(lipgloss.Color("#4FC3F7"))
 
 	ctx, cancel := context.WithCancel(context.Background())
+	sections := defaultSections()
 
-	return model{
-		opts:   opts.normalized(),
-		loader: loader,
-		ctx:    ctx,
-		cancel: cancel,
-		keys:   DefaultKeyMap(),
-		theme:  newTheme(),
-		sections: []section{
-			{Title: "Home", Short: "Overview", Implemented: true},
-			{Title: "Today", Short: "Easy Day"},
-			{Title: "Trends", Short: "Analytics"},
-			{Title: "Providers", Short: "Economics"},
-			{Title: "Models", Short: "Model Cost"},
-			{Title: "Agents", Short: "Agent Ops"},
-			{Title: "Sessions", Short: "Session Ops"},
-			{Title: "Commands", Short: "Command Mix"},
-			{Title: "Pipeline", Short: "Layer View"},
-			{Title: "Rewards", Short: "Streaks"},
-			{Title: "Logs", Short: "Runtime"},
-			{Title: "Config", Short: "Health"},
-		},
-		loading: true,
-		spinner: s,
+	m := model{
+		opts:     opts.normalized(),
+		loader:   loader,
+		ctx:      ctx,
+		cancel:   cancel,
+		keys:     DefaultKeyMap(),
+		theme:    newTheme(),
+		sections: sections,
+		toasts:   &toastStack{},
+		search:   NewSearchOverlay(),
+		loading:  true,
+		spinner:  s,
 	}
+
+	// Build the action registry with callbacks that close over the model
+	// via message-dispatch, not pointer capture — a SectionRenderer or
+	// action handler must never touch the model directly.
+	m.actions = DefaultActionRegistry(ActionDeps{
+		SectionCount: len(sections),
+		RequestRefresh: func() tea.Cmd {
+			return func() tea.Msg { return actionRequestMsg{ActionID: "view.refresh"} }
+		},
+		RequestJump: func(idx int) tea.Cmd {
+			return func() tea.Msg { return drillDownMsg{Section: idx} }
+		},
+		RequestToast: requestToastCmd,
+	})
+
+	// Build the palette last so it can reference both the registry and
+	// the section list built above.
+	m.palette = NewPalette(m.actions, sections)
+
+	return m
 }
 
 func (m model) Init() tea.Cmd {
@@ -148,14 +156,104 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if m.quitting {
 			return m, nil
 		}
+		// Overlays capture input while open. Palette and search are
+		// mutually exclusive — only one can be focused at a time.
+		if m.palette != nil && m.palette.IsOpen() {
+			if cmd := m.palette.Update(msg); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
+		if m.search != nil && m.search.IsOpen() {
+			if cmd := m.search.Update(msg); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
 		var cmd tea.Cmd
 		m, cmd = m.handleKey(msg)
+		if cmd != nil {
+			cmds = append(cmds, cmd)
+		}
+	case toastAddMsg:
+		if m.toasts != nil {
+			if cmd := m.toasts.add(msg.Kind, msg.Text, msg.TTL); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+		}
+	case toastExpireMsg:
+		if m.toasts != nil {
+			m.toasts.expire(msg.ID)
+		}
+	case actionRequestMsg:
+		if m.actions != nil {
+			cmds = append(cmds, runActionCmd(m.ctx, m.actions, msg.ActionID, msg.Args))
+		}
+	case actionResultMsg:
+		// For Phase 1 we report outcomes via toast; Phase 2 sections can
+		// intercept these to refresh themselves selectively.
+		if msg.Err != nil {
+			cmds = append(cmds, requestToastCmd(ToastError, fmt.Sprintf("%s: %s", msg.ActionID, msg.Err)))
+		}
+	case paletteExecMsg:
+		if m.actions != nil {
+			cmds = append(cmds, runActionCmd(m.ctx, m.actions, msg.ActionID, msg.Args))
+		}
+	case paletteCloseMsg:
+		// No-op; palette already closed itself before emitting the msg.
+	case searchCloseMsg:
+		// No-op; search overlay already cleared state.
+	case drillDownMsg:
+		// Section index from a drill-down acts as a jump for Phase 1
+		// where no section yet drills into a detail pane.
+		if msg.Section >= 0 && msg.Section < len(m.sections) {
+			m.navIndex = msg.Section
+		}
+	}
+
+	// Forward the message to the currently-focused section so it can
+	// react (cursor moves, row selection, search typing, etc.). This
+	// runs *after* the root handlers so root-level decisions (quit,
+	// nav) take priority. Section updates never receive tea.QuitMsg or
+	// quitMsg because those short-circuit the switch above.
+	if m.ready && len(m.sections) > 0 && !m.quitting {
+		ctx := m.sectionContext()
+		focused := m.sections[m.navIndex]
+		next, cmd := focused.Update(ctx, msg)
+		if next != nil {
+			m.sections[m.navIndex] = next
+		}
 		if cmd != nil {
 			cmds = append(cmds, cmd)
 		}
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+// sectionContext builds the read-only context handed to each section.
+func (m model) sectionContext() SectionContext {
+	// Reserve space for sidebar + right pane the same way renderBody does.
+	width := max(24, m.width)
+	if !m.compact {
+		width -= 19 // sidebar + gap
+		if m.width >= 170 && m.navIndex != 0 {
+			width -= 27 // right pane + gap
+		}
+		if width < 24 {
+			width = 24
+		}
+	}
+	return SectionContext{
+		Theme:   m.theme,
+		Keys:    m.keys,
+		Data:    m.data,
+		Opts:    m.opts,
+		Width:   width,
+		Height:  max(8, m.height-6), // header + footer
+		Compact: m.compact,
+		Focused: true,
+	}
 }
 
 func (m model) View() string {
@@ -167,11 +265,39 @@ func (m model) View() string {
 	header := m.renderHeader(contentWidth)
 	footer := m.renderFooter(contentWidth)
 
-	bodyHeight := max(8, m.height-lipgloss.Height(header)-lipgloss.Height(footer))
+	// Toast region sits between the body and the footer so it never
+	// clobbers the main view. Right-aligned to mimic a conventional
+	// notification stack. Phase 3 can replace this with a true overlay
+	// (lipgloss.Place composited on top of the body).
+	toastView := ""
+	toastHeight := 0
+	if m.toasts != nil && len(m.toasts.items) > 0 {
+		block := m.toasts.render(m.theme, contentWidth)
+		toastView = lipgloss.PlaceHorizontal(contentWidth, lipgloss.Right, block)
+		toastHeight = lipgloss.Height(toastView)
+	}
+
+	bodyHeight := max(8, m.height-lipgloss.Height(header)-lipgloss.Height(footer)-toastHeight)
 	body := m.renderBody(contentWidth, bodyHeight)
 
-	view := lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
-	return setWidth(m.theme.App, m.width).Render(view)
+	parts := []string{header, body}
+	if toastView != "" {
+		parts = append(parts, toastView)
+	}
+	parts = append(parts, footer)
+	view := lipgloss.JoinVertical(lipgloss.Left, parts...)
+	rendered := setWidth(m.theme.App, m.width).Render(view)
+
+	// Palette is a centered modal drawn on top of the rest of the frame.
+	// Because Bubble Tea re-renders top-to-bottom every frame, we prefix
+	// the modal block so terminals without alt-screen still clear the
+	// previous frame between paints.
+	if m.palette != nil && m.palette.IsOpen() {
+		modal := m.palette.View(m.theme, m.width)
+		centered := lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+		return centered
+	}
+	return rendered
 }
 
 // handleKey dispatches a key press against the keymap registry, mutates the
@@ -187,6 +313,14 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 		m.helpOpen = !m.helpOpen
 	case key.Matches(msg, m.keys.Esc):
 		m.helpOpen = false
+	case key.Matches(msg, m.keys.Palette):
+		if m.palette != nil {
+			return m, m.palette.Open()
+		}
+	case key.Matches(msg, m.keys.Search):
+		if m.search != nil {
+			return m, m.search.Open()
+		}
 	case key.Matches(msg, m.keys.NextSection):
 		m.navIndex = (m.navIndex + 1) % len(m.sections)
 	case key.Matches(msg, m.keys.PrevSection):
@@ -262,7 +396,7 @@ func sectionShortcutLabel(index int) string {
 
 func (m model) renderHeader(width int) string {
 	title := m.theme.Title.Render("tok")
-	sectionTitle := m.theme.Focus.Render(m.sections[m.navIndex].Title)
+	sectionTitle := m.theme.Focus.Render(m.sections[m.navIndex].Name())
 
 	statusParts := []string{
 		sectionTitle,
@@ -314,7 +448,7 @@ func (m model) renderSidebar(width, height int) string {
 	lines = append(lines, m.theme.SectionTitle.Render("Sections"))
 	for i, s := range m.sections {
 		label := sectionShortcutLabel(i)
-		text := lipgloss.JoinHorizontal(lipgloss.Left, m.theme.SidebarKey.Render(label), " ", s.Title)
+		text := lipgloss.JoinHorizontal(lipgloss.Left, m.theme.SidebarKey.Render(label), " ", s.Name())
 		if i == m.navIndex {
 			lines = append(lines, setWidth(m.theme.SidebarActive, width-2).Render(text))
 		} else {
@@ -330,7 +464,7 @@ func (m model) renderSidebar(width, height int) string {
 func (m model) renderCompactTabs(width int) string {
 	parts := make([]string, 0, len(m.sections))
 	for i, s := range m.sections {
-		label := s.Title
+		label := s.Name()
 		if i == m.navIndex {
 			parts = append(parts, m.theme.SidebarActive.Render(label))
 		} else {
@@ -350,10 +484,20 @@ func (m model) renderMain(width, height int) string {
 	if m.err != nil && m.data == nil {
 		return setWidth(m.theme.Main, width).Render(m.theme.Danger.Render("Failed to load snapshot") + "\n\n" + m.err.Error())
 	}
-	if m.navIndex == 0 {
-		return setWidth(m.theme.Main, width).Render(m.renderHome(width))
+	// Dispatch to the focused section via the SectionRenderer interface.
+	// We rebuild a SectionContext here with the computed main-pane width
+	// so sections don't have to re-derive layout from the raw model.
+	ctx := SectionContext{
+		Theme:   m.theme,
+		Keys:    m.keys,
+		Data:    m.data,
+		Opts:    m.opts,
+		Width:   width,
+		Height:  height,
+		Compact: m.compact,
+		Focused: true,
 	}
-	return setWidth(m.theme.Main, width).Render(m.renderPlaceholder(width))
+	return setWidth(m.theme.Main, width).Render(m.sections[m.navIndex].View(ctx))
 }
 
 func (m model) renderInsights(width, height int) string {
