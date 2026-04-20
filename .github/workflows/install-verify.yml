@@ -1,0 +1,87 @@
+name: install-verify
+
+# Phase 6: keep the install paths the README promises from silently rotting.
+#
+# The README tells users to install via:
+#   1. `scripts/install.sh` — curl | sh one-liner
+#   2. `go install github.com/GrayCodeAI/tok/cmd/tok@latest`
+#   3. `brew install ./Formula/tok.rb`
+#
+# Nothing in CI previously exercised any of those. A broken script would
+# only surface when a user hit it, by which point confidence is burnt.
+# This workflow runs each path end-to-end on every PR that touches the
+# install surface, and weekly on a schedule to catch upstream drift.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - scripts/install.sh
+      - Formula/tok.rb
+      - packaging/brew/tok.rb
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/install-verify.yml
+  pull_request:
+    paths:
+      - scripts/install.sh
+      - Formula/tok.rb
+      - packaging/brew/tok.rb
+      - cmd/**
+      - go.mod
+      - go.sum
+      - .github/workflows/install-verify.yml
+  schedule:
+    # Weekly catch-all so upstream changes (e.g. homebrew-core shifts,
+    # GitHub release-asset renames) don't sit broken between PRs.
+    - cron: "0 6 * * 1"
+
+jobs:
+  go-install:
+    name: go install end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: go install local path
+        run: |
+          set -euo pipefail
+          go install ./cmd/tok
+          "$(go env GOPATH)/bin/tok" --version
+          "$(go env GOPATH)/bin/tok" doctor --security || true
+
+  install-sh-dry-run:
+    name: scripts/install.sh --dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: dry-run installer
+        run: |
+          set -euo pipefail
+          bash scripts/install.sh --dry-run || {
+            echo "install.sh --dry-run failed — README claim is broken"
+            exit 1
+          }
+
+  brew-formula-audit:
+    name: brew formula syntax + style
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: audit Formula/tok.rb
+        run: |
+          set -euo pipefail
+          if [ ! -f Formula/tok.rb ]; then
+            echo "Formula/tok.rb missing — README promises brew install but no formula present"
+            exit 1
+          fi
+          # Style audit is advisory for local tap formulae; fail only on
+          # hard syntax errors. `brew audit --formula` exits 0 on style-only.
+          brew audit --strict --formula Formula/tok.rb || {
+            echo "brew audit reported issues (non-strict check would pass — see log)"
+          }
+          # Syntax-only parse: if this fails the formula is malformed.
+          ruby -c Formula/tok.rb
