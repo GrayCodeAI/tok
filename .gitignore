@@ -65,3 +65,6 @@ config/local.toml
 .gomodcache/
 .gocache/
 .gosrccache/
+
+# Claude Code internal state
+.claude/scheduled_tasks.lock
