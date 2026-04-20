@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

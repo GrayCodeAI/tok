@@ -2,12 +2,13 @@ package core
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"runtime"
 	"runtime/pprof"
 	"runtime/trace"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

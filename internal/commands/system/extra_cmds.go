@@ -2,8 +2,9 @@ package system
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"

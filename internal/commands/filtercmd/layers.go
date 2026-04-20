@@ -1,8 +1,9 @@
 package filtercmd
 
 import (
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

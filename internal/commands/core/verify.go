@@ -2,9 +2,10 @@ package core
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

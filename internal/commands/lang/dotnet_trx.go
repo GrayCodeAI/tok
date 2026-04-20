@@ -3,10 +3,11 @@ package lang
 import (
 	"encoding/xml"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

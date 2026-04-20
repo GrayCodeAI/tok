@@ -2,11 +2,12 @@ package filtercmd
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

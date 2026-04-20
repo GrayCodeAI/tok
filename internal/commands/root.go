@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"os/exec"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

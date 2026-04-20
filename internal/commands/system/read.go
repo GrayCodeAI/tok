@@ -3,11 +3,12 @@ package system
 import (
 	"bufio"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

@@ -3,8 +3,9 @@ package core
 import (
 	"encoding/json"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"path/filepath"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

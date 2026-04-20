@@ -2,10 +2,11 @@ package configcmd
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"reflect"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

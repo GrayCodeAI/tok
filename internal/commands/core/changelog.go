@@ -1,10 +1,11 @@
 package core
 
 import (
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

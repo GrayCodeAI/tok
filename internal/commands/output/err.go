@@ -4,10 +4,11 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"regexp"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

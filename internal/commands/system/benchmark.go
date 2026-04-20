@@ -1,11 +1,12 @@
 package system
 
 import (
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

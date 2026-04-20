@@ -9,10 +9,11 @@ package configcmd
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

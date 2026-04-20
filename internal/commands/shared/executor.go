@@ -2,12 +2,13 @@ package shared
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"os/exec"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/lakshmanpatel/tok/internal/config"
 	"github.com/lakshmanpatel/tok/internal/core"

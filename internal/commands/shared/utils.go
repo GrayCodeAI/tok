@@ -3,9 +3,10 @@ package shared
 import (
 	"encoding/json"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"path/filepath"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 )
 
 // OutputType represents the type of command output.

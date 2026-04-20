@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

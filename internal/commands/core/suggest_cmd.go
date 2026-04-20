@@ -1,9 +1,10 @@
 package core
 
 import (
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"math/rand"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

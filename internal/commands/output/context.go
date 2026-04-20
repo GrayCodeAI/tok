@@ -2,12 +2,13 @@ package output
 
 import (
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

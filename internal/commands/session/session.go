@@ -3,8 +3,9 @@ package session
 import (
 	"context"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"

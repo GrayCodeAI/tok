@@ -3,13 +3,14 @@ package shared
 import (
 	"context"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"log/slog"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/lakshmanpatel/tok/internal/config"
 	"github.com/lakshmanpatel/tok/internal/core"

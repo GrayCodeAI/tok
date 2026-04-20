@@ -3,9 +3,10 @@ package lang
 import (
 	"bytes"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os/exec"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

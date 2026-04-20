@@ -3,10 +3,11 @@ package system
 import (
 	"bufio"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"os"
 	"regexp"
 	"strings"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 

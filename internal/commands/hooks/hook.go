@@ -3,12 +3,13 @@ package hooks
 import (
 	"encoding/json"
 	"fmt"
-	out "github.com/lakshmanpatel/tok/internal/output"
 	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	out "github.com/lakshmanpatel/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
