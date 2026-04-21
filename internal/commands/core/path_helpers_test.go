@@ -14,4 +14,3 @@ func TestGetEnabledMarkerPathUsesDataPath(t *testing.T) {
 		t.Fatalf("getEnabledMarkerPath() = %q, want %q", got, want)
 	}
 }
-

@@ -37,9 +37,9 @@ func newAgentsSection() *agentsSection {
 func (s *agentsSection) Name() string  { return "Agents" }
 func (s *agentsSection) Short() string { return "Agent Ops" }
 
-func (s *agentsSection) ExportColumns() []Column { return s.table.Columns() }
-func (s *agentsSection) ExportRows() []Row       { return s.table.VisibleRows() }
-func (s *agentsSection) ExportName() string      { return "agents" }
+func (s *agentsSection) ExportColumns() []Column     { return s.table.Columns() }
+func (s *agentsSection) ExportRows() []Row           { return s.table.VisibleRows() }
+func (s *agentsSection) ExportName() string          { return "agents" }
 func (s *agentsSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *agentsSection) KeyBindings() []key.Binding {

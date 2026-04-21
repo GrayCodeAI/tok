@@ -330,8 +330,25 @@ func renderBudgetBadge(th theme, budget config.BudgetConfig, dailySpent int, wid
 // renderOnboarding is the empty-state shown on first launch, before
 // any commands have been tracked. Everything else in Home assumes a
 // snapshot exists — this screen tells the user how to make one.
+// asciiLogo returns the tok ASCII art logo.
+func asciiLogo(th theme) string {
+	logo := `
+
+    ████████╗  ██████╗  ██╗  ██╗
+    ╚══██╔══╝ ██╔═══██╗ ██║ ██╔╝
+       ██║    ██║   ██║ █████╔╝ 
+       ██║    ██║   ██║ ██╔═██╗ 
+       ██║    ╚██████╔╝ ██║ ██╗
+       ╚═╝     ╚═════╝  ╚═╝ ╚═╝
+
+`
+	return th.ValueFocus.Render(logo)
+}
+
 func renderOnboarding(th theme, width int) string {
 	lines := []string{
+		asciiLogo(th),
+		"",
 		th.Title.Render("Welcome to tok"),
 		th.Subtitle.Render("No commands tracked yet — here's how to start:"),
 		"",
@@ -424,8 +441,8 @@ func renderCardGrid(cards []string, columns int) string {
 
 // Column layout for the two-line breakdown entry:
 //
-//   <keyWidth>  <savedCol>  <rateCol>
-//   <barWidth>  <shareCol>
+//	<keyWidth>  <savedCol>  <rateCol>
+//	<barWidth>  <shareCol>
 //
 // savedCol/rateCol/shareCol widths are fixed so numerics right-align
 // predictably. keyWidth and barWidth are derived from the panel width.

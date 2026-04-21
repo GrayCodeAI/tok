@@ -17,9 +17,9 @@ import (
 // whose Key is formatted "<provider> / <model>", so we derive the
 // scoped model list by prefix match.
 type providersSection struct {
-	table        *Table
-	drill        string // provider key when non-empty
-	snapshotKey  string
+	table       *Table
+	drill       string // provider key when non-empty
+	snapshotKey string
 }
 
 func newProvidersSection() *providersSection {

@@ -17,11 +17,11 @@ import (
 // can dispatch the original actionRequestMsg without re-racing through
 // the palette.
 type ConfirmOverlay struct {
-	open    bool
-	title   string
-	prompt  string
-	action  Action
-	args    string
+	open     bool
+	title    string
+	prompt   string
+	action   Action
+	args     string
 	default_ bool // which button is highlighted by default: true=yes, false=no
 }
 

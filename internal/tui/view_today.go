@@ -19,11 +19,11 @@ type todaySection struct{}
 
 func newTodaySection() *todaySection { return &todaySection{} }
 
-func (s *todaySection) Name() string                      { return "Today" }
-func (s *todaySection) Short() string                     { return "Easy Day" }
-func (s *todaySection) Init(SectionContext) tea.Cmd       { return nil }
-func (s *todaySection) KeyBindings() []key.Binding        { return nil }
-func (s *todaySection) IsScrollable() bool                { return true }
+func (s *todaySection) Name() string                { return "Today" }
+func (s *todaySection) Short() string               { return "Easy Day" }
+func (s *todaySection) Init(SectionContext) tea.Cmd { return nil }
+func (s *todaySection) KeyBindings() []key.Binding  { return nil }
+func (s *todaySection) IsScrollable() bool          { return true }
 func (s *todaySection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
 	return s, nil
 }

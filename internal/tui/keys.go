@@ -21,14 +21,14 @@ type KeyMap struct {
 	HistoryForward key.Binding
 
 	// Cursor movement inside a section (Phase 1 sections will honor these)
-	Up      key.Binding
-	Down    key.Binding
-	Left    key.Binding
-	Right   key.Binding
-	Top     key.Binding
-	Bottom  key.Binding
-	PageUp  key.Binding
-	PageDn  key.Binding
+	Up     key.Binding
+	Down   key.Binding
+	Left   key.Binding
+	Right  key.Binding
+	Top    key.Binding
+	Bottom key.Binding
+	PageUp key.Binding
+	PageDn key.Binding
 
 	// Actions
 	Refresh key.Binding

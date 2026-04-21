@@ -26,9 +26,9 @@ func TestLiveSourceReceivesTrackerWrite(t *testing.T) {
 
 	// Publish a record through the same path Record() uses.
 	record := &tracking.CommandRecord{
-		Command:      "git status",
-		SavedTokens:  123,
-		ExecTimeMs:   50,
+		Command:     "git status",
+		SavedTokens: 123,
+		ExecTimeMs:  50,
 	}
 	// Brief sleep so the Start goroutine has actually registered the
 	// subscribe channel before we publish. Without it we race.

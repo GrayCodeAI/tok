@@ -17,7 +17,7 @@ import (
 // updates and compare them to files in testdata/. Run with -update to
 // refresh when you've intentionally changed the output shape:
 //
-//     go test -update ./internal/tui/... -run TestGolden
+//	go test -update ./internal/tui/... -run TestGolden
 //
 // The golden-file harness strips ANSI escape sequences before diffing,
 // so terminal-color variance between machines does not break tests.

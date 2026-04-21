@@ -16,13 +16,13 @@ import (
 // maximum value. Intended for "share" or "reduction %" columns where
 // visual weight conveys magnitude better than the digits alone.
 type Column struct {
-	Title     string
-	MinWidth  int    // clamps below this; 0 means no clamp
-	MaxWidth  int    // 0 means no clamp
-	Align     Align  // default Left
-	Accent    bool   // render as bar (cells should be numeric strings)
-	Sortable  bool   // header responds to a sort keybinding
-	Numeric   bool   // right-align and use number comparison for sorting
+	Title    string
+	MinWidth int   // clamps below this; 0 means no clamp
+	MaxWidth int   // 0 means no clamp
+	Align    Align // default Left
+	Accent   bool  // render as bar (cells should be numeric strings)
+	Sortable bool  // header responds to a sort keybinding
+	Numeric  bool  // right-align and use number comparison for sorting
 }
 
 // Align is the horizontal alignment of a cell.

@@ -36,10 +36,10 @@ func newModelsSection() *modelsSection {
 func (s *modelsSection) Name() string  { return "Models" }
 func (s *modelsSection) Short() string { return "Model Cost" }
 
-func (s *modelsSection) ExportColumns() []Column { return s.table.Columns() }
-func (s *modelsSection) ExportRows() []Row       { return s.table.VisibleRows() }
-func (s *modelsSection) ExportName() string      { return "models" }
-func (s *modelsSection) Init(SectionContext) tea.Cmd       { return nil }
+func (s *modelsSection) ExportColumns() []Column     { return s.table.Columns() }
+func (s *modelsSection) ExportRows() []Row           { return s.table.VisibleRows() }
+func (s *modelsSection) ExportName() string          { return "models" }
+func (s *modelsSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *modelsSection) KeyBindings() []key.Binding {
 	return []key.Binding{
