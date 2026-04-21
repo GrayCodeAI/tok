@@ -5,6 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/GrayCodeAI/tok/compare/v1.0.0...v1.1.0) (2026-04-21)
+
+
+### Features
+
+* **bill:** attribute tok savings against real provider invoices ([5c2189e](https://github.com/GrayCodeAI/tok/commit/5c2189ed8dad0182d4277b0a716827a34dfd14ee))
+* **core:** precise BPE for user-visible token counts ([da66506](https://github.com/GrayCodeAI/tok/commit/da665069b978ea699bd8bb4862f595160d45cd39))
+* **init:** expand to 20 wired agents, CLI-first ordering ([ab8c578](https://github.com/GrayCodeAI/tok/commit/ab8c578eebdaf1ddb577b4fb6fc40a7f9acb2b81))
+* **tui,tracking:** live event pipeline, scroll, welcome, nav fixes ([199aa96](https://github.com/GrayCodeAI/tok/commit/199aa96651b37bbdaa0ebc7ef956cfab4d4e2a3e))
+* **tui:** add core UX primitives for section build-out ([4cc099b](https://github.com/GrayCodeAI/tok/commit/4cc099b57dd3e10424707245f674a3da40dd3946))
+* **tui:** add final four sections — Pipeline, Rewards, Logs, Config ([c217851](https://github.com/GrayCodeAI/tok/commit/c217851c1207681a179671891dce90cc2b3c7194))
+* **tui:** add Models, Agents, and Commands sections ([be907e7](https://github.com/GrayCodeAI/tok/commit/be907e7e656c7a8176a81d09292fa576b939da9f))
+* **tui:** add Today, Trends, and Providers sections ([eb5d76b](https://github.com/GrayCodeAI/tok/commit/eb5d76b9cdf5bece2fb0c739117ee73d3a7aad51))
+* **tui:** implement Sessions section with drill-down ([c6723b1](https://github.com/GrayCodeAI/tok/commit/c6723b1c6ffd04d98c3fe27648ee061f8fb6686d))
+* **tui:** Phase 3 polish — env guards, mouse, yank, export, themes, confirm ([9bad5bb](https://github.com/GrayCodeAI/tok/commit/9bad5bbd3405a0ca5c2ddd2fd81c0cbbc6367a65))
+
+
+### Bug Fixes
+
+* **tui:** stop section renderers from overflowing the Main pane ([ef9e0d5](https://github.com/GrayCodeAI/tok/commit/ef9e0d594b6af146489ad087adcd73b70b279378))
+* **tui:** stop slog from smearing stderr across the alt-screen ([3eb99aa](https://github.com/GrayCodeAI/tok/commit/3eb99aa6a666bbda157b8348f6c97aa016f519f6))
+
+
+### Refactoring
+
+* drop undocumented undo + changelog subcommands ([96fbdda](https://github.com/GrayCodeAI/tok/commit/96fbdda140ee0313942cfa8806042171ebe0a39c))
+* **tui:** harden foundation before section build-out ([f7eccbf](https://github.com/GrayCodeAI/tok/commit/f7eccbf0f1f8d308ff3f765f0fcc1517fec0a7f7))
+
+
+### Tests
+
+* **filters:** golden-file harness + fix non-deterministic filter selection ([fefbf71](https://github.com/GrayCodeAI/tok/commit/fefbf71f957cfe4c011280b0fcb97fccaa863c13))
+* **init:** end-to-end round-trip for top-5 wired agents ([b8cc95b](https://github.com/GrayCodeAI/tok/commit/b8cc95b36da7b69e97ad8e4483ed6e77aa8aad37))
+
+
+### Documentation
+
+* reconcile LAYERS.md compression claims with measured numbers ([ce5da5e](https://github.com/GrayCodeAI/tok/commit/ce5da5eb2dfc2cd7a1651517371797fdc25371c6))
+
 ## 1.0.0 (2026-04-20)
 
 
