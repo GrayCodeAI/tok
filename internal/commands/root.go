@@ -118,7 +118,7 @@ func newRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "tok",
 		Version: shared.Version, // Set from shared.Version (injected via ldflags)
-		Short: "Token-aware CLI proxy",
+		Short:   "Token-aware CLI proxy",
 		Long: `tok intercepts CLI commands and filters verbose output
 to reduce token usage in LLM interactions.
 

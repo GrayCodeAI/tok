@@ -28,7 +28,7 @@ func TestLiveEndToEndWriteToEvent(t *testing.T) {
 	defer cancel()
 
 	source := &trackingLiveSource{
-		dbPath:        "",       // skip fsnotify; subscribe path only
+		dbPath:        "",        // skip fsnotify; subscribe path only
 		fallbackEvery: time.Hour, // no tick noise in this test
 	}
 	events := source.Start(ctx)

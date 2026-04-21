@@ -7,9 +7,9 @@ import (
 
 func TestDetectUTF8FromLang(t *testing.T) {
 	cases := []struct {
-		name   string
-		env    map[string]string
-		want   bool
+		name string
+		env  map[string]string
+		want bool
 	}{
 		{"explicit utf-8", map[string]string{"LANG": "en_US.UTF-8"}, true},
 		{"explicit utf8", map[string]string{"LC_ALL": "en_US.utf8"}, true},

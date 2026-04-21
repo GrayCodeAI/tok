@@ -30,8 +30,8 @@ const (
 
 func newTrendsSection() *trendsSection { return &trendsSection{granularity: trendDaily} }
 
-func (s *trendsSection) Name() string  { return "Trends" }
-func (s *trendsSection) Short() string { return "Analytics" }
+func (s *trendsSection) Name() string                { return "Trends" }
+func (s *trendsSection) Short() string               { return "Analytics" }
 func (s *trendsSection) Init(SectionContext) tea.Cmd { return nil }
 func (s *trendsSection) IsScrollable() bool          { return true }
 

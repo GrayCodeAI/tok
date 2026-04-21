@@ -13,13 +13,13 @@ import (
 type CLIContext struct {
 	// Core configuration
 	Config *config.Config
-	
+
 	// Feature flags (consolidated from 44+ global functions)
 	Flags FeatureFlags
-	
+
 	// Services
 	FilterMode filter.Mode
-	
+
 	// I/O (testable)
 	Stdout *os.File
 	Stderr *os.File
@@ -30,33 +30,33 @@ type CLIContext struct {
 // This replaces the 44+ global accessor functions in globals.go
 type FeatureFlags struct {
 	// Output control
-	Verbose      int  // 0=warn, 1=info, 2=debug, 3=trace
+	Verbose      int // 0=warn, 1=info, 2=debug, 3=trace
 	QuietMode    bool
 	UltraCompact bool
 	JSONOutput   bool
-	
+
 	// Core functionality
-	DryRun       bool
-	LLMEnabled   bool
-	TokenBudget  int
-	QueryIntent  string
-	
+	DryRun      bool
+	LLMEnabled  bool
+	TokenBudget int
+	QueryIntent string
+
 	// Layer configuration
 	LayerPreset   string
 	LayerProfile  string
 	EnableLayers  []string
 	DisableLayers []string
-	
+
 	// Processing modes
-	StreamMode       bool
+	StreamMode        bool
 	ReversibleEnabled bool
-	RemoteMode       bool
-	
+	RemoteMode        bool
+
 	// Remote settings
 	CompressionAddr string
 	AnalyticsAddr   string
 	RemoteTimeout   int
-	
+
 	// Compaction
 	CompactionEnabled    bool
 	CompactionThreshold  int
@@ -64,42 +64,42 @@ type FeatureFlags struct {
 	CompactionMaxTokens  int
 	CompactionSnapshot   bool
 	CompactionAutoDetect bool
-	
+
 	// Extractive prefilter
 	Extractive       bool
 	ExtractiveMax    int
 	ExtractiveHead   int
 	ExtractiveTail   int
 	ExtractiveSignal int
-	
+
 	// Quality and routing
 	PolicyRouter     bool
 	QualityGuardrail bool
-	
+
 	// Research layers (consolidated)
-	ResearchPack    bool
-	DiffAdapt       bool
-	EPiC            bool
-	SSDP            bool
-	ACON            bool
-	LatentCollab    bool
-	GraphCoT        bool
-	RoleBudget      bool
-	SWEAdaptive     bool
-	PlanBudget      bool
-	LightMem        bool
-	
+	ResearchPack bool
+	DiffAdapt    bool
+	EPiC         bool
+	SSDP         bool
+	ACON         bool
+	LatentCollab bool
+	GraphCoT     bool
+	RoleBudget   bool
+	SWEAdaptive  bool
+	PlanBudget   bool
+	LightMem     bool
+
 	// Agent layers (consolidated)
 	AgentOCR        bool
 	AgentOCRHistory bool
 	S2MAD           bool
-	
+
 	// Utility layers (consolidated)
-	PathShorten     bool
-	JSONSampler     bool
-	ContextCrunch   bool
-	SearchCrunch    bool
-	StructCollapse  bool
+	PathShorten      bool
+	JSONSampler      bool
+	ContextCrunch    bool
+	SearchCrunch     bool
+	StructCollapse   bool
 	AdaptiveLearning bool
 }
 
@@ -108,7 +108,7 @@ type FeatureFlags struct {
 func NewCLIContext(state *AppState) *CLIContext {
 	state.mu.RLock()
 	defer state.mu.RUnlock()
-	
+
 	return &CLIContext{
 		Flags: FeatureFlags{
 			Verbose:              state.Verbose,
@@ -200,20 +200,20 @@ func MustFromContext(ctx context.Context) *CLIContext {
 }
 
 // Convenience methods for common flag checks
-func (c *CLIContext) IsVerbose() bool         { return c.Flags.Verbose > 0 }
-func (c *CLIContext) IsDebug() bool           { return c.Flags.Verbose >= 2 }
-func (c *CLIContext) IsUltraCompact() bool    { return c.Flags.UltraCompact }
-func (c *CLIContext) IsQuietMode() bool       { return c.Flags.QuietMode }
-func (c *CLIContext) IsLLMEnabled() bool      { return c.Flags.LLMEnabled }
-func (c *CLIContext) IsStreamMode() bool      { return c.Flags.StreamMode }
-func (c *CLIContext) IsRemoteMode() bool      { return c.Flags.RemoteMode }
-func (c *CLIContext) IsReversibleEnabled() bool { return c.Flags.ReversibleEnabled }
-func (c *CLIContext) GetTokenBudget() int     { return c.Flags.TokenBudget }
-func (c *CLIContext) GetLayerPreset() string  { return c.Flags.LayerPreset }
-func (c *CLIContext) GetQueryIntent() string  { return c.Flags.QueryIntent }
+func (c *CLIContext) IsVerbose() bool            { return c.Flags.Verbose > 0 }
+func (c *CLIContext) IsDebug() bool              { return c.Flags.Verbose >= 2 }
+func (c *CLIContext) IsUltraCompact() bool       { return c.Flags.UltraCompact }
+func (c *CLIContext) IsQuietMode() bool          { return c.Flags.QuietMode }
+func (c *CLIContext) IsLLMEnabled() bool         { return c.Flags.LLMEnabled }
+func (c *CLIContext) IsStreamMode() bool         { return c.Flags.StreamMode }
+func (c *CLIContext) IsRemoteMode() bool         { return c.Flags.RemoteMode }
+func (c *CLIContext) IsReversibleEnabled() bool  { return c.Flags.ReversibleEnabled }
+func (c *CLIContext) GetTokenBudget() int        { return c.Flags.TokenBudget }
+func (c *CLIContext) GetLayerPreset() string     { return c.Flags.LayerPreset }
+func (c *CLIContext) GetQueryIntent() string     { return c.Flags.QueryIntent }
 func (c *CLIContext) GetCompressionAddr() string { return c.Flags.CompressionAddr }
-func (c *CLIContext) GetAnalyticsAddr() string { return c.Flags.AnalyticsAddr }
-func (c *CLIContext) GetRemoteTimeout() int   { return c.Flags.RemoteTimeout }
+func (c *CLIContext) GetAnalyticsAddr() string   { return c.Flags.AnalyticsAddr }
+func (c *CLIContext) GetRemoteTimeout() int      { return c.Flags.RemoteTimeout }
 
 // GetFilterMode returns the appropriate filter mode based on flags.
 func (c *CLIContext) GetFilterMode() filter.Mode {

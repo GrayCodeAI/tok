@@ -441,8 +441,8 @@ func renderCardGrid(cards []string, columns int) string {
 
 // Column layout for the two-line breakdown entry:
 //
-//   <keyWidth>  <savedCol>  <rateCol>
-//   <barWidth>  <shareCol>
+//	<keyWidth>  <savedCol>  <rateCol>
+//	<barWidth>  <shareCol>
 //
 // savedCol/rateCol/shareCol widths are fixed so numerics right-align
 // predictably. keyWidth and barWidth are derived from the panel width.

@@ -21,15 +21,15 @@ const (
 
 // Config represents the main configuration structure.
 type Config struct {
-	Tracking   TrackingConfig    `mapstructure:"tracking"`
-	Filter     FilterConfig      `mapstructure:"filter"`
-	Pipeline   PipelineConfig    `mapstructure:"pipeline"`
-	Hooks      HooksConfig       `mapstructure:"hooks"`
-	Dashboard  DashboardConfig   `mapstructure:"dashboard"`
-	Alerts     AlertsConfig      `mapstructure:"alerts"`
-	Budget     BudgetConfig      `mapstructure:"budget"`
-	Export     ExportConfig      `mapstructure:"export"`
-	Edit       EditConfig        `mapstructure:"edit"`       // Edit batching configuration
+	Tracking    TrackingConfig    `mapstructure:"tracking"`
+	Filter      FilterConfig      `mapstructure:"filter"`
+	Pipeline    PipelineConfig    `mapstructure:"pipeline"`
+	Hooks       HooksConfig       `mapstructure:"hooks"`
+	Dashboard   DashboardConfig   `mapstructure:"dashboard"`
+	Alerts      AlertsConfig      `mapstructure:"alerts"`
+	Budget      BudgetConfig      `mapstructure:"budget"`
+	Export      ExportConfig      `mapstructure:"export"`
+	Edit        EditConfig        `mapstructure:"edit"`        // Edit batching configuration
 	Keybindings KeybindingsConfig `mapstructure:"keybindings"` // TUI keybindings overrides
 }
 
@@ -59,8 +59,8 @@ type KeybindingsConfig struct {
 
 // BudgetConfig controls token budget tracking and alerts.
 type BudgetConfig struct {
-	DailyTokens      int `mapstructure:"daily_tokens"`       // Daily token budget (0 = unlimited)
-	WarningThreshold int `mapstructure:"warning_threshold"`  // Percent for warning (default: 80)
+	DailyTokens      int `mapstructure:"daily_tokens"`      // Daily token budget (0 = unlimited)
+	WarningThreshold int `mapstructure:"warning_threshold"` // Percent for warning (default: 80)
 }
 
 // PipelineConfig controls the 20-layer compression pipeline.

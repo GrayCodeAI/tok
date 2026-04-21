@@ -36,45 +36,45 @@ type liveEventMsg LiveEvent
 type quitMsg struct{}
 
 type model struct {
-	opts       Options
-	loader     snapshotLoader
-	ctx        context.Context
-	cancel     context.CancelFunc
-	keys       KeyMap
-	theme      theme
-	sections   []SectionRenderer
-	actions    *ActionRegistry
-	toasts     *toastStack
-	palette    *Palette
-	search     *SearchOverlay
-	filter     *FilterOverlay
-	confirm    *ConfirmOverlay
-	logs       *ringHandler
-	prevLogger *slog.Logger
-	env        Environment
-	history    *historyStack // navigation history for H/L back/forward
+	opts          Options
+	loader        snapshotLoader
+	ctx           context.Context
+	cancel        context.CancelFunc
+	keys          KeyMap
+	theme         theme
+	sections      []SectionRenderer
+	actions       *ActionRegistry
+	toasts        *toastStack
+	palette       *Palette
+	search        *SearchOverlay
+	filter        *FilterOverlay
+	confirm       *ConfirmOverlay
+	logs          *ringHandler
+	prevLogger    *slog.Logger
+	env           Environment
+	history       *historyStack // navigation history for H/L back/forward
 	navIndex      int
 	scrollOffsets []int // per-section vertical scroll offset for clipping in renderMain
 	width         int
 	height        int
-	ready      bool
-	compact    bool
-	helpOpen   bool
-	loading    bool
-	refreshing bool
-	quitting   bool
-	err        error
-	lastLoad   time.Time
-	lastLive   time.Time // last time any live event arrived (subscribe/fsnotify/tick)
-	liveCount  int       // number of Record events since TUI start (for live badge)
-	liveFeed   []LiveFeedEntry
-	data       *tracking.WorkspaceDashboardSnapshot
-	spinner    spinner.Model
-	live       liveSource
+	ready         bool
+	compact       bool
+	helpOpen      bool
+	loading       bool
+	refreshing    bool
+	quitting      bool
+	err           error
+	lastLoad      time.Time
+	lastLive      time.Time // last time any live event arrived (subscribe/fsnotify/tick)
+	liveCount     int       // number of Record events since TUI start (for live badge)
+	liveFeed      []LiveFeedEntry
+	data          *tracking.WorkspaceDashboardSnapshot
+	spinner       spinner.Model
+	live          liveSource
 
 	// Budget tracking for threshold alerts
-	dailySpent      int  // tokens spent today
-	budgetAlerted   bool // true if we've shown the budget toast already
+	dailySpent    int  // tokens spent today
+	budgetAlerted bool // true if we've shown the budget toast already
 }
 
 // LiveFeedEntry is one entry in the recent-activity ring buffer rendered
@@ -761,15 +761,15 @@ func (m model) maxOffsetForCurrent() int {
 	}
 	innerW, innerH := m.mainInnerDims()
 	ctx := SectionContext{
-		Theme:   m.theme,
-		Keys:    m.keys,
-		Data:    m.data,
-		Opts:    m.opts,
-		Width:   innerW,
-		Height:  innerH,
-		Compact: m.compact,
-		Focused: true,
-		Logs:    m.logs,
+		Theme:    m.theme,
+		Keys:     m.keys,
+		Data:     m.data,
+		Opts:     m.opts,
+		Width:    innerW,
+		Height:   innerH,
+		Compact:  m.compact,
+		Focused:  true,
+		Logs:     m.logs,
 		Env:      m.env,
 		LiveFeed: m.liveFeed,
 	}
@@ -1009,15 +1009,15 @@ func (m model) renderMain(width, height int) string {
 	// The header spinner already signals "loading", so a dedicated loading
 	// body would just hide the first-run welcome screen behind a spinner.
 	ctx := SectionContext{
-		Theme:   m.theme,
-		Keys:    m.keys,
-		Data:    m.data,
-		Opts:    m.opts,
-		Width:   innerWidth,
-		Height:  innerHeight,
-		Compact: m.compact,
-		Focused: true,
-		Logs:    m.logs,
+		Theme:    m.theme,
+		Keys:     m.keys,
+		Data:     m.data,
+		Opts:     m.opts,
+		Width:    innerWidth,
+		Height:   innerHeight,
+		Compact:  m.compact,
+		Focused:  true,
+		Logs:     m.logs,
 		Env:      m.env,
 		LiveFeed: m.liveFeed,
 	}

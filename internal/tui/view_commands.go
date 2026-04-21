@@ -45,9 +45,9 @@ func newCommandsSection() *commandsSection {
 func (s *commandsSection) Name() string  { return "Commands" }
 func (s *commandsSection) Short() string { return "Command Mix" }
 
-func (s *commandsSection) ExportColumns() []Column { return s.table.Columns() }
-func (s *commandsSection) ExportRows() []Row       { return s.table.VisibleRows() }
-func (s *commandsSection) ExportName() string      { return "commands" }
+func (s *commandsSection) ExportColumns() []Column     { return s.table.Columns() }
+func (s *commandsSection) ExportRows() []Row           { return s.table.VisibleRows() }
+func (s *commandsSection) ExportName() string          { return "commands" }
 func (s *commandsSection) Init(SectionContext) tea.Cmd { return nil }
 
 func (s *commandsSection) KeyBindings() []key.Binding {

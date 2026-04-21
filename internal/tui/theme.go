@@ -67,9 +67,9 @@ var AvailableThemes = []ThemeName{
 // separate from the lipgloss.Style construction below so adding a new
 // theme is a one-struct change, not a copy-and-mutate of newTheme.
 type themePalette struct {
-	bg, panelBg, panelBgAlt, fg, slate, line                 lipgloss.Color
-	green, amber, red, cyan, blue, gold                      lipgloss.Color
-	accents                                                  []lipgloss.Color
+	bg, panelBg, panelBgAlt, fg, slate, line lipgloss.Color
+	green, amber, red, cyan, blue, gold      lipgloss.Color
+	accents                                  []lipgloss.Color
 }
 
 func paletteFor(name ThemeName) themePalette {

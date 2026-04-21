@@ -56,8 +56,8 @@ type SectionContext struct {
 //     (embed bubbles components directly, don't hide them behind a
 //     pointer that would surprise the caller on reassignment).
 //   - KeyBindings returns section-local bindings that are:
-//       1. merged into the ? overlay
-//       2. documented in auto-generated help
+//     1. merged into the ? overlay
+//     2. documented in auto-generated help
 //     Global bindings (nav, refresh, palette, quit) must NOT be
 //     redeclared here.
 type SectionRenderer interface {
@@ -105,11 +105,11 @@ func newPlaceholderSection(title, short string) *placeholderSection {
 	return &placeholderSection{title: title, short: short}
 }
 
-func (s *placeholderSection) Name() string                         { return s.title }
-func (s *placeholderSection) Short() string                        { return s.short }
-func (s *placeholderSection) Init(SectionContext) tea.Cmd          { return nil }
-func (s *placeholderSection) KeyBindings() []key.Binding           { return nil }
-func (s *placeholderSection) IsScrollable() bool                   { return true }
+func (s *placeholderSection) Name() string                { return s.title }
+func (s *placeholderSection) Short() string               { return s.short }
+func (s *placeholderSection) Init(SectionContext) tea.Cmd { return nil }
+func (s *placeholderSection) KeyBindings() []key.Binding  { return nil }
+func (s *placeholderSection) IsScrollable() bool          { return true }
 func (s *placeholderSection) Update(_ SectionContext, _ tea.Msg) (SectionRenderer, tea.Cmd) {
 	return s, nil
 }
