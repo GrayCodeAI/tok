@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Paper: "TokenSkip: Controllable Chain-of-Thought Compression"

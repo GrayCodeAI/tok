@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // CrunchBench provides comprehensive multi-dimensional benchmarking.

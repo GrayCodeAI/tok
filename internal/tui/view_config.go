@@ -9,8 +9,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/hooks"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/hooks"
 )
 
 // configSection surfaces the TUI's view of configuration, hook state,

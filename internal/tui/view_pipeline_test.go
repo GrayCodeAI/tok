@@ -6,7 +6,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 func TestPipelineSectionRendersBarsAndTable(t *testing.T) {

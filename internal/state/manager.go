@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 // Manager consolidates all global state with single mutex

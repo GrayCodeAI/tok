@@ -12,7 +12,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 // CommandContext is now imported from config package to avoid duplication.

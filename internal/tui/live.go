@@ -8,8 +8,8 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // LiveEvent is published by the liveSource whenever the underlying

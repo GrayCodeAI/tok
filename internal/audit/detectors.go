@@ -7,7 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // Detector evaluates audit data and returns findings.

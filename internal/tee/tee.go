@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 const (

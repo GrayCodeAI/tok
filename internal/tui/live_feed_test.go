@@ -7,7 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // TestLiveFeedPanelShowsOnEvent injects a live subscribe event, renders

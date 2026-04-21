@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // rewardsSection surfaces gamification: streak status vs goal, points,

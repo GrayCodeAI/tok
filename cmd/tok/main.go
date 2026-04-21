@@ -20,7 +20,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lakshmanpatel/tok/internal/commands"
+	"github.com/GrayCodeAI/tok/internal/commands"
 )
 
 func main() {

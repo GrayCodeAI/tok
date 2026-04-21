@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 func TestGlobal(t *testing.T) {

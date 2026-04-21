@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // RoleBudgetFilter allocates compression budget by multi-agent role.

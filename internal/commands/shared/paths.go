@@ -3,7 +3,7 @@ package shared
 import (
 	"path/filepath"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 // GetConfigPath returns the effective config path, honoring the shared

@@ -4,7 +4,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // StreamingThreshold is the token count at which streaming mode activates.

@@ -4,7 +4,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // SectionContext is the read-only bundle the root model hands to a
@@ -41,6 +41,8 @@ type SectionContext struct {
 	// have arrived since TUI start. Home renders this as a "Live Feed"
 	// panel; other sections can ignore it.
 	LiveFeed []LiveFeedEntry
+	// DailySpent is today's token usage for budget threshold badges.
+	DailySpent int
 }
 
 // SectionRenderer is implemented by each screen in the TUI. The root

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/hooks"
+	"github.com/GrayCodeAI/tok/internal/hooks"
 )
 
 // HookDiagnosis is the return value of hooks.diagnose — both used as

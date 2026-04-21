@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/simd"
+	"github.com/GrayCodeAI/tok/internal/simd"
 )
 
 // BenchmarkSIMDOperations benchmarks SIMD-optimized functions

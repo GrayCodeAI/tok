@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // shouldEarlyExit returns true if budget is already met (T81).

@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Process runs the six-layer compression pipeline.

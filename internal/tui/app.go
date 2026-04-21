@@ -14,7 +14,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 type snapshotLoadedMsg struct {
@@ -47,10 +47,12 @@ type model struct {
 	toasts     *toastStack
 	palette    *Palette
 	search     *SearchOverlay
+	filter     *FilterOverlay
 	confirm    *ConfirmOverlay
 	logs       *ringHandler
 	prevLogger *slog.Logger
 	env        Environment
+	history    *historyStack // navigation history for H/L back/forward
 	navIndex      int
 	scrollOffsets []int // per-section vertical scroll offset for clipping in renderMain
 	width         int
@@ -69,6 +71,10 @@ type model struct {
 	data       *tracking.WorkspaceDashboardSnapshot
 	spinner    spinner.Model
 	live       liveSource
+
+	// Budget tracking for threshold alerts
+	dailySpent      int  // tokens spent today
+	budgetAlerted   bool // true if we've shown the budget toast already
 }
 
 // LiveFeedEntry is one entry in the recent-activity ring buffer rendered
@@ -126,18 +132,29 @@ func newModelWith(opts Options, loader snapshotLoader, live liveSource) tea.Mode
 	slog.SetDefault(slog.New(ring))
 
 	normalized := opts.normalized()
+
+	// Load keybindings: merge user overrides with defaults
+	km := DefaultKeyMap()
+	if hasKeybindings(normalized.Keybindings) {
+		if loaded, err := LoadKeyMap(normalized.Keybindings); err == nil {
+			km = loaded
+		}
+	}
+
 	m := model{
 		opts:          normalized,
 		loader:        loader,
 		live:          live,
 		ctx:           ctx,
 		cancel:        cancel,
-		keys:          DefaultKeyMap(),
+		keys:          km,
 		theme:         newThemeByName(normalized.Theme),
 		sections:      sections,
 		scrollOffsets: make([]int, len(sections)),
+		history:       newHistoryStack(50),
 		toasts:        &toastStack{},
 		search:        NewSearchOverlay(),
+		filter:        NewFilterOverlay(),
 		confirm:       NewConfirmOverlay(),
 		logs:          ring,
 		prevLogger:    prev,
@@ -286,6 +303,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.err == nil {
 			m.data = msg.snapshot
 			m.lastLoad = msg.loadedAt
+			// Update daily spending and check budget thresholds
+			m.updateDailySpending()
+			cmd := m.checkBudgetAlert()
+			if cmd != nil {
+				cmds = append(cmds, cmd)
+			}
 		}
 	case quitMsg:
 		return m, tea.Quit
@@ -311,6 +334,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		if m.search != nil && m.search.IsOpen() {
 			if cmd := m.search.Update(msg); cmd != nil {
+				cmds = append(cmds, cmd)
+			}
+			return m, tea.Batch(cmds...)
+		}
+		if m.filter != nil && m.filter.IsOpen() {
+			if cmd := m.filter.Update(msg); cmd != nil {
 				cmds = append(cmds, cmd)
 			}
 			return m, tea.Batch(cmds...)
@@ -360,6 +389,13 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// No-op; palette already closed itself before emitting the msg.
 	case searchCloseMsg:
 		// No-op; search overlay already cleared state.
+	case filterOverlayMsg:
+		// Apply filter to current section's table if it has one
+		if m.navIndex < len(m.sections) {
+			if t, ok := m.sections[m.navIndex].(interface{ SetFilter(string) }); ok {
+				t.SetFilter(msg.Query)
+			}
+		}
 	case themeChangedMsg:
 		m.theme = newThemeByName(msg.Name)
 		m.opts.Theme = msg.Name
@@ -378,6 +414,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Section index from a drill-down acts as a jump for Phase 1
 		// where no section yet drills into a detail pane.
 		if msg.Section >= 0 && msg.Section < len(m.sections) {
+			m.history.PushSection(m.navIndex, m.scrollOffsets[m.navIndex])
 			m.navIndex = msg.Section
 		}
 	}
@@ -400,6 +437,70 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, tea.Batch(cmds...)
+}
+
+// updateDailySpending calculates today's token usage from the snapshot.
+func (m *model) updateDailySpending() {
+	if m.data == nil || m.opts.Budget.DailyTokens <= 0 {
+		return
+	}
+
+	// Use the pre-calculated daily filtered tokens from Budgets
+	if m.data.Dashboard != nil {
+		m.dailySpent = int(m.data.Dashboard.Budgets.Daily.FilteredTokens)
+	}
+}
+
+// checkBudgetAlert returns a toast command if budget threshold crossed.
+func (m *model) checkBudgetAlert() tea.Cmd {
+	if m.opts.Budget.DailyTokens <= 0 {
+		return nil
+	}
+
+	warningThreshold := m.opts.Budget.WarningThreshold
+	if warningThreshold <= 0 {
+		warningThreshold = 80
+	}
+
+	pct := float64(m.dailySpent) * 100.0 / float64(m.opts.Budget.DailyTokens)
+
+	// Budget exceeded - critical alert
+	if pct >= 100 && !m.budgetAlerted {
+		m.budgetAlerted = true
+		return requestToastCmd(ToastError,
+			fmt.Sprintf("Budget exceeded: %d%% (%s/%s tokens)",
+				int(pct),
+				formatCompactNumber(m.dailySpent),
+				formatCompactNumber(m.opts.Budget.DailyTokens)))
+	}
+
+	// Warning threshold crossed
+	if pct >= float64(warningThreshold) && !m.budgetAlerted {
+		m.budgetAlerted = true
+		return requestToastCmd(ToastWarning,
+			fmt.Sprintf("Budget warning: %d%% used (%s/%s tokens)",
+				int(pct),
+				formatCompactNumber(m.dailySpent),
+				formatCompactNumber(m.opts.Budget.DailyTokens)))
+	}
+
+	// Reset alert if we're back under warning threshold
+	if pct < float64(warningThreshold)*0.9 {
+		m.budgetAlerted = false
+	}
+
+	return nil
+}
+
+// formatCompactNumber returns compact number display (1.2K, 3.4M, etc).
+func formatCompactNumber(n int) string {
+	if n >= 1_000_000 {
+		return fmt.Sprintf("%.1fM", float64(n)/1_000_000)
+	}
+	if n >= 1_000 {
+		return fmt.Sprintf("%.1fK", float64(n)/1_000)
+	}
+	return fmt.Sprintf("%d", n)
 }
 
 // sectionContext builds the read-only context handed to each section
@@ -429,17 +530,18 @@ func (m model) sectionContext() SectionContext {
 		innerHeight = 8
 	}
 	return SectionContext{
-		Theme:   m.theme,
-		Keys:    m.keys,
-		Data:    m.data,
-		Opts:    m.opts,
-		Width:   innerWidth,
-		Height:  innerHeight,
-		Compact: m.compact,
-		Focused: true,
-		Logs:    m.logs,
-		Env:      m.env,
-		LiveFeed: m.liveFeed,
+		Theme:      m.theme,
+		Keys:       m.keys,
+		Data:       m.data,
+		Opts:       m.opts,
+		Width:      innerWidth,
+		Height:     innerHeight,
+		Compact:    m.compact,
+		Focused:    true,
+		Logs:       m.logs,
+		Env:        m.env,
+		LiveFeed:   m.liveFeed,
+		DailySpent: m.dailySpent,
 	}
 }
 
@@ -486,6 +588,10 @@ func (m model) View() string {
 		modal := m.palette.View(m.theme, m.width)
 		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
 	}
+	if m.filter != nil && m.filter.IsOpen() {
+		modal := m.filter.View(m.theme, m.width)
+		return lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, modal)
+	}
 	return rendered
 }
 
@@ -510,10 +616,30 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 		if m.search != nil {
 			return m, m.search.Open()
 		}
+	case key.Matches(msg, m.keys.Filter):
+		if m.filter != nil {
+			return m, m.filter.Open()
+		}
 	case key.Matches(msg, m.keys.NextSection):
+		m.history.PushSection(m.navIndex, m.scrollOffsets[m.navIndex])
 		m.navIndex = (m.navIndex + 1) % len(m.sections)
 	case key.Matches(msg, m.keys.PrevSection):
+		m.history.PushSection(m.navIndex, m.scrollOffsets[m.navIndex])
 		m.navIndex = (m.navIndex - 1 + len(m.sections)) % len(m.sections)
+	case key.Matches(msg, m.keys.HistoryBack):
+		if m.history.CanGoBack() {
+			if entry, ok := m.history.Back(); ok {
+				m.navIndex = entry.SectionIndex
+				m.scrollOffsets[m.navIndex] = entry.ScrollOffset
+			}
+		}
+	case key.Matches(msg, m.keys.HistoryForward):
+		if m.history.CanGoForward() {
+			if entry, ok := m.history.Forward(); ok {
+				m.navIndex = entry.SectionIndex
+				m.scrollOffsets[m.navIndex] = entry.ScrollOffset
+			}
+		}
 	case key.Matches(msg, m.keys.Refresh):
 		m.loading = m.data == nil
 		m.refreshing = m.data != nil
@@ -526,6 +652,7 @@ func (m model) handleKey(msg tea.KeyMsg) (model, tea.Cmd) {
 		}
 	case key.Matches(msg, m.keys.JumpSection):
 		if idx, ok := sectionShortcutIndex(msg.String(), len(m.sections)); ok {
+			m.history.PushSection(m.navIndex, m.scrollOffsets[m.navIndex])
 			m.navIndex = idx
 		}
 	case key.Matches(msg, m.keys.PageUp):

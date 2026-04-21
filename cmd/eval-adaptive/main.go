@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 type sample struct {

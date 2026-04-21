@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"testing"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 	"github.com/spf13/cobra"
 )
 

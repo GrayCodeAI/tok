@@ -10,7 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // homeSection is the overview cockpit. Stateless for now — all layout
@@ -63,6 +64,9 @@ func renderHomeView(ctx SectionContext) string {
 	// Surfacing it here is the difference between "tok works" and
 	// "tok's numbers look wrong, I don't know why."
 	attributionBanner := renderAttributionBanner(th, quality, width)
+
+	// Budget badge — shows when daily budget threshold is crossed
+	budgetBadge := renderBudgetBadge(th, ctx.Opts.Budget, ctx.DailySpent, width)
 
 	metricColumns := 3
 	if width < 96 {
@@ -158,6 +162,9 @@ func renderHomeView(ctx SectionContext) string {
 	}
 	if attributionBanner != "" {
 		blocks = append(blocks, "", attributionBanner)
+	}
+	if budgetBadge != "" {
+		blocks = append(blocks, "", budgetBadge)
 	}
 	blocks = append(blocks,
 		"",
@@ -276,6 +283,47 @@ func renderAttributionBanner(th theme, q tracking.DashboardDataQuality, width in
 		th.CardMeta.Render("     or reinstall the hook with  tok init -g --force  from a shell."),
 	}
 	border := panelStyle(th, 0).BorderForeground(th.Warning.GetForeground())
+	return setWidth(border, width).Render(strings.Join(lines, "\n"))
+}
+
+// renderBudgetBadge returns a warning/danger banner when daily token
+// budget threshold is crossed. Returns empty string when under budget.
+func renderBudgetBadge(th theme, budget config.BudgetConfig, dailySpent int, width int) string {
+	if budget.DailyTokens <= 0 || dailySpent <= 0 {
+		return ""
+	}
+
+	warningThreshold := budget.WarningThreshold
+	if warningThreshold <= 0 {
+		warningThreshold = 80
+	}
+
+	pct := float64(dailySpent) * 100.0 / float64(budget.DailyTokens)
+
+	// Only show when at warning threshold or above
+	if pct < float64(warningThreshold) {
+		return ""
+	}
+
+	isDanger := pct >= 100
+	style := th.Warning
+	icon := "⚠"
+	label := "Budget warning"
+	if isDanger {
+		style = th.Danger
+		icon = "▲"
+		label = "Budget exceeded"
+	}
+
+	spentStr := formatCompactNumber(dailySpent)
+	budgetStr := formatCompactNumber(int(budget.DailyTokens))
+
+	lines := []string{
+		style.Render(icon + "  " + label),
+		fmt.Sprintf("Daily: %s / %s tokens (%d%%)", spentStr, budgetStr, int(pct)),
+	}
+
+	border := panelStyle(th, 0).BorderForeground(style.GetForeground())
 	return setWidth(border, width).Render(strings.Join(lines, "\n"))
 }
 

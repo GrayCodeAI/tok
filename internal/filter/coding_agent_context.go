@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Paper: "SWE-Pruner: Self-Adaptive Context Pruning for Coding Agents"

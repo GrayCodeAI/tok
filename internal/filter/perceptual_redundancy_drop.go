@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Paper: "Perception Compressor: Training-Free Prompt Compression for Long Context"

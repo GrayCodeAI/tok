@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
 )
 
 var cheatsheetCmd = &cobra.Command{
@@ -67,7 +67,7 @@ MORE
 ----
   Plugin authoring:  docs/plugin-dev.md
   Benchmarks:        evals/bench.sh
-  Source:            https://github.com/lakshmanpatel/tok
+  Source:            https://github.com/GrayCodeAI/tok
 `
 
 func runCheatsheet(cmd *cobra.Command, args []string) error {

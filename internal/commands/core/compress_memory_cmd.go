@@ -10,9 +10,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/core"
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 var (

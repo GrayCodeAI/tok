@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
 )
 
 var gitDiffCmd = &cobra.Command{

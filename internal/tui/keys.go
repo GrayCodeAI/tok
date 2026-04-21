@@ -16,6 +16,10 @@ type KeyMap struct {
 	PrevSection key.Binding
 	JumpSection key.Binding // numeric 1-9; matched separately, documented here
 
+	// History navigation (back/forward across sections)
+	HistoryBack    key.Binding
+	HistoryForward key.Binding
+
 	// Cursor movement inside a section (Phase 1 sections will honor these)
 	Up      key.Binding
 	Down    key.Binding
@@ -36,6 +40,7 @@ type KeyMap struct {
 	// Overlays (Phase 1)
 	Palette key.Binding // ":"
 	Search  key.Binding // "/"
+	Filter  key.Binding // "f"
 	Help    key.Binding // "?"
 
 	// App lifecycle
@@ -54,6 +59,14 @@ func DefaultKeyMap() KeyMap {
 		PrevSection: key.NewBinding(
 			key.WithKeys("shift+tab", "left", "h"),
 			key.WithHelp("shift+tab/←/h", "prev section"),
+		),
+		HistoryBack: key.NewBinding(
+			key.WithKeys("H"),
+			key.WithHelp("H", "history back"),
+		),
+		HistoryForward: key.NewBinding(
+			key.WithKeys("L"),
+			key.WithHelp("L", "history forward"),
 		),
 		JumpSection: key.NewBinding(
 			// 1–9 jump to the matching section. 0 maps to section 10.
@@ -125,6 +138,10 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("/"),
 			key.WithHelp("/", "search"),
 		),
+		Filter: key.NewBinding(
+			key.WithKeys("f"),
+			key.WithHelp("f", "filter rows"),
+		),
 		Help: key.NewBinding(
 			key.WithKeys("?"),
 			key.WithHelp("?", "help"),
@@ -156,7 +173,7 @@ func (k KeyMap) ShortHelp() []key.Binding {
 // FullHelp groups bindings into columns for the "?" overlay.
 func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
-		{k.JumpSection, k.NextSection, k.PrevSection, k.Refresh},
+		{k.JumpSection, k.NextSection, k.PrevSection, k.HistoryBack, k.HistoryForward, k.Refresh},
 		{k.Up, k.Down, k.Top, k.Bottom, k.PageUp, k.PageDn},
 		{k.Enter, k.Back, k.Yank, k.Export},
 		{k.Palette, k.Search, k.Help, k.Esc, k.Quit},

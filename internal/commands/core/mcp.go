@@ -3,13 +3,13 @@ package core
 import (
 	"os"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/filter"
-	"github.com/lakshmanpatel/tok/internal/mcp"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/mcp"
 )
 
 func init() {

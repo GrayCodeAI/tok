@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/filter"
-	"github.com/lakshmanpatel/tok/internal/metrics"
-	"github.com/lakshmanpatel/tok/internal/security"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/metrics"
+	"github.com/GrayCodeAI/tok/internal/security"
 )
 
 // TestPipelineCompression tests the full compression pipeline

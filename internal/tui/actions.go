@@ -9,7 +9,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/lakshmanpatel/tok/internal/hooks"
+	"github.com/GrayCodeAI/tok/internal/hooks"
 )
 
 // Action is a single registered operation the TUI can perform, whether

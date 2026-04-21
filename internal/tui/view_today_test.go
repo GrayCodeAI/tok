@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/session"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/session"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 func fixtureDashCtxWithTrends() SectionContext {

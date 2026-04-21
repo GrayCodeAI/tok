@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 func TestServer_Initialize(t *testing.T) {

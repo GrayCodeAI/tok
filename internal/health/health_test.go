@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/health"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/health"
 )
 
 func TestChecker_Creation(t *testing.T) {

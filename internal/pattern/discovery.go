@@ -18,7 +18,7 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 // PatternDiscoveryEngine automatically discovers patterns in content

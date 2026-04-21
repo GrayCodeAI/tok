@@ -206,6 +206,7 @@ func (t *Table) rebuild() {
 }
 
 func rowMatches(r Row, needle string) bool {
+	// Use simple substring matching for filtering
 	for _, c := range r.Cells {
 		if strings.Contains(strings.ToLower(c), needle) {
 			return true

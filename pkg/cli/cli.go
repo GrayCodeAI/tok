@@ -7,10 +7,10 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/lakshmanpatel/tok/internal/commands"
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/core"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/commands"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // Run executes tok CLI in-process with the provided args.

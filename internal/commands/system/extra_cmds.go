@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
 )
 
 func init() {
@@ -105,8 +105,8 @@ func runSelfUpdate(cmd *cobra.Command, args []string) error {
 	}
 
 	out.Global().Printf("To update tok to %s, run:\n\n", version)
-	out.Global().Printf("  go install github.com/lakshmanpatel/tok/cmd/tok@%s\n\n", version)
+	out.Global().Printf("  go install github.com/GrayCodeAI/tok/cmd/tok@%s\n\n", version)
 	out.Global().Println("Or download the latest release from:")
-	out.Global().Println("  https://github.com/lakshmanpatel/tok/releases")
+	out.Global().Println("  https://github.com/GrayCodeAI/tok/releases")
 	return nil
 }

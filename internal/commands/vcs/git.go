@@ -8,7 +8,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
 )
 
 // Git status codes

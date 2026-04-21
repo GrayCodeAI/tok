@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"github.com/lakshmanpatel/tok/internal/cache"
+	"github.com/GrayCodeAI/tok/internal/cache"
 )
 
 // NewPipelineCoordinator creates a new pipeline coordinator with all configured layers.

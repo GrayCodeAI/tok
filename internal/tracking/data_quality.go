@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	corepricing "github.com/lakshmanpatel/tok/internal/core"
+	corepricing "github.com/GrayCodeAI/tok/internal/core"
 )
 
 // PricingCoverageSummary describes how well tracked model usage maps to known pricing.

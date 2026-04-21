@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Paper: "EHPC" — Fei et al., Tsinghua/Huawei, 2025

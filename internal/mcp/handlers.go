@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/filter"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // FilterParams for tok_filter tool

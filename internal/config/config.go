@@ -21,14 +21,46 @@ const (
 
 // Config represents the main configuration structure.
 type Config struct {
-	Tracking  TrackingConfig  `mapstructure:"tracking"`
-	Filter    FilterConfig    `mapstructure:"filter"`
-	Pipeline  PipelineConfig  `mapstructure:"pipeline"`
-	Hooks     HooksConfig     `mapstructure:"hooks"`
-	Dashboard DashboardConfig `mapstructure:"dashboard"`
-	Alerts    AlertsConfig    `mapstructure:"alerts"`
-	Export    ExportConfig    `mapstructure:"export"`
-	Edit      EditConfig      `mapstructure:"edit"` // Edit batching configuration
+	Tracking   TrackingConfig    `mapstructure:"tracking"`
+	Filter     FilterConfig      `mapstructure:"filter"`
+	Pipeline   PipelineConfig    `mapstructure:"pipeline"`
+	Hooks      HooksConfig       `mapstructure:"hooks"`
+	Dashboard  DashboardConfig   `mapstructure:"dashboard"`
+	Alerts     AlertsConfig      `mapstructure:"alerts"`
+	Budget     BudgetConfig      `mapstructure:"budget"`
+	Export     ExportConfig      `mapstructure:"export"`
+	Edit       EditConfig        `mapstructure:"edit"`       // Edit batching configuration
+	Keybindings KeybindingsConfig `mapstructure:"keybindings"` // TUI keybindings overrides
+}
+
+// KeybindingsConfig allows users to remap TUI keys.
+// Keys use bubbletea's key syntax (e.g., "ctrl+c", "tab", "H").
+type KeybindingsConfig struct {
+	Quit           string `mapstructure:"quit"`            // default: q, ctrl+c
+	NextSection    string `mapstructure:"next_section"`    // default: tab, right, l
+	PrevSection    string `mapstructure:"prev_section"`    // default: shift+tab, left, h
+	HistoryBack    string `mapstructure:"history_back"`    // default: H
+	HistoryForward string `mapstructure:"history_forward"` // default: L
+	Refresh        string `mapstructure:"refresh"`         // default: r
+	Up             string `mapstructure:"up"`              // default: up, k
+	Down           string `mapstructure:"down"`            // default: down, j
+	PageUp         string `mapstructure:"page_up"`         // default: pgup, ctrl+b
+	PageDown       string `mapstructure:"page_down"`       // default: pgdn, ctrl+f
+	Top            string `mapstructure:"top"`             // default: g, home
+	Bottom         string `mapstructure:"bottom"`          // default: G, end
+	Enter          string `mapstructure:"enter"`           // default: enter
+	Back           string `mapstructure:"back"`            // default: backspace
+	Yank           string `mapstructure:"yank"`            // default: y
+	Export         string `mapstructure:"export"`          // default: e
+	Palette        string `mapstructure:"palette"`         // default: :
+	Search         string `mapstructure:"search"`          // default: /
+	Help           string `mapstructure:"help"`            // default: ?
+}
+
+// BudgetConfig controls token budget tracking and alerts.
+type BudgetConfig struct {
+	DailyTokens      int `mapstructure:"daily_tokens"`       // Daily token budget (0 = unlimited)
+	WarningThreshold int `mapstructure:"warning_threshold"`  // Percent for warning (default: 80)
 }
 
 // PipelineConfig controls the 20-layer compression pipeline.

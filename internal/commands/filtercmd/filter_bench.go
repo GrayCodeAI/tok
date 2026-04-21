@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/toml"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/toml"
 )
 
 var benchmarkIterations int

@@ -4,7 +4,7 @@ package output
 import (
 	"fmt"
 
-	tokcli "github.com/lakshmanpatel/tok/pkg/cli"
+	tokcli "github.com/GrayCodeAI/tok/pkg/cli"
 )
 
 // Handler processes output commands.

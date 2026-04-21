@@ -4,9 +4,9 @@ package app
 import (
 	"fmt"
 
-	"github.com/lakshmanpatel/tok/internal/app/input"
-	"github.com/lakshmanpatel/tok/internal/app/output"
-	"github.com/lakshmanpatel/tok/internal/app/unified"
+	"github.com/GrayCodeAI/tok/internal/app/input"
+	"github.com/GrayCodeAI/tok/internal/app/output"
+	"github.com/GrayCodeAI/tok/internal/app/unified"
 )
 
 const version = "0.1.0"

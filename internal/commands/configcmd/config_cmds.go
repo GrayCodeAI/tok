@@ -5,12 +5,12 @@ import (
 	"os"
 	"strings"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 var configShowCmd = &cobra.Command{

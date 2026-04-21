@@ -8,7 +8,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 // Server implements an MCP server

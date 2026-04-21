@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 func TestSaveLoadAndCompareSnapshots(t *testing.T) {

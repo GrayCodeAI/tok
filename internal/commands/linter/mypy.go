@@ -9,15 +9,15 @@ import (
 	"sort"
 	"strings"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/filter"
-	"github.com/lakshmanpatel/tok/internal/simd"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/simd"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 var mypyCmd = &cobra.Command{

@@ -15,10 +15,10 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/core"
-	"github.com/lakshmanpatel/tok/internal/retry"
-	"github.com/lakshmanpatel/tok/internal/utils"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/retry"
+	"github.com/GrayCodeAI/tok/internal/utils"
 )
 
 // HistoryRetentionDays is the number of days to retain tracking data.

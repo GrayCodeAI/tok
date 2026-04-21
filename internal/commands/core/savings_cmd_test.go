@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 func TestGetTierForTokens(t *testing.T) {

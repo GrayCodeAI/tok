@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"os"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 // summarizeCmd generates tiered summaries (L0/L1/L2).

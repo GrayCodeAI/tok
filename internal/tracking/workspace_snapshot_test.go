@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/GrayCodeAI/tok/internal/session"
 )
 
 func TestGetWorkspaceDashboardSnapshot(t *testing.T) {

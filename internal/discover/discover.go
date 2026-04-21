@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lakshmanpatel/tok/internal/telemetry"
+	"github.com/GrayCodeAI/tok/internal/telemetry"
 )
 
 // rewriteCache caches command rewrite results to avoid reprocessing

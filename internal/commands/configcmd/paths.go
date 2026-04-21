@@ -3,8 +3,8 @@ package configcmd
 import (
 	"path/filepath"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 func effectiveConfigPath() string {

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // TestLiveEndToEndWriteToEvent drives the full path: a real Tracker

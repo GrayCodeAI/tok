@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/app/input"
-	"github.com/lakshmanpatel/tok/internal/app/output"
+	"github.com/GrayCodeAI/tok/internal/app/input"
+	"github.com/GrayCodeAI/tok/internal/app/output"
 )
 
 // Handler processes unified commands.

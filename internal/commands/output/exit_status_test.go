@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 	"github.com/spf13/cobra"
 )
 

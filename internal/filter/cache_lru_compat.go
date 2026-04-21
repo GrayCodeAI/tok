@@ -5,7 +5,7 @@ package filter
 import (
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/cache"
+	"github.com/GrayCodeAI/tok/internal/cache"
 )
 
 // LRUCache is an alias to the unified LRU cache implementation.

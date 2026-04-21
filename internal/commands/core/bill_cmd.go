@@ -25,9 +25,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	out "github.com/lakshmanpatel/tok/internal/output"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	out "github.com/GrayCodeAI/tok/internal/output"
 )
 
 var (

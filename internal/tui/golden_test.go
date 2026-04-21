@@ -9,8 +9,8 @@ import (
 	"github.com/charmbracelet/x/exp/golden"
 	"github.com/muesli/termenv"
 
-	"github.com/lakshmanpatel/tok/internal/session"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/session"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // These tests capture the rendered frames after a scripted sequence of

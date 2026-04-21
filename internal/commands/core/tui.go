@@ -7,8 +7,9 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 
-	"github.com/lakshmanpatel/tok/internal/commands/registry"
-	appui "github.com/lakshmanpatel/tok/internal/tui"
+	"github.com/GrayCodeAI/tok/internal/commands/registry"
+	"github.com/GrayCodeAI/tok/internal/config"
+	appui "github.com/GrayCodeAI/tok/internal/tui"
 )
 
 var (
@@ -65,6 +66,12 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("tok tui requires an interactive terminal; stdin/stdout must both be TTYs")
 	}
 
+	// Load keybindings from config
+	cfg, _ := config.Load("")
+	if cfg == nil {
+		cfg = config.Defaults()
+	}
+
 	model := appui.NewModel(appui.Options{
 		RefreshInterval: refreshInterval,
 		Days:            tuiDays,
@@ -74,6 +81,8 @@ func runTUI(cmd *cobra.Command, args []string) error {
 		ModelName:       tuiModel,
 		SessionID:       tuiSession,
 		Theme:           appui.ThemeName(tuiTheme),
+		Keybindings:     cfg.Keybindings,
+		Budget:          cfg.Budget,
 	})
 
 	program := tea.NewProgram(model, tea.WithAltScreen(), tea.WithMouseCellMotion())

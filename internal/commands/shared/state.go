@@ -3,7 +3,7 @@ package shared
 import (
 	"sync"
 
-	"github.com/lakshmanpatel/tok/internal/version"
+	"github.com/GrayCodeAI/tok/internal/version"
 )
 
 // Version is the application version (re-exported from version package).

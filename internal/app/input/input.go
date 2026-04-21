@@ -13,10 +13,10 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/compressor"
-	"github.com/lakshmanpatel/tok/internal/git"
-	"github.com/lakshmanpatel/tok/internal/hooks"
-	"github.com/lakshmanpatel/tok/internal/review"
+	"github.com/GrayCodeAI/tok/internal/compressor"
+	"github.com/GrayCodeAI/tok/internal/git"
+	"github.com/GrayCodeAI/tok/internal/hooks"
+	"github.com/GrayCodeAI/tok/internal/review"
 )
 
 //go:embed agents

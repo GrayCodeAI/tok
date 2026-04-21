@@ -10,7 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/lakshmanpatel/tok/internal/session"
+	"github.com/GrayCodeAI/tok/internal/session"
 )
 
 // sessionsSection lists recent sessions from the workspace snapshot and

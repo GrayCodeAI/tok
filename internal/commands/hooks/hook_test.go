@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/discover"
+	"github.com/GrayCodeAI/tok/internal/discover"
 )
 
 // ── detectCopilotFormat ────────────────────────────────────────

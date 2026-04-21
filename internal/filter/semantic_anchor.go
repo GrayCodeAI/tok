@@ -5,7 +5,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/utils"
+	"github.com/GrayCodeAI/tok/internal/utils"
 )
 
 // SemanticAnchorFilter implements Layer 19: Semantic-Anchor Compression (SAC style).

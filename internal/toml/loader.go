@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 //go:embed builtin/*.toml

@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 func TestRewardsSectionView(t *testing.T) {

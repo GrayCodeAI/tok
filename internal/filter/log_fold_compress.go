@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // LogCrunchFilter folds repetitive INFO/DEBUG logs while preserving warnings/errors and state transitions.

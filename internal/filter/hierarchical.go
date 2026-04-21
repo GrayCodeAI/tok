@@ -6,7 +6,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/lakshmanpatel/tok/internal/simd"
+	"github.com/GrayCodeAI/tok/internal/simd"
 )
 
 // Pre-compiled high importance keywords for fast scoring

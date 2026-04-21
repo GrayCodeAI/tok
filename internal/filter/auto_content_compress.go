@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // ContextCrunchFilter combines Layer 46 (LogCrunch) and Layer 48 (DiffCrunch)

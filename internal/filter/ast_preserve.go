@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 var javaMethodRe = regexp.MustCompile(`^\w+\s+\w+\s*\([^)]*\)\s*\{?$`)

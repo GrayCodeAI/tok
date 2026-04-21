@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
-	"github.com/lakshmanpatel/tok/internal/session"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/commands/shared"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/session"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 type Options struct {
@@ -21,6 +22,8 @@ type Options struct {
 	ModelName       string
 	SessionID       string
 	Theme           ThemeName
+	Keybindings     config.KeybindingsConfig // User keybinding overrides
+	Budget          config.BudgetConfig      // Token budget settings
 }
 
 func (o Options) normalized() Options {

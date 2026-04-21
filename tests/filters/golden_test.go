@@ -26,8 +26,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lakshmanpatel/tok/internal/filter"
-	"github.com/lakshmanpatel/tok/internal/toml"
+	"github.com/GrayCodeAI/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/toml"
 )
 
 var updateGolden = flag.Bool("update", false, "regenerate expected.txt from current filter output")

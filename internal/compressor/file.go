@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/output"
+	"github.com/GrayCodeAI/tok/internal/output"
 )
 
 type FileCompressionResult struct {

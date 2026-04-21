@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/integrity"
-	"github.com/lakshmanpatel/tok/internal/tracking"
-	"github.com/lakshmanpatel/tok/internal/version"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/integrity"
+	"github.com/GrayCodeAI/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/version"
 )
 
 const (

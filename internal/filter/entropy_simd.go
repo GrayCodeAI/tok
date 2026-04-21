@@ -1,6 +1,6 @@
 package filter
 
-import "github.com/lakshmanpatel/tok/internal/simd"
+import "github.com/GrayCodeAI/tok/internal/simd"
 
 // SIMDEntropyFilter uses SIMD-optimized entropy calculation
 type SIMDEntropyFilter struct {

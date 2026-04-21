@@ -16,8 +16,8 @@ import (
 
 	_ "modernc.org/sqlite"
 
-	"github.com/lakshmanpatel/tok/internal/compression"
-	"github.com/lakshmanpatel/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/compression"
+	"github.com/GrayCodeAI/tok/internal/config"
 )
 
 // SessionManager manages sessions and their state

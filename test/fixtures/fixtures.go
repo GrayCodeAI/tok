@@ -128,7 +128,7 @@ var GoTestOutput = `=== RUN   TestPipelineCoordinator
 === RUN   TestPipelineIntegration
 --- PASS: TestPipelineIntegration (0.12s)
 PASS
-ok  	github.com/lakshmanpatel/tok/internal/filter	0.234s`
+ok  	github.com/GrayCodeAI/tok/internal/filter	0.234s`
 
 // LargeLogFile contains a large simulated log file for benchmarking
 var LargeLogFile = generateLargeLog()

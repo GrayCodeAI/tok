@@ -9,8 +9,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/tracking"
 )
 
 // Status represents the health status of a component

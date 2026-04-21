@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/lakshmanpatel/tok/internal/config"
-	"github.com/lakshmanpatel/tok/internal/filter"
+	"github.com/GrayCodeAI/tok/internal/config"
+	"github.com/GrayCodeAI/tok/internal/filter"
 )
 
 // CLIContext provides dependency injection for all CLI operations.

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/contextread"
+	"github.com/GrayCodeAI/tok/internal/contextread"
 )
 
 func (t *Tracker) GetSavings(projectPath string) (*SavingsSummary, error) {

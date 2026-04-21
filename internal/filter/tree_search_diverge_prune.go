@@ -3,7 +3,7 @@ package filter
 import (
 	"strings"
 
-	"github.com/lakshmanpatel/tok/internal/core"
+	"github.com/GrayCodeAI/tok/internal/core"
 )
 
 // Paper: "SSDP / Chopping Trees: Pruning Tree-of-Thought Branches for Efficient LLM Inference"

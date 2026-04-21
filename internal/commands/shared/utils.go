@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	out "github.com/lakshmanpatel/tok/internal/output"
+	out "github.com/GrayCodeAI/tok/internal/output"
 )
 
 // OutputType represents the type of command output.
