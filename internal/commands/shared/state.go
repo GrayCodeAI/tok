@@ -2,7 +2,12 @@ package shared
 
 import (
 	"sync"
+
+	"github.com/lakshmanpatel/tok/internal/version"
 )
+
+// Version is the application version (re-exported from version package).
+var Version = version.Version
 
 // AppState encapsulates all CLI flag state in a single struct.
 // This replaces the global variable pattern and enables:
@@ -77,9 +82,6 @@ type AppState struct {
 	StructCollapse   bool
 	AdaptiveLearning bool // Enable AdaptiveLearning (merged EngramLearner + TieredSummary)
 }
-
-// Version is set at build time.
-var Version string = "dev"
 
 // Global instance for backward compatibility.
 // New code should use explicit AppState instances.

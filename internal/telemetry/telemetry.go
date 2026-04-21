@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lakshmanpatel/tok/internal/commands/shared"
 	"github.com/lakshmanpatel/tok/internal/config"
 	"github.com/lakshmanpatel/tok/internal/integrity"
 	"github.com/lakshmanpatel/tok/internal/tracking"
+	"github.com/lakshmanpatel/tok/internal/version"
 )
 
 const (
@@ -215,7 +215,7 @@ func CollectDaily(tracker interface{}) error {
 	}
 
 	data := &TelemetryData{
-		Version:           shared.Version,
+		Version:           version.Version,
 		OS:                runtime.GOOS,
 		Arch:              runtime.GOARCH,
 		CommandCount:      latestCommandCount(snapshot),
@@ -363,7 +363,7 @@ func TrackFeatureUsage(featureName string, details map[string]interface{}) error
 		"type":      "feature_usage",
 		"feature":   featureName,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
-		"version":   shared.Version,
+		"version":   version.Version,
 		"os":        runtime.GOOS,
 		"arch":      runtime.GOARCH,
 	}
