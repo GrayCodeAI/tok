@@ -158,7 +158,7 @@ items, totalSize := cache.Stats()
 ```go
 // Creating new coordinator every time
 func processCommand(input string) string {
-    coord := filter.NewPipelineCoordinator(config)
+    coord := filter.NewPipelineCoordinator(&config)
     output, _ := coord.Process(input)
     return output
 }

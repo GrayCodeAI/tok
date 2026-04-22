@@ -68,7 +68,7 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 
 func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *PipelineStats) {
 	// Build a minimal fallback config to avoid copying the full 100+ field struct
-	fallbackCfg := PipelineConfig{
+	fallbackCfg := &PipelineConfig{
 		Mode:                ModeMinimal,
 		QueryIntent:         p.config.QueryIntent,
 		Budget:              p.config.Budget,
