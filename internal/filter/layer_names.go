@@ -1,0 +1,36 @@
+package filter
+
+// Layer name constants to eliminate magic-string coupling across the codebase.
+// Keep in sync with buildLayers() in pipeline_init.go.
+const (
+	LayerPolicyRouter        = "0_policy_router"
+	LayerExtractivePrefilter = "0_extractive_prefilter"
+	LayerTOMLFilter          = "0_toml_filter"
+	LayerAdaptiveLearning    = "1_adaptive_learning"
+	LayerEntropy             = "1_entropy"
+	LayerPerplexity          = "2_perplexity"
+	LayerGoalDriven          = "3_goal_driven"
+	LayerASTPreserve         = "4_ast_preserve"
+	LayerContrastive         = "5_contrastive"
+	LayerNgram               = "6_ngram"
+	LayerEvaluator           = "7_evaluator"
+	LayerGist                = "8_gist"
+	LayerHierarchical        = "9_hierarchical"
+	LayerSession             = "10_session"
+	LayerBudget              = "10_budget"
+	LayerBudgetTotal         = "10_total"
+	LayerCompaction          = "11_compaction"
+	LayerAttribution         = "12_attribution"
+	LayerH2O                 = "13_h2o"
+	LayerAttentionSink       = "14_attention_sink"
+	LayerEdgeCase            = "14_edge_case"
+	LayerMetaToken           = "15_meta_token"
+	LayerReasoning           = "15_reasoning"
+	LayerSemanticChunk       = "16_semantic_chunk"
+	LayerAdvanced            = "16_advanced"
+	LayerSemanticCache       = "17_semantic_cache"
+	LayerLazyPruner          = "18_lazy_pruner"
+	LayerSemanticAnchor      = "19_semantic_anchor"
+	LayerAgentMemory         = "20_agent_memory"
+	LayerGuardrailFallback   = "guardrail_fallback"
+)

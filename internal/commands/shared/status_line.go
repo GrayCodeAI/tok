@@ -21,20 +21,6 @@ type StatusEvent struct {
 	Timestamp    time.Time
 }
 
-// SetEnabled enables or disables status line output.
-func (s *StatusLine) SetEnabled(enabled bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.enabled = enabled && isTerminal()
-}
-
-// SetVerbose enables or disables verbose status updates.
-func (s *StatusLine) SetVerbose(verbose bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.verbose = verbose
-}
-
 // StatusLine manages real-time status output to stderr.
 type StatusLine struct {
 	mu        sync.RWMutex
@@ -43,7 +29,8 @@ type StatusLine struct {
 	verbose   bool
 	writer    io.Writer
 	cancel    chan struct{}
-	done      chan struct{}
+	wg        sync.WaitGroup
+	shutdown  sync.Once
 }
 
 var (
@@ -59,26 +46,33 @@ func GetStatusLine() *StatusLine {
 			verbose: false,
 			writer:  os.Stderr,
 			cancel:  make(chan struct{}),
-			done:    make(chan struct{}),
 		}
 	})
 	return globalStatus
 }
 
 // SetEnabled enables or disables the status line.
-func SetStatusEnabled(enabled bool) {
-	sl := GetStatusLine()
-	sl.mu.Lock()
-	defer sl.mu.Unlock()
-	globalStatus.enabled = enabled && isTerminal()
+func (s *StatusLine) SetEnabled(enabled bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.enabled = enabled && isTerminal()
 }
 
 // SetVerbose enables or disables verbose status updates.
-func SetVerbose(verbose bool) {
-	sl := GetStatusLine()
-	sl.mu.Lock()
-	defer sl.mu.Unlock()
-	globalStatus.verbose = verbose
+func (s *StatusLine) SetVerbose(verbose bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.verbose = verbose
+}
+
+// SetStatusEnabled enables or disables the status line (package-level helper).
+func SetStatusEnabled(enabled bool) {
+	GetStatusLine().SetEnabled(enabled)
+}
+
+// SetVerbose enables or disables verbose status updates (package-level helper).
+func SetVerboseStatus(verbose bool) {
+	GetStatusLine().SetVerbose(verbose)
 }
 
 // isTerminal checks if stderr is a terminal.
@@ -89,13 +83,18 @@ func isTerminal() bool {
 
 // Publish sends a status event (non-blocking).
 func (s *StatusLine) Publish(event StatusEvent) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if !s.enabled {
+	s.mu.RLock()
+	enabled := s.enabled
+	s.mu.RUnlock()
+	if !enabled {
 		return
 	}
+
+	s.mu.Lock()
 	s.lastEvent = &event
-	go s.render(event)
+	s.mu.Unlock()
+
+	s.render(event)
 }
 
 // render displays the status line.
@@ -193,15 +192,21 @@ func (s *StatusLine) Done() {
 	fmt.Fprint(s.writer, "\r\x1b[K")
 }
 
-// Shutdown gracefully stops the status line.
+// Shutdown gracefully stops the status line and waits for in-flight renders.
 func (s *StatusLine) Shutdown() {
-	close(s.cancel)
-	<-s.done
-}
-
-// helper function to set state
-func (s *StatusLine) setState(event *StatusEvent) {
-	s.lastEvent = event
+	s.shutdown.Do(func() {
+		close(s.cancel)
+		// Wait for active renders with a timeout to avoid hanging.
+		done := make(chan struct{})
+		go func() {
+			s.wg.Wait()
+			close(done)
+		}()
+		select {
+		case <-done:
+		case <-time.After(100 * time.Millisecond):
+		}
+	})
 }
 
 // GetLastEvent returns the most recent status event.

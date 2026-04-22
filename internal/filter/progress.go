@@ -1,13 +1,30 @@
 package filter
 
-// ProgressCallback is called during pipeline processing to report real-time progress.
-// Set by the commands/shared package to integrate with the status line.
-// Parameters: layerName, inputTokens, outputTokens, progressPercent (0-100)
-var ProgressCallback func(layerName string, inputTokens, outputTokens int, progressPercent float64)
+import "sync"
+
+var (
+	progressCallback   func(layerName string, inputTokens, outputTokens int, progressPercent float64)
+	progressCallbackMu sync.RWMutex
+)
+
+// SetProgressCallback registers the pipeline progress callback.
+// Called by the commands/shared package to integrate with the status line.
+func SetProgressCallback(cb func(layerName string, inputTokens, outputTokens int, progressPercent float64)) {
+	progressCallbackMu.Lock()
+	progressCallback = cb
+	progressCallbackMu.Unlock()
+}
+
+// GetProgressCallback returns the currently registered progress callback.
+func GetProgressCallback() func(layerName string, inputTokens, outputTokens int, progressPercent float64) {
+	progressCallbackMu.RLock()
+	defer progressCallbackMu.RUnlock()
+	return progressCallback
+}
 
 // reportProgress invokes the registered progress callback if set.
 func reportProgress(layer string, inTokens, outTokens int, progress float64) {
-	if ProgressCallback != nil {
-		ProgressCallback(layer, inTokens, outTokens, progress)
+	if cb := GetProgressCallback(); cb != nil {
+		cb(layer, inTokens, outTokens, progress)
 	}
 }

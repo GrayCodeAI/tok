@@ -294,11 +294,36 @@ func (h *FallbackHandler) rotateTeeFiles() {
 		return
 	}
 
-	if len(entries) > 20 {
-		for i := 0; i < len(entries)-20; i++ {
-			if err := os.Remove(filepath.Join(h.teeDir, entries[i].Name())); err != nil {
-				out.Global().Errorf("warning: failed to remove tee file %s: %v\n", entries[i].Name(), err)
+	if len(entries) <= 20 {
+		return
+	}
+
+	// Sort by modification time (oldest first) to delete oldest files
+	type fileInfo struct {
+		name string
+		info os.FileInfo
+	}
+	files := make([]fileInfo, 0, len(entries))
+	for _, entry := range entries {
+		fi, err := entry.Info()
+		if err != nil {
+			continue
+		}
+		files = append(files, fileInfo{name: entry.Name(), info: fi})
+	}
+
+	for i := 0; i < len(files)-1; i++ {
+		for j := i + 1; j < len(files); j++ {
+			if files[i].info.ModTime().After(files[j].info.ModTime()) {
+				files[i], files[j] = files[j], files[i]
 			}
+		}
+	}
+
+	toRemove := len(files) - 20
+	for i := 0; i < toRemove && i < len(files); i++ {
+		if err := os.Remove(filepath.Join(h.teeDir, files[i].name)); err != nil {
+			out.Global().Errorf("warning: failed to remove tee file %s: %v\n", files[i].name, err)
 		}
 	}
 }
@@ -407,9 +432,14 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 		cfg.EnableStructColl = true
 	}
 
-	pipeline := filter.NewPipelineCoordinator(cfg)
-
-	filtered, stats := pipeline.Process(output)
+	// Reuse a pooled coordinator instead of allocating a new one per request.
+	pool := filter.GetDefaultPool()
+	coordinator := pool.Get()
+	coordinator.UpdateConfig(func(c *filter.PipelineConfig) {
+		*c = cfg
+	})
+	filtered, stats := coordinator.Process(output)
+	pool.Put(coordinator)
 
 	if IsVerbose() && stats.TotalSaved > 0 {
 		out.Global().Errorf("[pipeline: %d -> %d tokens, %.1f%% saved]\n",
@@ -450,11 +480,15 @@ func shouldApplyTOMLConfig(rule *toml.TOMLFilterRule) bool {
 // Helper functions (package-level)
 
 func getGlobalTracker() *tracking.Tracker {
+	// Prefer the existing global tracker to avoid opening duplicate connections.
+	if tr := tracking.GetGlobalTracker(); tr != nil {
+		return tr
+	}
 	tracker, err := OpenTracker()
 	if err == nil {
 		return tracker
 	}
-	return tracking.GetGlobalTracker()
+	return nil
 }
 
 func getTeeDir() string {

@@ -22,6 +22,16 @@ import (
 // Depends on core, tracking, tee, and config packages.
 
 // TeeOnFailure writes output to tee file on error.
+const maxTrackingOutput = 65536 // 64KB cap per field to avoid DB bloat
+
+func truncateForTracking(s string) string {
+	if len(s) <= maxTrackingOutput {
+		return s
+	}
+	return s[:maxTrackingOutput] + "\n[truncated]"
+}
+
+// TeeOnFailure writes output to tee file on error.
 func TeeOnFailure(raw string, commandSlug string, err error) string {
 	if err == nil {
 		return ""
@@ -41,11 +51,10 @@ func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 		return nil
 	}
 
-	tracker, err := tracking.NewTracker(cfg.GetDatabasePath())
-	if err != nil {
-		return err
+	tracker := tracking.GetGlobalTracker()
+	if tracker == nil {
+		return fmt.Errorf("tracking not available")
 	}
-	defer tracker.Close()
 
 	originalTokens := tracking.EstimateTokens(originalOutput)
 	filteredTokens := tracking.EstimateTokens(filteredOutput)
@@ -56,8 +65,8 @@ func RecordCommand(command, originalOutput, filteredOutput string, execTimeMs in
 
 	record := &tracking.CommandRecord{
 		Command:        command,
-		OriginalOutput: originalOutput,
-		FilteredOutput: filteredOutput,
+		OriginalOutput: truncateForTracking(originalOutput),
+		FilteredOutput: truncateForTracking(filteredOutput),
 		OriginalTokens: originalTokens,
 		FilteredTokens: filteredTokens,
 		SavedTokens:    savedTokens,
@@ -88,8 +97,8 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 		status.Start(name)
 
 		// Install pipeline progress callback
-		originalCb := filter.ProgressCallback
-		filter.ProgressCallback = func(layer string, inTokens, outTokens int, progress float64) {
+		originalCb := filter.GetProgressCallback()
+		filter.SetProgressCallback(func(layer string, inTokens, outTokens int, progress float64) {
 			ev := StatusEvent{
 				Command:      name,
 				Stage:        "compressing",
@@ -100,8 +109,8 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 				Timestamp:    time.Now(),
 			}
 			status.Publish(ev)
-		}
-		defer func() { filter.ProgressCallback = originalCb }()
+		})
+		defer func() { filter.SetProgressCallback(originalCb) }()
 	}
 
 	raw, filtered, err := fn()
@@ -111,12 +120,6 @@ func ExecuteAndRecord(name string, fn func() (string, string, error)) error {
 	if statusEnabled {
 		status.Done()
 	}
-
-	if err != nil {
-		return err
-	}
-
-	out.Global().Print(filtered)
 
 	if err != nil {
 		return err
@@ -177,19 +180,22 @@ func RunAndCapture(cmd string, args []string) (output string, exitCode int, err 
 		errCh <- e
 	}()
 
+	// Drain pipes BEFORE calling Wait() — per os/exec docs, calling Wait before
+	// reads complete can truncate output because Wait closes the pipes.
+	var pipeErrs []error
+	for i := 0; i < 2; i++ {
+		if pErr := <-errCh; pErr != nil && pErr != io.EOF {
+			pipeErrs = append(pipeErrs, pErr)
+		}
+	}
+
 	waitErr := execCmd.Wait()
 	exitCode = 0
 	if execCmd.ProcessState != nil {
 		exitCode = execCmd.ProcessState.ExitCode()
 	}
-
-	// Check pipe errors (io.EOF is expected and not an error)
-	for i := 0; i < 2; i++ {
-		if pErr := <-errCh; pErr != nil && pErr != io.EOF {
-			if waitErr == nil {
-				waitErr = fmt.Errorf("pipe error: %w", pErr)
-			}
-		}
+	if len(pipeErrs) > 0 && waitErr == nil {
+		waitErr = fmt.Errorf("pipe error: %w", pipeErrs[0])
 	}
 
 	output = stdoutBuf.String() + stderrBuf.String()

@@ -59,6 +59,17 @@ func (s *AppState) GetTokenBudget() int {
 	return 0
 }
 
+// GetLayerProfile returns the compression profile from flag or environment.
+func (s *AppState) GetLayerProfile() string {
+	s.mu.RLock()
+	profile := s.LayerProfile
+	s.mu.RUnlock()
+	if profile != "" {
+		return profile
+	}
+	return os.Getenv("TOK_PROFILE")
+}
+
 // GetLayerPreset returns the layer preset from flag or environment.
 func (s *AppState) GetLayerPreset() string {
 	s.mu.RLock()

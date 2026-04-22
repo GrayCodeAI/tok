@@ -58,10 +58,13 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 		return err.Error(), 126, err
 	}
 
-	// Sanitize all arguments
+	// Sanitize and validate all arguments (not just the binary name)
 	safeArgs := make([]string, len(args))
 	safeArgs[0] = args[0]
 	for i, arg := range args[1:] {
+		if shellMetaCharsPattern.MatchString(arg) {
+			return "", 126, fmt.Errorf("argument %d contains shell meta-characters", i+1)
+		}
 		safeArgs[i+1] = sanitizeArgs(arg)
 	}
 

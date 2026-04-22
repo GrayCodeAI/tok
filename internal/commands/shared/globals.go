@@ -1,6 +1,8 @@
 package shared
 
 import (
+	"fmt"
+	"log"
 	"os"
 	"sync"
 )
@@ -250,44 +252,72 @@ func (s *AppState) syncFromGlobals() {
 
 // IsVerbose returns true if verbose mode is enabled.
 func IsVerbose() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsVerbose()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return Verbose > 0
 }
 
 // IsUltraCompact returns true if ultra-compact mode is enabled.
 func IsUltraCompact() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsUltraCompact()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return UltraCompact
 }
 
 // GetQueryIntent returns the query intent from flag or environment.
 func GetQueryIntent() string {
-	globalState.syncFromGlobals()
-	return globalState.GetQueryIntent()
+	globalsMu.RLock()
+	intent := QueryIntent
+	globalsMu.RUnlock()
+	if intent != "" {
+		return intent
+	}
+	return os.Getenv("TOK_QUERY")
 }
 
 // IsLLMEnabled returns true if LLM compression is enabled.
 func IsLLMEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsLLMEnabled()
+	globalsMu.RLock()
+	enabled := LLMEnabled
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_LLM") == "true"
 }
 
 // GetTokenBudget returns the token budget from flag or environment.
 func GetTokenBudget() int {
-	globalState.syncFromGlobals()
-	return globalState.GetTokenBudget()
+	globalsMu.RLock()
+	budget := TokenBudget
+	globalsMu.RUnlock()
+	if budget > 0 {
+		return budget
+	}
+	envBudget := os.Getenv("TOK_BUDGET")
+	if envBudget != "" {
+		var b int
+		if _, err := fmt.Sscanf(envBudget, "%d", &b); err == nil {
+			return b
+		}
+		log.Printf("warning: invalid TOK_BUDGET value %q, defaulting to unlimited", envBudget)
+	}
+	return 0
 }
 
 // GetLayerPreset returns the layer preset from flag or environment.
 func GetLayerPreset() string {
-	globalState.syncFromGlobals()
-	return globalState.GetLayerPreset()
+	globalsMu.RLock()
+	preset := LayerPreset
+	globalsMu.RUnlock()
+	if preset != "" {
+		return preset
+	}
+	return os.Getenv("TOK_PRESET")
 }
 
 // GetLayerProfile returns the compression profile from flag or environment.
 func GetLayerProfile() string {
-	globalState.syncFromGlobals()
-	profile := globalState.LayerProfile
+	globalsMu.RLock()
+	profile := LayerProfile
+	globalsMu.RUnlock()
 	if profile != "" {
 		return profile
 	}
@@ -296,210 +326,297 @@ func GetLayerProfile() string {
 
 // IsQuietMode returns true if quiet mode is enabled.
 func IsQuietMode() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsQuietMode()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return QuietMode
 }
 
 // IsReversibleEnabled returns true if reversible mode is enabled.
 func IsReversibleEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsReversibleEnabled()
+	globalsMu.RLock()
+	enabled := ReversibleEnabled
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_REVERSIBLE") == "true"
 }
 
 // IsRemoteMode returns true if remote mode is enabled.
 func IsRemoteMode() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsRemoteMode()
+	globalsMu.RLock()
+	enabled := RemoteMode
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_REMOTE") == "true"
 }
 
 // GetCompressionAddr returns the compression service address.
 func GetCompressionAddr() string {
-	globalState.syncFromGlobals()
-	return globalState.GetCompressionAddr()
+	globalsMu.RLock()
+	addr := CompressionAddr
+	globalsMu.RUnlock()
+	if addr != "" {
+		return addr
+	}
+	return os.Getenv("TOK_COMPRESSION_ADDR")
 }
 
 // GetAnalyticsAddr returns the analytics service address.
 func GetAnalyticsAddr() string {
-	globalState.syncFromGlobals()
-	return globalState.GetAnalyticsAddr()
+	globalsMu.RLock()
+	addr := AnalyticsAddr
+	globalsMu.RUnlock()
+	if addr != "" {
+		return addr
+	}
+	return os.Getenv("TOK_ANALYTICS_ADDR")
 }
 
 // GetRemoteTimeout returns the remote operation timeout in seconds.
 func GetRemoteTimeout() int {
-	globalState.syncFromGlobals()
-	return globalState.GetRemoteTimeout()
+	globalsMu.RLock()
+	timeout := RemoteTimeout
+	globalsMu.RUnlock()
+	if timeout > 0 {
+		return timeout
+	}
+	return 30
 }
 
 // GetEnableLayers returns layers to explicitly enable.
 func GetEnableLayers() []string {
-	globalState.syncFromGlobals()
-	return globalState.GetEnableLayers()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return EnableLayers
 }
 
 // GetDisableLayers returns layers to explicitly disable.
 func GetDisableLayers() []string {
-	globalState.syncFromGlobals()
-	return globalState.GetDisableLayers()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return DisableLayers
 }
 
 // IsStreamMode returns true if streaming mode is enabled for large inputs.
 func IsStreamMode() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsStreamMode()
+	globalsMu.RLock()
+	defer globalsMu.RUnlock()
+	return StreamMode
 }
 
 // IsPolicyRouterEnabled returns true if policy router is enabled.
 func IsPolicyRouterEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsPolicyRouterEnabled()
+	globalsMu.RLock()
+	enabled := PolicyRouter
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_POLICY_ROUTER") == "true"
 }
 
 // IsExtractiveEnabled returns true if extractive prefilter is enabled.
 func IsExtractiveEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsExtractiveEnabled()
+	globalsMu.RLock()
+	enabled := Extractive
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_EXTRACTIVE_PREFILTER") == "true"
 }
 
 // GetExtractiveMax returns max lines for extractive prefilter.
 func GetExtractiveMax() int {
-	globalState.syncFromGlobals()
-	return globalState.GetExtractiveMax()
+	globalsMu.RLock()
+	v := ExtractiveMax
+	globalsMu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOK_EXTRACTIVE_MAX_LINES", 400)
 }
 
 // GetExtractiveHead returns preserved head lines for extractive prefilter.
 func GetExtractiveHead() int {
-	globalState.syncFromGlobals()
-	return globalState.GetExtractiveHead()
+	globalsMu.RLock()
+	v := ExtractiveHead
+	globalsMu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOK_EXTRACTIVE_HEAD_LINES", 80)
 }
 
 // GetExtractiveTail returns preserved tail lines for extractive prefilter.
 func GetExtractiveTail() int {
-	globalState.syncFromGlobals()
-	return globalState.GetExtractiveTail()
+	globalsMu.RLock()
+	v := ExtractiveTail
+	globalsMu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOK_EXTRACTIVE_TAIL_LINES", 60)
 }
 
 // GetExtractiveSignal returns signal line budget for extractive prefilter.
 func GetExtractiveSignal() int {
-	globalState.syncFromGlobals()
-	return globalState.GetExtractiveSignal()
+	globalsMu.RLock()
+	v := ExtractiveSignal
+	globalsMu.RUnlock()
+	if v > 0 {
+		return v
+	}
+	return envInt("TOK_EXTRACTIVE_SIGNAL_LINES", 120)
 }
 
 // IsQualityGuardrailEnabled returns true if quality guardrail is enabled.
 func IsQualityGuardrailEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsQualityGuardrailEnabled()
+	globalsMu.RLock()
+	enabled := QualityGuardrail
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_QUALITY_GUARDRAIL") == "true"
 }
 
 // IsDiffAdaptEnabled returns true if DiffAdapt layer is enabled.
 func IsDiffAdaptEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsDiffAdaptEnabled()
+	globalsMu.RLock()
+	enabled := DiffAdapt
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_DIFF_ADAPT") == "true"
 }
 
 // IsEPiCEnabled returns true if EPiC layer is enabled.
 func IsEPiCEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsEPiCEnabled()
+	globalsMu.RLock()
+	enabled := EPiC
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_EPIC") == "true"
 }
 
 // IsSSDPEnabled returns true if SSDP layer is enabled.
 func IsSSDPEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsSSDPEnabled()
+	globalsMu.RLock()
+	enabled := SSDP
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_SSDP") == "true"
 }
 
 // IsAgentOCREnabled returns true if AgentOCR layer is enabled.
 func IsAgentOCREnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsAgentOCREnabled()
+	globalsMu.RLock()
+	enabled := AgentOCR
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_AGENT_OCR") == "true"
 }
 
 // IsS2MADEnabled returns true if S2-MAD layer is enabled.
 func IsS2MADEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsS2MADEnabled()
+	globalsMu.RLock()
+	enabled := S2MAD
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_S2_MAD") == "true"
 }
 
 // IsACONEnabled returns true if ACON layer is enabled.
 func IsACONEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsACONEnabled()
+	globalsMu.RLock()
+	enabled := ACON
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_ACON") == "true"
 }
 
 // IsResearchPackEnabled returns true if research layer pack is enabled.
 func IsResearchPackEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsResearchPackEnabled()
+	globalsMu.RLock()
+	enabled := ResearchPack
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_RESEARCH_PACK") == "true"
 }
 
 // IsLatentCollabEnabled returns true if latent-collab layer is enabled.
 func IsLatentCollabEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsLatentCollabEnabled()
+	globalsMu.RLock()
+	enabled := LatentCollab
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_LATENT_COLLAB") == "true"
 }
 
 // IsGraphCoTEnabled returns true if graph-cot layer is enabled.
 func IsGraphCoTEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsGraphCoTEnabled()
+	globalsMu.RLock()
+	enabled := GraphCoT
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_GRAPH_COT") == "true"
 }
 
 // IsRoleBudgetEnabled returns true if role-budget layer is enabled.
 func IsRoleBudgetEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsRoleBudgetEnabled()
+	globalsMu.RLock()
+	enabled := RoleBudget
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_ROLE_BUDGET") == "true"
 }
 
 // IsSWEAdaptiveEnabled returns true if swe-adaptive-loop layer is enabled.
 func IsSWEAdaptiveEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsSWEAdaptiveEnabled()
+	globalsMu.RLock()
+	enabled := SWEAdaptive
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_SWE_ADAPTIVE") == "true"
 }
 
 // IsAgentOCRHistoryEnabled returns true if agent-ocr-history layer is enabled.
 func IsAgentOCRHistoryEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsAgentOCRHistoryEnabled()
+	globalsMu.RLock()
+	enabled := AgentOCRHistory
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_AGENT_OCR_HISTORY") == "true"
 }
 
 // IsPlanBudgetEnabled returns true if plan-budget layer is enabled.
 func IsPlanBudgetEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsPlanBudgetEnabled()
+	globalsMu.RLock()
+	enabled := PlanBudget
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_PLAN_BUDGET") == "true"
 }
 
 // IsLightMemEnabled returns true if lightmem layer is enabled.
 func IsLightMemEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsLightMemEnabled()
+	globalsMu.RLock()
+	enabled := LightMem
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_LIGHTMEM") == "true"
 }
 
 // IsPathShortenEnabled returns true if path-shorten layer is enabled.
 func IsPathShortenEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsPathShortenEnabled()
+	globalsMu.RLock()
+	enabled := PathShorten
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_PATH_SHORTEN") == "true"
 }
 
 // IsJSONSamplerEnabled returns true if json-sampler layer is enabled.
 func IsJSONSamplerEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsJSONSamplerEnabled()
+	globalsMu.RLock()
+	enabled := JSONSampler
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_JSON_SAMPLER") == "true"
 }
 
 // IsContextCrunchEnabled returns true if context-crunch layer is enabled.
 func IsContextCrunchEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsContextCrunchEnabled()
+	globalsMu.RLock()
+	enabled := ContextCrunch
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_CONTEXT_CRUNCH") == "true"
 }
 
 // IsSearchCrunchEnabled returns true if search-crunch layer is enabled.
 func IsSearchCrunchEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsSearchCrunchEnabled()
+	globalsMu.RLock()
+	enabled := SearchCrunch
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_SEARCH_CRUNCH") == "true"
 }
 
 // IsStructCollapseEnabled returns true if structural-collapse layer is enabled.
 func IsStructCollapseEnabled() bool {
-	globalState.syncFromGlobals()
-	return globalState.IsStructCollapseEnabled()
+	globalsMu.RLock()
+	enabled := StructCollapse
+	globalsMu.RUnlock()
+	return enabled || os.Getenv("TOK_STRUCTURAL_COLLAPSE") == "true"
 }

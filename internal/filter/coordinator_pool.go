@@ -36,7 +36,7 @@ func (p *CoordinatorPool) Put(coord *PipelineCoordinator) {
 
 // reset clears coordinator state for reuse
 func (p *PipelineCoordinator) reset() {
-	// Clear caches but keep filter instances
+	p.processedLayers = 0
 	if p.layerCache != nil {
 		p.layerCache.Clear()
 	}
@@ -59,10 +59,12 @@ func GetDefaultPool() *CoordinatorPool {
 	return defaultPool
 }
 
-// ProcessWithPool processes input using pooled coordinator
-func ProcessWithPool(input string, config PipelineConfig) (string, *PipelineStats) {
-	pool := NewCoordinatorPool(config)
+// ProcessWithPool processes input using a caller-provided pool.
+// Use NewCoordinatorPool to create a pool for a fixed config,
+// or call GetDefaultPool for the global default pool.
+func ProcessWithPool(input string, pool *CoordinatorPool) (string, *PipelineStats) {
 	coord := pool.Get()
-	defer pool.Put(coord)
-	return coord.Process(input)
+	output, stats := coord.Process(input)
+	pool.Put(coord)
+	return output, stats
 }

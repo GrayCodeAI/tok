@@ -57,8 +57,8 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 		gr := p.qualityGuardrail.Validate(input, output)
 		if !gr.Passed {
 			safeOutput, safeStats := p.runGuardrailFallback(input)
-			safeStats.LayerStats["guardrail_fallback"] = LayerStat{TokensSaved: 0}
-			safeStats.LayerStats["guardrail_reason_"+gr.Reason] = LayerStat{TokensSaved: 0}
+			safeStats.AddLayerStatSafe(LayerGuardrailFallback, LayerStat{TokensSaved: 0})
+			safeStats.AddLayerStatSafe("guardrail_reason_"+gr.Reason, LayerStat{TokensSaved: 0})
 			return safeOutput, safeStats
 		}
 	}
@@ -67,10 +67,28 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 }
 
 func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *PipelineStats) {
-	fallbackCfg := p.config
-	fallbackCfg.Mode = ModeMinimal
-	fallbackCfg.EnableExtractivePrefilter = false
-	fallbackCfg.EnableQualityGuardrail = false
+	// Build a minimal fallback config to avoid copying the full 100+ field struct
+	fallbackCfg := PipelineConfig{
+		Mode:                ModeMinimal,
+		QueryIntent:         p.config.QueryIntent,
+		Budget:              p.config.Budget,
+		LLMEnabled:          p.config.LLMEnabled,
+		SessionTracking:     p.config.SessionTracking,
+		NgramEnabled:        p.config.NgramEnabled,
+		MultiFileEnabled:    p.config.MultiFileEnabled,
+		EnableEntropy:       p.config.EnableEntropy,
+		EnablePerplexity:    p.config.EnablePerplexity,
+		EnableAST:           p.config.EnableAST,
+		EnableGist:          p.config.EnableGist,
+		EnableHierarchical:  p.config.EnableHierarchical,
+		EnableCompaction:    p.config.EnableCompaction,
+		EnableAttribution:   p.config.EnableAttribution,
+		EnableH2O:           p.config.EnableH2O,
+		EnableAttentionSink: p.config.EnableAttentionSink,
+		EnableTOMLFilter:    p.config.EnableTOMLFilter,
+		CacheEnabled:        p.config.CacheEnabled,
+		CacheMaxSize:        p.config.CacheMaxSize,
+	}
 	fallback := NewPipelineCoordinator(fallbackCfg)
 	return fallback.Process(input)
 }

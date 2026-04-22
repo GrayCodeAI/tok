@@ -148,9 +148,25 @@ func CloseGlobalTracker() error {
 
 // DatabasePath returns the effective tracking database path using config file
 // resolution when available, with environment/default fallback.
+var (
+	cachedConfig     *config.Config
+	cachedConfigOnce sync.Once
+)
+
+func loadConfigCached() *config.Config {
+	cachedConfigOnce.Do(func() {
+		var err error
+		cachedConfig, err = config.Load("")
+		if err != nil {
+			cachedConfig = config.Defaults()
+		}
+	})
+	return cachedConfig
+}
+
 func DatabasePath() string {
-	cfg, err := config.Load("")
-	if err == nil && cfg != nil {
+	cfg := loadConfigCached()
+	if cfg != nil {
 		return cfg.GetDatabasePath()
 	}
 	return config.DatabasePath()

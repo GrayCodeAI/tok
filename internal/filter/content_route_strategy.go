@@ -12,15 +12,14 @@ func (p *PipelineCoordinator) applyAdaptiveRouting(input string, stats *Pipeline
 		if p.runtimeQueryIntent == "" {
 			p.runtimeQueryIntent = inferQueryIntentFromContent(output)
 		}
-		stats.LayerStats["0_policy_router"] = LayerStat{TokensSaved: 0}
+		stats.AddLayerStatSafe(LayerPolicyRouter, LayerStat{TokensSaved: 0})
 	}
 
 	if p.config.EnableExtractivePrefilter {
 		filtered, saved := p.applyExtractivePrefilter(output)
 		if saved > 0 {
 			output = filtered
-			stats.LayerStats["0_extractive_prefilter"] = LayerStat{TokensSaved: saved}
-			stats.runningSaved += saved
+			stats.AddLayerStatSafe(LayerExtractivePrefilter, LayerStat{TokensSaved: saved})
 		}
 	}
 	return output

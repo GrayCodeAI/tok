@@ -275,8 +275,8 @@ func (m *PipelineManager) processStreaming(input string, mode Mode, ctx config.C
 		}
 	}
 
-	// Combine chunks
-	result.Output = strings.Join(processedChunks, "\n\n--- Chunk Boundary ---\n\n")
+	// Combine chunks with minimal delimiter to avoid token inflation
+	result.Output = strings.Join(processedChunks, "\n---\n")
 	result.FinalTokens = EstimateTokens(result.Output)
 
 	// Safely calculate saved tokens with overflow protection
@@ -422,9 +422,21 @@ func (m *PipelineManager) saveTee(input string, ctx config.CommandContext, reaso
 	filename := fmt.Sprintf("tok-tee-%s-%s-%s.txt", timestamp, safeCommand, reason)
 	path := filepath.Join(m.teeDir, filename)
 
-	// Validate the resolved path is within tee directory
+	// Validate the resolved path is within tee directory (resolve symlinks)
 	absPath, err := filepath.Abs(path)
-	if err != nil || !strings.HasPrefix(absPath, m.teeDir) {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "warning: invalid tee path, skipping\n")
+		return ""
+	}
+	safeDir, err := filepath.EvalSymlinks(m.teeDir)
+	if err != nil {
+		safeDir = m.teeDir
+	}
+	safePath, err := filepath.EvalSymlinks(absPath)
+	if err != nil {
+		safePath = absPath
+	}
+	if !strings.HasPrefix(safePath, safeDir+string(filepath.Separator)) {
 		fmt.Fprintf(os.Stderr, "warning: invalid tee path, skipping\n")
 		return ""
 	}

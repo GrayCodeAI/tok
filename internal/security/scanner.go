@@ -5,6 +5,7 @@ package security
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 	"sync"
 	"unicode/utf8"
@@ -215,11 +216,15 @@ func RedactPII(content string) string {
 		return content
 	}
 
+	// Sort findings by position so overlapping redactions are deterministic
+	sort.Slice(findings, func(i, j int) bool {
+		return findings[i].Position < findings[j].Position
+	})
+
 	// Build result by iterating through content and replacing matches
 	var result strings.Builder
 	lastEnd := 0
 
-	// Sort findings by position
 	for i := 0; i < len(findings); i++ {
 		f := findings[i]
 		// Skip if this finding overlaps with previous
@@ -320,33 +325,42 @@ func SanitizeForLogging(content string) string {
 	return content
 }
 
+var (
+	suspiciousPatternsOnce sync.Once
+	suspiciousPatterns     []*regexp.Regexp
+)
+
+func initSuspiciousPatterns() {
+	suspiciousPatternsOnce.Do(func() {
+		suspiciousPatterns = []*regexp.Regexp{
+			// Shell injection
+			regexp.MustCompile(`[;&|]\s*(rm|mv|cp|chmod|chown|sudo|su)\s`),
+			regexp.MustCompile(`\$\(.*\)`),
+			regexp.MustCompile("`.*`"),
+			// SQL injection
+			regexp.MustCompile(`(?i)(union|select|insert|update|delete|drop|create|alter)\s+.*--`),
+			regexp.MustCompile(`(?i)union\s+select|select\s+\*\s+from`),
+			// Path traversal
+			regexp.MustCompile(`\.\./.*\.\./`),
+			regexp.MustCompile(`\.\./.*etc/passwd`),
+			// Null byte injection
+			regexp.MustCompile(`\x00`),
+			// XSS
+			regexp.MustCompile(`(?i)<script[^>]*>[\s\S]*?</script>`),
+			regexp.MustCompile(`(?i)javascript\s*:`),
+			regexp.MustCompile(`(?i)on\w+\s*=\s*["']?[^"'>]+`),
+		}
+	})
+}
+
 // IsSuspiciousContent checks for potentially malicious content patterns
 func IsSuspiciousContent(content string) bool {
-	suspiciousPatterns := []*regexp.Regexp{
-		// Shell injection
-		regexp.MustCompile(`[;&|]\s*(rm|mv|cp|chmod|chown|sudo|su)\s`),
-		regexp.MustCompile(`\$\(.*\)`),
-		regexp.MustCompile("`.*`"),
-		// SQL injection
-		regexp.MustCompile(`(?i)(union|select|insert|update|delete|drop|create|alter)\s+.*--`),
-		regexp.MustCompile(`(?i)union\s+select|select\s+\*\s+from`),
-		// Path traversal
-		regexp.MustCompile(`\.\./.*\.\./`),
-		regexp.MustCompile(`\.\./.*etc/passwd`),
-		// Null byte injection
-		regexp.MustCompile(`\x00`),
-		// XSS
-		regexp.MustCompile(`(?i)<script[^>]*>[\s\S]*?</script>`),
-		regexp.MustCompile(`(?i)javascript\s*:`),
-		regexp.MustCompile(`(?i)on\w+\s*=\s*["']?[^"'>]+`),
-	}
-
+	initSuspiciousPatterns()
 	for _, pattern := range suspiciousPatterns {
 		if pattern.MatchString(content) {
 			return true
 		}
 	}
-
 	return false
 }
 

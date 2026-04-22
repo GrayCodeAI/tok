@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/GrayCodeAI/tok/internal/config"
@@ -206,6 +207,22 @@ func formatHint(path string) string {
 }
 
 // getTeeModeFromEnv returns the tee mode from environment variable or empty string if not set.
+var (
+	cachedTeeConfig     *config.Config
+	cachedTeeConfigOnce sync.Once
+)
+
+func loadTeeConfigCached() *config.Config {
+	cachedTeeConfigOnce.Do(func() {
+		var err error
+		cachedTeeConfig, err = config.Load("")
+		if err != nil {
+			cachedTeeConfig = config.Defaults()
+		}
+	})
+	return cachedTeeConfig
+}
+
 func getTeeModeFromEnv() TeeMode {
 	mode := os.Getenv("TOK_TEE_MODE")
 	switch TeeMode(mode) {
@@ -231,11 +248,8 @@ func TeeRaw(raw string, commandSlug string, exitCode int) string {
 		return ""
 	}
 
-	// Load config
-	cfg, err := config.Load("")
-	if err != nil {
-		cfg = &config.Config{}
-	}
+	// Load config (cached)
+	cfg := loadTeeConfigCached()
 
 	teeDir, err := getTeeDir(cfg)
 	if err != nil {
@@ -296,11 +310,8 @@ func ForceTeeHint(raw string, commandSlug string) string {
 		return ""
 	}
 
-	// Load config
-	cfg, err := config.Load("")
-	if err != nil {
-		cfg = &config.Config{}
-	}
+	// Load config (cached)
+	cfg := loadTeeConfigCached()
 
 	// Get tee directory
 	teeDir, err := getTeeDir(cfg)
@@ -326,10 +337,7 @@ func ForceTeeHint(raw string, commandSlug string) string {
 // GetTeeDir returns the current tee directory path.
 // Useful for displaying to users or for testing.
 func GetTeeDir() (string, error) {
-	cfg, err := config.Load("")
-	if err != nil {
-		cfg = &config.Config{}
-	}
+	cfg := loadTeeConfigCached()
 	return getTeeDir(cfg)
 }
 

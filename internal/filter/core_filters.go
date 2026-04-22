@@ -267,9 +267,7 @@ func (s *SemanticFilters) Apply(input string, mode Mode, stats *PipelineStats) s
 func applyFilter(f Filter, input string, mode Mode, stats *PipelineStats) string {
 	output, saved := f.Apply(input, mode)
 	if stats != nil {
-		stats.LayerStats[f.Name()] = LayerStat{
-			TokensSaved: saved,
-		}
+		stats.AddLayerStatSafe(f.Name(), LayerStat{TokensSaved: saved})
 	}
 	return output
 }

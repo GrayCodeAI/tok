@@ -187,11 +187,10 @@ func (p *PipelineCoordinator) processLayer(layer filterLayer, input string, stat
 	// Check layer cache first (Phase 2 optimization)
 	if p.layerCache != nil {
 		if cached, hit := p.layerCache.Get(layer.name, input, p.config.Mode); hit {
-			stats.LayerStats[layer.name] = LayerStat{
+			stats.AddLayerStatSafe(layer.name, LayerStat{
 				TokensSaved: cached.TokensSaved,
 				Duration:    0, // Cache hit = no processing time
-			}
-			stats.runningSaved += cached.TokensSaved
+			})
 			return cached.Output
 		}
 	}
@@ -224,17 +223,16 @@ func (p *PipelineCoordinator) processBudgetLayer(input string, stats *PipelineSt
 		filtered, saved := p.sessionTracker.Apply(output, p.config.Mode)
 		output = filtered
 		totalSaved += saved
-		stats.LayerStats["10_session"] = LayerStat{TokensSaved: saved}
+		stats.AddLayerStatSafe(LayerSession, LayerStat{TokensSaved: saved})
 	}
 
 	if p.budgetEnforcer != nil {
 		filtered, saved := p.budgetEnforcer.Apply(output, p.config.Mode)
 		output = filtered
 		totalSaved += saved
-		stats.LayerStats["10_budget"] = LayerStat{TokensSaved: saved}
+		stats.AddLayerStatSafe(LayerBudget, LayerStat{TokensSaved: saved})
 	}
 
-	stats.LayerStats["10_total"] = LayerStat{TokensSaved: totalSaved}
-	stats.runningSaved += totalSaved
+	stats.AddLayerStatSafe(LayerBudgetTotal, LayerStat{TokensSaved: totalSaved})
 	return output
 }

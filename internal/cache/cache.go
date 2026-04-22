@@ -18,28 +18,60 @@ func GetGlobalCache() *FingerprintCache {
 	return globalCache
 }
 
+const (
+	defaultFingerprintCacheMaxSize = 10000
+	defaultFingerprintCacheTTL     = 10 * time.Minute
+)
+
+type fingerprintEntry struct {
+	value     string
+	expiresAt time.Time
+}
+
 type FingerprintCache struct {
-	mu    sync.RWMutex
-	cache map[string]string
+	mu      sync.RWMutex
+	cache   map[string]fingerprintEntry
+	maxSize int
+	ttl     time.Duration
 }
 
 func NewFingerprintCache() *FingerprintCache {
 	return &FingerprintCache{
-		cache: make(map[string]string),
+		cache:   make(map[string]fingerprintEntry),
+		maxSize: defaultFingerprintCacheMaxSize,
+		ttl:     defaultFingerprintCacheTTL,
 	}
 }
 
 func (c *FingerprintCache) Get(key string) (string, bool) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
-	val, ok := c.cache[key]
-	return val, ok
+	entry, ok := c.cache[key]
+	if !ok {
+		return "", false
+	}
+	if time.Now().After(entry.expiresAt) {
+		return "", false
+	}
+	return entry.value, true
 }
 
 func (c *FingerprintCache) Set(key, value string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	c.cache[key] = value
+
+	// Evict oldest entries if at capacity (simple random eviction for speed)
+	if len(c.cache) >= c.maxSize {
+		for k := range c.cache {
+			delete(c.cache, k)
+			break
+		}
+	}
+
+	c.cache[key] = fingerprintEntry{
+		value:     value,
+		expiresAt: time.Now().Add(c.ttl),
+	}
 }
 
 // Cache interface defines a generic cache

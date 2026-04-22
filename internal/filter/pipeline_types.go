@@ -123,14 +123,15 @@ type PipelineCoordinator struct {
 
 // reportProgress emits a progress event if a callback is registered.
 func (p *PipelineCoordinator) reportProgress(layer string, originalTokens, currentTokens int) {
-	if ProgressCallback != nil {
+	cb := GetProgressCallback()
+	if cb != nil {
 		// Compute progress percentage based on layers processed
 		total := len(p.layers)
 		if total > 0 {
 			progress := float64(p.processedLayers) / float64(total) * 100
-			ProgressCallback(layer, originalTokens, currentTokens, progress)
+			cb(layer, originalTokens, currentTokens, progress)
 		} else {
-			ProgressCallback(layer, originalTokens, currentTokens, 0)
+			cb(layer, originalTokens, currentTokens, 0)
 		}
 	}
 }
@@ -512,6 +513,11 @@ type PipelineStats struct {
 type LayerStat struct {
 	TokensSaved int
 	Duration    int64
+}
+
+// UpdateConfig allows pooled coordinators to be reconfigured before reuse.
+func (p *PipelineCoordinator) UpdateConfig(fn func(*PipelineConfig)) {
+	fn(&p.config)
 }
 
 // RunningSavedSafe returns the running saved count safely.
