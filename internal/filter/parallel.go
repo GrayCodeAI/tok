@@ -44,14 +44,8 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 
 	wg.Wait()
 
-	// Combine results: use output from last filter
-	// (This is a simplified combination - real implementation would be smarter)
-	totalSaved := 0
-	for _, r := range results {
-		totalSaved += r.Saved
-	}
-
-	// Return best result (most savings)
+	// Return best result (most savings) and its corresponding savings.
+	// Filters run independently on the same input; we pick the best output.
 	bestResult := results[0]
 	for _, r := range results {
 		if r.Saved > bestResult.Saved {
@@ -59,7 +53,7 @@ func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (str
 		}
 	}
 
-	return bestResult.Output, totalSaved
+	return bestResult.Output, bestResult.Saved
 }
 
 // ExecuteFiltersSequential runs filters sequentially
@@ -292,7 +286,7 @@ type ParallelCompressor struct {
 func NewParallelCompressor(config PipelineConfig) *ParallelCompressor {
 	return &ParallelCompressor{
 		processor: NewParallelProcessor(),
-		engine:    NewPipelineCoordinator(config),
+		engine:    NewPipelineCoordinator(&config),
 	}
 }
 

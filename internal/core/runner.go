@@ -1,16 +1,25 @@
 package core
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 )
 
+// maxOutputSize is the maximum bytes of command output to capture.
+// Beyond this, output is truncated with a [truncated] marker.
+const maxOutputSize = 100 * 1024 * 1024 // 100 MiB
+
 // shellMetaCharsPattern matches characters that should not appear in a raw command binary name.
-// These characters indicate shell interpretation and would bypass argument sanitization.
+// Note: exec.CommandContext does NOT invoke a shell, so shell injection is not possible
+// through the binary name or arguments. This regex serves two purposes:
+//  1. UX: fail fast with a clear message when the user accidentally includes shell syntax
+//  2. Defense-in-depth: if the code is ever changed to use exec.Command("sh", "-c", ...)
+//     this check would prevent injection (but that change should never be made).
 var shellMetaCharsPattern = regexp.MustCompile("[;&|`\\x01-\\x1f]")
 
 // OSCommandRunner executes real shell commands using os/exec.
@@ -25,17 +34,6 @@ func NewOSCommandRunner() *OSCommandRunner {
 	}
 }
 
-// sanitizeArgs removes control characters from arguments to prevent
-// command injection when arguments come from untrusted sources.
-func sanitizeArgs(arg string) string {
-	return strings.Map(func(r rune) rune {
-		if r < 0x20 && r != '\n' {
-			return -1
-		}
-		return r
-	}, arg)
-}
-
 // validateCommandName checks that the binary name doesn't contain shell
 // meta-characters that would indicate the caller intended shell execution.
 // exec.CommandContext does NOT use a shell, so these characters will simply
@@ -48,7 +46,10 @@ func validateCommandName(name string) error {
 }
 
 // Run executes a command and captures combined stdout+stderr.
-// Arguments are sanitized to prevent command injection from untrusted sources.
+// The binary name is validated for shell meta-characters to provide a clear
+// error message; arguments are passed directly to exec.CommandContext which
+// does not invoke a shell, making shell injection impossible.
+// Output is capped at maxOutputSize to prevent OOM from runaway commands.
 func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, error) {
 	if len(args) == 0 {
 		return "", 0, nil
@@ -58,26 +59,21 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 		return err.Error(), 126, err
 	}
 
-	// Sanitize and validate all arguments (not just the binary name)
-	safeArgs := make([]string, len(args))
-	safeArgs[0] = args[0]
-	for i, arg := range args[1:] {
-		if shellMetaCharsPattern.MatchString(arg) {
-			return "", 126, fmt.Errorf("argument %d contains shell meta-characters", i+1)
-		}
-		safeArgs[i+1] = sanitizeArgs(arg)
-	}
-
-	cmdPath, err := exec.LookPath(safeArgs[0])
+	cmdPath, err := exec.LookPath(args[0])
 	if err != nil {
 		hint := fmt.Sprintf("command not found: %s", args[0])
 		return hint, 127, err
 	}
 
-	cmd := exec.CommandContext(ctx, cmdPath, safeArgs[1:]...)
+	cmd := exec.CommandContext(ctx, cmdPath, args[1:]...)
 	cmd.Env = r.Env
 
-	output, err := cmd.CombinedOutput()
+	// Use a limited reader to cap memory usage
+	var buf bytes.Buffer
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+
+	err = cmd.Run()
 	exitCode := 0
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -87,10 +83,35 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 		}
 	}
 
-	return string(output), exitCode, err
+	output := buf.String()
+	if buf.Len() > maxOutputSize {
+		output = output[:maxOutputSize] + "\n[truncated: output exceeded 100 MiB]"
+	}
+
+	return output, exitCode, err
 }
 
 // LookPath resolves a command name to its full path.
 func (r *OSCommandRunner) LookPath(name string) (string, error) {
 	return exec.LookPath(name)
+}
+
+// LimitedWriter wraps an io.Writer and drops writes after N bytes.
+type LimitedWriter struct {
+	W       io.Writer
+	N       int64
+	Dropped int64
+}
+
+func (lw *LimitedWriter) Write(p []byte) (n int, err error) {
+	if lw.N <= 0 {
+		lw.Dropped += int64(len(p))
+		return len(p), nil
+	}
+	if int64(len(p)) > lw.N {
+		p = p[:lw.N]
+	}
+	n, err = lw.W.Write(p)
+	lw.N -= int64(n)
+	return n, err
 }

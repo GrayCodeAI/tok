@@ -52,7 +52,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	output := input
 
 	if p.entropyFilter != nil && p.config.EnableEntropy && !p.shouldSkipEntropy(output) {
-		if l, ok := p.safeLayer(0); ok {
+		if l, ok := p.safeLayer(LayerIdxEntropy); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -61,7 +61,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	}
 
 	if p.perplexityFilter != nil && p.config.EnablePerplexity && !p.shouldSkipPerplexity(output) {
-		if l, ok := p.safeLayer(1); ok {
+		if l, ok := p.safeLayer(LayerIdxPerplexity); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -70,7 +70,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	}
 
 	if p.goalDrivenFilter != nil && p.config.EnableGoalDriven && !p.shouldSkipQueryDependent() {
-		if l, ok := p.safeLayer(2); ok {
+		if l, ok := p.safeLayer(LayerIdxGoalDriven); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -79,7 +79,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	}
 
 	if p.astPreserveFilter != nil && p.config.EnableAST {
-		if l, ok := p.safeLayer(3); ok {
+		if l, ok := p.safeLayer(LayerIdxASTPreserve); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -88,7 +88,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	}
 
 	if p.contrastiveFilter != nil && p.config.EnableContrastive && !p.shouldSkipQueryDependent() {
-		if l, ok := p.safeLayer(4); ok {
+		if l, ok := p.safeLayer(LayerIdxContrastive); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -97,7 +97,7 @@ func (p *PipelineCoordinator) runLayer2Structural(input string, stats *PipelineS
 	}
 
 	if p.ngramAbbreviator != nil && !p.shouldSkipNgram(output) {
-		if l, ok := p.safeLayer(5); ok {
+		if l, ok := p.safeLayer(LayerIdxNgram); ok {
 			output = p.processLayer(l, output, stats)
 		}
 	}
@@ -112,7 +112,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	output := input
 
 	if p.evaluatorHeadsFilter != nil && p.config.EnableEvaluator {
-		if l, ok := p.safeLayer(6); ok {
+		if l, ok := p.safeLayer(LayerIdxEvaluator); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -121,7 +121,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.gistFilter != nil && p.config.EnableGist {
-		if l, ok := p.safeLayer(7); ok {
+		if l, ok := p.safeLayer(LayerIdxGist); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -130,7 +130,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.hierarchicalSummaryFilter != nil && p.config.EnableHierarchical {
-		if l, ok := p.safeLayer(8); ok {
+		if l, ok := p.safeLayer(LayerIdxHierarchical); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -139,7 +139,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.compactionLayer != nil && !p.shouldSkipCompaction(output) {
-		if l, ok := p.safeLayer(9); ok {
+		if l, ok := p.safeLayer(LayerIdxCompaction); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -148,7 +148,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.attributionFilter != nil {
-		if l, ok := p.safeLayer(10); ok {
+		if l, ok := p.safeLayer(LayerIdxAttribution); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -157,7 +157,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.metaTokenFilter != nil && !p.shouldSkipMetaToken(output) {
-		if l, ok := p.safeLayer(13); ok {
+		if l, ok := p.safeLayer(LayerIdxMetaToken); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -166,7 +166,7 @@ func (p *PipelineCoordinator) runLayer3Semantic(input string, stats *PipelineSta
 	}
 
 	if p.semanticChunkFilter != nil && !p.shouldSkipSemanticChunk(output) {
-		if l, ok := p.safeLayer(14); ok {
+		if l, ok := p.safeLayer(LayerIdxSemanticChunk); ok {
 			output = p.processLayer(l, output, stats)
 		}
 	}
@@ -195,7 +195,7 @@ func (p *PipelineCoordinator) runLayer4LLMSpecific(input string, stats *Pipeline
 	}
 
 	if p.h2oFilter != nil && !p.shouldSkipH2O(output) {
-		if l, ok := p.safeLayer(11); ok {
+		if l, ok := p.safeLayer(LayerIdxH2O); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -204,7 +204,7 @@ func (p *PipelineCoordinator) runLayer4LLMSpecific(input string, stats *Pipeline
 	}
 
 	if p.attentionSinkFilter != nil && !p.shouldSkipAttentionSink(output) {
-		if l, ok := p.safeLayer(12); ok {
+		if l, ok := p.safeLayer(LayerIdxAttentionSink); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -213,7 +213,7 @@ func (p *PipelineCoordinator) runLayer4LLMSpecific(input string, stats *Pipeline
 	}
 
 	if p.sketchStoreFilter != nil && !p.shouldSkipBudgetDependent() {
-		if l, ok := p.safeLayer(15); ok {
+		if l, ok := p.safeLayer(LayerIdxSketchStore); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -222,7 +222,7 @@ func (p *PipelineCoordinator) runLayer4LLMSpecific(input string, stats *Pipeline
 	}
 
 	if p.lazyPrunerFilter != nil && !p.shouldSkipBudgetDependent() {
-		if l, ok := p.safeLayer(16); ok {
+		if l, ok := p.safeLayer(LayerIdxLazyPruner); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -231,7 +231,7 @@ func (p *PipelineCoordinator) runLayer4LLMSpecific(input string, stats *Pipeline
 	}
 
 	if p.semanticAnchorFilter != nil {
-		if l, ok := p.safeLayer(17); ok {
+		if l, ok := p.safeLayer(LayerIdxSemanticAnchor); ok {
 			output = p.processLayer(l, output, stats)
 		}
 	}
@@ -246,7 +246,7 @@ func (p *PipelineCoordinator) runLayer5ContentType(input string, stats *Pipeline
 	output := input
 
 	if p.agentMemoryFilter != nil {
-		if l, ok := p.safeLayer(18); ok {
+		if l, ok := p.safeLayer(LayerIdxAgentMemory); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -255,7 +255,7 @@ func (p *PipelineCoordinator) runLayer5ContentType(input string, stats *Pipeline
 	}
 
 	if p.edgeCaseFilter != nil {
-		if l, ok := p.safeLayer(19); ok {
+		if l, ok := p.safeLayer(LayerIdxEdgeCase); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -264,7 +264,7 @@ func (p *PipelineCoordinator) runLayer5ContentType(input string, stats *Pipeline
 	}
 
 	if p.reasoningFilter != nil {
-		if l, ok := p.safeLayer(20); ok {
+		if l, ok := p.safeLayer(LayerIdxReasoning); ok {
 			output = p.processLayer(l, output, stats)
 			if p.shouldEarlyExit(stats) {
 				return output
@@ -273,7 +273,7 @@ func (p *PipelineCoordinator) runLayer5ContentType(input string, stats *Pipeline
 	}
 
 	if p.advancedFilter != nil {
-		if l, ok := p.safeLayer(21); ok {
+		if l, ok := p.safeLayer(LayerIdxAdvanced); ok {
 			output = p.processLayer(l, output, stats)
 		}
 	}

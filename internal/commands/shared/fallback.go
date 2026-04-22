@@ -2,10 +2,13 @@ package shared
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +24,9 @@ import (
 	"github.com/GrayCodeAI/tok/internal/utils"
 	"github.com/GrayCodeAI/tok/internal/validation"
 )
+
+// maxTeeFiles is the maximum number of tee files to retain before rotation.
+const maxTeeFiles = 20
 
 // Fallback handler for TOML-based command filtering.
 // This is the main entry point for commands not explicitly defined in Go.
@@ -100,7 +106,7 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 	}
 
 	start := time.Now()
-	output, exitCode, err := h.executeCommand(args)
+	output, exitCode, execErr := h.executeCommand(args)
 	execTime := time.Since(start)
 
 	// Validate output size
@@ -119,7 +125,7 @@ func (h *FallbackHandler) Handle(args []string) (string, bool, error) {
 		filtered = filtered + fmt.Sprintf("\n[full output saved: %s]", teePath)
 	}
 
-	return filtered, true, err
+	return filtered, true, execErr
 }
 
 func (h *FallbackHandler) rawPassthrough(args []string) (string, bool, error) {
@@ -239,6 +245,7 @@ func (h *FallbackHandler) saveTee(args []string, output string) string {
 	}
 
 	if err := os.WriteFile(path, []byte(output), 0600); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: failed to write tee file %s: %v\n", path, err)
 		return ""
 	}
 
@@ -247,20 +254,14 @@ func (h *FallbackHandler) saveTee(args []string, output string) string {
 	return path
 }
 
-// hashArgs creates a short hash of arguments for safe filenames
+// hashArgs creates a short hash of arguments for safe filenames.
+// Uses SHA-256 instead of a weak string hash to avoid collisions.
 func hashArgs(args []string) string {
 	if len(args) == 0 {
 		return "empty"
 	}
-	// Use a simple hash of the first argument
-	h := 0
-	for i, c := range args[0] {
-		if i > 20 {
-			break
-		}
-		h = 31*h + int(c)
-	}
-	return fmt.Sprintf("%08x", h&0xFFFFFFFF)
+	h := sha256.Sum256([]byte(strings.Join(args, "\x00")))
+	return hex.EncodeToString(h[:8])
 }
 
 // sanitizeFilename removes any potentially dangerous characters from filename
@@ -273,11 +274,22 @@ func sanitizeFilename(name string) string {
 	return name
 }
 
-// isPathSafe checks if the resulting path is within the allowed directory
+// isPathSafe checks if the resulting path is within the allowed directory.
+// Resolves symlinks to prevent path traversal attacks.
+// Falls back to prefix checking for paths that do not yet exist.
 func isPathSafe(path, allowedDir string) bool {
-	// Clean and resolve both paths
-	cleanPath := filepath.Clean(path)
-	cleanDir := filepath.Clean(allowedDir)
+	// Clean and resolve both paths, following symlinks where possible
+	resolvedPath, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		// Path may not exist yet (e.g., before WriteFile). Fall back to Clean.
+		resolvedPath = filepath.Clean(path)
+	}
+	resolvedDir, err := filepath.EvalSymlinks(allowedDir)
+	if err != nil {
+		resolvedDir = filepath.Clean(allowedDir)
+	}
+	cleanPath := filepath.Clean(resolvedPath)
+	cleanDir := filepath.Clean(resolvedDir)
 
 	// Check if path starts with allowedDir
 	return strings.HasPrefix(cleanPath, cleanDir+string(filepath.Separator)) ||
@@ -294,7 +306,7 @@ func (h *FallbackHandler) rotateTeeFiles() {
 		return
 	}
 
-	if len(entries) <= 20 {
+	if len(entries) <= maxTeeFiles {
 		return
 	}
 
@@ -312,15 +324,11 @@ func (h *FallbackHandler) rotateTeeFiles() {
 		files = append(files, fileInfo{name: entry.Name(), info: fi})
 	}
 
-	for i := 0; i < len(files)-1; i++ {
-		for j := i + 1; j < len(files); j++ {
-			if files[i].info.ModTime().After(files[j].info.ModTime()) {
-				files[i], files[j] = files[j], files[i]
-			}
-		}
-	}
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].info.ModTime().Before(files[j].info.ModTime())
+	})
 
-	toRemove := len(files) - 20
+	toRemove := len(files) - maxTeeFiles
 	for i := 0; i < toRemove && i < len(files); i++ {
 		if err := os.Remove(filepath.Join(h.teeDir, files[i].name)); err != nil {
 			out.Global().Errorf("warning: failed to remove tee file %s: %v\n", files[i].name, err)

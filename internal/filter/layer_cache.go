@@ -3,6 +3,7 @@ package filter
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"sort"
 	"sync"
 	"time"
 )
@@ -57,6 +58,8 @@ func makeKey(layerName, inputHash string, mode Mode) string {
 }
 
 // Get retrieves a cached result if available and not expired.
+// Uses a single write lock to avoid the race window between RUnlock and Lock
+// during hit-count promotion.
 func (c *LayerCache) Get(layerName, input string, mode Mode) (*LayerCacheEntry, bool) {
 	if c == nil {
 		return nil, false
@@ -65,32 +68,25 @@ func (c *LayerCache) Get(layerName, input string, mode Mode) (*LayerCacheEntry, 
 	inputHash := computeHash(input)
 	key := makeKey(layerName, inputHash, mode)
 
-	c.mu.RLock()
-	entry, found := c.items[key]
-	c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
+	entry, found := c.items[key]
 	if !found {
-		c.mu.Lock()
 		c.misses++
-		c.mu.Unlock()
 		return nil, false
 	}
 
 	// Check TTL
 	if time.Since(entry.Timestamp) > c.ttl {
-		c.mu.Lock()
 		delete(c.items, key)
 		c.misses++
-		c.mu.Unlock()
 		return nil, false
 	}
 
 	// Update hit count
-	c.mu.Lock()
 	entry.HitCount++
 	c.hits++
-	c.mu.Unlock()
-
 	return entry, true
 }
 
@@ -136,19 +132,10 @@ func (c *LayerCache) evictOldest(n int) {
 		kvs = append(kvs, kv{k, v})
 	}
 
-	// Sort by timestamp (oldest first)
-	// Simple bubble sort for small n
-	for i := 0; i < len(kvs)-1 && i < n; i++ {
-		oldestIdx := i
-		for j := i + 1; j < len(kvs); j++ {
-			if kvs[j].value.Timestamp.Before(kvs[oldestIdx].value.Timestamp) {
-				oldestIdx = j
-			}
-		}
-		if oldestIdx != i {
-			kvs[i], kvs[oldestIdx] = kvs[oldestIdx], kvs[i]
-		}
-	}
+	// Sort by timestamp (oldest first) — O(n log n)
+	sort.Slice(kvs, func(i, j int) bool {
+		return kvs[i].value.Timestamp.Before(kvs[j].value.Timestamp)
+	})
 
 	// Remove oldest n entries
 	toRemove := n

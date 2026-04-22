@@ -55,9 +55,9 @@ func (t *Tracker) GetDailyStats(days int, projectPath string) ([]PeriodStats, er
 			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
 			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
 		FROM commands
-		WHERE timestamp >= DATE('now', '-%d days')
+		WHERE timestamp >= DATE('now', ?)
 	`
-	args := []interface{}{}
+	args := []interface{}{fmt.Sprintf("-%d days", days)}
 
 	if projectPath != "" {
 		query += ` AND (project_path GLOB ? OR project_path = ?)`
@@ -70,7 +70,6 @@ func (t *Tracker) GetDailyStats(days int, projectPath string) ([]PeriodStats, er
 		ORDER BY period DESC
 	`
 
-	query = fmt.Sprintf(query, days)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -93,9 +92,9 @@ func (t *Tracker) GetWeeklyStats(weeks int, projectPath string) ([]PeriodStats, 
 			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
 			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
 		FROM commands
-		WHERE timestamp >= DATE('now', '-%d days')
+		WHERE timestamp >= DATE('now', ?)
 	`
-	args := []interface{}{}
+	args := []interface{}{fmt.Sprintf("-%d days", weeks*7)}
 
 	if projectPath != "" {
 		query += ` AND (project_path GLOB ? OR project_path = ?)`
@@ -108,7 +107,6 @@ func (t *Tracker) GetWeeklyStats(weeks int, projectPath string) ([]PeriodStats, 
 		ORDER BY period DESC
 	`
 
-	query = fmt.Sprintf(query, weeks*7)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -131,9 +129,9 @@ func (t *Tracker) GetMonthlyStats(months int, projectPath string) ([]PeriodStats
 			COALESCE(SUM(saved_tokens), 0) as saved_tokens,
 			COALESCE(SUM(exec_time_ms), 0) as exec_time_ms
 		FROM commands
-		WHERE timestamp >= DATE('now', '-%d months')
+		WHERE timestamp >= DATE('now', ?)
 	`
-	args := []interface{}{}
+	args := []interface{}{fmt.Sprintf("-%d months", months)}
 
 	if projectPath != "" {
 		query += ` AND (project_path GLOB ? OR project_path = ?)`
@@ -146,7 +144,6 @@ func (t *Tracker) GetMonthlyStats(months int, projectPath string) ([]PeriodStats
 		ORDER BY period DESC
 	`
 
-	query = fmt.Sprintf(query, months)
 	rows, err := t.db.Query(query, args...)
 	if err != nil {
 		return nil, err
@@ -291,7 +288,7 @@ func scanPeriodStats(rows *sql.Rows) ([]PeriodStats, error) {
 		var inputTokens, outputTokens, savedTokens int
 		err := rows.Scan(&ps.Period, &ps.Commands, &inputTokens, &outputTokens, &savedTokens, &ps.ExecTimeMs)
 		if err != nil {
-			continue
+			return nil, err
 		}
 		ps.InputTokens = inputTokens
 		ps.OutputTokens = outputTokens
@@ -300,6 +297,9 @@ func scanPeriodStats(rows *sql.Rows) ([]PeriodStats, error) {
 			ps.SavingsPct = float64(savedTokens) / float64(inputTokens) * 100
 		}
 		results = append(results, ps)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return results, nil
 }

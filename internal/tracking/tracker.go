@@ -268,9 +268,12 @@ func addOptionalCommandColumns(db *sql.DB) error {
 		var dfltValue interface{}
 		var pk int
 		if err := rows.Scan(&cid, &name, &colType, &notNull, &dfltValue, &pk); err != nil {
-			continue
+			return fmt.Errorf("scanning table_info: %w", err)
 		}
 		existingCols[name] = true
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterating table_info: %w", err)
 	}
 
 	// Add missing columns

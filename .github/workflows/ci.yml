@@ -76,11 +76,11 @@ jobs:
           exit 1
         fi
     
-    # golangci-lint removed: all prebuilt v1.x binaries are linked against
-    # Go 1.24 and refuse to load a config with go: "1.25", and install-mode
-    # goinstall had the same effect. staticcheck (configured via
-    # staticcheck.conf) covers the overlap. Re-introduce via v2.x when
-    # there's budget to migrate the config.
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v7
+      with:
+        version: v2.0
+        args: --timeout=5m
 
   build:
     name: Build

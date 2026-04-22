@@ -3,11 +3,12 @@ package core
 import "sync"
 
 // Processor interface for batch processing
+// The error return allows callers to detect failures per item.
 type Processor interface {
-	Process(string) (string, interface{})
+	Process(string) (string, interface{}, error)
 }
 
-// BatchProcessor processes multiple inputs concurrently
+// BatchProcessor processes multiple inputs concurrently.
 type BatchProcessor struct {
 	coordinator Processor
 	workers     int
@@ -24,6 +25,8 @@ type BatchResult struct {
 	Error  error
 }
 
+// ProcessBatch runs the processor on each input concurrently.
+// Errors from the processor are captured in BatchResult.Error.
 func (bp *BatchProcessor) ProcessBatch(inputs []string) []BatchResult {
 	results := make([]BatchResult, len(inputs))
 	jobs := make(chan int, len(inputs))
@@ -34,11 +37,12 @@ func (bp *BatchProcessor) ProcessBatch(inputs []string) []BatchResult {
 		go func() {
 			defer wg.Done()
 			for idx := range jobs {
-				output, stats := bp.coordinator.Process(inputs[idx])
+				output, stats, err := bp.coordinator.Process(inputs[idx])
 				results[idx] = BatchResult{
 					Index:  idx,
 					Output: output,
 					Stats:  stats,
+					Error:  err,
 				}
 			}
 		}()

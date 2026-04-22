@@ -16,15 +16,22 @@ func NewCoordinatorPool(config PipelineConfig) *CoordinatorPool {
 		config: config,
 		pool: sync.Pool{
 			New: func() any {
-				return NewPipelineCoordinator(config)
+				return NewPipelineCoordinator(&config)
 			},
 		},
 	}
 }
 
-// Get retrieves a coordinator from pool
+// Get retrieves a coordinator from pool.
+// If the pool contains an unexpected type, a fresh coordinator is created.
 func (p *CoordinatorPool) Get() *PipelineCoordinator {
-	return p.pool.Get().(*PipelineCoordinator)
+	v := p.pool.Get()
+	coord, ok := v.(*PipelineCoordinator)
+	if !ok {
+		// Pool corruption or nil value: allocate fresh
+		return NewPipelineCoordinator(&p.config)
+	}
+	return coord
 }
 
 // Put returns coordinator to pool

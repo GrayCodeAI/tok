@@ -2,7 +2,6 @@ package shared
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"sync"
 )
@@ -283,7 +282,15 @@ func IsLLMEnabled() bool {
 	return enabled || os.Getenv("TOK_LLM") == "true"
 }
 
+var (
+	cachedEnvBudget    int
+	cachedEnvBudgetStr string
+	cachedEnvBudgetMu  sync.RWMutex
+)
+
 // GetTokenBudget returns the token budget from flag or environment.
+// The environment variable is parsed lazily and cached; if the env var
+// changes, it is re-parsed on the next call.
 func GetTokenBudget() int {
 	globalsMu.RLock()
 	budget := TokenBudget
@@ -291,15 +298,31 @@ func GetTokenBudget() int {
 	if budget > 0 {
 		return budget
 	}
+
 	envBudget := os.Getenv("TOK_BUDGET")
-	if envBudget != "" {
-		var b int
-		if _, err := fmt.Sscanf(envBudget, "%d", &b); err == nil {
-			return b
-		}
-		log.Printf("warning: invalid TOK_BUDGET value %q, defaulting to unlimited", envBudget)
+	if envBudget == "" {
+		return 0
 	}
-	return 0
+
+	cachedEnvBudgetMu.RLock()
+	if cachedEnvBudgetStr == envBudget {
+		b := cachedEnvBudget
+		cachedEnvBudgetMu.RUnlock()
+		return b
+	}
+	cachedEnvBudgetMu.RUnlock()
+
+	cachedEnvBudgetMu.Lock()
+	defer cachedEnvBudgetMu.Unlock()
+	// Double-check after acquiring write lock
+	if cachedEnvBudgetStr == envBudget {
+		return cachedEnvBudget
+	}
+	cachedEnvBudgetStr = envBudget
+	if _, err := fmt.Sscanf(envBudget, "%d", &cachedEnvBudget); err != nil {
+		cachedEnvBudget = 0
+	}
+	return cachedEnvBudget
 }
 
 // GetLayerPreset returns the layer preset from flag or environment.

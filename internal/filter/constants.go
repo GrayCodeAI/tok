@@ -40,3 +40,32 @@ const (
 	TokensPerCharHeuristic = 0.25 // 1 token per 4 chars
 	MinTokenEstimate       = 1    // Minimum token count
 )
+
+// Layer indices for the p.layers slice in PipelineCoordinator.
+// These decouple layer access from hardcoded numbers in six_layer_pipeline.go.
+// If you reorder buildLayers(), update these constants to match.
+const (
+	LayerIdxEntropy = iota
+	LayerIdxPerplexity
+	LayerIdxGoalDriven
+	LayerIdxASTPreserve
+	LayerIdxContrastive
+	LayerIdxNgram
+	LayerIdxEvaluator
+	LayerIdxGist
+	LayerIdxHierarchical
+	LayerIdxCompaction
+	LayerIdxAttribution
+	LayerIdxH2O
+	LayerIdxAttentionSink
+	LayerIdxMetaToken
+	LayerIdxSemanticChunk
+	LayerIdxSketchStore
+	LayerIdxLazyPruner
+	LayerIdxSemanticAnchor
+	LayerIdxAgentMemory
+	LayerIdxEdgeCase
+	LayerIdxReasoning
+	LayerIdxAdvanced
+	NumLayerIndices // must be last; equals total number of layers
+)

@@ -24,35 +24,43 @@ const (
 )
 
 type fingerprintEntry struct {
+	key       string
 	value     string
 	expiresAt time.Time
+	element   *list.Element
 }
 
 type FingerprintCache struct {
 	mu      sync.RWMutex
-	cache   map[string]fingerprintEntry
+	cache   map[string]*fingerprintEntry
+	order   *list.List
 	maxSize int
 	ttl     time.Duration
 }
 
 func NewFingerprintCache() *FingerprintCache {
 	return &FingerprintCache{
-		cache:   make(map[string]fingerprintEntry),
+		cache:   make(map[string]*fingerprintEntry),
+		order:   list.New(),
 		maxSize: defaultFingerprintCacheMaxSize,
 		ttl:     defaultFingerprintCacheTTL,
 	}
 }
 
 func (c *FingerprintCache) Get(key string) (string, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	entry, ok := c.cache[key]
 	if !ok {
 		return "", false
 	}
 	if time.Now().After(entry.expiresAt) {
+		c.removeEntry(entry)
 		return "", false
 	}
+	// Promote to most recently used
+	c.order.MoveToBack(entry.element)
 	return entry.value, true
 }
 
@@ -60,17 +68,56 @@ func (c *FingerprintCache) Set(key, value string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	// Evict oldest entries if at capacity (simple random eviction for speed)
-	if len(c.cache) >= c.maxSize {
-		for k := range c.cache {
-			delete(c.cache, k)
-			break
-		}
+	now := time.Now()
+
+	// Update existing key
+	if entry, ok := c.cache[key]; ok {
+		entry.value = value
+		entry.expiresAt = now.Add(c.ttl)
+		c.order.MoveToBack(entry.element)
+		return
 	}
 
-	c.cache[key] = fingerprintEntry{
+	// Proactive expiration: remove expired entries at the front (oldest)
+	for front := c.order.Front(); front != nil; {
+		k := front.Value.(string)
+		e, ok := c.cache[k]
+		if !ok || now.After(e.expiresAt) {
+			next := front.Next()
+			c.removeEntry(e)
+			front = next
+			continue
+		}
+		break
+	}
+
+	// Evict oldest entry if still at capacity
+	if len(c.cache) >= c.maxSize {
+		c.evictOldest()
+	}
+
+	element := c.order.PushBack(key)
+	c.cache[key] = &fingerprintEntry{
+		key:       key,
 		value:     value,
-		expiresAt: time.Now().Add(c.ttl),
+		expiresAt: now.Add(c.ttl),
+		element:   element,
+	}
+}
+
+func (c *FingerprintCache) removeEntry(entry *fingerprintEntry) {
+	c.order.Remove(entry.element)
+	delete(c.cache, entry.key)
+}
+
+func (c *FingerprintCache) evictOldest() {
+	front := c.order.Front()
+	if front == nil {
+		return
+	}
+	key := front.Value.(string)
+	if entry, ok := c.cache[key]; ok {
+		c.removeEntry(entry)
 	}
 }
 
@@ -87,11 +134,11 @@ type LRUCache struct {
 	mu    sync.Mutex
 	cap   int
 	ttl   time.Duration
-	cache map[string]*cacheEntry
+	cache map[string]*lruCacheEntry
 	order *list.List
 }
 
-type cacheEntry struct {
+type lruCacheEntry struct {
 	key       string
 	value     interface{}
 	expiresAt time.Time
@@ -102,7 +149,7 @@ func NewLRUCache(capacity int, ttl time.Duration) *LRUCache {
 	return &LRUCache{
 		cap:   capacity,
 		ttl:   ttl,
-		cache: make(map[string]*cacheEntry),
+		cache: make(map[string]*lruCacheEntry),
 		order: list.New(),
 	}
 }
@@ -147,7 +194,7 @@ func (c *LRUCache) Set(key string, value interface{}) {
 
 	// Add new entry
 	element := c.order.PushBack(key)
-	entry := &cacheEntry{
+	entry := &lruCacheEntry{
 		key:       key,
 		value:     value,
 		expiresAt: time.Now().Add(c.ttl),
@@ -183,7 +230,7 @@ func (c *LRUCache) evictOldest() {
 	}
 }
 
-func (c *LRUCache) removeEntry(entry *cacheEntry) {
+func (c *LRUCache) removeEntry(entry *lruCacheEntry) {
 	c.order.Remove(entry.element)
 	delete(c.cache, entry.key)
 }

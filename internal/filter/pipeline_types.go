@@ -113,12 +113,11 @@ type PipelineCoordinator struct {
 	smallKVCompensator *SmallKVCompensator
 	tomlFilterWrapper  Filter
 
-	// NEW: Inter-Layer Feedback Mechanism
-	interLayerFeedback *InterLayerFeedback
-	feedback           *InterLayerFeedback
-	qualityEstimator   *QualityEstimator
-	adaptiveLearning   *AdaptiveLearningFilter
-	crunchBench        *CrunchBench
+	// Inter-Layer Feedback Mechanism
+	feedback         *InterLayerFeedback
+	qualityEstimator *QualityEstimator
+	adaptiveLearning *AdaptiveLearningFilter
+	crunchBench      *CrunchBench
 }
 
 // reportProgress emits a progress event if a callback is registered.
@@ -495,6 +494,23 @@ type PipelineConfigWithNestedLayers struct {
 // New code should use PipelineConfigWithNestedLayers to take advantage of nested structure.
 type PipelineConfig = PipelineConfigWithNestedLayers
 
+// AllCoreLayersDisabled returns true when none of the core layers (1-9) are enabled.
+// This is used by NewPipelineCoordinator to decide whether to apply zero-config defaults.
+func (cfg *PipelineConfig) AllCoreLayersDisabled() bool {
+	return !cfg.EnableEntropy && !cfg.EnablePerplexity && !cfg.EnableGoalDriven &&
+		!cfg.EnableAST && !cfg.EnableContrastive && !cfg.EnableEvaluator &&
+		!cfg.EnableGist && !cfg.EnableHierarchical
+}
+
+// HasExplicitSettings returns true when the user has provided any non-default
+// configuration that should prevent zero-config defaults from being applied.
+func (cfg *PipelineConfig) HasExplicitSettings() bool {
+	return cfg.Budget > 0 || cfg.QueryIntent != "" || cfg.LLMEnabled ||
+		cfg.NgramEnabled || cfg.MultiFileEnabled || cfg.SessionTracking ||
+		cfg.EnableCompaction || cfg.EnableAttribution || cfg.EnableH2O || cfg.EnableAttentionSink ||
+		cfg.EnableAdaptiveLearning || cfg.EnableContextCrunch
+}
+
 // PipelineStats holds statistics from the compression pipeline
 type PipelineStats struct {
 	OriginalTokens   int
@@ -537,4 +553,157 @@ func (s *PipelineStats) AddLayerStatSafe(name string, stat LayerStat) {
 	}
 	s.LayerStats[name] = stat
 	s.runningSaved += stat.TokensSaved
+}
+
+// LayerBitset provides a compact bitset representation of layer enable flags.
+// This is an optional optimization for callers that need to pass config across
+// wire boundaries or store many configs in memory.
+//
+// Usage:
+//
+//	bits := cfg.ToLayerBitset()
+//	// ... pass bits over the wire ...
+//	restored := bits.ToConfig(cfg.Mode)
+//
+// Bit positions (0-indexed):
+//
+//	0  - Entropy
+//	1  - Perplexity
+//	2  - GoalDriven
+//	3  - AST
+//	4  - Contrastive
+//	5  - Evaluator
+//	6  - Gist
+//	7  - Hierarchical
+//	8  - Compaction
+//	9  - Attribution
+//	10 - H2O
+//	11 - AttentionSink
+//	12 - MetaToken
+//	13 - SemanticChunk
+//	14 - SketchStore
+//	15 - LazyPruner
+//	16 - SemanticAnchor
+//	17 - AgentMemory
+//	18 - EdgeCase
+//	19 - Reasoning
+//	20 - Advanced
+//	21 - QuantumLock
+//	22 - Photon
+//	23 - AdaptiveLearning
+//	24 - CrunchBench
+//	25..63 reserved
+type LayerBitset uint64
+
+// ToLayerBitset packs the core layer enable flags into a compact uint64.
+func (cfg *PipelineConfig) ToLayerBitset() LayerBitset {
+	var b LayerBitset
+	if cfg.EnableEntropy {
+		b |= 1 << 0
+	}
+	if cfg.EnablePerplexity {
+		b |= 1 << 1
+	}
+	if cfg.EnableGoalDriven {
+		b |= 1 << 2
+	}
+	if cfg.EnableAST {
+		b |= 1 << 3
+	}
+	if cfg.EnableContrastive {
+		b |= 1 << 4
+	}
+	if cfg.EnableEvaluator {
+		b |= 1 << 5
+	}
+	if cfg.EnableGist {
+		b |= 1 << 6
+	}
+	if cfg.EnableHierarchical {
+		b |= 1 << 7
+	}
+	if cfg.EnableCompaction {
+		b |= 1 << 8
+	}
+	if cfg.EnableAttribution {
+		b |= 1 << 9
+	}
+	if cfg.EnableH2O {
+		b |= 1 << 10
+	}
+	if cfg.EnableAttentionSink {
+		b |= 1 << 11
+	}
+	if cfg.EnableMetaToken {
+		b |= 1 << 12
+	}
+	if cfg.EnableSemanticChunk {
+		b |= 1 << 13
+	}
+	if cfg.EnableSketchStore {
+		b |= 1 << 14
+	}
+	if cfg.EnableLazyPruner {
+		b |= 1 << 15
+	}
+	if cfg.EnableSemanticAnchor {
+		b |= 1 << 16
+	}
+	if cfg.EnableAgentMemory {
+		b |= 1 << 17
+	}
+	if cfg.EnableEdgeCase {
+		b |= 1 << 18
+	}
+	if cfg.EnableReasoning {
+		b |= 1 << 19
+	}
+	if cfg.EnableAdvanced {
+		b |= 1 << 20
+	}
+	if cfg.EnableQuantumLock {
+		b |= 1 << 21
+	}
+	if cfg.EnablePhoton {
+		b |= 1 << 22
+	}
+	if cfg.EnableAdaptiveLearning {
+		b |= 1 << 23
+	}
+	if cfg.EnableCrunchBench {
+		b |= 1 << 24
+	}
+	return b
+}
+
+// ToConfig restores layer enable flags from a bitset into a PipelineConfig.
+// Callers should set Mode, Budget, QueryIntent, etc. separately.
+func (b LayerBitset) ToConfig() PipelineConfig {
+	return PipelineConfig{
+		EnableEntropy:          b&(1<<0) != 0,
+		EnablePerplexity:       b&(1<<1) != 0,
+		EnableGoalDriven:       b&(1<<2) != 0,
+		EnableAST:              b&(1<<3) != 0,
+		EnableContrastive:      b&(1<<4) != 0,
+		EnableEvaluator:        b&(1<<5) != 0,
+		EnableGist:             b&(1<<6) != 0,
+		EnableHierarchical:     b&(1<<7) != 0,
+		EnableCompaction:       b&(1<<8) != 0,
+		EnableAttribution:      b&(1<<9) != 0,
+		EnableH2O:              b&(1<<10) != 0,
+		EnableAttentionSink:    b&(1<<11) != 0,
+		EnableMetaToken:        b&(1<<12) != 0,
+		EnableSemanticChunk:    b&(1<<13) != 0,
+		EnableSketchStore:      b&(1<<14) != 0,
+		EnableLazyPruner:       b&(1<<15) != 0,
+		EnableSemanticAnchor:   b&(1<<16) != 0,
+		EnableAgentMemory:      b&(1<<17) != 0,
+		EnableEdgeCase:         b&(1<<18) != 0,
+		EnableReasoning:        b&(1<<19) != 0,
+		EnableAdvanced:         b&(1<<20) != 0,
+		EnableQuantumLock:      b&(1<<21) != 0,
+		EnablePhoton:           b&(1<<22) != 0,
+		EnableAdaptiveLearning: b&(1<<23) != 0,
+		EnableCrunchBench:      b&(1<<24) != 0,
+	}
 }

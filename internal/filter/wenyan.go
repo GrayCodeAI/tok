@@ -73,53 +73,67 @@ var (
 		{regexp.MustCompile(`(?i)\bresults? in\b`), "→"},
 		{regexp.MustCompile(`(?i)\bcauses?\b`), "→"},
 	}
-	wenyanAbbrevs = map[string]string{
-		"configuration":  "config",
-		"implementation": "impl",
-		"documentation":  "docs",
-		"development":    "dev",
-		"environment":    "env",
-		"application":    "app",
-		"authentication": "auth",
-		"authorization":  "authz",
-		"information":    "info",
-		"directory":      "dir",
-		"parameters":     "params",
-		"parameter":      "param",
-		"arguments":      "args",
-		"argument":       "arg",
-		"functions":      "fns",
-		"function":       "fn",
-		"variables":      "vars",
-		"variable":       "var",
-		"database":       "db",
-		"connections":    "conns",
-		"connection":     "conn",
-		"responses":      "resps",
-		"response":       "resp",
-		"requests":       "reqs",
-		"request":        "req",
-		"messages":       "msgs",
-		"message":        "msg",
-		"errors":         "errs",
-		"error":          "err",
+	wenyanAbbrevs = []struct {
+		long  string
+		short string
+	}{
+		{"configuration", "config"},
+		{"implementation", "impl"},
+		{"documentation", "docs"},
+		{"development", "dev"},
+		{"environment", "env"},
+		{"application", "app"},
+		{"authentication", "auth"},
+		{"authorization", "authz"},
+		{"information", "info"},
+		{"directory", "dir"},
+		{"parameters", "params"},
+		{"parameter", "param"},
+		{"arguments", "args"},
+		{"argument", "arg"},
+		{"functions", "fns"},
+		{"function", "fn"},
+		{"variables", "vars"},
+		{"variable", "var"},
+		{"database", "db"},
+		{"connections", "conns"},
+		{"connection", "conn"},
+		{"responses", "resps"},
+		{"response", "resp"},
+		{"requests", "reqs"},
+		{"request", "req"},
+		{"messages", "msgs"},
+		{"message", "msg"},
+		{"errors", "errs"},
+		{"error", "err"},
 	}
-	wenyanUltraAbbrevs = map[string]string{
-		"without": "w/o",
-		"with":    "w/",
-		"through": "thru",
-		"should":  "shld",
-		"would":   "wld",
-		"could":   "cld",
+	wenyanUltraAbbrevs = []struct {
+		long  string
+		short string
+	}{
+		{"without", "w/o"},
+		{"with", "w/"},
+		{"through", "thru"},
+		{"should", "shld"},
+		{"would", "wld"},
+		{"could", "cld"},
 	}
 	wenyanConnectives = []string{
 		" and ", " but ", " or ", " however ", " although ", " while ",
 	}
 )
 
+var wenyanFillerRes []*regexp.Regexp
+
+func init() {
+	wenyanFillerRes = make([]*regexp.Regexp, len(wenyanFillers))
+	for i, f := range wenyanFillers {
+		wenyanFillerRes[i] = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(f) + `\b\s*`)
+	}
+}
+
 func wenyanStripFiller(s string) string {
-	for _, f := range wenyanFillers {
-		re := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(f) + `\b\s*`)
+	for _, re := range wenyanFillerRes {
 		s = re.ReplaceAllString(s, "")
 	}
 	return s
@@ -132,16 +146,30 @@ func wenyanArrowCausality(s string) string {
 	return s
 }
 
-func wenyanAbbreviate(s string, includeUltra bool) string {
-	apply := func(m map[string]string) {
-		for long, short := range m {
-			re := regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(long) + `\b`)
-			s = re.ReplaceAllString(s, short)
-		}
+var (
+	wenyanAbbrevRes      []*regexp.Regexp
+	wenyanUltraAbbrevRes []*regexp.Regexp
+)
+
+func init() {
+	wenyanAbbrevRes = make([]*regexp.Regexp, len(wenyanAbbrevs))
+	for i, p := range wenyanAbbrevs {
+		wenyanAbbrevRes[i] = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(p.long) + `\b`)
 	}
-	apply(wenyanAbbrevs)
+	wenyanUltraAbbrevRes = make([]*regexp.Regexp, len(wenyanUltraAbbrevs))
+	for i, p := range wenyanUltraAbbrevs {
+		wenyanUltraAbbrevRes[i] = regexp.MustCompile(`(?i)\b` + regexp.QuoteMeta(p.long) + `\b`)
+	}
+}
+
+func wenyanAbbreviate(s string, includeUltra bool) string {
+	for i, p := range wenyanAbbrevs {
+		s = wenyanAbbrevRes[i].ReplaceAllString(s, p.short)
+	}
 	if includeUltra {
-		apply(wenyanUltraAbbrevs)
+		for i, p := range wenyanUltraAbbrevs {
+			s = wenyanUltraAbbrevRes[i].ReplaceAllString(s, p.short)
+		}
 	}
 	return s
 }
@@ -182,11 +210,14 @@ func wenyanCJK(s string, mode WenyanMode) string {
 	return s
 }
 
+var (
+	collapseSpaceRe   = regexp.MustCompile(`[ \t]+`)
+	collapseNewlineRe = regexp.MustCompile(`\n{3,}`)
+)
+
 func collapseWhitespace(s string) string {
-	re := regexp.MustCompile(`[ \t]+`)
-	s = re.ReplaceAllString(s, " ")
-	re2 := regexp.MustCompile(`\n{3,}`)
-	s = re2.ReplaceAllString(s, "\n\n")
+	s = collapseSpaceRe.ReplaceAllString(s, " ")
+	s = collapseNewlineRe.ReplaceAllString(s, "\n\n")
 	return strings.TrimSpace(s)
 }
 

@@ -5,26 +5,19 @@ import (
 )
 
 // NewPipelineCoordinator creates a new pipeline coordinator with all configured layers.
-func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
+func NewPipelineCoordinator(cfg *PipelineConfig) *PipelineCoordinator {
 	p := &PipelineCoordinator{
-		config:       cfg,
+		config:       *cfg,
 		resultCache:  cache.GetGlobalCache(),
 		cacheEnabled: true,
 		layerCache:   GetGlobalLayerCache(), // Initialize layer cache
 	}
 
 	// Apply tier-based defaults if no explicit layers are enabled
-	p.applyTierDefaults(&cfg)
+	p.applyTierDefaults(cfg)
 
 	// Set legacy defaults - all layers enabled by default when using zero-config.
-	allDisabled := !cfg.EnableEntropy && !cfg.EnablePerplexity && !cfg.EnableGoalDriven &&
-		!cfg.EnableAST && !cfg.EnableContrastive && !cfg.EnableEvaluator &&
-		!cfg.EnableGist && !cfg.EnableHierarchical
-	hasExplicitSettings := cfg.Budget > 0 || cfg.QueryIntent != "" || cfg.LLMEnabled ||
-		cfg.NgramEnabled || cfg.MultiFileEnabled || cfg.SessionTracking ||
-		cfg.EnableCompaction || cfg.EnableAttribution || cfg.EnableH2O || cfg.EnableAttentionSink ||
-		cfg.EnableAdaptiveLearning || cfg.EnableContextCrunch
-	if allDisabled && !hasExplicitSettings {
+	if cfg.AllCoreLayersDisabled() && !cfg.HasExplicitSettings() {
 		cfg.EnableEntropy = true
 		cfg.EnablePerplexity = true
 		cfg.EnableGoalDriven = true
@@ -65,7 +58,7 @@ func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
 	return p
 }
 
-func (p *PipelineCoordinator) initCoreFilters(cfg PipelineConfig) {
+func (p *PipelineCoordinator) initCoreFilters(cfg *PipelineConfig) {
 	// Layer 0: QuantumLock (KV-cache alignment)
 	if cfg.EnableQuantumLock {
 		p.quantumLockFilter = NewQuantumLockFilter()
@@ -105,7 +98,7 @@ func (p *PipelineCoordinator) initCoreFilters(cfg PipelineConfig) {
 	}
 }
 
-func (p *PipelineCoordinator) initSemanticFilters(cfg PipelineConfig) {
+func (p *PipelineCoordinator) initSemanticFilters(cfg *PipelineConfig) {
 	if cfg.EnableCompaction {
 		compactionCfg := CompactionConfig{
 			Enabled:             true,
@@ -236,7 +229,7 @@ func (p *PipelineCoordinator) initSemanticFilters(cfg PipelineConfig) {
 	p.initResearchFilters(cfg)
 }
 
-func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
+func (p *PipelineCoordinator) initResearchFilters(cfg *PipelineConfig) {
 	// Unified L14: Edge cases (merges L21-L25)
 	if cfg.EnableEdgeCase {
 		p.edgeCaseFilter = NewEdgeCaseFilter()
@@ -254,31 +247,30 @@ func (p *PipelineCoordinator) initResearchFilters(cfg PipelineConfig) {
 }
 
 func (p *PipelineCoordinator) buildLayers() {
-	p.layers = []filterLayer{
-		{p.entropyFilter, LayerEntropy},
-		{p.perplexityFilter, LayerPerplexity},
-		{p.goalDrivenFilter, LayerGoalDriven},
-		{p.astPreserveFilter, LayerASTPreserve},
-		{p.contrastiveFilter, LayerContrastive},
-		{p.ngramAbbreviator, LayerNgram},
-		{p.evaluatorHeadsFilter, LayerEvaluator},
-		{p.gistFilter, LayerGist},
-		{p.hierarchicalSummaryFilter, LayerHierarchical},
-		{p.compactionLayer, LayerCompaction},
-		{p.attributionFilter, LayerAttribution},
-		{p.h2oFilter, LayerH2O},
-		{p.attentionSinkFilter, LayerAttentionSink},
-		{p.metaTokenFilter, LayerMetaToken},
-		{p.semanticChunkFilter, LayerSemanticChunk},
-		{p.sketchStoreFilter, LayerSemanticCache},
-		{p.lazyPrunerFilter, LayerLazyPruner},
-		{p.semanticAnchorFilter, LayerSemanticAnchor},
-		{p.agentMemoryFilter, LayerAgentMemory},
-		// Unified layers
-		{p.edgeCaseFilter, LayerEdgeCase},
-		{p.reasoningFilter, LayerReasoning},
-		{p.advancedFilter, LayerAdvanced},
-	}
+	p.layers = make([]filterLayer, 0, NumLayerIndices)
+	p.layers = append(p.layers, filterLayer{p.entropyFilter, LayerEntropy})
+	p.layers = append(p.layers, filterLayer{p.perplexityFilter, LayerPerplexity})
+	p.layers = append(p.layers, filterLayer{p.goalDrivenFilter, LayerGoalDriven})
+	p.layers = append(p.layers, filterLayer{p.astPreserveFilter, LayerASTPreserve})
+	p.layers = append(p.layers, filterLayer{p.contrastiveFilter, LayerContrastive})
+	p.layers = append(p.layers, filterLayer{p.ngramAbbreviator, LayerNgram})
+	p.layers = append(p.layers, filterLayer{p.evaluatorHeadsFilter, LayerEvaluator})
+	p.layers = append(p.layers, filterLayer{p.gistFilter, LayerGist})
+	p.layers = append(p.layers, filterLayer{p.hierarchicalSummaryFilter, LayerHierarchical})
+	p.layers = append(p.layers, filterLayer{p.compactionLayer, LayerCompaction})
+	p.layers = append(p.layers, filterLayer{p.attributionFilter, LayerAttribution})
+	p.layers = append(p.layers, filterLayer{p.h2oFilter, LayerH2O})
+	p.layers = append(p.layers, filterLayer{p.attentionSinkFilter, LayerAttentionSink})
+	p.layers = append(p.layers, filterLayer{p.metaTokenFilter, LayerMetaToken})
+	p.layers = append(p.layers, filterLayer{p.semanticChunkFilter, LayerSemanticChunk})
+	p.layers = append(p.layers, filterLayer{p.sketchStoreFilter, LayerSemanticCache})
+	p.layers = append(p.layers, filterLayer{p.lazyPrunerFilter, LayerLazyPruner})
+	p.layers = append(p.layers, filterLayer{p.semanticAnchorFilter, LayerSemanticAnchor})
+	p.layers = append(p.layers, filterLayer{p.agentMemoryFilter, LayerAgentMemory})
+	// Unified layers
+	p.layers = append(p.layers, filterLayer{p.edgeCaseFilter, LayerEdgeCase})
+	p.layers = append(p.layers, filterLayer{p.reasoningFilter, LayerReasoning})
+	p.layers = append(p.layers, filterLayer{p.advancedFilter, LayerAdvanced})
 }
 
 // applyTierDefaults applies tier-based layer enablement if UseTiers is set.

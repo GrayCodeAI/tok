@@ -1,10 +1,29 @@
 package shared
 
 import (
+	"context"
 	"sync"
 
 	"github.com/GrayCodeAI/tok/internal/version"
 )
+
+// appStateKey is the context key for storing AppState.
+// Using a private struct type prevents collisions with other packages.
+type appStateKey struct{}
+
+// WithAppState returns a context that carries the given AppState.
+func WithAppState(ctx context.Context, state *AppState) context.Context {
+	return context.WithValue(ctx, appStateKey{}, state)
+}
+
+// AppStateFrom retrieves the AppState from the context.
+// Falls back to the global state if none is present.
+func AppStateFrom(ctx context.Context) *AppState {
+	if state, ok := ctx.Value(appStateKey{}).(*AppState); ok && state != nil {
+		return state
+	}
+	return globalState
+}
 
 // Version is the application version (re-exported from version package).
 var Version = version.Version
@@ -85,6 +104,14 @@ type AppState struct {
 
 // Global instance for backward compatibility.
 // New code should use explicit AppState instances.
+//
+// Migration guide:
+//
+//	Old: shared.Global().Verbose > 0
+//	New: state := shared.AppStateFrom(ctx); state.Verbose > 0
+//
+//	Old: shared.SetFlags(cfg)
+//	New: state := &shared.AppState{}; state.Set(cfg); ctx = shared.WithAppState(ctx, state)
 var globalState = &AppState{}
 
 // Global returns the global AppState instance.

@@ -157,11 +157,13 @@ func RunAndCapture(cmd string, args []string) (output string, exitCode int, err 
 	if pipeErr != nil {
 		return "", 1, fmt.Errorf("creating stdout pipe: %w", pipeErr)
 	}
+	defer stdoutPipe.Close()
 
 	stderrPipe, pipeErr := execCmd.StderrPipe()
 	if pipeErr != nil {
 		return "", 1, fmt.Errorf("creating stderr pipe: %w", pipeErr)
 	}
+	defer stderrPipe.Close()
 
 	if startErr := execCmd.Start(); startErr != nil {
 		return "", 1, fmt.Errorf("starting command: %w", startErr)
