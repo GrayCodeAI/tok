@@ -62,7 +62,7 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	cfg.EnableStructColl = true
 
 	input := syntheticBenchmarkInput(benchLines)
-	p := filter.NewPipelineCoordinator(cfg)
+	p := filter.NewPipelineCoordinator(&cfg)
 	start := time.Now()
 	_, stats := p.Process(input)
 	totalDur := time.Since(start)

@@ -88,7 +88,7 @@ func runCompress(cmd *cobra.Command, args []string) error {
 		budget = shared.GetTokenBudget()
 	}
 
-	pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
+	pipeline := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 		Mode:                mode,
 		QueryIntent:         shared.GetQueryIntent(),
 		Budget:              budget,

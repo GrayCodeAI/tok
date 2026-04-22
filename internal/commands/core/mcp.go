@@ -63,7 +63,7 @@ Usage:
 		cfg := filter.PipelineConfig{
 			Mode: filter.ModeMinimal,
 		}
-		pipeline := filter.NewPipelineCoordinator(cfg)
+		pipeline := filter.NewPipelineCoordinator(&cfg)
 
 		// Create and run MCP server
 		server := mcp.NewServer("tok", "1.0.0", pipeline)

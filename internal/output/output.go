@@ -111,9 +111,8 @@ func (p *Printer) JSON(v interface{}) error {
 }
 
 // IsTTY returns whether stdout is a terminal.
+// Safe to call without locking: isTTY is set at construction and never mutated.
 func (p *Printer) IsTTY() bool {
-	p.mu.Lock()
-	defer p.mu.Unlock()
 	return p.isTTY
 }
 

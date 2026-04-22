@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -115,13 +116,9 @@ func cleanupOldFiles(dir string, maxFiles int) error {
 
 	// Sort by filename (which starts with epoch timestamp = chronological)
 	// We need to sort in ascending order to delete oldest first
-	for i := 0; i < len(logFiles)-1; i++ {
-		for j := i + 1; j < len(logFiles); j++ {
-			if logFiles[i].Name() > logFiles[j].Name() {
-				logFiles[i], logFiles[j] = logFiles[j], logFiles[i]
-			}
-		}
-	}
+	sort.Slice(logFiles, func(i, j int) bool {
+		return logFiles[i].Name() < logFiles[j].Name()
+	})
 
 	// Remove oldest files
 	toRemove := len(logFiles) - maxFiles
@@ -258,6 +255,7 @@ func TeeRaw(raw string, commandSlug string, exitCode int) string {
 
 	// Get tee config (from config file or defaults)
 	teeCfg := DefaultTeeConfig()
+	teeCfg.Enabled = cfg.Hooks.TeeEnabled
 	if cfg.Hooks.TeeDir != "" {
 		teeCfg.Directory = cfg.Hooks.TeeDir
 	}
@@ -319,8 +317,9 @@ func ForceTeeHint(raw string, commandSlug string) string {
 		return ""
 	}
 
-	// Check if tee is enabled
+	// Check if tee is enabled from config
 	teeCfg := DefaultTeeConfig()
+	teeCfg.Enabled = cfg.Hooks.TeeEnabled
 	if !teeCfg.Enabled {
 		return ""
 	}

@@ -103,7 +103,7 @@ func (cb *CrunchBench) RunBenchmark(cfg PipelineConfig) *BenchmarkReport {
 		Recommendations: make([]string, 0),
 	}
 
-	pipeline := NewPipelineCoordinator(cfg)
+	pipeline := NewPipelineCoordinator(&cfg)
 
 	for _, input := range cb.testInputs {
 		result := cb.benchmarkInput(input, pipeline)

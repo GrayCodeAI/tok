@@ -191,6 +191,10 @@ output, applies intelligent filtering, and tracks token savings.`,
 			// See shared.AppState for the SkipEnv field.
 			_ = skipEnv // consumed by executor to pass env to child processes
 
+			// Inject AppState into command context so subcommands can retrieve
+			// flag state via shared.AppStateFrom(ctx) instead of globals.
+			cmd.SetContext(shared.WithAppState(cmd.Context(), shared.Global()))
+
 			if isOperationalCommand(cmd) {
 				if err := integrity.RuntimeCheck(); err != nil {
 					return err
@@ -540,14 +544,24 @@ func trackCommandInvocation(cmd *cobra.Command) {
 	})
 }
 
-// showPowerfulWelcome displays a helpful welcome message for the CLI
+// showPowerfulWelcome displays a helpful welcome message for the CLI.
+// The ASCII box width is computed dynamically so version strings of any
+// length keep the border aligned.
 func showPowerfulWelcome(cmd *cobra.Command) error {
+	const boxWidth = 62 // total inner width of the box
+	versionStr := "🚀 tok CLI v" + shared.Version
+	titlePadding := (boxWidth - len(versionStr)) / 2
+	if titlePadding < 0 {
+		titlePadding = 0
+	}
+	titleLine := "║" + strings.Repeat(" ", titlePadding) + versionStr + strings.Repeat(" ", boxWidth-titlePadding-len(versionStr)) + "║"
+
 	out.Global().Println()
-	out.Global().Println("╔════════════════════════════════════════════════════════════╗")
-	out.Global().Println("║                    🚀 tok CLI v" + shared.Version + "                     ║")
-	out.Global().Println("╠════════════════════════════════════════════════════════════╣")
-	out.Global().Println("║  Token-aware CLI proxy - 60-90% token reduction           ║")
-	out.Global().Println("╚════════════════════════════════════════════════════════════╝")
+	out.Global().Println("╔" + strings.Repeat("═", boxWidth) + "╗")
+	out.Global().Println(titleLine)
+	out.Global().Println("╠" + strings.Repeat("═", boxWidth) + "╣")
+	out.Global().Println("║  Token-aware CLI proxy - 60-90% token reduction" + strings.Repeat(" ", boxWidth-49) + "║")
+	out.Global().Println("╚" + strings.Repeat("═", boxWidth) + "╝")
 	out.Global().Println()
 	out.Global().Println("📚 QUICK START:")
 	out.Global().Println()

@@ -46,7 +46,7 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 	out.Global().Printf("Pipeline Execution: %s\n", args[0])
 	out.Global().Printf("Original: ~%d tokens\n\n", originalTokens)
 
-	pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
+	pipeline := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 		Mode:                filter.ModeMinimal,
 		QueryIntent:         shared.GetQueryIntent(),
 		Budget:              shared.GetTokenBudget(),

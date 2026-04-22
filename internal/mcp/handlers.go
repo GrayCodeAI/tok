@@ -67,7 +67,7 @@ func (s *Server) handleFilter(arguments json.RawMessage) (*ToolsCallResult, erro
 	// Use existing pipeline or create new one
 	pipeline := s.pipeline
 	if pipeline == nil {
-		pipeline = filter.NewPipelineCoordinator(cfg)
+		pipeline = filter.NewPipelineCoordinator(&cfg)
 	}
 
 	// Process text
@@ -135,7 +135,7 @@ func (s *Server) handleCompressFile(arguments json.RawMessage) (*ToolsCallResult
 	cfg := filter.PipelineConfig{Mode: mode}
 	pipeline := s.pipeline
 	if pipeline == nil {
-		pipeline = filter.NewPipelineCoordinator(cfg)
+		pipeline = filter.NewPipelineCoordinator(&cfg)
 	}
 
 	// Process

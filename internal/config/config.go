@@ -252,8 +252,9 @@ type FilterConfig struct {
 // HooksConfig controls shell hook behavior.
 type HooksConfig struct {
 	ExcludedCommands []string `mapstructure:"excluded_commands"`
-	AuditDir         string   `mapstructure:"audit_dir"` // Directory for hook audit logs
-	TeeDir           string   `mapstructure:"tee_dir"`   // Directory for failure tee logs
+	AuditDir         string   `mapstructure:"audit_dir"`   // Directory for hook audit logs
+	TeeDir           string   `mapstructure:"tee_dir"`     // Directory for failure tee logs
+	TeeEnabled       bool     `mapstructure:"tee_enabled"` // Enable tee file writing (default: true)
 }
 
 // EditConfig controls edit batching behavior.
@@ -505,6 +506,7 @@ func Defaults() *Config {
 			ExcludedCommands: []string{},
 			AuditDir:         "",
 			TeeDir:           "",
+			TeeEnabled:       true,
 		},
 		Edit: EditConfig{
 			BatchEnabled:    true,
@@ -595,76 +597,95 @@ func Load(cfgFile string) (*Config, error) {
 	return cfg, nil
 }
 
+// envAlias defines a single environment-variable alias.
+// Using a struct instead of closures eliminates per-Load allocation.
+type envAlias struct {
+	key    string // config key to set
+	parser string // "string", "bool", "int", "float", "bool-not"
+}
+
+// envAliasRegistry maps non-standard env var names to their config keys.
+// Registered once at init time — no allocations on each Load() call.
+var envAliasRegistry = map[string]envAlias{
+	"TOK_DB_PATH":             {key: "tracking.database_path", parser: "string"},
+	"TOK_TELEMETRY_DISABLED":  {key: "tracking.telemetry", parser: "bool-not"},
+	"TOK_AUDIT_DIR":           {key: "hooks.audit_dir", parser: "string"},
+	"TOK_TEE_DIR":             {key: "hooks.tee_dir", parser: "string"},
+	"TOK_TEE":                 {key: "hooks.tee_enabled", parser: "bool"},
+	"TOK_HOOK_AUDIT":          {key: "hooks.audit_enabled", parser: "bool"},
+	"TOK_BUDGET":              {key: "pipeline.default_budget", parser: "int"},
+	"TOK_MODE":                {key: "filter.mode", parser: "string"},
+	"TOK_PRESET":              {key: "pipeline.preset", parser: "string"},
+	"TOK_MAX_CONTEXT":         {key: "pipeline.max_context_tokens", parser: "int"},
+	"TOK_CACHE_SIZE":          {key: "pipeline.cache_max_size", parser: "int"},
+	"TOK_ENTROPY_THRESHOLD":   {key: "pipeline.entropy_threshold", parser: "float"},
+	"TOK_COMPACTION":          {key: "pipeline.enable_compaction", parser: "bool"},
+	"TOK_H2O":                 {key: "pipeline.enable_h2o", parser: "bool"},
+	"TOK_ATTENTION_SINK":      {key: "pipeline.enable_attention_sink", parser: "bool"},
+	"TOK_DIFF_ADAPT":          {key: "pipeline.enable_difft_adapt", parser: "bool"},
+	"TOK_EPIC":                {key: "pipeline.enable_epic", parser: "bool"},
+	"TOK_SSDP":                {key: "pipeline.enable_ssdp", parser: "bool"},
+	"TOK_AGENT_OCR":           {key: "pipeline.enable_agent_ocr", parser: "bool"},
+	"TOK_S2_MAD":              {key: "pipeline.enable_s2_mad", parser: "bool"},
+	"TOK_ACON":                {key: "pipeline.enable_acon", parser: "bool"},
+	"TOK_LATENT_COLLAB":       {key: "pipeline.enable_latent_collab", parser: "bool"},
+	"TOK_GRAPH_COT":           {key: "pipeline.enable_graph_cot", parser: "bool"},
+	"TOK_ROLE_BUDGET":         {key: "pipeline.enable_role_budget", parser: "bool"},
+	"TOK_SWE_ADAPTIVE":        {key: "pipeline.enable_swe_adaptive_loop", parser: "bool"},
+	"TOK_AGENT_OCR_HISTORY":   {key: "pipeline.enable_agent_ocr_history", parser: "bool"},
+	"TOK_PLAN_BUDGET":         {key: "pipeline.enable_plan_budget", parser: "bool"},
+	"TOK_LIGHTMEM":            {key: "pipeline.enable_lightmem", parser: "bool"},
+	"TOK_PATH_SHORTEN":        {key: "pipeline.enable_path_shorten", parser: "bool"},
+	"TOK_JSON_SAMPLER":        {key: "pipeline.enable_json_sampler", parser: "bool"},
+	"TOK_LOG_CRUNCH":          {key: "pipeline.enable_log_crunch", parser: "bool"},
+	"TOK_SEARCH_CRUNCH":       {key: "pipeline.enable_search_crunch", parser: "bool"},
+	"TOK_DIFF_CRUNCH":         {key: "pipeline.enable_diff_crunch", parser: "bool"},
+	"TOK_STRUCTURAL_COLLAPSE": {key: "pipeline.enable_structural_collapse", parser: "bool"},
+	"TOK_RESEARCH_PACK":       {key: "pipeline.enable_research_pack", parser: "bool"},
+}
+
+// parseEnvValue converts a raw env string according to the alias parser type.
+func parseEnvValue(val string, parser string) (interface{}, bool) {
+	switch parser {
+	case "string":
+		return val, true
+	case "bool":
+		return val == "true" || val == "1", true
+	case "bool-not":
+		b, err := strconv.ParseBool(val)
+		if err != nil {
+			return nil, false
+		}
+		return !b, true
+	case "int":
+		n, err := strconv.Atoi(val)
+		if err != nil {
+			return nil, false
+		}
+		return n, true
+	case "float":
+		f, err := strconv.ParseFloat(val, 64)
+		if err != nil {
+			return nil, false
+		}
+		return f, true
+	default:
+		return val, true
+	}
+}
+
 // bindEnvAliases maps non-standard env var names to their config keys.
 // Viper's AutomaticEnv handles standard TOK_<CONFIG_KEY> mappings.
 // This function covers legacy/short env var names and values requiring transformation.
+// Zero-allocation hot path: the registry is a package-level static map.
 func bindEnvAliases(v *viper.Viper) {
-	aliasMap := map[string]func(v *viper.Viper, val string){
-		"TOK_DB_PATH": func(v *viper.Viper, val string) { v.Set("tracking.database_path", val) },
-		"TOK_TELEMETRY_DISABLED": func(v *viper.Viper, val string) {
-			if parsed, err := strconv.ParseBool(val); err == nil {
-				v.Set("tracking.telemetry", !parsed)
-			}
-		},
-		"TOK_AUDIT_DIR":  func(v *viper.Viper, val string) { v.Set("hooks.audit_dir", val) },
-		"TOK_TEE_DIR":    func(v *viper.Viper, val string) { v.Set("hooks.tee_dir", val) },
-		"TOK_TEE":        func(v *viper.Viper, val string) { v.Set("hooks.tee_enabled", val == "true" || val == "1") },
-		"TOK_HOOK_AUDIT": func(v *viper.Viper, val string) { v.Set("hooks.audit_enabled", val == "true" || val == "1") },
-		"TOK_BUDGET": func(v *viper.Viper, val string) {
-			if n, err := strconv.Atoi(val); err == nil {
-				v.Set("pipeline.default_budget", n)
-			}
-		},
-		"TOK_MODE":   func(v *viper.Viper, val string) { v.Set("filter.mode", val) },
-		"TOK_PRESET": func(v *viper.Viper, val string) { v.Set("pipeline.preset", val) },
-		"TOK_MAX_CONTEXT": func(v *viper.Viper, val string) {
-			if n, err := strconv.Atoi(val); err == nil {
-				v.Set("pipeline.max_context_tokens", n)
-			}
-		},
-		"TOK_CACHE_SIZE": func(v *viper.Viper, val string) {
-			if n, err := strconv.Atoi(val); err == nil {
-				v.Set("pipeline.cache_max_size", n)
-			}
-		},
-		"TOK_ENTROPY_THRESHOLD": func(v *viper.Viper, val string) {
-			if f, err := strconv.ParseFloat(val, 64); err == nil {
-				v.Set("pipeline.entropy_threshold", f)
-			}
-		},
-		"TOK_COMPACTION":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_compaction", val == "true" || val == "1") },
-		"TOK_H2O":            func(v *viper.Viper, val string) { v.Set("pipeline.enable_h2o", val == "true" || val == "1") },
-		"TOK_ATTENTION_SINK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_attention_sink", val == "true" || val == "1") },
-		"TOK_DIFF_ADAPT":     func(v *viper.Viper, val string) { v.Set("pipeline.enable_difft_adapt", val == "true" || val == "1") },
-		"TOK_EPIC":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_epic", val == "true" || val == "1") },
-		"TOK_SSDP":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_ssdp", val == "true" || val == "1") },
-		"TOK_AGENT_OCR":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_agent_ocr", val == "true" || val == "1") },
-		"TOK_S2_MAD":         func(v *viper.Viper, val string) { v.Set("pipeline.enable_s2_mad", val == "true" || val == "1") },
-		"TOK_ACON":           func(v *viper.Viper, val string) { v.Set("pipeline.enable_acon", val == "true" || val == "1") },
-		"TOK_LATENT_COLLAB":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_latent_collab", val == "true" || val == "1") },
-		"TOK_GRAPH_COT":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_graph_cot", val == "true" || val == "1") },
-		"TOK_ROLE_BUDGET":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_role_budget", val == "true" || val == "1") },
-		"TOK_SWE_ADAPTIVE": func(v *viper.Viper, val string) {
-			v.Set("pipeline.enable_swe_adaptive_loop", val == "true" || val == "1")
-		},
-		"TOK_AGENT_OCR_HISTORY": func(v *viper.Viper, val string) {
-			v.Set("pipeline.enable_agent_ocr_history", val == "true" || val == "1")
-		},
-		"TOK_PLAN_BUDGET":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_plan_budget", val == "true" || val == "1") },
-		"TOK_LIGHTMEM":      func(v *viper.Viper, val string) { v.Set("pipeline.enable_lightmem", val == "true" || val == "1") },
-		"TOK_PATH_SHORTEN":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_path_shorten", val == "true" || val == "1") },
-		"TOK_JSON_SAMPLER":  func(v *viper.Viper, val string) { v.Set("pipeline.enable_json_sampler", val == "true" || val == "1") },
-		"TOK_LOG_CRUNCH":    func(v *viper.Viper, val string) { v.Set("pipeline.enable_log_crunch", val == "true" || val == "1") },
-		"TOK_SEARCH_CRUNCH": func(v *viper.Viper, val string) { v.Set("pipeline.enable_search_crunch", val == "true" || val == "1") },
-		"TOK_DIFF_CRUNCH":   func(v *viper.Viper, val string) { v.Set("pipeline.enable_diff_crunch", val == "true" || val == "1") },
-		"TOK_STRUCTURAL_COLLAPSE": func(v *viper.Viper, val string) {
-			v.Set("pipeline.enable_structural_collapse", val == "true" || val == "1")
-		},
-		"TOK_RESEARCH_PACK": func(v *viper.Viper, val string) { v.Set("pipeline.enable_research_pack", val == "true" || val == "1") },
-	}
-	for env, setter := range aliasMap {
-		if val := os.Getenv(env); val != "" {
-			setter(v, val)
+	for env, alias := range envAliasRegistry {
+		val := os.Getenv(env)
+		if val == "" {
+			continue
+		}
+		if parsed, ok := parseEnvValue(val, alias.parser); ok {
+			v.Set(alias.key, parsed)
 		}
 	}
 }

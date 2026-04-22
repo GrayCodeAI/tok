@@ -244,7 +244,7 @@ func compressToFit(content string, maxTokens int) string {
 		Budget: maxTokens,
 	}
 
-	pipeline := filter.NewPipelineCoordinator(cfg)
+	pipeline := filter.NewPipelineCoordinator(&cfg)
 	compressed, _ := pipeline.Process(content)
 
 	return compressed

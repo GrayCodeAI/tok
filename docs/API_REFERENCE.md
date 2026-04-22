@@ -7,7 +7,7 @@
 #### Pipeline Coordinator
 ```go
 // NewPipelineCoordinator creates a new compression pipeline
-func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator
+func NewPipelineCoordinator(cfg *PipelineConfig) *PipelineCoordinator
 
 // Process compresses input through all enabled layers
 func (pc *PipelineCoordinator) Process(input string) (string, *PipelineStats)
@@ -149,7 +149,7 @@ cfg := PipelineConfig{
     Mode:   ModeMinimal,
     Budget: 2000,
 }
-pipeline := NewPipelineCoordinator(cfg)
+pipeline := NewPipelineCoordinator(&cfg)
 output, stats := pipeline.Process(input)
 ```
 

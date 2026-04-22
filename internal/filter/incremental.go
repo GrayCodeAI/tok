@@ -9,7 +9,7 @@ type IncrementalCompressor struct {
 
 func NewIncrementalCompressor(cfg PipelineConfig, chunkSize int) *IncrementalCompressor {
 	return &IncrementalCompressor{
-		coordinator: NewPipelineCoordinator(cfg),
+		coordinator: NewPipelineCoordinator(&cfg),
 		chunkSize:   chunkSize,
 	}
 }

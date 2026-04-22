@@ -33,12 +33,56 @@ type Scanner struct {
 	rules []ScanRule
 }
 
+// ContextValidator is an optional interface for rules that need additional
+// context validation beyond regex matching (e.g., to reduce false positives).
+type ContextValidator interface {
+	// ValidateContext returns true if the match at position pos in content is a true positive.
+	ValidateContext(content string, pos int, match string) bool
+}
+
+// awsSecretContextValidator checks that a 40-char base64 string is likely an
+// AWS secret by looking for AWS-related keywords within a 60-char window.
+type awsSecretContextValidator struct{}
+
+var awsContextKeywords = []string{
+	"aws", "secret", "access", "credential", "key", "token",
+	"AKIA", "ASIA", "AROA", "AIDA",
+}
+
+func (awsSecretContextValidator) ValidateContext(content string, pos int, match string) bool {
+	// Check 60 chars before the match for AWS-related context
+	start := pos - 60
+	if start < 0 {
+		start = 0
+	}
+	window := strings.ToLower(content[start:pos])
+	for _, kw := range awsContextKeywords {
+		if strings.Contains(window, kw) {
+			return true
+		}
+	}
+	// Also check after the match (in case of "key = <secret>" format)
+	end := pos + len(match) + 60
+	if end > len(content) {
+		end = len(content)
+	}
+	afterWindow := strings.ToLower(content[pos:end])
+	for _, kw := range awsContextKeywords {
+		if strings.Contains(afterWindow, kw) {
+			return true
+		}
+	}
+	return false
+}
+
 // ScanRule defines a single scanning rule
 type ScanRule struct {
 	Name        string
 	Pattern     *regexp.Regexp
 	Severity    string
 	Description string
+	// ContextValidator, if non-nil, is called for each match to reduce false positives.
+	ContextValidator ContextValidator
 }
 
 // Pre-compiled regexes for performance (PERF-6)
@@ -58,10 +102,11 @@ func initScanner() []ScanRule {
 				Description: "AWS Access Key ID",
 			},
 			{
-				Name:        "aws_secret_key",
-				Pattern:     regexp.MustCompile(`(?:^|[^a-zA-Z0-9/+=])([A-Za-z0-9/+=]{40})(?:[^a-zA-Z0-9/+=]|$)`),
-				Severity:    SeverityCritical,
-				Description: "AWS Secret Access Key",
+				Name:             "aws_secret_key",
+				Pattern:          regexp.MustCompile(`(?:^|[^a-zA-Z0-9/+=])([A-Za-z0-9/+=]{40})(?:[^a-zA-Z0-9/+=]|$)`),
+				Severity:         SeverityCritical,
+				Description:      "AWS Secret Access Key",
+				ContextValidator: awsSecretContextValidator{},
 			},
 			{
 				Name:        "github_token",
@@ -165,18 +210,25 @@ func NewScanner() *Scanner {
 	}
 }
 
-// Scan analyzes content for sensitive information and returns findings
+// Scan analyzes content for sensitive information and returns findings.
+// If a rule has a ContextValidator, matches that fail validation are skipped.
 func (s *Scanner) Scan(content string) []Finding {
 	var findings []Finding
 
 	for _, rule := range s.rules {
 		matches := rule.Pattern.FindAllStringIndex(content, -1)
 		for _, match := range matches {
+			m := content[match[0]:match[1]]
+			if rule.ContextValidator != nil {
+				if !rule.ContextValidator.ValidateContext(content, match[0], m) {
+					continue
+				}
+			}
 			findings = append(findings, Finding{
 				Rule:     rule.Name,
 				Severity: rule.Severity,
 				Message:  rule.Description,
-				Match:    content[match[0]:match[1]],
+				Match:    m,
 				Position: match[0],
 			})
 		}
@@ -374,28 +426,25 @@ func IsPrintableASCII(s string) bool {
 	return true
 }
 
+// hiddenUnicodeSet contains invisible/zero-width Unicode characters.
+var hiddenUnicodeSet = map[rune]bool{
+	'\u200B': true, // Zero-width space
+	'\u200C': true, // Zero-width non-joiner
+	'\u200D': true, // Zero-width joiner
+	'\uFEFF': true, // Byte order mark (zero-width no-break space)
+	'\u2060': true, // Word joiner
+	'\u180E': true, // Mongolian vowel separator
+	'\u200E': true, // Left-to-right mark
+	'\u200F': true, // Right-to-left mark
+}
+
 // HasHiddenUnicode checks for hidden/invisible Unicode characters
 func HasHiddenUnicode(s string) bool {
-	// Zero-width characters and other invisible Unicode
-	hiddenChars := []rune{
-		'\u200B', // Zero-width space
-		'\u200C', // Zero-width non-joiner
-		'\u200D', // Zero-width joiner
-		'\uFEFF', // Byte order mark (zero-width no-break space)
-		'\u2060', // Word joiner
-		'\u180E', // Mongolian vowel separator
-		'\u200E', // Left-to-right mark
-		'\u200F', // Right-to-left mark
-	}
-
 	for _, r := range s {
-		for _, hidden := range hiddenChars {
-			if r == hidden {
-				return true
-			}
+		if hiddenUnicodeSet[r] {
+			return true
 		}
 	}
-
 	return false
 }
 

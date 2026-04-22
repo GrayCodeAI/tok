@@ -21,7 +21,7 @@ func FuzzPipelineProcess(f *testing.F) {
 	}
 
 	f.Fuzz(func(t *testing.T, input string) {
-		p := NewPipelineCoordinator(PipelineConfig{})
+		p := NewPipelineCoordinator(&PipelineConfig{})
 		_, _ = p.Process(input)
 	})
 }

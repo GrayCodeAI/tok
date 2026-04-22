@@ -65,7 +65,7 @@ func QuickProcess(input string, mode Mode) (string, int) {
 		EnableSmallKV:          true,
 		EnableKVzip:            true,
 	}
-	p := NewPipelineCoordinator(cfg)
+	p := NewPipelineCoordinator(&cfg)
 	output, stats := p.Process(input)
 	return output, stats.TotalSaved
 }

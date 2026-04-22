@@ -87,7 +87,7 @@ func TestServer_ToolsList(t *testing.T) {
 
 func TestServer_ToolsCall_Filter(t *testing.T) {
 	cfg := filter.PipelineConfig{Mode: filter.ModeMinimal}
-	pipeline := filter.NewPipelineCoordinator(cfg)
+	pipeline := filter.NewPipelineCoordinator(&cfg)
 	server := NewServer("test", "1.0.0", pipeline)
 
 	// First initialize

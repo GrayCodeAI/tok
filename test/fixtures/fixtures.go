@@ -67,7 +67,7 @@ index 1234567..abcdefg 100644
 +	EnableAST        bool
  }
  
- func NewPipelineCoordinator(cfg PipelineConfig) *PipelineCoordinator {
+ func NewPipelineCoordinator(cfg *PipelineConfig) *PipelineCoordinator {
 -	return &PipelineCoordinator{}
 +	pc := &PipelineCoordinator{
 +		config: cfg,

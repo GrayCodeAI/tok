@@ -45,7 +45,7 @@ func TestPipelineCompression(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := filter.NewPipelineCoordinator(filter.PipelineConfig{
+			p := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 				Mode:            filter.ModeMinimal,
 				SessionTracking: true,
 				NgramEnabled:    true,
@@ -224,7 +224,7 @@ func TestLargeInput(t *testing.T) {
 	}
 	input := builder.String()
 
-	p := filter.NewPipelineCoordinator(filter.PipelineConfig{
+	p := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 		Mode:             filter.ModeMinimal,
 		SessionTracking:  true,
 		EnableEntropy:    true,
@@ -245,7 +245,7 @@ func TestContextCancellation(t *testing.T) {
 	cancel() // Cancel immediately
 	_ = ctx  // Avoid unused variable warning
 
-	p := filter.NewPipelineCoordinator(filter.PipelineConfig{
+	p := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 		Mode:            filter.ModeMinimal,
 		SessionTracking: true,
 	})
@@ -261,7 +261,7 @@ func BenchmarkFullPipeline(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		p := filter.NewPipelineCoordinator(filter.PipelineConfig{
+		p := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 			Mode:            filter.ModeMinimal,
 			SessionTracking: true,
 			NgramEnabled:    true,
@@ -279,7 +279,7 @@ func BenchmarkMinimalPipeline(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		p := filter.NewPipelineCoordinator(filter.PipelineConfig{
+		p := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 			Mode:            filter.ModeMinimal,
 			SessionTracking: false,
 		})

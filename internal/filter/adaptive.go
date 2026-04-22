@@ -202,7 +202,7 @@ func (a *AdaptiveLayerSelector) RecommendedConfig(ct ContentType, mode Mode) Pip
 func (a *AdaptiveLayerSelector) OptimizePipeline(input string, mode Mode) *PipelineCoordinator {
 	ct := a.AnalyzeContent(input)
 	config := a.RecommendedConfig(ct, mode)
-	return NewPipelineCoordinator(config)
+	return NewPipelineCoordinator(&config)
 }
 
 // ContentTypeString returns a human-readable content type name

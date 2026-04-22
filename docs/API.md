@@ -151,7 +151,7 @@ type PipelineCoordinator struct {
     stats   PipelineStats
 }
 
-func NewPipelineCoordinator(config PipelineConfig) *PipelineCoordinator
+func NewPipelineCoordinator(config *PipelineConfig) *PipelineCoordinator
 func (p *PipelineCoordinator) Process(input string) (string, PipelineStats)
 func (p *PipelineCoordinator) ProcessStream(ctx context.Context, reader io.Reader, writer io.Writer) error
 func (p *PipelineCoordinator) Stats() PipelineStats

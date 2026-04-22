@@ -53,7 +53,7 @@ func runExplain(cmd *cobra.Command, args []string) error {
 	out.Global().Printf("Command: %s\n", strings.Join(args, " "))
 	out.Global().Printf("Original: ~%d tokens\n\n", originalTokens)
 
-	pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
+	pipeline := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 		Mode:                filter.ModeMinimal,
 		QueryIntent:         shared.GetQueryIntent(),
 		Budget:              shared.GetTokenBudget(),

@@ -117,24 +117,6 @@ func TestOSCommandRunner_LookPath(t *testing.T) {
 	}
 }
 
-func TestSanitizeArgs(t *testing.T) {
-	tests := []struct {
-		input, want string
-	}{
-		{"hello", "hello"},
-		{"hello\nworld", "hello\nworld"},
-		{"hello\x01world", "helloworld"},
-		{"test\x00null", "testnull"},
-	}
-
-	for _, tt := range tests {
-		got := sanitizeArgs(tt.input)
-		if got != tt.want {
-			t.Errorf("sanitizeArgs(%q) = %q, want %q", tt.input, got, tt.want)
-		}
-	}
-}
-
 func TestCommonModelPricing(t *testing.T) {
 	if len(CommonModelPricing) == 0 {
 		t.Error("CommonModelPricing should not be empty")

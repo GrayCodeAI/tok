@@ -14,7 +14,7 @@ type StreamingPipeline struct {
 // NewStreamingPipeline creates a streaming pipeline wrapper
 func NewStreamingPipeline(cfg PipelineConfig) *StreamingPipeline {
 	return &StreamingPipeline{
-		coordinator: NewPipelineCoordinator(cfg),
+		coordinator: NewPipelineCoordinator(&cfg),
 		bufferSize:  64 * 1024, // 64KB chunks
 	}
 }

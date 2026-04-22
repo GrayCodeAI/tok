@@ -21,7 +21,7 @@ func BenchmarkPipeline_ProcessSmall(b *testing.B) {
 		EnableH2O:           true,
 		EnableAttentionSink: true,
 	}
-	p := NewPipelineCoordinator(cfg)
+	p := NewPipelineCoordinator(&cfg)
 	input := "This is a small test input for the compression pipeline."
 
 	b.ResetTimer()
@@ -48,7 +48,7 @@ func BenchmarkPipeline_ProcessMedium(b *testing.B) {
 		EnableH2O:           true,
 		EnableAttentionSink: true,
 	}
-	p := NewPipelineCoordinator(cfg)
+	p := NewPipelineCoordinator(&cfg)
 	// ~1KB input
 	input := ""
 	for i := 0; i < 50; i++ {
@@ -81,7 +81,7 @@ func BenchmarkPipeline_ProcessWithBudget(b *testing.B) {
 		EnableH2O:           true,
 		EnableAttentionSink: true,
 	}
-	p := NewPipelineCoordinator(cfg)
+	p := NewPipelineCoordinator(&cfg)
 	input := ""
 	for i := 0; i < 50; i++ {
 		input += "This is line " + string(rune('0'+i%10)) + " of the test input for the compression pipeline.\n"
@@ -162,7 +162,7 @@ func BenchmarkPipeline_ProcessParallel(b *testing.B) {
 		EnablePerplexity: true,
 		EnableAST:        true,
 	}
-	p := NewPipelineCoordinator(cfg)
+	p := NewPipelineCoordinator(&cfg)
 	input := "Test input for parallel processing benchmark"
 
 	b.ResetTimer()

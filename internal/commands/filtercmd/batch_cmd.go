@@ -120,7 +120,7 @@ func runBatch(cmd *cobra.Command, args []string) error {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
+			pipeline := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 				Mode:             mode,
 				QueryIntent:      shared.GetQueryIntent(),
 				Budget:           shared.GetTokenBudget(),

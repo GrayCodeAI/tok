@@ -56,7 +56,7 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 
 	for _, preset := range presets {
 		cfg := filter.PresetConfig(preset, filter.ModeMinimal)
-		pipeline := filter.NewPipelineCoordinator(cfg)
+		pipeline := filter.NewPipelineCoordinator(&cfg)
 		compressed, stats := pipeline.Process(rawOutput)
 		report := equiv.Check(rawOutput, compressed)
 

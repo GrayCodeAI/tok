@@ -215,7 +215,7 @@ func BenchmarkPipeline(b *testing.B) {
 	for _, config := range configs {
 		for _, size := range sizes {
 			input := makeString(size)
-			pipeline := NewPipelineCoordinator(config.cfg)
+			pipeline := NewPipelineCoordinator(&config.cfg)
 
 			b.Run(fmt.Sprintf("%s_%d", config.name, size), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
@@ -248,21 +248,24 @@ func BenchmarkCompressionQuality(b *testing.B) {
 
 	for _, input := range inputs {
 		b.Run(fmt.Sprintf("%s_Fast", input.name), func(b *testing.B) {
-			pipeline := NewPipelineCoordinator(TierConfig(TierSurface, ModeMinimal))
+			cfg := TierConfig(TierSurface, ModeMinimal)
+			pipeline := NewPipelineCoordinator(&cfg)
 			for i := 0; i < b.N; i++ {
 				pipeline.Process(input.input)
 			}
 		})
 
 		b.Run(fmt.Sprintf("%s_Balanced", input.name), func(b *testing.B) {
-			pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
+			cfg := TierConfig(TierTrim, ModeMinimal)
+			pipeline := NewPipelineCoordinator(&cfg)
 			for i := 0; i < b.N; i++ {
 				pipeline.Process(input.input)
 			}
 		})
 
 		b.Run(fmt.Sprintf("%s_Full", input.name), func(b *testing.B) {
-			pipeline := NewPipelineCoordinator(TierConfig(TierExtract, ModeMinimal))
+			cfg := TierConfig(TierExtract, ModeMinimal)
+			pipeline := NewPipelineCoordinator(&cfg)
 			for i := 0; i < b.N; i++ {
 				pipeline.Process(input.input)
 			}
@@ -278,7 +281,8 @@ func BenchmarkMemoryUsage(b *testing.B) {
 		runtime.GC()
 		runtime.ReadMemStats(&m1)
 
-		pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
+		cfg := TierConfig(TierTrim, ModeMinimal)
+		pipeline := NewPipelineCoordinator(&cfg)
 		input := makeString(10000)
 
 		b.ResetTimer()
@@ -296,7 +300,8 @@ func BenchmarkMemoryUsage(b *testing.B) {
 
 // BenchmarkLatency benchmarks end-to-end latency
 func BenchmarkLatency(b *testing.B) {
-	pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
+	cfg := TierConfig(TierTrim, ModeMinimal)
+	pipeline := NewPipelineCoordinator(&cfg)
 
 	inputs := []struct {
 		name  string

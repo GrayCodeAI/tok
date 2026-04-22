@@ -129,7 +129,7 @@ func runWatch(cmd *cobra.Command, args []string) error {
 				continue
 			}
 
-			pipeline := filter.NewPipelineCoordinator(filter.PipelineConfig{
+			pipeline := filter.NewPipelineCoordinator(&filter.PipelineConfig{
 				Mode:             mode,
 				NgramEnabled:     true,
 				EnableCompaction: true,
