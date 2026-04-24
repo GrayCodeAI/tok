@@ -203,6 +203,7 @@ func (m model) Init() tea.Cmd {
 		m.spinner.Tick,
 		loadSnapshotCmd(m.ctx, m.loader, m.opts),
 		liveEventCmd(m.ctx, m.live),
+		refreshTickCmd(m.opts.RefreshInterval),
 	)
 }
 
@@ -376,10 +377,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmds = append(cmds, runActionCmd(m.ctx, m.actions, msg.ActionID, msg.Args))
 		}
 	case actionResultMsg:
-		// For Phase 1 we report outcomes via toast; Phase 2 sections can
-		// intercept these to refresh themselves selectively.
 		if msg.Err != nil {
 			cmds = append(cmds, requestToastCmd(ToastError, fmt.Sprintf("%s: %s", msg.ActionID, msg.Err)))
+		}
+		if msg.Cmd != nil {
+			cmds = append(cmds, msg.Cmd)
 		}
 	case paletteExecMsg:
 		if m.actions != nil {
@@ -967,14 +969,17 @@ func (m model) renderCompactTabs(width int) string {
 	}
 
 	// Breadcrumb fallback: keep the whole line under `width` even on 60-col
-	// terminals. Format: "‹ shift-tab · [3/12] Trends · tab ›".
+	// terminals. Format: "‹ Prev · [3/12] Current · Next ›".
 	current := m.sections[m.navIndex].Name()
-	breadcrumb := fmt.Sprintf("‹ shift-tab · %s[%d/%d] %s%s · tab ›",
-		"",
-		m.navIndex+1, len(m.sections),
-		current,
-		"",
-	)
+	prev := ""
+	if m.navIndex > 0 {
+		prev = m.sections[m.navIndex-1].Short() + " · "
+	}
+	next := ""
+	if m.navIndex < len(m.sections)-1 {
+		next = " · " + m.sections[m.navIndex+1].Short()
+	}
+	breadcrumb := fmt.Sprintf("‹ %s[%d/%d] %s%s ›", prev, m.navIndex+1, len(m.sections), current, next)
 	styled := m.theme.SidebarActive.Render(breadcrumb)
 	if lipgloss.Width(styled) > width {
 		// Even narrower: drop the arrows.

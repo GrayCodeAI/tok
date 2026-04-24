@@ -218,7 +218,7 @@ func newThemeByName(name ThemeName) theme {
 			Foreground(blue).
 			Bold(true),
 		PanelTitle: lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#F6F2A2")).
+			Foreground(gold).
 			Bold(true),
 		Panel: lipgloss.NewStyle().
 			Background(panelBg).

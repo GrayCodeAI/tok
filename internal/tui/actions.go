@@ -117,7 +117,11 @@ func runActionCmd(ctx context.Context, reg *ActionRegistry, id, args string) tea
 			return actionResultMsg{ActionID: id, Err: err}
 		}
 		result, err := a.Run(ctx, args)
-		return actionResultMsg{ActionID: id, Result: result, Err: err}
+		msg := actionResultMsg{ActionID: id, Result: result, Err: err}
+		if cmd, ok := result.(tea.Cmd); ok {
+			msg.Cmd = cmd
+		}
+		return msg
 	}
 }
 
@@ -148,7 +152,7 @@ func DefaultActionRegistry(deps ActionDeps) *ActionRegistry {
 		Category:    "View",
 		Run: func(context.Context, string) (any, error) {
 			if deps.RequestRefresh != nil {
-				_ = deps.RequestRefresh()
+				return deps.RequestRefresh(), nil
 			}
 			return nil, nil
 		},

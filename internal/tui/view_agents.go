@@ -34,8 +34,9 @@ func newAgentsSection() *agentsSection {
 	}
 }
 
-func (s *agentsSection) Name() string  { return "Agents" }
-func (s *agentsSection) Short() string { return "Agent Ops" }
+func (s *agentsSection) Name() string          { return "Agents" }
+func (s *agentsSection) Short() string         { return "Agent Ops" }
+func (s *agentsSection) SetFilter(q string)    { s.table.SetFilter(q) }
 
 func (s *agentsSection) ExportColumns() []Column     { return s.table.Columns() }
 func (s *agentsSection) ExportRows() []Row           { return s.table.VisibleRows() }

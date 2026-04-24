@@ -39,8 +39,9 @@ func newSessionsSection() *sessionsSection {
 	}
 }
 
-func (s *sessionsSection) Name() string  { return "Sessions" }
-func (s *sessionsSection) Short() string { return "Session Ops" }
+func (s *sessionsSection) Name() string          { return "Sessions" }
+func (s *sessionsSection) Short() string         { return "Session Ops" }
+func (s *sessionsSection) SetFilter(q string)    { s.table.SetFilter(q) }
 
 // Export* implementations satisfy ExportableTable so Phase 3 e-export
 // can serialize this view without the section reaching into the

@@ -34,7 +34,8 @@ func newModelsSection() *modelsSection {
 }
 
 func (s *modelsSection) Name() string  { return "Models" }
-func (s *modelsSection) Short() string { return "Model Cost" }
+func (s *modelsSection) Short() string         { return "Model Cost" }
+func (s *modelsSection) SetFilter(q string)    { s.table.SetFilter(q) }
 
 func (s *modelsSection) ExportColumns() []Column     { return s.table.Columns() }
 func (s *modelsSection) ExportRows() []Row           { return s.table.VisibleRows() }
@@ -176,6 +177,8 @@ func handleTableNav(t *Table, m tea.KeyMsg) {
 		t.PageDown()
 	case "pgup", "ctrl+b":
 		t.PageUp()
+	case "s":
+		t.SortAccent()
 	}
 }
 

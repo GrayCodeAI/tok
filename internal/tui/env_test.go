@@ -1,11 +1,17 @@
 package tui
 
 import (
+	"runtime"
 	"strings"
 	"testing"
 )
 
 func TestDetectUTF8FromLang(t *testing.T) {
+	// On darwin/linux the no-env-vars case defaults to true (modern terminals
+	// are UTF-8 by default). On other platforms it defaults to false.
+	emptyWant := runtime.GOOS == "darwin" || runtime.GOOS == "linux" ||
+		runtime.GOOS == "freebsd" || runtime.GOOS == "openbsd" || runtime.GOOS == "netbsd"
+
 	cases := []struct {
 		name string
 		env  map[string]string
@@ -15,7 +21,7 @@ func TestDetectUTF8FromLang(t *testing.T) {
 		{"explicit utf8", map[string]string{"LC_ALL": "en_US.utf8"}, true},
 		{"POSIX", map[string]string{"LANG": "POSIX"}, false},
 		{"latin1", map[string]string{"LANG": "en_US.ISO-8859-1"}, false},
-		{"empty", map[string]string{}, false},
+		{"empty", map[string]string{}, emptyWant},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

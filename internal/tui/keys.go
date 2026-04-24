@@ -36,6 +36,7 @@ type KeyMap struct {
 	Back    key.Binding
 	Yank    key.Binding
 	Export  key.Binding
+	Sort    key.Binding
 
 	// Overlays (Phase 1)
 	Palette key.Binding // ":"
@@ -130,6 +131,10 @@ func DefaultKeyMap() KeyMap {
 			key.WithKeys("e"),
 			key.WithHelp("e", "export view"),
 		),
+		Sort: key.NewBinding(
+			key.WithKeys("s"),
+			key.WithHelp("s", "sort by savings"),
+		),
 		Palette: key.NewBinding(
 			key.WithKeys(":"),
 			key.WithHelp(":", "command palette"),
@@ -175,7 +180,7 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	return [][]key.Binding{
 		{k.JumpSection, k.NextSection, k.PrevSection, k.HistoryBack, k.HistoryForward, k.Refresh},
 		{k.Up, k.Down, k.Top, k.Bottom, k.PageUp, k.PageDn},
-		{k.Enter, k.Back, k.Yank, k.Export},
+		{k.Enter, k.Back, k.Yank, k.Export, k.Sort},
 		{k.Palette, k.Search, k.Help, k.Esc, k.Quit},
 	}
 }

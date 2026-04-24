@@ -141,6 +141,17 @@ func (t *Table) ToggleSort(col int) {
 	t.rebuild()
 }
 
+// SortAccent toggles sort on the first accent column (the "Saved" column
+// in most sections). Cycles through ascending → descending → off.
+func (t *Table) SortAccent() {
+	for i, c := range t.columns {
+		if c.Accent {
+			t.ToggleSort(i)
+			return
+		}
+	}
+}
+
 // MoveUp, MoveDown, Top, Bottom, PageUp, PageDown are the cursor
 // primitives a section's Update wires to KeyMap entries.
 func (t *Table) MoveUp()   { t.moveBy(-1) }

@@ -42,8 +42,9 @@ func newCommandsSection() *commandsSection {
 	}
 }
 
-func (s *commandsSection) Name() string  { return "Commands" }
-func (s *commandsSection) Short() string { return "Command Mix" }
+func (s *commandsSection) Name() string          { return "Commands" }
+func (s *commandsSection) Short() string         { return "Command Mix" }
+func (s *commandsSection) SetFilter(q string)    { s.table.SetFilter(q) }
 
 func (s *commandsSection) ExportColumns() []Column     { return s.table.Columns() }
 func (s *commandsSection) ExportRows() []Row           { return s.table.VisibleRows() }

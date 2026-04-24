@@ -110,12 +110,13 @@ func (c *ConfirmOverlay) View(th theme, width int) string {
 
 	yesLabel := " yes "
 	noLabel := " no "
+	btnText := th.App.GetBackground()
 	yesStyle := lipgloss.NewStyle().Padding(0, 1).Background(th.Muted.GetForeground())
 	noStyle := lipgloss.NewStyle().Padding(0, 1).Background(th.Muted.GetForeground())
 	if c.default_ {
-		yesStyle = yesStyle.Background(th.Positive.GetForeground()).Foreground(lipgloss.Color("#000000")).Bold(true)
+		yesStyle = yesStyle.Background(th.Positive.GetForeground()).Foreground(btnText).Bold(true)
 	} else {
-		noStyle = noStyle.Background(th.Danger.GetForeground()).Foreground(lipgloss.Color("#000000")).Bold(true)
+		noStyle = noStyle.Background(th.Danger.GetForeground()).Foreground(btnText).Bold(true)
 	}
 
 	buttons := lipgloss.JoinHorizontal(lipgloss.Top,

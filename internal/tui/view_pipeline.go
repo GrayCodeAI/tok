@@ -33,7 +33,8 @@ func newPipelineSection() *pipelineSection {
 	}
 }
 
-func (s *pipelineSection) Name() string  { return "Pipeline" }
+func (s *pipelineSection) Name() string          { return "Pipeline" }
+func (s *pipelineSection) SetFilter(q string)    { s.table.SetFilter(q) }
 func (s *pipelineSection) Short() string { return "Layer View" }
 
 func (s *pipelineSection) ExportColumns() []Column     { return s.table.Columns() }

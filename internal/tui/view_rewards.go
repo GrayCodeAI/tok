@@ -129,22 +129,21 @@ func renderStreakCalendar(th theme, points []tracking.DashboardTrendPoint, width
 
 func streakCell(th theme, p tracking.DashboardTrendPoint, utf8 bool) string {
 	var glyph string
-	var color lipgloss.Color
+	var color lipgloss.TerminalColor
 	switch {
 	case p.SavedTokens == 0:
 		glyph = pickGlyph(utf8, "░ ", ". ")
-		color = lipgloss.Color("#2B3442")
+		color = th.BarEmpty.GetForeground()
 	case p.ReductionPct < 20:
 		glyph = pickGlyph(utf8, "▒ ", ": ")
-		color = lipgloss.Color("#7AB8FF")
+		color = th.ValueFocus.GetForeground()
 	case p.ReductionPct < 40:
 		glyph = pickGlyph(utf8, "▓ ", "+ ")
-		color = lipgloss.Color("#53D18D")
+		color = th.ValuePositive.GetForeground()
 	default:
 		glyph = pickGlyph(utf8, "█ ", "# ")
-		color = lipgloss.Color("#F2CC70")
+		color = th.ValueGold.GetForeground()
 	}
-	_ = th
 	return lipgloss.NewStyle().Foreground(color).Render(glyph)
 }
 

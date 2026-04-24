@@ -104,21 +104,17 @@ func renderToast(th theme, t toast, width int) string {
 func toastStyle(th theme, kind ToastKind) (string, lipgloss.Style) {
 	switch kind {
 	case ToastSuccess:
-		return "✓", lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#53D18D")).
-			BorderForeground(lipgloss.Color("#53D18D"))
+		c := th.Positive.GetForeground()
+		return "✓", lipgloss.NewStyle().Foreground(c).BorderForeground(c)
 	case ToastWarning:
-		return "!", lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#E8BC62")).
-			BorderForeground(lipgloss.Color("#E8BC62"))
+		c := th.Warning.GetForeground()
+		return "!", lipgloss.NewStyle().Foreground(c).BorderForeground(c)
 	case ToastError:
-		return "✗", lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#FF7A7A")).
-			BorderForeground(lipgloss.Color("#FF7A7A"))
+		c := th.Danger.GetForeground()
+		return "✗", lipgloss.NewStyle().Foreground(c).BorderForeground(c)
 	default:
-		return "·", lipgloss.NewStyle().
-			Foreground(lipgloss.Color("#4FC3F7")).
-			BorderForeground(lipgloss.Color("#4FC3F7"))
+		c := th.Focus.GetForeground()
+		return "·", lipgloss.NewStyle().Foreground(c).BorderForeground(c)
 	}
 }
 

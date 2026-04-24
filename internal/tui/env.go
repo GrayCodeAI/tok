@@ -2,6 +2,7 @@ package tui
 
 import (
 	"os"
+	"runtime"
 	"strings"
 
 	"golang.org/x/term"
@@ -39,8 +40,14 @@ func detectUTF8() bool {
 				strings.Contains(strings.ToLower(s), "utf8")
 		}
 	}
-	// No locale envs set → default to UTF-8 on macOS/Linux, conservative
-	// ASCII elsewhere. Windows Terminal advertises UTF-8 but older
-	// consoles don't; returning false there keeps us readable.
-	return false
+	// No locale envs set. Modern macOS and Linux terminals are UTF-8 by
+	// default; Windows consoles are not. Default true on unix-like systems
+	// so Braille charts work out of the box without users needing to set
+	// LANG.
+	switch runtime.GOOS {
+	case "darwin", "linux", "freebsd", "openbsd", "netbsd":
+		return true
+	default:
+		return false
+	}
 }

@@ -34,8 +34,9 @@ func newProvidersSection() *providersSection {
 	}
 }
 
-func (s *providersSection) Name() string  { return "Providers" }
-func (s *providersSection) Short() string { return "Economics" }
+func (s *providersSection) Name() string             { return "Providers" }
+func (s *providersSection) Short() string            { return "Economics" }
+func (s *providersSection) SetFilter(q string)       { s.table.SetFilter(q) }
 
 func (s *providersSection) ExportColumns() []Column { return s.table.Columns() }
 func (s *providersSection) ExportRows() []Row       { return s.table.VisibleRows() }

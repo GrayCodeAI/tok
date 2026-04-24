@@ -61,9 +61,7 @@ func (s *logsSection) Update(ctx SectionContext, msg tea.Msg) (SectionRenderer, 
 		case "e":
 			s.minLevel = slog.LevelError
 		case "c":
-			if ctx.Logs != nil {
-				ctx.Logs.Clear()
-			}
+			return s, func() tea.Msg { return actionRequestMsg{ActionID: "logs.clear"} }
 		case "j", "down":
 			if s.scroll > 0 {
 				s.scroll--

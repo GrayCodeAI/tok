@@ -1,6 +1,9 @@
 package tui
 
-import "time"
+import (
+	tea "github.com/charmbracelet/bubbletea"
+	"time"
+)
 
 // This file is the single source of truth for the TUI's typed message
 // vocabulary. Every Update() switch across the package references these
@@ -26,13 +29,6 @@ const (
 	FilterModel    FilterField = "model"
 	FilterSession  FilterField = "session"
 )
-
-// filterChangedMsg is dispatched when the user edits a filter. The root
-// model applies it to Options, then kicks a reload.
-type filterChangedMsg struct {
-	Field FilterField
-	Value string // empty string clears the filter
-}
 
 // --- Drill-down / navigation ---------------------------------------------
 
@@ -87,9 +83,12 @@ type actionRequestMsg struct {
 
 // actionResultMsg reports the outcome of an action run. The section that
 // triggered the action is responsible for rendering any follow-up toast.
+// Cmd carries an optional follow-up tea.Cmd returned by the action (e.g.
+// view.refresh returns a loadSnapshotCmd via this field).
 type actionResultMsg struct {
 	ActionID string
 	Result   any
+	Cmd      tea.Cmd
 	Err      error
 }
 
