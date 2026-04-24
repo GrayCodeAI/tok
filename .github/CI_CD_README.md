@@ -158,8 +158,8 @@ When contributing:
 Add these badges to your README:
 
 ```markdown
-![CI](https://github.com/lakshmanpatel/tok/workflows/CI/badge.svg)
-![Security](https://github.com/lakshmanpatel/tok/workflows/Security/badge.svg)
-[![codecov](https://codecov.io/gh/lakshmanpatel/tok/branch/main/graph/badge.svg)](https://codecov.io/gh/lakshmanpatel/tok)
-[![Go Report Card](https://goreportcard.com/badge/github.com/lakshmanpatel/tok)](https://goreportcard.com/report/github.com/lakshmanpatel/tok)
+![CI](https://github.com/GrayCodeAI/tok/workflows/CI/badge.svg)
+![Security](https://github.com/GrayCodeAI/tok/workflows/Security/badge.svg)
+[![codecov](https://codecov.io/gh/GrayCodeAI/tok/branch/main/graph/badge.svg)](https://codecov.io/gh/GrayCodeAI/tok)
+[![Go Report Card](https://goreportcard.com/badge/github.com/GrayCodeAI/tok)](https://goreportcard.com/report/github.com/GrayCodeAI/tok)
 ```

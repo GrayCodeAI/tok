@@ -68,3 +68,4 @@ config/local.toml
 
 # Claude Code internal state
 .claude/scheduled_tasks.lock
+tok

@@ -2,7 +2,7 @@
 # Remove consolidated experimental layer files
 # These are now merged into L14-L16
 
-cd /Users/lakshmanpatel/Desktop/ProjectAlpha/tok/internal/filter
+cd /workspace/tok/internal/filter
 
 # L21-L25 → L14 (Edge Cases)
 rm -f marginal_info_gain.go      # L21

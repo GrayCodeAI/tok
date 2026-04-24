@@ -59,7 +59,7 @@ WantedBy=multi-user.target
   tasks:
     - name: Install Tok
       get_url:
-        url: https://github.com/lakshmanpatel/tok/releases/latest/download/tok
+        url: https://github.com/GrayCodeAI/tok/releases/latest/download/tok
         dest: /usr/local/bin/tok
         mode: '0755'
 

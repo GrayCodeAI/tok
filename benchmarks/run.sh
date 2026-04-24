@@ -15,7 +15,7 @@ RESULTS_FILE="$SCRIPT_DIR/results.md"
 
 if ! command -v "$TOK_BIN" &>/dev/null; then
   echo "Error: tok binary not found at '$TOK_BIN'"
-  echo "Build it first: cd /Users/lakshmanpatel/Desktop/ProjectAlpha/tok && go build -o tok ./cmd/tok"
+  echo "Build it first: cd /workspace/tok && go build -o tok ./cmd/tok"
   exit 1
 fi
 

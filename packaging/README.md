@@ -13,12 +13,12 @@ Two copies of the formula exist:
 
 ### Publish to a tap
 
-1. Create a tap repo, e.g. `github.com/lakshmanpatel/homebrew-tok`.
+1. Create a tap repo, e.g. `github.com/GrayCodeAI/homebrew-tok`.
 2. Copy `Formula/tok.rb` into the tap's `Formula/` directory.
 3. Users install with:
 
    ```sh
-   brew tap lakshmanpatel/tok
+   brew tap GrayCodeAI/tok
    brew install tok
    ```
 
@@ -36,7 +36,7 @@ Automation: a future `.github/workflows/publish-tap.yml` will mirror
 ENTRYPOINT-scoped to `tok`, so:
 
 ```sh
-docker run --rm -v "$PWD:/work" -w /work ghcr.io/lakshmanpatel/tok:latest --help
+docker run --rm -v "$PWD:/work" -w /work ghcr.io/GrayCodeAI/tok:latest --help
 ```
 
 ## Release signing

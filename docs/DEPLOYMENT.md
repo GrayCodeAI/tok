@@ -17,15 +17,15 @@ Tok can be deployed in several ways depending on your use case:
 
 ```bash
 # Option 1: Go install
-go install github.com/lakshmanpatel/tok/cmd/tok@latest
+go install github.com/GrayCodeAI/tok/cmd/tok@latest
 
 # Option 2: From source
-git clone https://github.com/lakshmanpatel/tok.git
+git clone https://github.com/GrayCodeAI/tok.git
 cd tok && make build
 sudo mv tok /usr/local/bin/
 
 # Option 3: Pre-built binary
-curl -fsSL https://github.com/lakshmanpatel/tok/releases/latest/download/tok_$(uname -s)_$(uname -m).tar.gz | tar xz
+curl -fsSL https://github.com/GrayCodeAI/tok/releases/latest/download/tok_$(uname -s)_$(uname -m).tar.gz | tar xz
 sudo mv tok /usr/local/bin/
 ```
 
@@ -125,7 +125,7 @@ set -e
 echo "Setting up Tok for team..."
 
 # Install
-go install github.com/lakshmanpatel/tok/cmd/tok@latest
+go install github.com/GrayCodeAI/tok/cmd/tok@latest
 
 # Copy team config
 mkdir -p ~/.config/tok
@@ -164,7 +164,7 @@ jobs:
           go-version: '1.24'
       
       - name: Install Tok
-        run: go install github.com/lakshmanpatel/tok/cmd/tok@latest
+        run: go install github.com/GrayCodeAI/tok/cmd/tok@latest
       
       - name: Run tests with Tok
         run: tok go test ./... 2>&1 | head -50
@@ -187,7 +187,7 @@ tok:
   image: golang:1.24
   stage: test
   script:
-    - go install github.com/lakshmanpatel/tok/cmd/tok@latest
+    - go install github.com/GrayCodeAI/tok/cmd/tok@latest
     - tok go test ./...
     - tok stats
   artifacts:
@@ -274,9 +274,9 @@ changelog:
 
 brews:
   - repository:
-      owner: lakshmanpatel
+      owner: GrayCodeAI
       name: homebrew-tok
-    homepage: "https://github.com/lakshmanpatel/tok"
+    homepage: "https://github.com/GrayCodeAI/tok"
     description: "Token-aware CLI proxy with practical 20-layer compression pipeline"
     license: "MIT"
     test: |
@@ -285,7 +285,7 @@ brews:
 nfpms:
   - package_name: tok
     vendor: GrayCode AI
-    homepage: https://github.com/lakshmanpatel/tok
+    homepage: https://github.com/GrayCodeAI/tok
     maintainer: GrayCode AI <maintainers@graycode.ai>
     description: Token-aware CLI proxy for AI coding assistants
     license: MIT
@@ -323,7 +323,7 @@ ls dist/
 tok --version
 
 # Upgrade via Go
-go install github.com/lakshmanpatel/tok/cmd/tok@latest
+go install github.com/GrayCodeAI/tok/cmd/tok@latest
 
 # Upgrade via Homebrew (when available)
 brew upgrade tok
@@ -351,10 +351,10 @@ tok upgrade
 
 ```bash
 # Install specific version
-go install github.com/lakshmanpatel/tok/cmd/tok@v0.28.0
+go install github.com/GrayCodeAI/tok/cmd/tok@v0.28.0
 
 # Or download specific release binary
-curl -fsSL https://github.com/lakshmanpatel/tok/releases/download/v0.28.0/tok_0.28.0_$(uname -s)_$(uname -m).tar.gz | tar xz
+curl -fsSL https://github.com/GrayCodeAI/tok/releases/download/v0.28.0/tok_0.28.0_$(uname -s)_$(uname -m).tar.gz | tar xz
 sudo mv tok /usr/local/bin/
 ```
 
@@ -385,7 +385,7 @@ rm -rf ~/.config/tok
 rm -rf ~/.local/share/tok
 
 # 5. Remove Go cache
-go clean -i github.com/lakshmanpatel/tok/...
+go clean -i github.com/GrayCodeAI/tok/...
 ```
 
 ---

@@ -131,5 +131,5 @@ If you discover a security vulnerability, please report it responsibly:
 ## Security Updates
 
 Subscribe to security advisories:
-- GitHub Security Advisories: https://github.com/lakshmanpatel/tok/security/advisories
+- GitHub Security Advisories: https://github.com/GrayCodeAI/tok/security/advisories
 - Release notes include security fixes

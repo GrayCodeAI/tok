@@ -24,7 +24,7 @@ jobs:
           
       - name: Install Tok
         run: |
-          go install github.com/lakshmanpatel/tok/cmd/tok@latest
+          go install github.com/GrayCodeAI/tok/cmd/tok@latest
           
       - name: Generate Savings Report
         run: |

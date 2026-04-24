@@ -129,4 +129,4 @@ All checks passed!
 - `tok --help` - Command reference
 - `tok <command> --help` - Command-specific help
 - [Documentation](./docs/) - Full docs
-- [GitHub Issues](https://github.com/lakshmanpatel/tok/issues) - Bug reports
+- [GitHub Issues](https://github.com/GrayCodeAI/tok/issues) - Bug reports

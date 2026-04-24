@@ -24,7 +24,7 @@ go install github.com/GrayCodeAI/tok/cmd/tok@latest
 或通过 Homebrew：
 
 ```bash
-brew install lakshmanpatel/tap/tok
+brew install GrayCodeAI/tap/tok
 ```
 
 ## 快速开始

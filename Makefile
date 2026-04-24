@@ -8,7 +8,7 @@ BUILD_DIR=cmd/tok
 VERSION=$(shell git describe --tags --always --dirty 2>/dev/null | sed 's/^v//' || echo "dev")
 
 # Build flags with version injection
-LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tok/internal/commands/shared.Version=$(VERSION)'"
+LDFLAGS=-ldflags="-s -w -X 'github.com/GrayCodeAI/tok/internal/version.Version=$(VERSION)'"
 
 # Go flags
 GOFLAGS=CGO_ENABLED=0

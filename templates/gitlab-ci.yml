@@ -6,7 +6,7 @@ tok-report:
   image: golang:1.21
   allow_failure: true
   script:
-    - go install github.com/lakshmanpatel/tok/cmd/tok@latest
+    - go install github.com/GrayCodeAI/tok/cmd/tok@latest
     - tok report --period daily --output json > tok-report.json
     - tok summary --format markdown
   artifacts:

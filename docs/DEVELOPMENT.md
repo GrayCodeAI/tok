@@ -164,8 +164,8 @@ import (
     "github.com/spf13/viper"
     
     // Internal packages last
-    "github.com/lakshmanpatel/tok/internal/config"
-    "github.com/lakshmanpatel/tok/internal/filter"
+    "github.com/GrayCodeAI/tok/internal/config"
+    "github.com/GrayCodeAI/tok/internal/filter"
 )
 ```
 
@@ -366,7 +366,7 @@ func BenchmarkFilterApply_Parallel(b *testing.B) {
 Use the utils logger package:
 
 ```go
-import "github.com/lakshmanpatel/tok/internal/utils"
+import "github.com/GrayCodeAI/tok/internal/utils"
 
 // Different log levels
 utils.Logger.Debug("Debug message with values", "key", value)
@@ -394,7 +394,7 @@ package mycategory
 
 import (
     "github.com/spf13/cobra"
-    "github.com/lakshmanpatel/tok/internal/commands/registry"
+    "github.com/GrayCodeAI/tok/internal/commands/registry"
 )
 
 var myCmd = &cobra.Command{
@@ -428,7 +428,7 @@ Then add the import to `root.go`:
 ```go
 import (
     // ... other imports
-    _ "github.com/lakshmanpatel/tok/internal/commands/mycategory"
+    _ "github.com/GrayCodeAI/tok/internal/commands/mycategory"
 )
 ```
 

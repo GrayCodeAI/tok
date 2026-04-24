@@ -23,7 +23,7 @@ if [ -n "$TOK_VERSION" ]; then
   MINOR=$(echo "$TOK_VERSION" | cut -d. -f2)
   # Require >= 0.2.0
   if [ "$MAJOR" -eq 0 ] && [ "$MINOR" -lt 2 ]; then
-    echo "[tok] WARNING: tok $TOK_VERSION is too old (need >= 0.2.0). Upgrade: go install github.com/lakshmanpatel/tok@latest" >&2
+    echo "[tok] WARNING: tok $TOK_VERSION is too old (need >= 0.2.0). Upgrade: go install github.com/GrayCodeAI/tok/cmd/tok@latest" >&2
     exit 0
   fi
 fi

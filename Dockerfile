@@ -6,7 +6,7 @@ RUN go mod download
 
 COPY . .
 ARG VERSION=dev
-RUN CGO_ENABLED=0 go build -ldflags="-s -w -X 'github.com/lakshmanpatel/tok/internal/commands/shared.Version=${VERSION}'" -o /tok ./cmd/tok/
+RUN CGO_ENABLED=0 go build -ldflags="-s -w -X 'github.com/GrayCodeAI/tok/internal/version.Version=${VERSION}'" -o /tok ./cmd/tok/
 
 FROM alpine:3.21
 RUN apk add --no-cache ca-certificates git

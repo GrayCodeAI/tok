@@ -417,7 +417,7 @@ tok audit --json large_file.txt
 
 ### Programmatic
 ```go
-import "github.com/lakshmanpatel/tok/internal/filter"
+import "github.com/GrayCodeAI/tok/internal/filter"
 
 manager := filter.NewPipelineManager(filter.ManagerConfig{
     MaxContextTokens: 2000000,

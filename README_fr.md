@@ -24,7 +24,7 @@ go install github.com/GrayCodeAI/tok/cmd/tok@latest
 Ou avec Homebrew :
 
 ```bash
-brew install lakshmanpatel/tap/tok
+brew install GrayCodeAI/tap/tok
 ```
 
 ## Démarrage rapide

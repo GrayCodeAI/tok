@@ -35,7 +35,7 @@
 
 2. If missing, reinstall:
    ```bash
-   go install github.com/lakshmanpatel/tok/cmd/tok@latest
+   go install github.com/GrayCodeAI/tok/cmd/tok@latest
    ```
 
 3. Ensure Go bin is in PATH:
@@ -666,12 +666,12 @@ sqlite3 ~/.local/share/tok/tok.db "SELECT command, SUM(saved_tokens) as total FR
    rm -rf ~/.config/tok ~/.local/share/tok ~/.claude/hooks/tok-rewrite.sh*
 
    # Reinstall
-   go install github.com/lakshmanpatel/tok/cmd/tok@latest
+   go install github.com/GrayCodeAI/tok/cmd/tok@latest
    tok init
    ```
 
 4. **Report the issue**:
-   - GitHub Issues: [github.com/lakshmanpatel/tok/issues](https://github.com/lakshmanpatel/tok/issues)
+   - GitHub Issues: [github.com/GrayCodeAI/tok/issues](https://github.com/GrayCodeAI/tok/issues)
    - Include: debug log, `tok --version`, OS, shell
 
 ---
@@ -680,7 +680,7 @@ sqlite3 ~/.local/share/tok/tok.db "SELECT command, SUM(saved_tokens) as total FR
 
 | Issue | Quick Fix |
 |-------|-----------|
-| Command not found | `go install github.com/lakshmanpatel/tok/cmd/tok@latest` |
+| Command not found | `go install github.com/GrayCodeAI/tok/cmd/tok@latest` |
 | Hook not working | `tok init && source ~/.bashrc` |
 | Too verbose output | `tok -u command` |
 | Missing output | `tok proxy command` |

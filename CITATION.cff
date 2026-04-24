@@ -5,8 +5,8 @@ type: software
 authors:
   - name: "GrayCode AI"
     website: "https://github.com/lakshmanpatel"
-repository-code: "https://github.com/lakshmanpatel/tok"
-url: "https://github.com/lakshmanpatel/tok"
+repository-code: "https://github.com/GrayCodeAI/tok"
+url: "https://github.com/GrayCodeAI/tok"
 license: MIT
 version: "0.28.2"
 date-released: "2026-04-03"

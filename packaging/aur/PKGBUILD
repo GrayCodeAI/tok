@@ -1,13 +1,13 @@
-# Maintainer: Lakshman Patel <lakshmanpatel@users.noreply.github.com>
+# Maintainer: Lakshman Patel <GrayCodeAI@users.noreply.github.com>
 pkgname=tok
 pkgver=0.0.0
 pkgrel=1
 pkgdesc="Transparent command-output filter that reduces LLM token consumption"
 arch=('x86_64' 'aarch64')
-url="https://github.com/lakshmanpatel/tok"
+url="https://github.com/GrayCodeAI/tok"
 license=('MIT')
 makedepends=('go')
-source=("git+https://github.com/lakshmanpatel/tok.git")
+source=("git+https://github.com/GrayCodeAI/tok.git")
 sha256sums=('SKIP')
 
 pkgver() {

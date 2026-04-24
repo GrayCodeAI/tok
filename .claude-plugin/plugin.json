@@ -3,7 +3,7 @@
   "description": "Unified token-reduction CLI: transparent command output filtering, six compression modes (lite/full/ultra/wenyan-*), SQLite-backed savings analytics, and 69+ built-in filters.",
   "author": {
     "name": "Lakshman Patel",
-    "url": "https://github.com/lakshmanpatel/tok"
+    "url": "https://github.com/GrayCodeAI/tok"
   },
   "hooks": {
     "SessionStart": [

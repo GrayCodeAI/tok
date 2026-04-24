@@ -24,7 +24,7 @@ go install github.com/GrayCodeAI/tok/cmd/tok@latest
 또는 Homebrew 로:
 
 ```bash
-brew install lakshmanpatel/tap/tok
+brew install GrayCodeAI/tap/tok
 ```
 
 ## 빠른 시작

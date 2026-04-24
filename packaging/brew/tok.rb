@@ -1,15 +1,15 @@
 # Homebrew formula for tok.
 #
-# Install:   brew install --HEAD lakshmanpatel/tok/tok
+# Install:   brew install --HEAD GrayCodeAI/tok/tok
 # Upgrade:   brew upgrade tok
 #
 # For tagged releases, replace `head` with `url` + `sha256` once a GitHub
 # Releases page is publishing signed archives.
 class Tok < Formula
   desc "Transparent command-output filter that reduces LLM token consumption"
-  homepage "https://github.com/lakshmanpatel/tok"
+  homepage "https://github.com/GrayCodeAI/tok"
   license "MIT"
-  head "https://github.com/lakshmanpatel/tok.git", branch: "main"
+  head "https://github.com/GrayCodeAI/tok.git", branch: "main"
 
   depends_on "go" => :build
 

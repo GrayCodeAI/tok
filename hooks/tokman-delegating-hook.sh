@@ -27,7 +27,7 @@ fi
 
 if ! command -v tok &>/dev/null; then
   echo "[tok] WARNING: tok is not installed or not in PATH." >&2
-  echo "[tok] Install: https://github.com/lakshmanpatel/tok#installation" >&2
+  echo "[tok] Install: https://github.com/GrayCodeAI/tok#installation" >&2
   exit 0
 fi
 

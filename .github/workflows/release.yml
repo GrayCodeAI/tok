@@ -24,9 +24,9 @@ jobs:
       run: go test -race ./...
     
     - name: Run linter
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v7
       with:
-        version: latest
+        version: v2.0
         args: --timeout=5m
 
   build:
@@ -62,7 +62,7 @@ jobs:
         CGO_ENABLED: 0
       run: |
         version=${GITHUB_REF#refs/tags/}
-        ldflags="-s -w -X 'github.com/lakshmanpatel/tok/internal/commands/shared.Version=${version}'"
+        ldflags="-s -w -X 'github.com/GrayCodeAI/tok/internal/version.Version=${version}'"
         
         output="tok-${{ matrix.os }}-${{ matrix.arch }}"
         if [ "${{ matrix.os }}" = "windows" ]; then
