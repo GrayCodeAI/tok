@@ -7,12 +7,9 @@ import (
 
 func TestPluginSandbox(t *testing.T) {
 	ps := NewPluginSandbox(1024, 2)
-	out, err := ps.Execute("plugin", "input")
-	if err != nil {
-		t.Fatalf("Execute failed: %v", err)
-	}
-	if out != "input" {
-		t.Errorf("expected %q, got %q", "input", out)
+	_, err := ps.Execute("plugin", "input")
+	if err == nil {
+		t.Fatal("Execute should return an error — WASM sandbox is not implemented")
 	}
 }
 

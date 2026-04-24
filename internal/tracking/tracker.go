@@ -207,12 +207,10 @@ func NewTracker(dbPath string) (*Tracker, error) {
 		return nil, fmt.Errorf("failed to enable foreign keys: %w", err)
 	}
 
-	// Run migrations
-	for i, migration := range InitSchema() {
-		if _, err := db.Exec(migration); err != nil {
-			db.Close()
-			return nil, fmt.Errorf("failed to run migration %d: %w", i, err)
-		}
+	// Run versioned migrations.
+	if err := RunMigrations(db); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to run migrations: %w", err)
 	}
 
 	// Safely add optional metadata columns (idempotent)

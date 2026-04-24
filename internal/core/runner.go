@@ -68,10 +68,10 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 	cmd := exec.CommandContext(ctx, cmdPath, args[1:]...)
 	cmd.Env = r.Env
 
-	// Use a limited reader to cap memory usage
 	var buf bytes.Buffer
-	cmd.Stdout = &buf
-	cmd.Stderr = &buf
+	lw := &LimitedWriter{W: &buf, N: maxOutputSize}
+	cmd.Stdout = lw
+	cmd.Stderr = lw
 
 	err = cmd.Run()
 	exitCode := 0
@@ -84,8 +84,8 @@ func (r *OSCommandRunner) Run(ctx context.Context, args []string) (string, int, 
 	}
 
 	output := buf.String()
-	if buf.Len() > maxOutputSize {
-		output = output[:maxOutputSize] + "\n[truncated: output exceeded 100 MiB]"
+	if lw.Dropped > 0 {
+		output += "\n[truncated: output exceeded 100 MiB]"
 	}
 
 	return output, exitCode, err

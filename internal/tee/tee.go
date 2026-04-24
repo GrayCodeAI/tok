@@ -158,7 +158,7 @@ func shouldTee(enabled bool, mode TeeMode, rawLen int, exitCode int, teeDir stri
 // writeTeeFile writes raw output to a tee file in the given directory.
 // Returns the file path on success.
 func writeTeeFile(raw string, commandSlug string, teeDir string, maxFileSize int, maxFiles int) (string, error) {
-	if err := os.MkdirAll(teeDir, 0755); err != nil {
+	if err := os.MkdirAll(teeDir, 0700); err != nil {
 		return "", fmt.Errorf("failed to create tee directory: %w", err)
 	}
 
@@ -181,7 +181,7 @@ func writeTeeFile(raw string, commandSlug string, teeDir string, maxFileSize int
 		content = raw[:boundary] + fmt.Sprintf("\n\n--- truncated at %d bytes ---", maxFileSize)
 	}
 
-	if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
+	if err := os.WriteFile(filepath, []byte(content), 0600); err != nil {
 		return "", fmt.Errorf("failed to write tee file: %w", err)
 	}
 

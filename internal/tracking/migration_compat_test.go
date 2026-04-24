@@ -15,15 +15,13 @@ func TestNewTrackerMigratesLegacySchemaAndCreatesCheckpointEvents(t *testing.T) 
 	if err != nil {
 		t.Fatalf("open legacy db: %v", err)
 	}
-	defer db.Close()
 
 	// Simulate older schema: commands only, no checkpoint_events table.
+	// user_version is left at 0 to mimic a pre-versioning database.
 	if _, err := db.Exec(CreateCommandsTable); err != nil {
 		t.Fatalf("create commands table: %v", err)
 	}
-	if _, err := db.Exec(CreateMigrationTable); err != nil {
-		t.Fatalf("create migration table: %v", err)
-	}
+	db.Close()
 
 	tr, err := NewTracker(dbPath)
 	if err != nil {
@@ -50,9 +48,6 @@ func TestNewTrackerLegacyDBCanRecordAndReadCheckpointTelemetry(t *testing.T) {
 	}
 	if _, err := db.Exec(CreateCommandsTable); err != nil {
 		t.Fatalf("create commands table: %v", err)
-	}
-	if _, err := db.Exec(CreateMigrationTable); err != nil {
-		t.Fatalf("create migration table: %v", err)
 	}
 	_ = db.Close()
 

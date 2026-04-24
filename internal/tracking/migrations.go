@@ -1,7 +1,13 @@
 package tracking
 
-// SchemaVersion is the current database schema version.
-const SchemaVersion = 5
+import (
+	"database/sql"
+	"fmt"
+)
+
+// SchemaVersion is the number of entries in Migrations. Update this whenever
+// a new migration is appended.
+const SchemaVersion = 19
 
 // CreateCommandsTable creates the main commands table.
 const CreateCommandsTable = `
@@ -403,15 +409,33 @@ var Migrations = []string{
 	CreateCheckpointEventsTable,
 }
 
-// MigrationHistory tracks applied migrations.
-const CreateMigrationTable = `
-CREATE TABLE IF NOT EXISTS schema_migrations (
-    version INTEGER PRIMARY KEY,
-    applied_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-`
+// RunMigrations applies only the migrations that have not yet been run,
+// using PRAGMA user_version as the persistent version counter.
+//
+// When user_version == 0 (new DB or legacy un-versioned DB), all migrations
+// are executed. Because every migration uses IF NOT EXISTS, re-running them
+// on an existing schema is safe — any missing tables or indexes are created
+// and existing ones are left untouched.
+func RunMigrations(db *sql.DB) error {
+	var current int
+	if err := db.QueryRow("PRAGMA user_version").Scan(&current); err != nil {
+		return fmt.Errorf("read user_version: %w", err)
+	}
 
-// InitSchema initializes all database tables and migrations.
-func InitSchema() []string {
-	return append([]string{CreateMigrationTable}, Migrations...)
+	target := len(Migrations)
+
+	// Run only the delta: migrations[current:target].
+	// When current==0 this covers all migrations (handles both new and legacy DBs).
+	for i := current; i < target; i++ {
+		if _, err := db.Exec(Migrations[i]); err != nil {
+			return fmt.Errorf("migration %d: %w", i+1, err)
+		}
+		// Advance the version after each successful migration so a mid-run
+		// crash leaves the DB in a recoverable state.
+		if _, err := db.Exec(fmt.Sprintf("PRAGMA user_version = %d", i+1)); err != nil {
+			return fmt.Errorf("update user_version to %d: %w", i+1, err)
+		}
+	}
+
+	return nil
 }

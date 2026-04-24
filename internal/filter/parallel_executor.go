@@ -52,10 +52,12 @@ func (pe *ParallelExecutor) ExecuteParallel(input string, layers []Filter) (stri
 		}
 	}
 
-	// Return to pool
+	// Copy before returning to pool — best points into results, which we Put below.
+	bestOutput, bestTokens := best.output, best.tokens
+
 	for _, r := range results {
 		pe.pool.Put(r)
 	}
 
-	return best.output, best.tokens
+	return bestOutput, bestTokens
 }

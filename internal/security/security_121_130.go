@@ -20,8 +20,7 @@ func NewPluginSandbox(mem uint64, cpu int) *PluginSandbox {
 }
 
 func (ps *PluginSandbox) Execute(plugin string, input string) (string, error) {
-	// TODO: implement WASM sandbox execution
-	return input, nil
+	return "", fmt.Errorf("plugin sandbox: WASM execution not implemented — do not use in production")
 }
 
 // Task 122: Audit logging
@@ -204,7 +203,8 @@ func (tc *TLSConfig) Validate() error {
 
 // Task 128-130: Security scanning, vulnerability scanning, code signing
 // SecurityScanner performs static analysis on code strings.
-// Currently a stub; real implementation should integrate with a SAST tool.
+// STUB: Scan always returns no findings. Do not use in security-critical paths
+// until a real SAST backend is integrated.
 type SecurityScanner struct {
 	scanned atomic.Uint64
 	found   atomic.Uint64
@@ -212,7 +212,6 @@ type SecurityScanner struct {
 
 func (ss *SecurityScanner) Scan(code string) []string {
 	ss.scanned.Add(1)
-	// TODO: integrate with static analysis engine
 	return []string{}
 }
 
