@@ -87,9 +87,8 @@ func GetStatusLine() string {
 	return fmt.Sprintf("[TOK:%s]", strings.ToUpper(mode))
 }
 
-// AutoActivateOnStartup checks config and auto-activates if configured
+// AutoActivateOnStartup checks env and auto-activates tok if configured.
 func AutoActivateOnStartup() error {
-	// Check env var
 	if os.Getenv("TOK_AUTO_ACTIVATE") == "1" {
 		mode := os.Getenv("TOK_DEFAULT_MODE")
 		if mode == "" {
@@ -97,15 +96,6 @@ func AutoActivateOnStartup() error {
 		}
 		return Activate(mode)
 	}
-
-	// Check config file
-	configPath := filepath.Join(filepath.Dir(GetFlagPath()), "config.json")
-	// Simple config check - could be expanded
-	if _, err := os.Stat(configPath); err == nil {
-		// Config exists, could parse for auto_activate setting
-		// For now, just check env var
-	}
-
 	return nil
 }
 

@@ -59,18 +59,16 @@ Same fix. 75% less word.
 
 ## Install
 
+> **tok is distributed exclusively through [Hawk](https://github.com/GrayCodeAI/hawk).**
+> It is not available as a standalone package.
+
 ```bash
-# Homebrew
-brew install GrayCodeAI/tap/tok
+# Via Hawk CLI (the only supported distribution)
+hawk tok --help
 
-# Go install
-go install github.com/GrayCodeAI/tok/cmd/tok@latest
-
-# Quick install
-curl -fsSL https://raw.githubusercontent.com/GrayCodeAI/tok/main/scripts/install.sh | sh
-
-# Build from source
-git clone https://github.com/GrayCodeAI/tok.git && cd tok && make build
+# Or install Hawk first
+npm install -g hawk
+hawk tok compress -mode full -input "your text here"
 ```
 
 ---

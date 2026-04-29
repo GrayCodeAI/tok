@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"sync"
+	"sync/atomic"
 
 	"golang.org/x/term"
 )
@@ -130,16 +131,19 @@ func (p *Printer) Stderr() io.Writer {
 	return p.stderr
 }
 
-// Global printer instance for backward compatibility.
-var global = New()
+// global holds the package-level Printer. Access only via Global() / SetGlobal()
+// to avoid data races during test parallelisation.
+var global atomic.Pointer[Printer]
+
+func init() {
+	global.Store(New())
+}
 
 // Global returns the global Printer instance.
-func Global() *Printer { return global }
+func Global() *Printer { return global.Load() }
 
 // SetGlobal replaces the global Printer instance (for testing).
 // Returns the previous global printer so it can be restored.
 func SetGlobal(p *Printer) *Printer {
-	old := global
-	global = p
-	return old
+	return global.Swap(p)
 }

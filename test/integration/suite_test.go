@@ -117,8 +117,14 @@ func TestSecurityValidation(t *testing.T) {
 			fn:      validator.ValidatePath,
 		},
 		{
-			name:    "valid path",
+			name:    "absolute path",
 			input:   "/tmp/test.txt",
+			wantErr: true,
+			fn:      validator.ValidatePath,
+		},
+		{
+			name:    "valid relative path",
+			input:   "tmp/test.txt",
 			wantErr: false,
 			fn:      validator.ValidatePath,
 		},

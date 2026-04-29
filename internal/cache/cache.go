@@ -48,20 +48,34 @@ func NewFingerprintCache() *FingerprintCache {
 }
 
 func (c *FingerprintCache) Get(key string) (string, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+	// Fast path: read-only check under RLock.
+	c.mu.RLock()
 	entry, ok := c.cache[key]
 	if !ok {
+		c.mu.RUnlock()
 		return "", false
 	}
-	if time.Now().After(entry.expiresAt) {
-		c.removeEntry(entry)
+	now := time.Now()
+	if now.After(entry.expiresAt) {
+		c.mu.RUnlock()
+		// Expired — need write lock to remove.
+		c.mu.Lock()
+		if e, stillThere := c.cache[key]; stillThere && now.After(e.expiresAt) {
+			c.removeEntry(e)
+		}
+		c.mu.Unlock()
 		return "", false
 	}
-	// Promote to most recently used
-	c.order.MoveToBack(entry.element)
-	return entry.value, true
+	value := entry.value
+	c.mu.RUnlock()
+
+	// Promotion requires mutation — acquire write lock.
+	c.mu.Lock()
+	if e, stillThere := c.cache[key]; stillThere && !now.After(e.expiresAt) {
+		c.order.MoveToBack(e.element)
+	}
+	c.mu.Unlock()
+	return value, true
 }
 
 func (c *FingerprintCache) Set(key, value string) {
@@ -131,7 +145,7 @@ type Cache interface {
 
 // LRUCache implements a true LRU cache with O(1) operations
 type LRUCache struct {
-	mu    sync.Mutex
+	mu    sync.RWMutex
 	cap   int
 	ttl   time.Duration
 	cache map[string]*lruCacheEntry
@@ -155,24 +169,34 @@ func NewLRUCache(capacity int, ttl time.Duration) *LRUCache {
 }
 
 func (c *LRUCache) Get(key string) (interface{}, bool) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
+	// Fast path: read-only check under RLock.
+	c.mu.RLock()
 	entry, ok := c.cache[key]
 	if !ok {
+		c.mu.RUnlock()
 		return nil, false
 	}
-
-	// Check TTL
-	if time.Now().After(entry.expiresAt) {
-		c.removeEntry(entry)
+	now := time.Now()
+	if now.After(entry.expiresAt) {
+		c.mu.RUnlock()
+		// Expired — need write lock to remove.
+		c.mu.Lock()
+		if e, stillThere := c.cache[key]; stillThere && now.After(e.expiresAt) {
+			c.removeEntry(e)
+		}
+		c.mu.Unlock()
 		return nil, false
 	}
+	value := entry.value
+	c.mu.RUnlock()
 
-	// Move to front (true LRU promotion)
-	c.order.MoveToBack(entry.element)
-
-	return entry.value, true
+	// Promotion requires mutation — acquire write lock.
+	c.mu.Lock()
+	if e, stillThere := c.cache[key]; stillThere && !now.After(e.expiresAt) {
+		c.order.MoveToBack(e.element)
+	}
+	c.mu.Unlock()
+	return value, true
 }
 
 func (c *LRUCache) Set(key string, value interface{}) {

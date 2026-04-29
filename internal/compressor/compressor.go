@@ -4,228 +4,155 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
-	"sync"
 )
 
-// Pre-compiled regex patterns for performance
+// rule pairs a compiled regex with its replacement string.
+type rule struct {
+	re      *regexp.Regexp
+	replace string
+}
+
+// newRules compiles a slice of (pattern, replacement) pairs into rules.
+// Every pattern is automatically wrapped with (?i) for case-insensitive
+// matching so behaviour is consistent across all compression modes.
+func newRules(pairs ...[2]string) []rule {
+	rules := make([]rule, 0, len(pairs))
+	for _, p := range pairs {
+		pat := p[0]
+		// Add case-insensitive flag if the pattern doesn't already have it.
+		if !strings.HasPrefix(pat, "(?i)") {
+			pat = "(?i:" + pat + ")"
+		}
+		re := regexp.MustCompile(pat)
+		rules = append(rules, rule{re: re, replace: p[1]})
+	}
+	return rules
+}
+
 var (
-	regexCache   = make(map[string]*regexp.Regexp)
-	regexCacheMu sync.RWMutex
+	liteRules   []rule
+	fullRules   []rule
+	ultraRules  []rule
+	wenyanLite  []rule
+	wenyanFull  []rule
+	wenyanUltra []rule
 )
 
-func getRegex(pattern string) *regexp.Regexp {
-	regexCacheMu.RLock()
-	if re, ok := regexCache[pattern]; ok {
-		regexCacheMu.RUnlock()
-		return re
-	}
-	regexCacheMu.RUnlock()
+func init() {
+	liteRules = newRules(
+		[2]string{`\b(just|really|basically|actually|simply)\b`, ""},
+		[2]string{`\b(sure|certainly|of course|happy to|glad to)\b`, ""},
+		[2]string{`\b(perhaps|maybe|might|could|possibly)\b`, ""},
+		[2]string{`\s+`, " "},
+	)
 
-	regexCacheMu.Lock()
-	defer regexCacheMu.Unlock()
-	// Double-check after acquiring write lock
-	if re, ok := regexCache[pattern]; ok {
-		return re
-	}
-	re := regexp.MustCompile(pattern)
-	regexCache[pattern] = re
-	return re
+	fullRules = newRules(
+		[2]string{`\b(the|a|an)\b`, ""},
+		[2]string{`\b(just|really|basically|actually|simply|perhaps|maybe|might|could|possibly)\b`, ""},
+		[2]string{`\b(sure|certainly|of course|happy to|glad to|please|thank you|thanks)\b`, ""},
+		[2]string{`\b(I would like to|I want to|I need to|I am going to)\b`, ""},
+		[2]string{`\b(in order to|so that|such that)\b`, "to"},
+		[2]string{`\b(utilize|utilise)\b`, "use"},
+		[2]string{`\b(additional)\b`, "more"},
+		[2]string{`\b(implement a solution for)\b`, "fix"},
+		[2]string{`\s+`, " "},
+	)
+
+	ultraRules = newRules(
+		[2]string{`\b(the|a|an|and|or|but|so|because|if|then)\b`, ""},
+		[2]string{`\b(just|really|basically|actually|simply|perhaps|maybe|might|could|possibly|probably)\b`, ""},
+		[2]string{`\b(sure|certainly|of course|happy to|glad to|please|thank you|thanks|sorry)\b`, ""},
+		[2]string{`\b(database)\b`, "DB"},
+		[2]string{`\b(authentication)\b`, "auth"},
+		[2]string{`\b(configuration)\b`, "config"},
+		[2]string{`\b(request)\b`, "req"},
+		[2]string{`\b(response)\b`, "res"},
+		[2]string{`\b(function)\b`, "fn"},
+		[2]string{`\b(implementation)\b`, "impl"},
+		[2]string{`\bcauses\b|\bleads to\b|\bresults in\b`, "→"},
+		[2]string{`\btherefore\b|\bthus\b|\bhence\b`, "∴"},
+		[2]string{`[.,;:]+
+\s*`, " "},
+		[2]string{`\s+`, " "},
+	)
+
+	wenyanLite = newRules(
+		[2]string{`\b(just|really|basically|actually|simply|perhaps|maybe)\b`, ""},
+		[2]string{`\bcreate a new\b`, "new"},
+		[2]string{`\bmake a\b`, ""},
+		[2]string{`\bthis is\b`, "this"},
+		[2]string{`\bthere is\b`, "exists"},
+		[2]string{`\s+`, " "},
+	)
+
+	wenyanFull = newRules(
+		[2]string{`\bnew object reference\b`, "物出新參照"},
+		[2]string{`\bre-render\b`, "重繪"},
+		[2]string{`\bwrap in\b`, "Wrap之"},
+		[2]string{`\bdatabase\b`, "庫"},
+		[2]string{`\bconfiguration\b`, "配置"},
+		[2]string{`\bconnection\b`, "連接"},
+		[2]string{`\breuse\b`, "復用"},
+		[2]string{`\bopen\b`, "開"},
+		[2]string{`\bper request\b`, "每請求"},
+		[2]string{`\bskip\b`, "skip"},
+		[2]string{`\boverhead\b`, "overhead"},
+		[2]string{`\b(the|a|an|and|is|are|to)\b`, ""},
+		[2]string{`\s+`, " "},
+	)
+
+	wenyanUltra = newRules(
+		[2]string{`\bnew\b`, "新"},
+		[2]string{`\breference\b`, "參"},
+		[2]string{`\bobject\b`, "物"},
+		[2]string{`\bcause\b`, "致"},
+		[2]string{`\bresult\b`, "果"},
+		[2]string{`\buse\b`, "用"},
+		[2]string{`\bfix\b`, "修"},
+		[2]string{`\bbug\b`, "蟲"},
+		[2]string{`\berror\b`, "錯"},
+		[2]string{`\bconnection\b`, "連"},
+		[2]string{`\bdatabase\b`, "庫"},
+		[2]string{`\bconfiguration\b`, "配"},
+		[2]string{`\bauthentication\b`, "驗"},
+		[2]string{`\b(the|a|an|and|or|is|are|to|of|in|on|at|for|with)\b`, ""},
+		[2]string{`\s+`, ""},
+	)
 }
 
 // Compress takes input text and mode and returns compressed text.
 func Compress(text, mode string) (string, error) {
 	switch mode {
 	case "lite":
-		return compressLite(text), nil
+		return applyRules(text, liteRules), nil
 	case "full":
-		return compressFull(text), nil
+		return applyRules(text, fullRules), nil
 	case "ultra":
-		return compressUltra(text), nil
+		return applyRules(text, ultraRules), nil
 	case "wenyan-lite":
-		return compressWenyanLite(text), nil
+		return applyRules(text, wenyanLite), nil
 	case "wenyan", "wenyan-full":
-		return compressWenyanFull(text), nil
+		return applyRules(text, wenyanFull), nil
 	case "wenyan-ultra":
-		return compressWenyanUltra(text), nil
+		return applyRules(text, wenyanUltra), nil
 	default:
 		return "", fmt.Errorf("unsupported mode: %s (use lite, full, ultra, wenyan-lite, wenyan, wenyan-ultra)", mode)
 	}
 }
 
-func compressLite(text string) string {
-	// Remove filler words, keep grammar
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Remove filler adverbs (case-insensitive)
-		{`(?i)\b(just|really|basically|actually|simply)\b`, ""},
-		// Remove pleasantries (case-insensitive)
-		{`(?i)\b(sure|certainly|of course|happy to|glad to)\b`, ""},
-		// Remove hedging (case-insensitive)
-		{`(?i)\b(perhaps|maybe|might|could|possibly)\b`, ""},
-		// Trim extra spaces
-		{`\s+`, " "},
-	}
+// Backward-compatible wrappers used by tests.
+func compressLite(text string) string   { return applyRules(text, liteRules) }
+func compressFull(text string) string   { return applyRules(text, fullRules) }
+func compressUltra(text string) string  { return applyRules(text, ultraRules) }
+func compressWenyanLite(text string) string { return applyRules(text, wenyanLite) }
+func compressWenyanFull(text string) string  { return applyRules(text, wenyanFull) }
+func compressWenyanUltra(text string) string { return applyRules(text, wenyanUltra) }
 
+// applyRules runs a slice of pre-compiled rules over the input text.
+func applyRules(text string, rules []rule) string {
 	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
-	}
-	return strings.TrimSpace(result)
-}
-
-func compressFull(text string) string {
-	// Remove articles and more aggressive compression
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Remove articles
-		{`\b(the|a|an)\b`, ""},
-		// Remove filler words (more aggressive)
-		{`\b(just|really|basically|actually|simply|perhaps|maybe|might|could|possibly)\b`, ""},
-		// Remove pleasantries
-		{`\b(sure|certainly|of course|happy to|glad to|please|thank you|thanks)\b`, ""},
-		// Remove verbose phrases
-		{`\b(I would like to|I want to|I need to|I am going to)\b`, ""},
-		{`\b(in order to|so that|such that)\b`, "to"},
-		// Replace longer words with shorter synonyms
-		{`\b(utilize|utilise)\b`, "use"},
-		{`\b(additional)\b`, "more"},
-		{`\b(implement a solution for)\b`, "fix"},
-		// Trim extra spaces
-		{`\s+`, " "},
-	}
-
-	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
-	}
-	return strings.TrimSpace(result)
-}
-
-func compressUltra(text string) string {
-	// Ultra compression: telegraphic style
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Remove articles and common words
-		{`\b(the|a|an|and|or|but|so|because|if|then)\b`, ""},
-		// Remove all filler
-		{`\b(just|really|basically|actually|simply|perhaps|maybe|might|could|possibly|probably)\b`, ""},
-		// Remove pleasantries
-		{`\b(sure|certainly|of course|happy to|glad to|please|thank you|thanks|sorry)\b`, ""},
-		// Replace with abbreviations
-		{`\b(database)\b`, "DB"},
-		{`\b(authentication)\b`, "auth"},
-		{`\b(configuration)\b`, "config"},
-		{`\b(request)\b`, "req"},
-		{`\b(response)\b`, "res"},
-		{`\b(function)\b`, "fn"},
-		{`\b(implementation)\b`, "impl"},
-		// Replace arrows for causality
-		{`\bcauses\b|\bleads to\b|\bresults in\b`, "→"},
-		{`\btherefore\b|\bthus\b|\bhence\b`, "∴"},
-		// Remove unnecessary punctuation at end of words
-		{`[.,;:]+\s*`, " "},
-		// Trim extra spaces
-		{`\s+`, " "},
-	}
-
-	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
-	}
-	return strings.TrimSpace(result)
-}
-
-// Wenyan modes - Classical Chinese compression
-func compressWenyanLite(text string) string {
-	// Semi-classical: Drop filler/hedging but keep grammar structure
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Remove filler
-		{`\b(just|really|basically|actually|simply|perhaps|maybe)\b`, ""},
-		// Replace common phrases with semi-classical equivalents
-		{`\bcreate a new\b`, "new"},
-		{`\bmake a\b`, ""},
-		{`\bthis is\b`, "this"},
-		{`\bthere is\b`, "exists"},
-		// Trim spaces
-		{`\s+`, " "},
-	}
-
-	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
-	}
-	return strings.TrimSpace(result)
-}
-
-func compressWenyanFull(text string) string {
-	// Maximum classical terseness with Chinese characters
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Replace common patterns with Chinese equivalents
-		{`\bnew object reference\b`, "物出新參照"},
-		{`\bre-render\b`, "重繪"},
-		{`\bwrap in\b`, "Wrap之"},
-		{`\bdatabase\b`, "庫"},
-		{`\bconfiguration\b`, "配置"},
-		{`\bconnection\b`, "連接"},
-		{`\breuse\b`, "復用"},
-		{`\bopen\b`, "開"},
-		{`\bper request\b`, "每請求"},
-		{`\bskip\b`, "skip"},
-		{`\boverhead\b`, "overhead"},
-		// Remove articles and fillers
-		{`\b(the|a|an|and|is|are|to)\b`, ""},
-		// Trim spaces
-		{`\s+`, " "},
-	}
-
-	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
-	}
-	return strings.TrimSpace(result)
-}
-
-func compressWenyanUltra(text string) string {
-	// Extreme abbreviation with classical Chinese feel
-	rules := []struct {
-		pattern string
-		replace string
-	}{
-		// Maximum compression
-		{`\bnew\b`, "新"},
-		{`\breference\b`, "參"},
-		{`\bobject\b`, "物"},
-		{`\bcause\b`, "致"},
-		{`\bresult\b`, "果"},
-		{`\buse\b`, "用"},
-		{`\bfix\b`, "修"},
-		{`\bbug\b`, "蟲"},
-		{`\berror\b`, "錯"},
-		{`\bconnection\b`, "連"},
-		{`\bdatabase\b`, "庫"},
-		{`\bconfiguration\b`, "配"},
-		{`\bauthentication\b`, "驗"},
-		// Remove all small words
-		{`\b(the|a|an|and|or|is|are|to|of|in|on|at|for|with)\b`, ""},
-		// Trim spaces aggressively
-		{`\s+`, ""},
-	}
-
-	result := text
-	for _, rule := range rules {
-		result = getRegex(rule.pattern).ReplaceAllString(result, rule.replace)
+	for _, r := range rules {
+		result = r.re.ReplaceAllString(result, r.replace)
 	}
 	return strings.TrimSpace(result)
 }

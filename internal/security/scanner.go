@@ -4,6 +4,7 @@ package security
 
 import (
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -500,20 +501,33 @@ func (v *Validator) ValidateBudget(budget int) error {
 	return nil
 }
 
-// ValidatePath validates a file path for security
+// ValidatePath validates a file path for security.
+// It rejects absolute paths, path traversal, null bytes, and overly long paths.
 func (v *Validator) ValidatePath(path string) error {
 	if path == "" {
 		return nil // empty path is valid (uses default)
 	}
 
-	// Check for path traversal attempts
-	if strings.Contains(path, "..") {
-		return fmt.Errorf("path contains invalid sequence '..'")
-	}
-
-	// Check for null bytes
+	// Reject null bytes early
 	if strings.Contains(path, "\x00") {
 		return fmt.Errorf("path contains null byte")
+	}
+
+	// Reject absolute paths
+	if filepath.IsAbs(path) {
+		return fmt.Errorf("absolute paths are not allowed")
+	}
+
+	// Clean the path and validate it stays within bounds
+	clean := filepath.Clean(path)
+	if strings.HasPrefix(clean, "..") || strings.Contains(clean, "../") {
+		return fmt.Errorf("path traversal detected")
+	}
+
+	// Length limit to prevent DoS
+	const maxPathLen = 4096
+	if len(path) > maxPathLen {
+		return fmt.Errorf("path exceeds maximum length of %d characters", maxPathLen)
 	}
 
 	return nil

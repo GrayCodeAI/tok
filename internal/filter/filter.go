@@ -127,9 +127,10 @@ func NewEngineWithConfig(cfg EngineConfig) *Engine {
 }
 
 // Process applies all filters to the input.
+// Returns the filtered output and the total tokens saved relative to the
+// original input (not the cumulative sum of per-filter claims).
 func (e *Engine) Process(input string) (string, int) {
 	output := input
-	totalSaved := 0
 
 	for _, filter := range e.filters {
 		// Skip body filter in minimal mode
@@ -137,12 +138,17 @@ func (e *Engine) Process(input string) (string, int) {
 			continue
 		}
 
-		filtered, saved := filter.Apply(output, e.mode)
+		filtered, _ := filter.Apply(output, e.mode)
 		output = filtered
-		totalSaved += saved
 	}
 
-	return output, totalSaved
+	originalTokens := estimateTokens(input)
+	finalTokens := estimateTokens(output)
+	saved := originalTokens - finalTokens
+	if saved < 0 {
+		saved = 0
+	}
+	return output, saved
 }
 
 // SetMode changes the filter mode.
@@ -225,14 +231,21 @@ var typescriptIndicators = []string{
 
 // DetectLanguage attempts to detect the programming language from output
 // using weighted scoring across multiple indicators.
+// For performance, only the first 4KB of output are scanned.
 func DetectLanguage(output string) string {
+	// Fast path: scan only the first 4KB to avoid O(n*m) on large logs.
+	sample := output
+	if len(sample) > 4096 {
+		sample = sample[:4096]
+	}
+
 	scores := make(map[string]int)
 
 	// Apply rule-based scoring
 	for lang, rules := range languageRules {
 		for _, rule := range rules {
 			for _, pattern := range rule.patterns {
-				if strings.Contains(output, pattern) {
+				if strings.Contains(sample, pattern) {
 					scores[lang] += rule.score
 					break
 				}
@@ -241,22 +254,22 @@ func DetectLanguage(output string) string {
 	}
 
 	// Python-specific detection with curly brace penalty
-	detectPython(output, scores)
+	detectPython(sample, scores)
 
 	// SQL detection
-	detectSQL(output, scores)
+	detectSQL(sample, scores)
 
 	// JavaScript/TypeScript detection
-	detectJavaScriptFamily(output, scores)
+	detectJavaScriptFamily(sample, scores)
 
 	// C/C++ shared indicators
-	if strings.Contains(output, "#include") {
+	if strings.Contains(sample, "#include") {
 		scores["c"] += 5
 		scores["cpp"] += 5
 	}
 
 	// Ruby-specific detection
-	detectRuby(output, scores)
+	detectRuby(sample, scores)
 
 	return selectBestLanguage(scores)
 }

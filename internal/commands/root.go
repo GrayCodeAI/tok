@@ -10,6 +10,7 @@ import (
 
 	out "github.com/GrayCodeAI/tok/internal/output"
 
+	"github.com/mattn/go-runewidth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -550,11 +551,12 @@ func trackCommandInvocation(cmd *cobra.Command) {
 func showPowerfulWelcome(cmd *cobra.Command) error {
 	const boxWidth = 62 // total inner width of the box
 	versionStr := "🚀 tok CLI v" + shared.Version
-	titlePadding := (boxWidth - len(versionStr)) / 2
+	vWidth := runewidth.StringWidth(versionStr)
+	titlePadding := (boxWidth - vWidth) / 2
 	if titlePadding < 0 {
 		titlePadding = 0
 	}
-	titleLine := "║" + strings.Repeat(" ", titlePadding) + versionStr + strings.Repeat(" ", boxWidth-titlePadding-len(versionStr)) + "║"
+	titleLine := "║" + strings.Repeat(" ", titlePadding) + versionStr + strings.Repeat(" ", boxWidth-titlePadding-vWidth) + "║"
 
 	out.Global().Println()
 	out.Global().Println("╔" + strings.Repeat("═", boxWidth) + "╗")

@@ -57,7 +57,7 @@ func TestCompressFull(t *testing.T) {
 		{
 			name:     "shorten words",
 			input:    "Please utilize additional functionality",
-			expected: "Please use more functionality",
+			expected: "use more functionality",
 		},
 	}
 

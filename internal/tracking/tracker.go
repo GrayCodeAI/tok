@@ -40,6 +40,7 @@ type Tracker struct {
 	db            *sql.DB
 	lastCleanupMs int64          // atomic: unix timestamp of last cleanup
 	cleanupCh     chan struct{}  // non-blocking cleanup trigger
+	doneCh        chan struct{}  // signals shutdown to cleanup worker
 	cleanupWg     sync.WaitGroup // waits for cleanup goroutine to finish
 	closed        atomic.Bool
 	closeOnce     sync.Once
@@ -222,6 +223,7 @@ func NewTracker(dbPath string) (*Tracker, error) {
 	t := &Tracker{
 		db:        db,
 		cleanupCh: make(chan struct{}, 1),
+		doneCh:    make(chan struct{}),
 	}
 	t.cleanupWg.Add(1)
 	go t.cleanupWorker()
@@ -233,8 +235,8 @@ func (t *Tracker) Close() error {
 	var err error
 	t.closeOnce.Do(func() {
 		t.closed.Store(true)
-		close(t.cleanupCh)
-		t.cleanupWg.Wait() // Wait for cleanup goroutine to finish before closing DB
+		close(t.doneCh)    // signal worker to exit
+		t.cleanupWg.Wait() // wait for cleanup goroutine to finish before closing DB
 		err = t.db.Close()
 	})
 	return err
@@ -243,8 +245,13 @@ func (t *Tracker) Close() error {
 // cleanupWorker processes cleanup triggers from the channel.
 func (t *Tracker) cleanupWorker() {
 	defer t.cleanupWg.Done()
-	for range t.cleanupCh {
-		t.cleanupOld()
+	for {
+		select {
+		case <-t.cleanupCh:
+			t.cleanupOld()
+		case <-t.doneCh:
+			return
+		}
 	}
 }
 
@@ -277,8 +284,7 @@ func addOptionalCommandColumns(db *sql.DB) error {
 	// Add missing columns
 	for _, col := range CommandColumnDefs {
 		if !existingCols[col.Name] {
-			_, err := db.Exec(fmt.Sprintf("ALTER TABLE commands ADD COLUMN %s %s", col.Name, col.Type))
-			if err != nil {
+			if err := addColumnSafe(db, col.Name, col.Type); err != nil {
 				return fmt.Errorf("failed to add column %s: %w", col.Name, err)
 			}
 		}
@@ -290,6 +296,36 @@ func addOptionalCommandColumns(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+// validColumnNames is the allowlist of column names that may be added dynamically.
+// Only names in this set are accepted by addColumnSafe.
+var validColumnNames = map[string]bool{
+	"agent_name":            true,
+	"model_name":            true,
+	"provider":              true,
+	"model_family":          true,
+	"context_kind":          true,
+	"context_mode":          true,
+	"context_resolved_mode": true,
+	"context_target":        true,
+	"context_related_files": true,
+	"context_bundle":        true,
+}
+
+// addColumnSafe adds a column using a strict allowlist and quoted identifiers.
+func addColumnSafe(db *sql.DB, name, colType string) error {
+	if !validColumnNames[name] {
+		return fmt.Errorf("column name %q is not in the allowlist", name)
+	}
+	quoted := sqliteQuoteIdentifier(name)
+	_, err := db.Exec(fmt.Sprintf("ALTER TABLE commands ADD COLUMN %s %s", quoted, colType))
+	return err
+}
+
+// sqliteQuoteIdentifier wraps an identifier in double quotes and escapes embedded quotes.
+func sqliteQuoteIdentifier(name string) string {
+	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
 }
 
 // Query executes a raw SQL query and returns the rows.
