@@ -51,7 +51,7 @@ func TestPipelineCompression(t *testing.T) {
 				NgramEnabled:    true,
 			})
 
-			output, _ := p.Process(tt.input)
+			output, _, _ := p.Process(tt.input)
 			_ = output
 			t.Logf("Processed %d bytes", len(tt.input))
 		})
@@ -232,7 +232,10 @@ func TestLargeInput(t *testing.T) {
 		EnableH2O:        true,
 	})
 
-	output, stats := p.Process(input)
+	output, stats, err := p.Process(input)
+	if err != nil {
+		t.Fatalf("Process failed: %v", err)
+	}
 
 	t.Logf("Input: %d chars", len(input))
 	t.Logf("Output: %d chars", len(output))
@@ -251,7 +254,7 @@ func TestContextCancellation(t *testing.T) {
 	})
 
 	input := "test content"
-	_, _ = p.Process(input)
+	_, _, _ = p.Process(input)
 	t.Logf("Context cancellation test passed")
 }
 
@@ -268,7 +271,7 @@ func BenchmarkFullPipeline(b *testing.B) {
 			EnableEntropy:   true,
 			EnableH2O:       true,
 		})
-		output, _ := p.Process(input)
+		output, _, _ := p.Process(input)
 		_ = output
 	}
 }
@@ -283,7 +286,7 @@ func BenchmarkMinimalPipeline(b *testing.B) {
 			Mode:            filter.ModeMinimal,
 			SessionTracking: false,
 		})
-		output, _ := p.Process(input)
+		output, _, _ := p.Process(input)
 		_ = output
 	}
 }

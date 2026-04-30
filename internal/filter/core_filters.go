@@ -295,7 +295,7 @@ func NewRefactoredCoordinator(cfg PipelineConfig) *RefactoredCoordinator {
 }
 
 // Process processes input through the pipeline
-func (r *RefactoredCoordinator) Process(input string) (string, *PipelineStats) {
+func (r *RefactoredCoordinator) Process(input string) (string, *PipelineStats, error) {
 	stats := &PipelineStats{
 		OriginalTokens: EstimateTokens(input),
 		LayerStats:     make(map[string]LayerStat),
@@ -318,5 +318,5 @@ func (r *RefactoredCoordinator) Process(input string) (string, *PipelineStats) {
 	stats.FinalTokens = EstimateTokens(output)
 	stats.TotalSaved = stats.OriginalTokens - stats.FinalTokens
 
-	return output, stats
+	return output, stats, nil
 }

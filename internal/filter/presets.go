@@ -218,7 +218,10 @@ func TierConfig(tier Tier, baseMode Mode) PipelineConfig {
 func ApplyTier(input string, mode Mode, tier Tier) (string, int) {
 	cfg := TierConfig(tier, mode)
 	p := NewPipelineCoordinator(cfg)
-	output, stats := p.Process(input)
+	output, stats, err := p.Process(input)
+	if err != nil {
+		return output, 0
+	}
 	return output, stats.TotalSaved
 }
 
@@ -280,6 +283,9 @@ func PresetConfig(preset PipelinePreset, baseMode Mode) PipelineConfig {
 func QuickProcessPreset(input string, mode Mode, preset PipelinePreset) (string, int) {
 	cfg := PresetConfig(preset, mode)
 	p := NewPipelineCoordinator(cfg)
-	output, stats := p.Process(input)
+	output, stats, err := p.Process(input)
+	if err != nil {
+		return output, 0
+	}
 	return output, stats.TotalSaved
 }

@@ -2,9 +2,7 @@ package filter
 
 import (
 	"fmt"
-	"runtime"
 	"testing"
-	"time"
 
 	"github.com/GrayCodeAI/tok/internal/simd"
 )
@@ -219,7 +217,7 @@ func BenchmarkPipeline(b *testing.B) {
 
 			b.Run(fmt.Sprintf("%s_%d", config.name, size), func(b *testing.B) {
 				for i := 0; i < b.N; i++ {
-					pipeline.Process(input)
+					_, _, _ = pipeline.Process(input)
 				}
 			})
 		}
@@ -250,54 +248,45 @@ func BenchmarkCompressionQuality(b *testing.B) {
 		b.Run(fmt.Sprintf("%s_Fast", input.name), func(b *testing.B) {
 			pipeline := NewPipelineCoordinator(TierConfig(TierSurface, ModeMinimal))
 			for i := 0; i < b.N; i++ {
-				pipeline.Process(input.input)
+				_, _, _ = pipeline.Process(input.input)
 			}
 		})
 
 		b.Run(fmt.Sprintf("%s_Balanced", input.name), func(b *testing.B) {
 			pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
 			for i := 0; i < b.N; i++ {
-				pipeline.Process(input.input)
+				_, _, _ = pipeline.Process(input.input)
 			}
 		})
 
 		b.Run(fmt.Sprintf("%s_Full", input.name), func(b *testing.B) {
 			pipeline := NewPipelineCoordinator(TierConfig(TierExtract, ModeMinimal))
 			for i := 0; i < b.N; i++ {
-				pipeline.Process(input.input)
+				_, _, _ = pipeline.Process(input.input)
 			}
 		})
 	}
 }
 
-// BenchmarkMemoryUsage benchmarks memory usage
+// BenchmarkMemoryUsage benchmarks memory usage.
+// Run with -benchmem to get accurate alloc/op and allocs/op from the testing framework.
 func BenchmarkMemoryUsage(b *testing.B) {
 	b.Run("PipelineMemory", func(b *testing.B) {
-		var m1, m2 runtime.MemStats
-
-		runtime.GC()
-		runtime.ReadMemStats(&m1)
-
 		pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
 		input := makeString(10000)
 
+		b.ReportAllocs()
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			pipeline.Process(input)
+			_, _, _ = pipeline.Process(input)
 		}
-		b.StopTimer()
-
-		runtime.ReadMemStats(&m2)
-
-		b.ReportMetric(float64(m2.TotalAlloc-m1.TotalAlloc)/float64(b.N), "bytes/op")
-		b.ReportMetric(float64(m2.HeapAlloc-m1.HeapAlloc)/float64(b.N), "heap_bytes/op")
 	})
 }
 
-// BenchmarkLatency benchmarks end-to-end latency
+// BenchmarkLatency benchmarks end-to-end latency.
+// Go's testing framework already measures ns/op over b.N iterations,
+// so we don't manually time inside the loop.
 func BenchmarkLatency(b *testing.B) {
-	pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
-
 	inputs := []struct {
 		name  string
 		size  int
@@ -310,23 +299,11 @@ func BenchmarkLatency(b *testing.B) {
 
 	for _, tc := range inputs {
 		b.Run(tc.name, func(b *testing.B) {
-			latencies := make([]time.Duration, b.N)
-
+			pipeline := NewPipelineCoordinator(TierConfig(TierTrim, ModeMinimal))
+			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
-				start := time.Now()
-				pipeline.Process(tc.input)
-				latencies[i] = time.Since(start)
+				_, _, _ = pipeline.Process(tc.input)
 			}
-
-			// Calculate percentiles
-			var total time.Duration
-			for _, lat := range latencies {
-				total += lat
-			}
-			avg := total / time.Duration(b.N)
-
-			b.ReportMetric(float64(avg.Nanoseconds()), "ns/op")
-			b.ReportMetric(float64(avg.Microseconds()), "us/op")
 		})
 	}
 }

@@ -73,160 +73,195 @@ func TestIsStreamMode(t *testing.T) {
 }
 
 func TestGetQueryIntent(t *testing.T) {
-	os.Unsetenv("TOK_QUERY")
+	t.Run("flag takes precedence", func(t *testing.T) {
+		QueryIntent = "debug"
+		if got := GetQueryIntent(); got != "debug" {
+			t.Errorf("expected 'debug', got %q", got)
+		}
+	})
 
-	// Flag takes precedence
-	QueryIntent = "debug"
-	if got := GetQueryIntent(); got != "debug" {
-		t.Errorf("expected 'debug', got %q", got)
-	}
+	t.Run("falls back to env var", func(t *testing.T) {
+		QueryIntent = ""
+		t.Setenv("TOK_QUERY", "fix bug")
+		if got := GetQueryIntent(); got != "fix bug" {
+			t.Errorf("expected 'fix bug', got %q", got)
+		}
+	})
 
-	// Falls back to env var
-	QueryIntent = ""
-	os.Setenv("TOK_QUERY", "fix bug")
-	if got := GetQueryIntent(); got != "fix bug" {
-		t.Errorf("expected 'fix bug', got %q", got)
-	}
-
-	// Empty when neither set
-	os.Unsetenv("TOK_QUERY")
-	if got := GetQueryIntent(); got != "" {
-		t.Errorf("expected empty, got %q", got)
-	}
+	t.Run("empty when neither set", func(t *testing.T) {
+		QueryIntent = ""
+		if got := GetQueryIntent(); got != "" {
+			t.Errorf("expected empty, got %q", got)
+		}
+	})
 }
 
 func TestIsLLMEnabled(t *testing.T) {
-	os.Unsetenv("TOK_LLM")
+	t.Run("flag true", func(t *testing.T) {
+		LLMEnabled = true
+		if !IsLLMEnabled() {
+			t.Error("expected true when LLMEnabled=true")
+		}
+	})
 
-	LLMEnabled = true
-	if !IsLLMEnabled() {
-		t.Error("expected true when LLMEnabled=true")
-	}
+	t.Run("env true", func(t *testing.T) {
+		LLMEnabled = false
+		t.Setenv("TOK_LLM", "true")
+		if !IsLLMEnabled() {
+			t.Error("expected true when TOK_LLM=true")
+		}
+	})
 
-	LLMEnabled = false
-	os.Setenv("TOK_LLM", "true")
-	if !IsLLMEnabled() {
-		t.Error("expected true when TOK_LLM=true")
-	}
-
-	os.Unsetenv("TOK_LLM")
-	if IsLLMEnabled() {
-		t.Error("expected false when neither flag nor env set")
-	}
+	t.Run("neither set", func(t *testing.T) {
+		LLMEnabled = false
+		if IsLLMEnabled() {
+			t.Error("expected false when neither flag nor env set")
+		}
+	})
 }
 
 func TestGetTokenBudget(t *testing.T) {
-	os.Unsetenv("TOK_BUDGET")
+	t.Run("flag takes precedence", func(t *testing.T) {
+		TokenBudget = 1000
+		if got := GetTokenBudget(); got != 1000 {
+			t.Errorf("expected 1000, got %d", got)
+		}
+	})
 
-	// Flag takes precedence
-	TokenBudget = 1000
-	if got := GetTokenBudget(); got != 1000 {
-		t.Errorf("expected 1000, got %d", got)
-	}
+	t.Run("falls back to env var", func(t *testing.T) {
+		TokenBudget = 0
+		t.Setenv("TOK_BUDGET", "2000")
+		if got := GetTokenBudget(); got != 2000 {
+			t.Errorf("expected 2000, got %d", got)
+		}
+	})
 
-	// Falls back to env var
-	TokenBudget = 0
-	os.Setenv("TOK_BUDGET", "2000")
-	if got := GetTokenBudget(); got != 2000 {
-		t.Errorf("expected 2000, got %d", got)
-	}
-
-	// Zero when neither set
-	os.Unsetenv("TOK_BUDGET")
-	if got := GetTokenBudget(); got != 0 {
-		t.Errorf("expected 0, got %d", got)
-	}
+	t.Run("zero when neither set", func(t *testing.T) {
+		TokenBudget = 0
+		if got := GetTokenBudget(); got != 0 {
+			t.Errorf("expected 0, got %d", got)
+		}
+	})
 }
 
 func TestGetLayerPreset(t *testing.T) {
-	os.Unsetenv("TOK_PRESET")
+	t.Run("flag set", func(t *testing.T) {
+		LayerPreset = "fast"
+		if got := GetLayerPreset(); got != "fast" {
+			t.Errorf("expected 'fast', got %q", got)
+		}
+	})
 
-	LayerPreset = "fast"
-	if got := GetLayerPreset(); got != "fast" {
-		t.Errorf("expected 'fast', got %q", got)
-	}
+	t.Run("env var fallback", func(t *testing.T) {
+		LayerPreset = ""
+		t.Setenv("TOK_PRESET", "balanced")
+		if got := GetLayerPreset(); got != "balanced" {
+			t.Errorf("expected 'balanced', got %q", got)
+		}
+	})
 
-	LayerPreset = ""
-	os.Setenv("TOK_PRESET", "balanced")
-	if got := GetLayerPreset(); got != "balanced" {
-		t.Errorf("expected 'balanced', got %q", got)
-	}
-
-	os.Unsetenv("TOK_PRESET")
+	t.Run("neither set", func(t *testing.T) {
+		LayerPreset = ""
+		if got := GetLayerPreset(); got != "" {
+			t.Errorf("expected empty, got %q", got)
+		}
+	})
 }
 
 func TestIsReversibleEnabled(t *testing.T) {
-	os.Unsetenv("TOK_REVERSIBLE")
+	t.Run("flag true", func(t *testing.T) {
+		ReversibleEnabled = true
+		if !IsReversibleEnabled() {
+			t.Error("expected true when ReversibleEnabled=true")
+		}
+	})
 
-	ReversibleEnabled = true
-	if !IsReversibleEnabled() {
-		t.Error("expected true when ReversibleEnabled=true")
-	}
+	t.Run("env true", func(t *testing.T) {
+		ReversibleEnabled = false
+		t.Setenv("TOK_REVERSIBLE", "true")
+		if !IsReversibleEnabled() {
+			t.Error("expected true when TOK_REVERSIBLE=true")
+		}
+	})
 
-	ReversibleEnabled = false
-	os.Setenv("TOK_REVERSIBLE", "true")
-	if !IsReversibleEnabled() {
-		t.Error("expected true when TOK_REVERSIBLE=true")
-	}
-
-	os.Unsetenv("TOK_REVERSIBLE")
-	if IsReversibleEnabled() {
-		t.Error("expected false when neither set")
-	}
+	t.Run("neither set", func(t *testing.T) {
+		ReversibleEnabled = false
+		if IsReversibleEnabled() {
+			t.Error("expected false when neither set")
+		}
+	})
 }
 
 func TestIsRemoteMode(t *testing.T) {
-	os.Unsetenv("TOK_REMOTE")
+	t.Run("flag true", func(t *testing.T) {
+		RemoteMode = true
+		if !IsRemoteMode() {
+			t.Error("expected true when RemoteMode=true")
+		}
+	})
 
-	RemoteMode = true
-	if !IsRemoteMode() {
-		t.Error("expected true when RemoteMode=true")
-	}
+	t.Run("env true", func(t *testing.T) {
+		RemoteMode = false
+		t.Setenv("TOK_REMOTE", "true")
+		if !IsRemoteMode() {
+			t.Error("expected true when TOK_REMOTE=true")
+		}
+	})
 
-	RemoteMode = false
-	os.Setenv("TOK_REMOTE", "true")
-	if !IsRemoteMode() {
-		t.Error("expected true when TOK_REMOTE=true")
-	}
-
-	os.Unsetenv("TOK_REMOTE")
-	if IsRemoteMode() {
-		t.Error("expected false when neither set")
-	}
+	t.Run("neither set", func(t *testing.T) {
+		RemoteMode = false
+		if IsRemoteMode() {
+			t.Error("expected false when neither set")
+		}
+	})
 }
 
 func TestGetCompressionAddr(t *testing.T) {
-	os.Unsetenv("TOK_COMPRESSION_ADDR")
+	t.Run("flag set", func(t *testing.T) {
+		CompressionAddr = "localhost:9090"
+		if got := GetCompressionAddr(); got != "localhost:9090" {
+			t.Errorf("expected 'localhost:9090', got %q", got)
+		}
+		CompressionAddr = ""
+	})
 
-	CompressionAddr = "localhost:9090"
-	if got := GetCompressionAddr(); got != "localhost:9090" {
-		t.Errorf("expected 'localhost:9090', got %q", got)
-	}
+	t.Run("env var fallback", func(t *testing.T) {
+		t.Setenv("TOK_COMPRESSION_ADDR", "remote:9090")
+		if got := GetCompressionAddr(); got != "remote:9090" {
+			t.Errorf("expected 'remote:9090', got %q", got)
+		}
+	})
 
-	CompressionAddr = ""
-	os.Setenv("TOK_COMPRESSION_ADDR", "remote:9090")
-	if got := GetCompressionAddr(); got != "remote:9090" {
-		t.Errorf("expected 'remote:9090', got %q", got)
-	}
-
-	os.Unsetenv("TOK_COMPRESSION_ADDR")
+	t.Run("neither set", func(t *testing.T) {
+		CompressionAddr = ""
+		if got := GetCompressionAddr(); got != "" {
+			t.Errorf("expected empty, got %q", got)
+		}
+	})
 }
 
 func TestGetAnalyticsAddr(t *testing.T) {
-	os.Unsetenv("TOK_ANALYTICS_ADDR")
+	t.Run("flag set", func(t *testing.T) {
+		AnalyticsAddr = "localhost:9091"
+		if got := GetAnalyticsAddr(); got != "localhost:9091" {
+			t.Errorf("expected 'localhost:9091', got %q", got)
+		}
+		AnalyticsAddr = ""
+	})
 
-	AnalyticsAddr = "localhost:9091"
-	if got := GetAnalyticsAddr(); got != "localhost:9091" {
-		t.Errorf("expected 'localhost:9091', got %q", got)
-	}
+	t.Run("env var fallback", func(t *testing.T) {
+		t.Setenv("TOK_ANALYTICS_ADDR", "remote:9091")
+		if got := GetAnalyticsAddr(); got != "remote:9091" {
+			t.Errorf("expected 'remote:9091', got %q", got)
+		}
+	})
 
-	AnalyticsAddr = ""
-	os.Setenv("TOK_ANALYTICS_ADDR", "remote:9091")
-	if got := GetAnalyticsAddr(); got != "remote:9091" {
-		t.Errorf("expected 'remote:9091', got %q", got)
-	}
-
-	os.Unsetenv("TOK_ANALYTICS_ADDR")
+	t.Run("neither set", func(t *testing.T) {
+		AnalyticsAddr = ""
+		if got := GetAnalyticsAddr(); got != "" {
+			t.Errorf("expected empty, got %q", got)
+		}
+	})
 }
 
 func TestGetRemoteTimeout(t *testing.T) {
@@ -366,20 +401,27 @@ func TestSetFlags(t *testing.T) {
 }
 
 func TestGetLayerProfile(t *testing.T) {
-	os.Unsetenv("TOK_PROFILE")
+	t.Run("flag set", func(t *testing.T) {
+		LayerProfile = "thread"
+		if got := GetLayerProfile(); got != "thread" {
+			t.Errorf("expected 'thread', got %q", got)
+		}
+		LayerProfile = ""
+	})
 
-	LayerProfile = "thread"
-	if got := GetLayerProfile(); got != "thread" {
-		t.Errorf("expected 'thread', got %q", got)
-	}
+	t.Run("env var fallback", func(t *testing.T) {
+		t.Setenv("TOK_PROFILE", "log")
+		if got := GetLayerProfile(); got != "log" {
+			t.Errorf("expected 'log', got %q", got)
+		}
+	})
 
-	LayerProfile = ""
-	os.Setenv("TOK_PROFILE", "log")
-	if got := GetLayerProfile(); got != "log" {
-		t.Errorf("expected 'log', got %q", got)
-	}
-
-	os.Unsetenv("TOK_PROFILE")
+	t.Run("neither set", func(t *testing.T) {
+		LayerProfile = ""
+		if got := GetLayerProfile(); got != "" {
+			t.Errorf("expected empty, got %q", got)
+		}
+	})
 }
 
 type testRootCmd struct {
@@ -563,12 +605,6 @@ func TestFallbackHandleFiltersAndRecordsOnCommandError(t *testing.T) {
 }
 
 func TestGetProjectPathUsesCanonicalPath(t *testing.T) {
-	origWD, err := os.Getwd()
-	if err != nil {
-		t.Fatalf("Getwd() error = %v", err)
-	}
-	t.Cleanup(func() { _ = os.Chdir(origWD) })
-
 	base := t.TempDir()
 	realDir := filepath.Join(base, "real")
 	linkDir := filepath.Join(base, "link")
@@ -578,9 +614,7 @@ func TestGetProjectPathUsesCanonicalPath(t *testing.T) {
 	if err := os.Symlink(realDir, linkDir); err != nil {
 		t.Fatalf("Symlink() error = %v", err)
 	}
-	if err := os.Chdir(linkDir); err != nil {
-		t.Fatalf("Chdir() error = %v", err)
-	}
+	t.Chdir(linkDir)
 
 	got := getProjectPath()
 	want := config.ProjectPath()

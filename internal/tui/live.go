@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -46,6 +47,7 @@ type liveSource interface {
 type trackingLiveSource struct {
 	dbPath        string
 	fallbackEvery time.Duration
+	started       atomic.Bool // guards against multiple Start calls without cancellation
 }
 
 // newTrackingLiveSource returns a live source rooted at the user's tok
@@ -65,7 +67,18 @@ func resolveTrackingDBPath() string {
 // Start begins emitting events on the returned channel. Callers must
 // drain it; a slow consumer causes drops, not backpressure. Cancel ctx
 // to shut down all three underlying goroutines and close the channel.
+//
+// Start is safe to call exactly once per instance. If called again without
+// the previous context being cancelled, it returns a closed channel to
+// prevent goroutine leaks.
 func (s *trackingLiveSource) Start(ctx context.Context) <-chan LiveEvent {
+	if !s.started.CompareAndSwap(false, true) {
+		// Already started without cancellation — prevent goroutine leak.
+		ch := make(chan LiveEvent)
+		close(ch)
+		return ch
+	}
+
 	out := make(chan LiveEvent, 64)
 
 	go func() {

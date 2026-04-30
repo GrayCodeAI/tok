@@ -126,7 +126,10 @@ func (cb *CrunchBench) RunBenchmark(cfg PipelineConfig) *BenchmarkReport {
 // benchmarkInput benchmarks a single input.
 func (cb *CrunchBench) benchmarkInput(input TestInput, pipeline *PipelineCoordinator) BenchmarkResult {
 	start := time.Now()
-	compressed, stats := pipeline.Process(input.Content)
+	compressed, stats, err := pipeline.Process(input.Content)
+	if err != nil {
+		return BenchmarkResult{TestName: input.Name, CompressionTime: time.Since(start)}
+	}
 	elapsed := time.Since(start)
 
 	origTokens := core.EstimateTokens(input.Content)

@@ -3,6 +3,7 @@ package utils
 import "testing"
 
 func TestMin(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		a, b, want int
 	}{
@@ -19,6 +20,7 @@ func TestMin(t *testing.T) {
 }
 
 func TestMax(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		a, b, want int
 	}{
@@ -35,6 +37,7 @@ func TestMax(t *testing.T) {
 }
 
 func TestClamp(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		x, min, max, want int
 	}{
@@ -52,6 +55,7 @@ func TestClamp(t *testing.T) {
 }
 
 func TestAbs(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		x, want int
 	}{
@@ -68,6 +72,7 @@ func TestAbs(t *testing.T) {
 }
 
 func TestShortenPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		path     string
 		maxLen   int
@@ -88,6 +93,7 @@ func TestShortenPath(t *testing.T) {
 }
 
 func TestFormatBytes(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		bytes int64
 		want  string
@@ -108,6 +114,7 @@ func TestFormatBytes(t *testing.T) {
 }
 
 func TestFormatDuration(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		ms   int64
 		want string
@@ -127,6 +134,7 @@ func TestFormatDuration(t *testing.T) {
 }
 
 func TestFormatTokens(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		n    int
 		want string
@@ -146,6 +154,7 @@ func TestFormatTokens(t *testing.T) {
 }
 
 func TestGetModelFamily(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name, want string
 	}{
@@ -171,6 +180,7 @@ func TestGetModelFamily(t *testing.T) {
 }
 
 func TestFormatTokens64(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		n    uint64
 		want string

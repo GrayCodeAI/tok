@@ -39,7 +39,7 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 	}
 
 	execCmd := exec.Command(exePath, args[1:]...)
-	output, err := execCmd.CombinedOutput()
+	output, execErr := execCmd.CombinedOutput()
 	rawOutput := string(output)
 
 	originalTokens := core.EstimateTokens(rawOutput)
@@ -57,7 +57,10 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 	for _, preset := range presets {
 		cfg := filter.PresetConfig(preset, filter.ModeMinimal)
 		pipeline := filter.NewPipelineCoordinator(cfg)
-		compressed, stats := pipeline.Process(rawOutput)
+		compressed, stats, err := pipeline.Process(rawOutput)
+		if err != nil {
+			return err
+		}
 		report := equiv.Check(rawOutput, compressed)
 
 		status := "PASS"
@@ -78,5 +81,5 @@ func runCompressTest(cmd *cobra.Command, args []string) error {
 	if failed > 0 {
 		return fmt.Errorf("compression quality test failed")
 	}
-	return err
+	return execErr
 }

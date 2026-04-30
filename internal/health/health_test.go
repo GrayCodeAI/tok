@@ -9,6 +9,7 @@ import (
 )
 
 func TestChecker_Creation(t *testing.T) {
+	t.Parallel()
 	cfg := config.Defaults()
 	checker := health.NewChecker(cfg, nil, "test-version")
 
@@ -18,6 +19,7 @@ func TestChecker_Creation(t *testing.T) {
 }
 
 func TestChecker_Check(t *testing.T) {
+	t.Parallel()
 	cfg := config.Defaults()
 	checker := health.NewChecker(cfg, nil, "test-version")
 
@@ -35,6 +37,7 @@ func TestChecker_Check(t *testing.T) {
 }
 
 func TestChecker_Liveness(t *testing.T) {
+	t.Parallel()
 	cfg := config.Defaults()
 	checker := health.NewChecker(cfg, nil, "test-version")
 
@@ -49,6 +52,7 @@ func TestChecker_Liveness(t *testing.T) {
 }
 
 func TestChecker_Readiness(t *testing.T) {
+	t.Parallel()
 	cfg := config.Defaults()
 	checker := health.NewChecker(cfg, nil, "test-version")
 
@@ -60,6 +64,7 @@ func TestChecker_Readiness(t *testing.T) {
 }
 
 func TestStatus_Values(t *testing.T) {
+	t.Parallel()
 	// Just verify the constants exist and are different
 	if health.StatusHealthy == health.StatusDegraded {
 		t.Error("expected statuses to be different")

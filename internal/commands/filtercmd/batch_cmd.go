@@ -135,7 +135,11 @@ func runBatch(cmd *cobra.Command, args []string) error {
 				}
 				input := string(raw)
 				orig := core.EstimateTokens(input)
-				compressed, stats := pipeline.Process(input)
+				compressed, stats, err := pipeline.Process(input)
+				if err != nil {
+					results <- batchResult{path: path, err: err}
+					continue
+				}
 				results <- batchResult{
 					path:        path,
 					compressed:  compressed,

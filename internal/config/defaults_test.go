@@ -1,21 +1,12 @@
 package config
 
 import (
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
 )
 
 func TestConfigPath(t *testing.T) {
-	// Save original env vars
-	origXDG := os.Getenv("XDG_CONFIG_HOME")
-	origAppData := os.Getenv("APPDATA")
-	defer func() {
-		os.Setenv("XDG_CONFIG_HOME", origXDG)
-		os.Setenv("APPDATA", origAppData)
-	}()
-
 	tests := []struct {
 		name     string
 		xdg      string
@@ -31,8 +22,8 @@ func TestConfigPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("XDG_CONFIG_HOME", tt.xdg)
-			os.Setenv("APPDATA", tt.appData)
+			t.Setenv("XDG_CONFIG_HOME", tt.xdg)
+			t.Setenv("APPDATA", tt.appData)
 
 			result := ConfigPath()
 			if result != tt.expected {
@@ -43,8 +34,8 @@ func TestConfigPath(t *testing.T) {
 
 	// Test default path (no env vars)
 	t.Run("default path", func(t *testing.T) {
-		os.Unsetenv("XDG_CONFIG_HOME")
-		os.Unsetenv("APPDATA")
+		t.Setenv("XDG_CONFIG_HOME", "")
+		t.Setenv("APPDATA", "")
 
 		result := ConfigPath()
 		if runtime.GOOS == "windows" {
@@ -62,19 +53,10 @@ func TestConfigPath(t *testing.T) {
 }
 
 func TestDataPath(t *testing.T) {
-	origXDG := os.Getenv("XDG_DATA_HOME")
-	origLocalAppData := os.Getenv("LOCALAPPDATA")
-	origAppData := os.Getenv("APPDATA")
-	defer func() {
-		os.Setenv("XDG_DATA_HOME", origXDG)
-		os.Setenv("LOCALAPPDATA", origLocalAppData)
-		os.Setenv("APPDATA", origAppData)
-	}()
-
 	t.Run("XDG override", func(t *testing.T) {
-		os.Setenv("XDG_DATA_HOME", "/custom/data")
-		os.Unsetenv("LOCALAPPDATA")
-		os.Unsetenv("APPDATA")
+		t.Setenv("XDG_DATA_HOME", "/custom/data")
+		t.Setenv("LOCALAPPDATA", "")
+		t.Setenv("APPDATA", "")
 
 		result := DataPath()
 		expected := "/custom/data/tok"
@@ -84,9 +66,9 @@ func TestDataPath(t *testing.T) {
 	})
 
 	t.Run("default path", func(t *testing.T) {
-		os.Unsetenv("XDG_DATA_HOME")
-		os.Unsetenv("LOCALAPPDATA")
-		os.Unsetenv("APPDATA")
+		t.Setenv("XDG_DATA_HOME", "")
+		t.Setenv("LOCALAPPDATA", "")
+		t.Setenv("APPDATA", "")
 
 		result := DataPath()
 		if !filepath.IsAbs(result) {
@@ -96,11 +78,8 @@ func TestDataPath(t *testing.T) {
 }
 
 func TestDatabasePath(t *testing.T) {
-	orig := os.Getenv("TOK_DATABASE_PATH")
-	defer os.Setenv("TOK_DATABASE_PATH", orig)
-
 	t.Run("custom path", func(t *testing.T) {
-		os.Setenv("TOK_DATABASE_PATH", "/custom/db.sqlite")
+		t.Setenv("TOK_DATABASE_PATH", "/custom/db.sqlite")
 		result := DatabasePath()
 		if result != "/custom/db.sqlite" {
 			t.Errorf("DatabasePath() = %q, want /custom/db.sqlite", result)
@@ -108,7 +87,7 @@ func TestDatabasePath(t *testing.T) {
 	})
 
 	t.Run("default path", func(t *testing.T) {
-		os.Unsetenv("TOK_DATABASE_PATH")
+		t.Setenv("TOK_DATABASE_PATH", "")
 		result := DatabasePath()
 		if !filepath.IsAbs(result) {
 			t.Errorf("DatabasePath() = %q, expected absolute path", result)
@@ -142,16 +121,9 @@ func TestProjectPath(t *testing.T) {
 }
 
 func TestConfigPath_Windows(t *testing.T) {
-	origXDG := os.Getenv("XDG_CONFIG_HOME")
-	origAppData := os.Getenv("APPDATA")
-	defer func() {
-		os.Setenv("XDG_CONFIG_HOME", origXDG)
-		os.Setenv("APPDATA", origAppData)
-	}()
-
 	t.Run("Windows APPDATA path", func(t *testing.T) {
-		os.Unsetenv("XDG_CONFIG_HOME")
-		os.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
+		t.Setenv("XDG_CONFIG_HOME", "")
+		t.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
 
 		result := ConfigPath()
 		// On non-Windows, APPDATA is ignored, so we just verify it doesn't crash
@@ -163,19 +135,10 @@ func TestConfigPath_Windows(t *testing.T) {
 }
 
 func TestDataPath_Windows(t *testing.T) {
-	origXDG := os.Getenv("XDG_DATA_HOME")
-	origLocalAppData := os.Getenv("LOCALAPPDATA")
-	origAppData := os.Getenv("APPDATA")
-	defer func() {
-		os.Setenv("XDG_DATA_HOME", origXDG)
-		os.Setenv("LOCALAPPDATA", origLocalAppData)
-		os.Setenv("APPDATA", origAppData)
-	}()
-
 	t.Run("Windows LOCALAPPDATA path", func(t *testing.T) {
-		os.Unsetenv("XDG_DATA_HOME")
-		os.Setenv("LOCALAPPDATA", `C:\Users\TestUser\AppData\Local`)
-		os.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
+		t.Setenv("XDG_DATA_HOME", "")
+		t.Setenv("LOCALAPPDATA", `C:\Users\TestUser\AppData\Local`)
+		t.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
 
 		result := DataPath()
 		t.Logf("DataPath with LOCALAPPDATA set: %s", result)
@@ -185,9 +148,9 @@ func TestDataPath_Windows(t *testing.T) {
 	})
 
 	t.Run("Windows fallback to APPDATA", func(t *testing.T) {
-		os.Unsetenv("XDG_DATA_HOME")
-		os.Unsetenv("LOCALAPPDATA")
-		os.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
+		t.Setenv("XDG_DATA_HOME", "")
+		t.Setenv("LOCALAPPDATA", "")
+		t.Setenv("APPDATA", `C:\Users\TestUser\AppData\Roaming`)
 
 		result := DataPath()
 		t.Logf("DataPath with APPDATA fallback: %s", result)

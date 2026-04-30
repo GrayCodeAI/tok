@@ -134,7 +134,11 @@ func runWatch(cmd *cobra.Command, args []string) error {
 				NgramEnabled:     true,
 				EnableCompaction: true,
 			})
-			result, stats := pipeline.Process(input)
+			result, stats, err := pipeline.Process(input)
+			if err != nil {
+				out.Global().Errorf("[tok watch] pipeline error: %v\n", err)
+				continue
+			}
 
 			origTokens := core.EstimateTokens(input)
 			totalEvents++

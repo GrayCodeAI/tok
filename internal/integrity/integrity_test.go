@@ -7,6 +7,7 @@ import (
 )
 
 func TestComputeHashDeterministic(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	file := filepath.Join(tempDir, "test.sh")
 	os.WriteFile(file, []byte("#!/bin/bash\necho hello\n"), 0644)
@@ -31,6 +32,7 @@ func TestComputeHashDeterministic(t *testing.T) {
 }
 
 func TestComputeHashChangesOnModification(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	file := filepath.Join(tempDir, "test.sh")
 
@@ -52,6 +54,7 @@ func TestComputeHashChangesOnModification(t *testing.T) {
 }
 
 func TestStoreAndVerifyOK(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	os.WriteFile(hook, []byte("#!/bin/bash\n# tok-hook-version: 1\necho test\n"), 0644)
@@ -71,6 +74,7 @@ func TestStoreAndVerifyOK(t *testing.T) {
 }
 
 func TestVerifyDetectsTampering(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	os.WriteFile(hook, []byte("#!/bin/bash\necho original\n"), 0644)
@@ -101,6 +105,7 @@ func TestVerifyDetectsTampering(t *testing.T) {
 }
 
 func TestVerifyNoBaseline(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	content := "#!/bin/bash\n# tok-hook-version: 1\necho test\n"
@@ -118,6 +123,7 @@ func TestVerifyNoBaseline(t *testing.T) {
 }
 
 func TestVerifyNotInstalled(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	// Don't create hook file
@@ -133,6 +139,7 @@ func TestVerifyNotInstalled(t *testing.T) {
 }
 
 func TestVerifyOrphanedHash(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	hashFile := filepath.Join(tempDir, HashFilename)
@@ -152,6 +159,7 @@ func TestVerifyOrphanedHash(t *testing.T) {
 }
 
 func TestVerifyOutdatedHookVersion(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	content := "#!/bin/bash\n# tok-hook-version: 0\necho test\n"
@@ -175,6 +183,7 @@ func TestVerifyOutdatedHookVersion(t *testing.T) {
 }
 
 func TestStoreHashCreatesSha256sumFormat(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	os.WriteFile(hook, []byte("test content"), 0644)
@@ -202,6 +211,7 @@ func TestStoreHashCreatesSha256sumFormat(t *testing.T) {
 }
 
 func TestStoreHashOverwritesExisting(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 
@@ -233,6 +243,7 @@ func TestStoreHashOverwritesExisting(t *testing.T) {
 }
 
 func TestHashFilePermissions(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	os.WriteFile(hook, []byte("test"), 0644)
@@ -254,6 +265,7 @@ func TestHashFilePermissions(t *testing.T) {
 }
 
 func TestRemoveHash(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	os.WriteFile(hook, []byte("test"), 0644)
@@ -282,6 +294,7 @@ func TestRemoveHash(t *testing.T) {
 }
 
 func TestRemoveHashNotFound(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 
@@ -296,6 +309,7 @@ func TestRemoveHashNotFound(t *testing.T) {
 }
 
 func TestInvalidHashFileRejected(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	hashFile := filepath.Join(tempDir, HashFilename)
@@ -310,6 +324,7 @@ func TestInvalidHashFileRejected(t *testing.T) {
 }
 
 func TestHashOnlyNoFilenameRejected(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	hashFile := filepath.Join(tempDir, HashFilename)
@@ -325,6 +340,7 @@ func TestHashOnlyNoFilenameRejected(t *testing.T) {
 }
 
 func TestWrongSeparatorRejected(t *testing.T) {
+	t.Parallel()
 	tempDir := t.TempDir()
 	hook := filepath.Join(tempDir, HookFilename)
 	hashFile := filepath.Join(tempDir, HashFilename)

@@ -3,6 +3,7 @@ package core
 import "testing"
 
 func TestEstimateTokensExact(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input       string
 		minExpected int // BPE is more accurate than heuristic, use minimum
@@ -27,6 +28,7 @@ func TestEstimateTokensExact(t *testing.T) {
 }
 
 func TestEstimateTokensPositive(t *testing.T) {
+	t.Parallel()
 	// Non-empty strings should always return >= 1 token
 	inputs := []string{"a", "hello", "test string", "func main() {}"}
 	for _, input := range inputs {
@@ -38,6 +40,7 @@ func TestEstimateTokensPositive(t *testing.T) {
 }
 
 func TestCalculateTokensSavedPositive(t *testing.T) {
+	t.Parallel()
 	saved := CalculateTokensSaved("hello world test", "hello")
 	if saved <= 0 {
 		t.Errorf("expected positive savings, got %d", saved)
@@ -45,6 +48,7 @@ func TestCalculateTokensSavedPositive(t *testing.T) {
 }
 
 func TestCalculateTokensSavedZero(t *testing.T) {
+	t.Parallel()
 	zero := CalculateTokensSaved("hi", "hello world test more")
 	if zero != 0 {
 		t.Errorf("expected 0 for negative savings, got %d", zero)
@@ -52,6 +56,7 @@ func TestCalculateTokensSavedZero(t *testing.T) {
 }
 
 func TestCalculateTokensSavedEqual(t *testing.T) {
+	t.Parallel()
 	saved := CalculateTokensSaved("same", "same")
 	if saved != 0 {
 		t.Errorf("expected 0 for equal length, got %d", saved)
@@ -59,6 +64,7 @@ func TestCalculateTokensSavedEqual(t *testing.T) {
 }
 
 func TestEstimateTokensConsistency(t *testing.T) {
+	t.Parallel()
 	text := "repeated calculation test"
 	for i := 0; i < 100; i++ {
 		a := EstimateTokens(text)
@@ -74,6 +80,7 @@ func TestEstimateTokensConsistency(t *testing.T) {
 // upgraded, these must stay stable — otherwise every `tok gain` number
 // in the wild becomes retroactively wrong.
 func TestEstimateTokensPreciseMatchesBPE(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		text string
 		want int
@@ -97,6 +104,7 @@ func TestEstimateTokensPreciseMatchesBPE(t *testing.T) {
 // takes a 200-char heuristic fast path, which silently undercounts short
 // memory-file snippets. EstimateTokensPrecise must skip that fast path.
 func TestEstimateTokensPreciseShortString(t *testing.T) {
+	t.Parallel()
 	short := "hello" // 5 chars — would trigger <30 heuristic in EstimateTokens
 	fast := EstimateTokensFast(short)
 	precise := EstimateTokensPrecise(short)

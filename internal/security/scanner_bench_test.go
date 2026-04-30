@@ -1,6 +1,7 @@
 package security
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -94,14 +95,23 @@ func BenchmarkValidateContent(b *testing.B) {
 	}
 }
 
-// Benchmark parallel scanning
+// Benchmark parallel scanning.
+// NOTE: Scanner is not goroutine-safe. Each goroutine gets its own scanner
+// via sync.Pool to measure true throughput.
 func BenchmarkScanner_ScanParallel(b *testing.B) {
-	scanner := NewScanner()
 	content := "API Key: AKIAIOSFODNN7EXAMPLE and email: test@example.com"
+
+	pool := sync.Pool{
+		New: func() any {
+			return NewScanner()
+		},
+	}
 
 	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
+		scanner := pool.Get().(*Scanner)
+		defer pool.Put(scanner)
 		for pb.Next() {
 			scanner.Scan(content)
 		}

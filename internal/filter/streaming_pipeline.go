@@ -28,7 +28,10 @@ func (sp *StreamingPipeline) ProcessStream(r io.Reader, w io.Writer) (*PipelineS
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		compressed, stats := sp.coordinator.Process(line)
+		compressed, stats, err := sp.coordinator.Process(line)
+		if err != nil {
+			return totalStats, err
+		}
 
 		if _, err := w.Write([]byte(compressed + "\n")); err != nil {
 			return totalStats, err

@@ -150,7 +150,7 @@ cfg := PipelineConfig{
     Budget: 2000,
 }
 pipeline := NewPipelineCoordinator(cfg)
-output, stats := pipeline.Process(input)
+output, stats, err := pipeline.Process(input)
 ```
 
 ### Streaming

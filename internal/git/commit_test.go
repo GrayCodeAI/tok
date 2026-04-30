@@ -93,13 +93,7 @@ func TestGenerateCommitMessageNoGit(t *testing.T) {
 func TestGenerateCommitMessageMock(t *testing.T) {
 	// Create a temporary directory and initialize git
 	tmpDir := t.TempDir()
-	originalDir, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Chdir(originalDir)
-
-	os.Chdir(tmpDir)
+	t.Chdir(tmpDir)
 	exec.Command("git", "init").Run()
 	exec.Command("git", "config", "user.email", "test@test.com").Run()
 	exec.Command("git", "config", "user.name", "Test User").Run()

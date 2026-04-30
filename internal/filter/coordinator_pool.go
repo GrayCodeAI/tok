@@ -64,5 +64,9 @@ func ProcessWithPool(input string, config PipelineConfig) (string, *PipelineStat
 	pool := NewCoordinatorPool(config)
 	coord := pool.Get()
 	defer pool.Put(coord)
-	return coord.Process(input)
+	output, stats, err := coord.Process(input)
+	if err != nil {
+		return input, nil
+	}
+	return output, stats
 }

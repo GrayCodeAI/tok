@@ -13,8 +13,7 @@ func setupTestEngine(t *testing.T) (*PatternDiscoveryEngine, func()) {
 	}
 
 	// Override data path
-	oldDataPath := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
+	t.Setenv("XDG_DATA_HOME", tmpDir)
 
 	engine, err := NewPatternDiscoveryEngine()
 	if err != nil {
@@ -25,7 +24,6 @@ func setupTestEngine(t *testing.T) (*PatternDiscoveryEngine, func()) {
 	cleanup := func() {
 		engine.Close()
 		os.RemoveAll(tmpDir)
-		os.Setenv("XDG_DATA_HOME", oldDataPath)
 	}
 
 	return engine, cleanup
@@ -94,6 +92,7 @@ func TestPatternDiscoveryEngine_RestartAfterStop(t *testing.T) {
 	}
 
 	engine.SubmitSample("2024-01-15 INFO restarted", "restart.log")
+	// Allow background worker goroutine time to register the sample.
 	time.Sleep(50 * time.Millisecond)
 }
 
@@ -109,7 +108,7 @@ func TestPatternDiscoveryEngine_SubmitSample(t *testing.T) {
 	engine.SubmitSample("2024-01-15 INFO Starting application", "app.log")
 	engine.SubmitSample("error: connection failed", "error.log")
 
-	// Give worker time to process
+	// Allow background worker goroutine time to process queued samples.
 	time.Sleep(100 * time.Millisecond)
 }
 

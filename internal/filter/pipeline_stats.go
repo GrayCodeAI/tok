@@ -38,7 +38,7 @@ func (s *PipelineStats) String() string {
 }
 
 // QuickProcess compresses input with default configuration
-func QuickProcess(input string, mode Mode) (string, int) {
+func QuickProcess(input string, mode Mode) (string, int, error) {
 	cfg := PipelineConfig{
 		Mode:                   mode,
 		SessionTracking:        true,
@@ -66,6 +66,6 @@ func QuickProcess(input string, mode Mode) (string, int) {
 		EnableKVzip:            true,
 	}
 	p := NewPipelineCoordinator(cfg)
-	output, stats := p.Process(input)
-	return output, stats.TotalSaved
+	output, stats, err := p.Process(input)
+	return output, stats.TotalSaved, err
 }

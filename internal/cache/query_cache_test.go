@@ -152,9 +152,6 @@ func TestQueryCache_InvalidateByCommand(t *testing.T) {
 	qc.Set("key2", "npm", []string{"test"}, "/tmp", nil, "output2", 200, 100)
 	qc.Set("key3", "git", []string{"log"}, "/tmp", nil, "output3", 150, 75)
 
-	// Wait for async writes
-	time.Sleep(100 * time.Millisecond)
-
 	// Invalidate git entries
 	err = qc.InvalidateByCommand("git")
 	if err != nil {
@@ -191,9 +188,6 @@ func TestQueryCache_Stats(t *testing.T) {
 	qc.Set("key1", "git", []string{"status"}, "/tmp", nil, "output1", 100, 50)
 	qc.Set("key2", "npm", []string{"test"}, "/tmp", nil, "output2", 200, 100)
 
-	// Wait for async writes
-	time.Sleep(100 * time.Millisecond)
-
 	stats, err := qc.Stats()
 	if err != nil {
 		t.Fatalf("Stats failed: %v", err)
@@ -219,9 +213,6 @@ func TestQueryCache_Cleanup(t *testing.T) {
 
 	// Add entry
 	qc.Set("key1", "git", []string{"status"}, "/tmp", nil, "output1", 100, 50)
-
-	// Wait for async writes
-	time.Sleep(100 * time.Millisecond)
 
 	// Cleanup with very long max age should remove nothing
 	err = qc.Cleanup(24 * time.Hour)

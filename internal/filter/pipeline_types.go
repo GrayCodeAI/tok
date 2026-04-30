@@ -9,7 +9,7 @@ import (
 // Pipeline defines the interface for compression pipelines.
 // This allows mock testing and future pipeline implementations.
 type Pipeline interface {
-	Process(input string) (string, *PipelineStats)
+	Process(input string) (string, *PipelineStats, error)
 }
 
 // filterLayer pairs a compression filter with its stats key.
