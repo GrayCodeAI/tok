@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -419,7 +420,7 @@ func recordHookAudit(action, originalCmd, rewrittenCmd string) {
 		return
 	}
 
-	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return
 	}
@@ -435,8 +436,31 @@ func recordHookAudit(action, originalCmd, rewrittenCmd string) {
 	_, _ = file.WriteString(line)
 }
 
+// secretPatterns matches common credential patterns in command strings and output.
+// This is a best-effort heuristic; it does not guarantee complete secret scrubbing.
+var secretPatterns = []struct {
+	re      *regexp.Regexp
+	replace string
+}{
+	// API keys / tokens
+	{regexp.MustCompile(`\b(sk-[a-zA-Z0-9]{20,})\b`), `[REDACTED_SK]`},
+	{regexp.MustCompile(`\b(ghp_[a-zA-Z0-9]{36,})\b`), `[REDACTED_GH]`},
+	{regexp.MustCompile(`\b(glpat-[a-zA-Z0-9\-]{20,})\b`), `[REDACTED_GL]`},
+	{regexp.MustCompile(`\b(AKIA[0-9A-Z]{16})\b`), `[REDACTED_AWS_AK]`},
+	// Passwords / secrets in key=value forms
+	{regexp.MustCompile(`(?i)(password|passwd|pwd|secret|token|api_key|apikey)\s*[=:]\s*\S+`), `[REDACTED]`},
+	// Authorization headers
+	{regexp.MustCompile(`(?i)(authorization|x-api-key)\s*[:=]\s*\S+`), `[REDACTED]`},
+	// Private keys
+	{regexp.MustCompile(`-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----[\s\S]*?-----END (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----`), `[REDACTED_KEY]`},
+}
+
 func sanitizeAuditField(value string) string {
-	return strings.NewReplacer("\\", "\\\\", "|", "\\|", "\n", "\\n", "\r", "\\r").Replace(value)
+	v := strings.NewReplacer("\\", "\\\\", "|", "\\|", "\n", "\\n", "\r", "\\r").Replace(value)
+	for _, p := range secretPatterns {
+		v = p.re.ReplaceAllString(v, p.replace)
+	}
+	return v
 }
 
 func runClaudeInner(input string) string {

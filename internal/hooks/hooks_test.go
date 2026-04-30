@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"os"
 	"path/filepath"
 	"testing"
 )
@@ -9,8 +8,7 @@ import (
 func TestGetFlagPath(t *testing.T) {
 	// Test with env var
 	testDir := t.TempDir()
-	os.Setenv("TOK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TOK_CONFIG_DIR")
+	t.Setenv("TOK_CONFIG_DIR", testDir)
 
 	path := GetFlagPath()
 	expected := filepath.Join(testDir, ".tok-active")
@@ -21,8 +19,7 @@ func TestGetFlagPath(t *testing.T) {
 
 func TestActivateDeactivate(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TOK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TOK_CONFIG_DIR")
+	t.Setenv("TOK_CONFIG_DIR", testDir)
 
 	// Test activation
 	if err := Activate("full"); err != nil {
@@ -51,8 +48,7 @@ func TestActivateDeactivate(t *testing.T) {
 
 func TestGetStatusLine(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TOK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TOK_CONFIG_DIR")
+	t.Setenv("TOK_CONFIG_DIR", testDir)
 
 	// Not active
 	if status := GetStatusLine(); status != "" {
@@ -74,8 +70,7 @@ func TestGetStatusLine(t *testing.T) {
 
 func TestAutoActivateOnStartup(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TOK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TOK_CONFIG_DIR")
+	t.Setenv("TOK_CONFIG_DIR", testDir)
 
 	// Without env var
 	Deactivate()
@@ -87,10 +82,8 @@ func TestAutoActivateOnStartup(t *testing.T) {
 	}
 
 	// With env var
-	os.Setenv("TOK_AUTO_ACTIVATE", "1")
-	os.Setenv("TOK_DEFAULT_MODE", "lite")
-	defer os.Unsetenv("TOK_AUTO_ACTIVATE")
-	defer os.Unsetenv("TOK_DEFAULT_MODE")
+	t.Setenv("TOK_AUTO_ACTIVATE", "1")
+	t.Setenv("TOK_DEFAULT_MODE", "lite")
 
 	if err := AutoActivateOnStartup(); err != nil {
 		t.Errorf("AutoActivateOnStartup() error = %v", err)
@@ -105,12 +98,10 @@ func TestAutoActivateOnStartup(t *testing.T) {
 
 func TestResolveDefaultMode(t *testing.T) {
 	testDir := t.TempDir()
-	os.Setenv("TOK_CONFIG_DIR", testDir)
-	defer os.Unsetenv("TOK_CONFIG_DIR")
-	defer os.Unsetenv("TOK_DEFAULT_MODE")
+	t.Setenv("TOK_CONFIG_DIR", testDir)
 
 	_ = Deactivate()
-	os.Setenv("TOK_DEFAULT_MODE", "ultra")
+	t.Setenv("TOK_DEFAULT_MODE", "ultra")
 	if got := ResolveDefaultMode(); got != "ultra" {
 		t.Errorf("ResolveDefaultMode() = %q, want ultra", got)
 	}

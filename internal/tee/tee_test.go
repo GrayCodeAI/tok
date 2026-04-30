@@ -287,8 +287,7 @@ func TestDefaultTeeConfig(t *testing.T) {
 // --- Integration tests ---
 
 func TestTeeRaw_EnvDisable(t *testing.T) {
-	os.Setenv("TOK_TEE", "0")
-	defer os.Unsetenv("TOK_TEE")
+	t.Setenv("TOK_TEE", "0")
 
 	content := strings.Repeat("error output\n", 100)
 	path := TeeRaw(content, "test_cmd", 1)
@@ -321,12 +320,10 @@ func TestTeeRaw_SuccessInFailuresMode(t *testing.T) {
 func TestTeeAndHint(t *testing.T) {
 	// Set up temp directory for tee files
 	tmpDir := t.TempDir()
-	os.Setenv("TOK_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOK_TEE_DIR")
+	t.Setenv("TOK_TEE_DIR", tmpDir)
 
 	// Set mode to always so we can test with exit code 0
-	os.Setenv("TOK_TEE_MODE", "always")
-	defer os.Unsetenv("TOK_TEE_MODE")
+	t.Setenv("TOK_TEE_MODE", "always")
 
 	content := strings.Repeat("test output\n", 100)
 	hint := TeeAndHint(content, "test_cmd", 0)
@@ -347,8 +344,7 @@ func TestTeeAndHint(t *testing.T) {
 func TestForceTeeHint(t *testing.T) {
 	// Set up temp directory for tee files
 	tmpDir := t.TempDir()
-	os.Setenv("TOK_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOK_TEE_DIR")
+	t.Setenv("TOK_TEE_DIR", tmpDir)
 
 	content := strings.Repeat("force tee output\n", 100)
 	hint := ForceTeeHint(content, "test_cmd")
@@ -373,8 +369,7 @@ func TestForceTeeHint_SmallOutput(t *testing.T) {
 }
 
 func TestForceTeeHint_EnvDisable(t *testing.T) {
-	os.Setenv("TOK_TEE", "0")
-	defer os.Unsetenv("TOK_TEE")
+	t.Setenv("TOK_TEE", "0")
 
 	content := strings.Repeat("force tee output\n", 100)
 	hint := ForceTeeHint(content, "test_cmd")
@@ -388,8 +383,7 @@ func TestForceTeeHint_EnvDisable(t *testing.T) {
 
 func TestListTeeFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("TOK_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOK_TEE_DIR")
+	t.Setenv("TOK_TEE_DIR", tmpDir)
 
 	// Create some test files
 	for i := 0; i < 3; i++ {
@@ -410,8 +404,7 @@ func TestListTeeFiles(t *testing.T) {
 
 func TestCleanupTeeFiles(t *testing.T) {
 	tmpDir := t.TempDir()
-	os.Setenv("TOK_TEE_DIR", tmpDir)
-	defer os.Unsetenv("TOK_TEE_DIR")
+	t.Setenv("TOK_TEE_DIR", tmpDir)
 
 	// Create files with old and new timestamps
 	oldTime := time.Now().Add(-7 * 24 * time.Hour)

@@ -100,7 +100,10 @@ func runCompress(cmd *cobra.Command, args []string) error {
 		EnableAttentionSink: true,
 	})
 
-	result, stats := pipeline.Process(input)
+	result, stats, err := pipeline.Process(input)
+	if err != nil {
+		return err
+	}
 
 	// Write compressed output to stdout
 	out.Global().Print(result)

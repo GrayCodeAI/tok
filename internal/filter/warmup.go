@@ -5,7 +5,7 @@ import "sync/atomic"
 // Warmup pre-initializes pipeline components
 func (p *PipelineCoordinator) Warmup() {
 	dummy := "warmup test data"
-	p.Process(dummy)
+	_, _, _ = p.Process(dummy)
 }
 
 // LockFreeCounter atomic counter

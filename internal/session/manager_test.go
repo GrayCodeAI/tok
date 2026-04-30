@@ -14,8 +14,7 @@ func setupTestManager(t *testing.T) (*SessionManager, func()) {
 	}
 
 	// Set data path for test
-	oldDataPath := os.Getenv("XDG_DATA_HOME")
-	os.Setenv("XDG_DATA_HOME", tmpDir)
+	t.Setenv("XDG_DATA_HOME", tmpDir)
 
 	sm, err := NewSessionManager()
 	if err != nil {
@@ -26,7 +25,6 @@ func setupTestManager(t *testing.T) (*SessionManager, func()) {
 	cleanup := func() {
 		sm.Close()
 		os.RemoveAll(tmpDir)
-		os.Setenv("XDG_DATA_HOME", oldDataPath)
 	}
 
 	return sm, cleanup
@@ -229,7 +227,7 @@ func TestSessionManager_RegisterHook(t *testing.T) {
 	// Create session - should trigger hook
 	_, _ = sm.CreateSession("agent", "/project")
 
-	// Give hook time to execute
+	// Allow background hook goroutine time to execute.
 	time.Sleep(100 * time.Millisecond)
 
 	// Note: Hook runs in goroutine with timeout, may or may not complete

@@ -21,7 +21,7 @@ func (ic *IncrementalCompressor) Add(data string) string {
 		return ""
 	}
 
-	output, _ := ic.coordinator.Process(ic.buffer)
+	output, _, _ := ic.coordinator.Process(ic.buffer)
 	ic.buffer = ""
 	return output
 }
@@ -31,7 +31,7 @@ func (ic *IncrementalCompressor) Flush() string {
 		return ""
 	}
 
-	output, _ := ic.coordinator.Process(ic.buffer)
+	output, _, _ := ic.coordinator.Process(ic.buffer)
 	ic.buffer = ""
 	return output
 }

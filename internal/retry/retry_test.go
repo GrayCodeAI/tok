@@ -8,6 +8,7 @@ import (
 )
 
 func TestDefaultConfig(t *testing.T) {
+	t.Parallel()
 	cfg := DefaultConfig()
 
 	if cfg.MaxAttempts != 3 {
@@ -25,6 +26,7 @@ func TestDefaultConfig(t *testing.T) {
 }
 
 func TestDo_Success(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 3,
 		InitialWait: 10 * time.Millisecond,
@@ -48,6 +50,7 @@ func TestDo_Success(t *testing.T) {
 }
 
 func TestDo_RetryThenSuccess(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 3,
 		InitialWait: 10 * time.Millisecond,
@@ -74,6 +77,7 @@ func TestDo_RetryThenSuccess(t *testing.T) {
 }
 
 func TestDo_MaxAttemptsExceeded(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 3,
 		InitialWait: 10 * time.Millisecond,
@@ -101,6 +105,7 @@ func TestDo_MaxAttemptsExceeded(t *testing.T) {
 }
 
 func TestDo_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 5,
 		InitialWait: 1 * time.Second,
@@ -126,6 +131,7 @@ func TestDo_ContextCancellation(t *testing.T) {
 }
 
 func TestDoWithResult_Success(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 3,
 		InitialWait: 10 * time.Millisecond,
@@ -152,6 +158,7 @@ func TestDoWithResult_Success(t *testing.T) {
 }
 
 func TestDoWithResult_RetryThenSuccess(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 3,
 		InitialWait: 10 * time.Millisecond,
@@ -181,6 +188,7 @@ func TestDoWithResult_RetryThenSuccess(t *testing.T) {
 }
 
 func TestDoWithResult_MaxAttemptsExceeded(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 2,
 		InitialWait: 10 * time.Millisecond,
@@ -203,6 +211,7 @@ func TestDoWithResult_MaxAttemptsExceeded(t *testing.T) {
 }
 
 func TestBackoffCalculation(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 5,
 		InitialWait: 10 * time.Millisecond,
@@ -233,6 +242,7 @@ func TestBackoffCalculation(t *testing.T) {
 }
 
 func TestBackoffMaxWait(t *testing.T) {
+	t.Parallel()
 	cfg := Config{
 		MaxAttempts: 10,
 		InitialWait: 10 * time.Millisecond,

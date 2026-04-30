@@ -14,9 +14,7 @@ func TestIntegrationTestRunnerDetectsCargo(t *testing.T) {
 
 	// Create a temporary Cargo project
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create Cargo.toml
 	cargoToml := `[package]
@@ -54,9 +52,7 @@ func TestIntegrationTestRunnerDetectsNodejs(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create package.json
 	packageJSON := `{
@@ -98,9 +94,7 @@ func TestIntegrationTestRunnerDetectsVitest(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create package.json
 	packageJSON := `{
@@ -139,9 +133,7 @@ func TestIntegrationTestRunnerMultipleDetections(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create multiple config files
 	os.WriteFile(filepath.Join(tmpDir, "package.json"), []byte(`{}`), 0644)
@@ -284,9 +276,7 @@ func TestIntegrationDetectedRunnersWithPriority(t *testing.T) {
 	}
 
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create a project with multiple test configurations
 	// Vitest (priority 110) should win over Jest (priority 80)

@@ -71,7 +71,10 @@ func (s *Server) handleFilter(arguments json.RawMessage) (*ToolsCallResult, erro
 	}
 
 	// Process text
-	filtered, stats := pipeline.Process(params.Text)
+	filtered, stats, err := pipeline.Process(params.Text)
+	if err != nil {
+		return nil, err
+	}
 
 	// Build result
 	layersApplied := make([]string, 0, len(stats.LayerStats))
@@ -139,7 +142,10 @@ func (s *Server) handleCompressFile(arguments json.RawMessage) (*ToolsCallResult
 	}
 
 	// Process
-	filtered, stats := pipeline.Process(text)
+	filtered, stats, err := pipeline.Process(text)
+	if err != nil {
+		return nil, err
+	}
 
 	// Apply max_lines limit if specified
 	if params.MaxLines > 0 {

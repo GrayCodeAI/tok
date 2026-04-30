@@ -64,7 +64,10 @@ func runBenchmark(cmd *cobra.Command, args []string) error {
 	input := syntheticBenchmarkInput(benchLines)
 	p := filter.NewPipelineCoordinator(&cfg)
 	start := time.Now()
-	_, stats := p.Process(input)
+	_, stats, err := p.Process(input)
+	if err != nil {
+		return err
+	}
 	totalDur := time.Since(start)
 
 	out.Global().Printf("tok Pipeline Benchmark\n")

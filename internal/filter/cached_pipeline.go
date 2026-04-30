@@ -53,7 +53,10 @@ func (cp *CachedPipeline) Process(command string, args []string, getOutput func(
 			return nil, err
 		}
 
-		filtered, stats := cp.pipeline.Process(output)
+		filtered, stats, err := cp.pipeline.Process(output)
+		if err != nil {
+			return nil, err
+		}
 		return &CachedProcessResult{
 			Output:         filtered,
 			OriginalOutput: output,
@@ -110,7 +113,10 @@ func (cp *CachedPipeline) Process(command string, args []string, getOutput func(
 	}
 
 	// Filter output
-	filtered, stats := cp.pipeline.Process(output)
+	filtered, stats, err := cp.pipeline.Process(output)
+	if err != nil {
+		return nil, err
+	}
 
 	// Store in cache
 	_ = cp.cache.Set(

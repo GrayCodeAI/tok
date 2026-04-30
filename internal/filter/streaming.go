@@ -38,7 +38,11 @@ func ShouldStream(input string) bool {
 func (sp *StreamingProcessor) ProcessStream(input string) (string, *PipelineStats) {
 	if !ShouldStream(input) {
 		// Not large enough for streaming, use normal processing
-		return sp.coordinator.Process(input)
+		output, stats, err := sp.coordinator.Process(input)
+		if err != nil {
+			return input, nil
+		}
+		return output, stats
 	}
 
 	// Split input into chunks at natural boundaries
@@ -51,7 +55,11 @@ func (sp *StreamingProcessor) ProcessStream(input string) (string, *PipelineStat
 	}
 
 	for _, chunk := range chunks {
-		output, stats := sp.coordinator.Process(chunk)
+		output, stats, err := sp.coordinator.Process(chunk)
+		if err != nil {
+			results = append(results, chunk)
+			continue
+		}
 		results = append(results, output)
 
 		// Aggregate stats
