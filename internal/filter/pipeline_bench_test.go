@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"sync"
 	"testing"
 )
 
@@ -27,7 +28,7 @@ func BenchmarkPipeline_ProcessSmall(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p.Process(input)
+		_, _, _ = p.Process(input)
 	}
 }
 
@@ -59,7 +60,7 @@ func BenchmarkPipeline_ProcessMedium(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p.Process(input)
+		_, _, _ = p.Process(input)
 	}
 }
 
@@ -90,7 +91,7 @@ func BenchmarkPipeline_ProcessWithBudget(b *testing.B) {
 	b.ResetTimer()
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		p.Process(input)
+		_, _, _ = p.Process(input)
 	}
 }
 
@@ -154,7 +155,9 @@ func BenchmarkLayer_Perplexity(b *testing.B) {
 	}
 }
 
-// Benchmark parallel processing
+// Benchmark parallel processing.
+// NOTE: PipelineCoordinator.Process is not goroutine-safe. Each goroutine
+// gets its own coordinator via sync.Pool to measure true throughput.
 func BenchmarkPipeline_ProcessParallel(b *testing.B) {
 	cfg := PipelineConfig{
 		Mode:             ModeMinimal,
@@ -162,14 +165,21 @@ func BenchmarkPipeline_ProcessParallel(b *testing.B) {
 		EnablePerplexity: true,
 		EnableAST:        true,
 	}
-	p := NewPipelineCoordinator(cfg)
 	input := "Test input for parallel processing benchmark"
+
+	pool := sync.Pool{
+		New: func() any {
+			return NewPipelineCoordinator(cfg)
+		},
+	}
 
 	b.ResetTimer()
 	b.ReportAllocs()
 	b.RunParallel(func(pb *testing.PB) {
+		p := pool.Get().(*PipelineCoordinator)
+		defer pool.Put(p)
 		for pb.Next() {
-			p.Process(input)
+			_, _, _ = p.Process(input)
 		}
 	})
 }

@@ -149,8 +149,11 @@ func (m *PipelineManager) processSingle(input string, mode Mode, ctx config.Comm
 	// coordinator.config between concurrent goroutines.
 	m.mu.Lock()
 	m.syncCoordinatorForRequest(mode, ctx.Intent)
-	output, stats := m.coordinator.Process(input)
+	output, stats, err := m.coordinator.Process(input)
 	m.mu.Unlock()
+	if err != nil {
+		return nil, err
+	}
 
 	m.mu.RLock()
 	validateOutput := m.config.ValidateOutput

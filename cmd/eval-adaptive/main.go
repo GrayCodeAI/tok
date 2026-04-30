@@ -129,7 +129,7 @@ func runSample(input string, cfg filter.PipelineConfig, iterations int) result {
 	start := time.Now()
 	for i := 0; i < iterations; i++ {
 		p := filter.NewPipelineCoordinator(cfg)
-		_, stats := p.Process(input)
+		_, stats, _ := p.Process(input)
 		finalTokens = stats.FinalTokens
 		saved = stats.ReductionPercent
 	}

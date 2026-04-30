@@ -164,7 +164,10 @@ func (a *KVCacheAligner) CacheAwareCompress(content string, compressor *Pipeline
 		return content, 0
 	}
 
-	compressedSuffix, stats := compressor.Process(suffix)
+	compressedSuffix, stats, err := compressor.Process(suffix)
+	if err != nil {
+		return content, 0
+	}
 	saved := stats.TotalSaved
 
 	// Reassemble with preserved prefix

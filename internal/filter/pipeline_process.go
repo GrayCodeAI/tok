@@ -9,13 +9,13 @@ import (
 // Layers run in order; each exits early if the token budget is already met.
 // The quality guardrail runs after all six layers and may trigger a fallback
 // to ModeMinimal if the output fails semantic validation.
-func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
+func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats, error) {
 	if p == nil {
 		return input, &PipelineStats{
 			OriginalTokens: core.EstimateTokens(input),
 			FinalTokens:    core.EstimateTokens(input),
 			LayerStats:     make(map[string]LayerStat, 6),
-		}
+		}, nil
 	}
 
 	stats := &PipelineStats{
@@ -40,7 +40,7 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	} {
 		output = l.fn(output, stats)
 		if p.shouldEarlyExit(stats) {
-			return output, p.finalizeStats(stats, output)
+			return output, p.finalizeStats(stats, output), nil
 		}
 	}
 
@@ -56,17 +56,17 @@ func (p *PipelineCoordinator) Process(input string) (string, *PipelineStats) {
 	if p.qualityGuardrail != nil {
 		gr := p.qualityGuardrail.Validate(input, output)
 		if !gr.Passed {
-			safeOutput, safeStats := p.runGuardrailFallback(input)
+			safeOutput, safeStats, err := p.runGuardrailFallback(input)
 			safeStats.LayerStats["guardrail_fallback"] = LayerStat{TokensSaved: 0}
 			safeStats.LayerStats["guardrail_reason_"+gr.Reason] = LayerStat{TokensSaved: 0}
-			return safeOutput, safeStats
+			return safeOutput, safeStats, err
 		}
 	}
 
-	return output, p.finalizeStats(stats, output)
+	return output, p.finalizeStats(stats, output), nil
 }
 
-func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *PipelineStats) {
+func (p *PipelineCoordinator) runGuardrailFallback(input string) (string, *PipelineStats, error) {
 	fallbackCfg := p.config
 	fallbackCfg.Mode = ModeMinimal
 	fallbackCfg.EnableExtractivePrefilter = false

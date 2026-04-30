@@ -85,9 +85,7 @@ func TestDetectedRunners(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create temp directory with test files
 			tmpDir := t.TempDir()
-			origDir, _ := os.Getwd()
-			os.Chdir(tmpDir)
-			defer os.Chdir(origDir)
+			t.Chdir(tmpDir)
 
 			// Create test files
 			for _, file := range tt.files {
@@ -121,9 +119,7 @@ func TestDetectedRunners(t *testing.T) {
 func TestDetectedRunnersPriority(t *testing.T) {
 	// Test that higher priority runners are preferred
 	tmpDir := t.TempDir()
-	origDir, _ := os.Getwd()
-	os.Chdir(tmpDir)
-	defer os.Chdir(origDir)
+	t.Chdir(tmpDir)
 
 	// Create both Cargo.toml and package.json (Vitest should win due to specificity)
 	os.WriteFile(filepath.Join(tmpDir, "Cargo.toml"), []byte("test"), 0644)

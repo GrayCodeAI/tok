@@ -7,6 +7,10 @@ import (
 	"sync"
 )
 
+// maxRegexCacheSize limits the number of compiled regex patterns kept in memory.
+// This prevents unbounded growth when dynamic/unique patterns are passed.
+const maxRegexCacheSize = 1000
+
 // Pre-compiled regex patterns for performance
 var (
 	regexCache   = make(map[string]*regexp.Regexp)
@@ -27,6 +31,15 @@ func getRegex(pattern string) *regexp.Regexp {
 	if re, ok := regexCache[pattern]; ok {
 		return re
 	}
+
+	// Evict a random entry if cache is at capacity to prevent memory exhaustion.
+	if len(regexCache) >= maxRegexCacheSize {
+		for k := range regexCache {
+			delete(regexCache, k)
+			break // remove just one entry
+		}
+	}
+
 	re := regexp.MustCompile(pattern)
 	regexCache[pattern] = re
 	return re

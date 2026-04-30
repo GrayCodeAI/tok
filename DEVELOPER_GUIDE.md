@@ -49,7 +49,7 @@ pool := filter.GetDefaultPool()
 coord := pool.Get()
 defer pool.Put(coord)
 
-output, stats := coord.Process(input)
+output, stats, err := coord.Process(input)
 
 // Or create custom pool
 customPool := filter.NewCoordinatorPool(myConfig)
@@ -159,7 +159,7 @@ items, totalSize := cache.Stats()
 // Creating new coordinator every time
 func processCommand(input string) string {
     coord := filter.NewPipelineCoordinator(config)
-    output, _ := coord.Process(input)
+    output, _, err := coord.Process(input)
     return output
 }
 
@@ -194,7 +194,7 @@ func processCommand(input string) string {
     coord := pool.Get()
     defer pool.Put(coord)
     
-    output, _ := coord.Process(input)
+    output, _, err := coord.Process(input)
     return output
 }
 

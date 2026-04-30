@@ -6,6 +6,7 @@ import (
 )
 
 func TestValidateInputSize(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		input   string
@@ -35,6 +36,7 @@ func TestValidateInputSize(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := ValidateInputSize(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateInputSize() error = %v, wantErr %v", err, tt.wantErr)
@@ -44,6 +46,7 @@ func TestValidateInputSize(t *testing.T) {
 }
 
 func TestValidateCommandArgs(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		args    []string
@@ -78,6 +81,7 @@ func TestValidateCommandArgs(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := ValidateCommandArgs(tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ValidateCommandArgs() error = %v, wantErr %v", err, tt.wantErr)
@@ -87,6 +91,7 @@ func TestValidateCommandArgs(t *testing.T) {
 }
 
 func TestSanitizePath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		path    string
@@ -121,6 +126,7 @@ func TestSanitizePath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			got, err := SanitizePath(tt.path)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("SanitizePath() error = %v, wantErr %v", err, tt.wantErr)
@@ -134,6 +140,7 @@ func TestSanitizePath(t *testing.T) {
 }
 
 func TestSanitizePath_ReturnsAbsolute(t *testing.T) {
+	t.Parallel()
 	result, err := SanitizePath("./test")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -144,6 +151,7 @@ func TestSanitizePath_ReturnsAbsolute(t *testing.T) {
 }
 
 func TestValidateConfigPath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		path    string
@@ -168,6 +176,7 @@ func TestValidateConfigPath(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 			err := ValidateConfigPath(tt.path)
 			// The homeDir check may fail in test environment, so we mainly check
 			// that it doesn't panic and handles errors appropriately
@@ -179,6 +188,7 @@ func TestValidateConfigPath(t *testing.T) {
 }
 
 func TestConstants(t *testing.T) {
+	t.Parallel()
 	if MaxInputSize != 10*1024*1024 {
 		t.Errorf("MaxInputSize = %d, want %d", MaxInputSize, 10*1024*1024)
 	}

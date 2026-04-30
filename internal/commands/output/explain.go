@@ -43,9 +43,9 @@ func runExplain(cmd *cobra.Command, args []string) error {
 
 	execCmd := exec.CommandContext(contextOrBackground(cmd.Context()), exePath, args[1:]...)
 	execCmd.Env = os.Environ()
-	output, err := execCmd.CombinedOutput()
-	if err != nil && len(output) == 0 {
-		return fmt.Errorf("command failed: %s (%w)", args[0], err)
+	output, execErr := execCmd.CombinedOutput()
+	if execErr != nil && len(output) == 0 {
+		return fmt.Errorf("command failed: %s (%w)", args[0], execErr)
 	}
 	rawOutput := string(output)
 
@@ -66,7 +66,10 @@ func runExplain(cmd *cobra.Command, args []string) error {
 		EnableAttentionSink: true,
 	})
 
-	_, stats := pipeline.Process(rawOutput)
+	_, stats, err := pipeline.Process(rawOutput)
+	if err != nil {
+		return err
+	}
 
 	out.Global().Printf("%-25s %s\n", "Layer", "Tokens Saved")
 	out.Global().Printf("%-25s %s\n", "─────────────────────────", "────────────")
@@ -111,5 +114,5 @@ func runExplain(cmd *cobra.Command, args []string) error {
 	out.Global().Printf("\nTotal saved: %d tokens (%.1f%% reduction)\n",
 		stats.TotalSaved, stats.ReductionPercent)
 
-	return err
+	return execErr
 }

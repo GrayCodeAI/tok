@@ -409,7 +409,13 @@ func (h *FallbackHandler) applyPipeline(output string, tomlConfig *toml.TOMLFilt
 
 	pipeline := filter.NewPipelineCoordinator(cfg)
 
-	filtered, stats := pipeline.Process(output)
+	filtered, stats, err := pipeline.Process(output)
+	if err != nil {
+		if IsVerbose() {
+			out.Global().Errorf("[pipeline error: %v, returning unfiltered]\n", err)
+		}
+		return output
+	}
 
 	if IsVerbose() && stats.TotalSaved > 0 {
 		out.Global().Errorf("[pipeline: %d -> %d tokens, %.1f%% saved]\n",

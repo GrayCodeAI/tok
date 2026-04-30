@@ -151,9 +151,7 @@ max_lines = 20
 	os.WriteFile(filepath.Join(configDir, "filters.toml"), []byte(filterContent), 0644)
 
 	// Set HOME to temp dir
-	origHome := os.Getenv("HOME")
-	os.Setenv("HOME", homeDir)
-	defer os.Setenv("HOME", origHome)
+	t.Setenv("HOME", homeDir)
 
 	loader := NewLoader(configDir)
 	reg, err := loader.LoadAll("")
@@ -209,9 +207,7 @@ func TestLoaderLoadAll_InvalidTOML(t *testing.T) {
 	// Create invalid TOML file
 	os.WriteFile(filepath.Join(configDir, "filters.toml"), []byte("invalid {{{ toml"), 0644)
 
-	origHome := os.Getenv("HOME")
-	os.Setenv("HOME", homeDir)
-	defer os.Setenv("HOME", origHome)
+	t.Setenv("HOME", homeDir)
 
 	loader := NewLoader(configDir)
 	_, err := loader.LoadAll("")

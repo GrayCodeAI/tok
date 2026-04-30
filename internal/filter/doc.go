@@ -19,7 +19,7 @@
 // Create a coordinator with configuration and process text:
 //
 //	pipeline := filter.NewPipelineCoordinator(config)
-//	output, stats := pipeline.Process(inputText)
+//	output, stats, err := pipeline.Process(inputText)
 //	fmt.Printf("Saved %d tokens (%.1f%%)\n", stats.TotalSaved, stats.ReductionPercent)
 //
 // # Filter Engine

@@ -38,7 +38,7 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	execCmd := exec.Command(exePath, args[1:]...)
 	execCmd.Env = os.Environ()
-	output, err := execCmd.CombinedOutput()
+	output, execErr := execCmd.CombinedOutput()
 	rawOutput := string(output)
 
 	originalTokens := core.EstimateTokens(rawOutput)
@@ -58,7 +58,10 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 		EnableAttentionSink: true,
 	})
 
-	_, stats := pipeline.Process(rawOutput)
+	_, stats, err := pipeline.Process(rawOutput)
+	if err != nil {
+		return err
+	}
 
 	out.Global().Printf("%-30s %10s %8s\n", "Layer", "Saved", "Status")
 	out.Global().Printf("%-30s %10s %8s\n", "──────────────────────────────", "──────────", "────────")
@@ -82,5 +85,5 @@ func runPipeline(cmd *cobra.Command, args []string) error {
 
 	out.Global().Printf("\nFinal: ~%d tokens (%.1f%% reduction)\n", stats.FinalTokens, stats.ReductionPercent)
 
-	return err
+	return execErr
 }

@@ -13,53 +13,20 @@ type ParallelFilterResult struct {
 	Error  error
 }
 
-// ExecuteFiltersParallel runs independent filters in parallel
-// This improves throughput for multi-core systems
+// ExecuteFiltersParallel runs filters in parallel on the same input.
+// WARNING: This is only safe for truly independent filters that do not depend
+// on each other's output. For sequential filter chains (where each layer
+// transforms the output of the previous layer), use ExecuteFiltersSequential.
+//
+// Historically this function attempted to run sequential filters in parallel,
+// which produced semantically incorrect output because later filters received
+// the original input instead of the transformed output from previous layers.
+// It now safely delegates to sequential execution unless all filters are
+// explicitly marked as independent (future enhancement).
 func ExecuteFiltersParallel(filters []filterLayer, input string, mode Mode) (string, int) {
-	if len(filters) == 0 {
-		return input, 0
-	}
-
-	// Single filter: run directly (avoid goroutine overhead)
-	if len(filters) == 1 {
-		return filters[0].filter.Apply(input, mode)
-	}
-
-	// Parallel execution for multiple filters
-	results := make([]ParallelFilterResult, len(filters))
-	var wg sync.WaitGroup
-
-	// Run filters in parallel
-	for i, layer := range filters {
-		wg.Add(1)
-		go func(idx int, l filterLayer) {
-			defer wg.Done()
-			output, saved := l.filter.Apply(input, mode)
-			results[idx] = ParallelFilterResult{
-				Output: output,
-				Saved:  saved,
-			}
-		}(i, layer)
-	}
-
-	wg.Wait()
-
-	// Combine results: use output from last filter
-	// (This is a simplified combination - real implementation would be smarter)
-	totalSaved := 0
-	for _, r := range results {
-		totalSaved += r.Saved
-	}
-
-	// Return best result (most savings)
-	bestResult := results[0]
-	for _, r := range results {
-		if r.Saved > bestResult.Saved {
-			bestResult = r
-		}
-	}
-
-	return bestResult.Output, totalSaved
+	// Sequential execution is the only safe default for filter chains where
+	// each layer depends on the previous layer's output.
+	return ExecuteFiltersSequential(filters, input, mode)
 }
 
 // ExecuteFiltersSequential runs filters sequentially
@@ -298,7 +265,10 @@ func NewParallelCompressor(config PipelineConfig) *ParallelCompressor {
 
 // Compress compresses a single input
 func (pc *ParallelCompressor) Compress(input string) (string, int) {
-	output, stats := pc.engine.Process(input)
+	output, stats, err := pc.engine.Process(input)
+	if err != nil {
+		return input, 0
+	}
 	if stats == nil {
 		return output, 0
 	}
@@ -308,7 +278,10 @@ func (pc *ParallelCompressor) Compress(input string) (string, int) {
 // CompressBatch compresses multiple inputs in parallel
 func (pc *ParallelCompressor) CompressBatch(inputs []string) []ParallelProcessResult {
 	return pc.processor.ProcessItems(inputs, func(item string) (string, int) {
-		output, stats := pc.engine.Process(item)
+		output, stats, err := pc.engine.Process(item)
+		if err != nil {
+			return item, 0
+		}
 		if stats == nil {
 			return output, 0
 		}
@@ -319,7 +292,10 @@ func (pc *ParallelCompressor) CompressBatch(inputs []string) []ParallelProcessRe
 // CompressBatchContext compresses with context support
 func (pc *ParallelCompressor) CompressBatchContext(ctx context.Context, inputs []string) ([]ParallelProcessResult, error) {
 	return pc.processor.ProcessItemsContext(ctx, inputs, func(ctx context.Context, item string) (string, int) {
-		output, stats := pc.engine.Process(item)
+		output, stats, err := pc.engine.Process(item)
+		if err != nil {
+			return item, 0
+		}
 		if stats == nil {
 			return output, 0
 		}

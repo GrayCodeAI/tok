@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -183,7 +184,10 @@ func writeTeeFile(raw string, commandSlug string, teeDir string, maxFileSize int
 		content = raw[:boundary] + fmt.Sprintf("\n\n--- truncated at %d bytes ---", maxFileSize)
 	}
 
-	if err := os.WriteFile(filepath, []byte(content), 0644); err != nil {
+	// Best-effort secret redaction before writing to disk.
+	content = redactSecrets(content)
+
+	if err := os.WriteFile(filepath, []byte(content), 0600); err != nil {
 		return "", fmt.Errorf("failed to write tee file: %w", err)
 	}
 
@@ -331,6 +335,33 @@ func GetTeeDir() (string, error) {
 		cfg = &config.Config{}
 	}
 	return getTeeDir(cfg)
+}
+
+// secretPatterns matches common credential patterns in text.
+// This is a best-effort heuristic; it does not guarantee complete secret scrubbing.
+var secretPatterns = []struct {
+	re      *regexp.Regexp
+	replace string
+}{
+	// API keys / tokens
+	{regexp.MustCompile(`\b(sk-[a-zA-Z0-9]{20,})\b`), `[REDACTED_SK]`},
+	{regexp.MustCompile(`\b(ghp_[a-zA-Z0-9]{36,})\b`), `[REDACTED_GH]`},
+	{regexp.MustCompile(`\b(glpat-[a-zA-Z0-9\-]{20,})\b`), `[REDACTED_GL]`},
+	{regexp.MustCompile(`\b(AKIA[0-9A-Z]{16})\b`), `[REDACTED_AWS_AK]`},
+	// Passwords / secrets in key=value forms
+	{regexp.MustCompile(`(?i)(password|passwd|pwd|secret|token|api_key|apikey)\s*[=:]\s*\S+`), `[REDACTED]`},
+	// Authorization headers
+	{regexp.MustCompile(`(?i)(authorization|x-api-key)\s*[:=]\s*\S+`), `[REDACTED]`},
+	// Private keys
+	{regexp.MustCompile(`-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----[\s\S]*?-----END (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----`), `[REDACTED_KEY]`},
+}
+
+func redactSecrets(input string) string {
+	out := input
+	for _, p := range secretPatterns {
+		out = p.re.ReplaceAllString(out, p.replace)
+	}
+	return out
 }
 
 // TeeFileInfo represents information about a tee file.
